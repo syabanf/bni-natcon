@@ -50,6 +50,7 @@ func main() {
 		usecase.NewSeminarUsecase(seminarRepo),
 		usecase.NewBoothUsecase(tenantRepo, visitRepo),
 		usecase.NewAdminUsecase(postgres.NewAdminRepo(pool), httpdelivery.BcryptVerifier{}, cfg.SeedPassword),
+		usecase.NewNetworkingUsecase(postgres.NewNetworkingRepo(pool)),
 	)
 
 	slog.Info("API listening", "addr", cfg.Addr)

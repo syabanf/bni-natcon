@@ -121,12 +121,12 @@ export default function Home() {
           <h4>Seminar Paralel</h4>
           <p>Pilih sesi, daftar via scan QR</p>
         </button>
-        <button className="quick" onClick={() => navigate('/qr')}>
+        <button className="quick" onClick={() => navigate('/network')}>
           <span className="q-ic">
             <Icon name="users" size={18} />
           </span>
           <h4>Speed Networking</h4>
-          <p>Segera hadir di aplikasi</p>
+          <p>8 orang · 1 meja · otomatis terkoneksi</p>
         </button>
       </div>
 

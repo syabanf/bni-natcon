@@ -53,6 +53,17 @@ export const api = {
     isMock() ? mockApi.unregisterSeminar(id) : request(`/seminars/${id}/register`, { method: 'DELETE' }),
   scan: (memberCode) =>
     isMock() ? mockApi.scan(memberCode) : request('/scans', { method: 'POST', body: { member_code: memberCode } }),
+  networking: () => (isMock() ? mockApi.networking() : request('/networking')),
+  networkingCheckIn: (tableNo) =>
+    isMock()
+      ? mockApi.networkingCheckIn(tableNo)
+      : request('/networking/checkin', { method: 'POST', body: { table_no: tableNo } }),
+  saveContact: (memberId) =>
+    isMock()
+      ? mockApi.saveContact(memberId)
+      : request('/networking/contacts', { method: 'POST', body: { member_id: memberId } }),
+  saveAllContacts: () =>
+    isMock() ? mockApi.saveAllContacts() : request('/networking/contacts/all', { method: 'POST' }),
   booth: () => (isMock() ? mockApi.booth() : request('/booth')),
   boothStats: () => (isMock() ? mockApi.boothStats() : request('/booth/stats')),
   boothVisitors: (limit = 10) =>

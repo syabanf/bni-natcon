@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import Modal from './Modal'
 import { parseSheet } from './excel'
+import { MemberDetail, TenantDetail, SeminarDetail } from './Detail'
 
 /*
  * Master data pages: Peserta / Tenant / Seminar.
@@ -159,9 +160,14 @@ function Notices({ crud, importResult, clearImport }) {
   )
 }
 
-function RowActions({ onEdit, onDelete }) {
+function RowActions({ onDetail, onEdit, onDelete }) {
   return (
     <td className="md-actions">
+      {onDetail && (
+        <button className="detail" onClick={onDetail}>
+          Detail
+        </button>
+      )}
       <button onClick={onEdit}>Ubah</button>
       <button className="danger" onClick={onDelete}>
         Hapus
@@ -180,6 +186,19 @@ export function MembersPage() {
     remove: (id) => api.deleteMember(id),
   })
   const [importResult, setImportResult] = useState(null)
+  const [detailId, setDetailId] = useState(null)
+
+  if (detailId) {
+    return (
+      <MemberDetail
+        id={detailId}
+        onBack={() => {
+          setDetailId(null)
+          crud.load()
+        }}
+      />
+    )
+  }
 
   return (
     <>
@@ -232,6 +251,7 @@ export function MembersPage() {
               <td>{m.chapter}</td>
               <td className="num">{m.visits}</td>
               <RowActions
+                onDetail={() => setDetailId(m.id)}
                 onEdit={() =>
                   crud.setForm({ id: m.id, name: m.name, email: m.email, chapter: m.chapter, company: m.company })
                 }
@@ -276,6 +296,19 @@ export function TenantsPage() {
     remove: (id) => api.deleteTenant(id),
   })
   const [importResult, setImportResult] = useState(null)
+  const [detailId, setDetailId] = useState(null)
+
+  if (detailId) {
+    return (
+      <TenantDetail
+        id={detailId}
+        onBack={() => {
+          setDetailId(null)
+          crud.load()
+        }}
+      />
+    )
+  }
 
   return (
     <>
@@ -330,6 +363,7 @@ export function TenantsPage() {
               <td>{t.category}</td>
               <td className="num">{t.scan_count}</td>
               <RowActions
+                onDetail={() => setDetailId(t.id)}
                 onEdit={() =>
                   crud.setForm({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials })
                 }
@@ -377,6 +411,20 @@ export function SeminarsPage() {
     remove: (id) => api.deleteSeminar(id),
   })
 
+  const [detailId, setDetailId] = useState(null)
+
+  if (detailId) {
+    return (
+      <SeminarDetail
+        id={detailId}
+        onBack={() => {
+          setDetailId(null)
+          crud.load()
+        }}
+      />
+    )
+  }
+
   return (
     <>
       <PageHead title="Master Data — Seminar" sub="Peserta hanya bisa memilih satu seminar per slot">
@@ -416,6 +464,7 @@ export function SeminarsPage() {
                 {sm.seats_taken}/{sm.capacity}
               </td>
               <RowActions
+                onDetail={() => setDetailId(sm.id)}
                 onEdit={() =>
                   crud.setForm({
                     id: sm.id, slot: sm.slot, room: sm.room, title: sm.title,

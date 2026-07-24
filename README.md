@@ -2,9 +2,12 @@
 
 Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html` mockup.
 Members collect digital "stamps" (door-prize coupons) by having tenants scan
-their QR code, and register for parallel seminars. Tenants scan member QRs with
-their device camera and watch a live booth dashboard. A separate admin app
-gives the committee live monitoring plus master-data CRUD.
+their QR code, register for parallel seminars, and join **speed networking**
+(check in at a table of 8 — everyone at the table is auto-connected and can
+save each other as contacts). Tenants scan member QRs with their device camera
+and watch a live booth dashboard. A separate admin app gives the committee
+live monitoring, master-data CRUD, and **detail pages** per peserta/tenant/
+seminar (profile, visit history, leads, attendee lists).
 
 All UI follows Swiss / International Typographic Style (Inter, hairline rules,
 flat surfaces, single red accent).
@@ -103,6 +106,10 @@ All with password `natcon2026`:
 | GET `/booth`                   | tenant | booth profile                            |
 | GET `/booth/stats`             | tenant | total + today scan counts                |
 | GET `/booth/visitors`          | tenant | recent visitors                          |
+| GET `/networking`              | member | table list + my table, mates, saved flags |
+| POST `/networking/checkin`     | member | check in / move table (409 when full)   |
+| POST `/networking/contacts`(`/all`) | member | save one / all table-mate contacts |
+| GET `/admin/{members,tenants,seminars}/{id}` | admin | detail pages         |
 | GET `/admin/overview`          | admin  | event-wide stats                         |
 | GET `/admin/tenants`           | admin  | booth ranking by scans                   |
 | GET `/admin/seminars`          | admin  | seminar fill                             |

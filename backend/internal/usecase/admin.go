@@ -188,6 +188,20 @@ func (u *AdminUsecase) BulkCreateTenants(ctx context.Context, rows []TenantImpor
 	return created, errs
 }
 
+/* ----- Detail pages ----- */
+
+func (u *AdminUsecase) MemberDetail(ctx context.Context, id int64) (*domain.MemberDetail, error) {
+	return u.admin.MemberDetail(ctx, id)
+}
+
+func (u *AdminUsecase) TenantDetail(ctx context.Context, id int64) (*domain.TenantDetail, error) {
+	return u.admin.TenantDetail(ctx, id)
+}
+
+func (u *AdminUsecase) SeminarDetail(ctx context.Context, id int64) (*domain.SeminarDetail, error) {
+	return u.admin.SeminarDetail(ctx, id)
+}
+
 /* ----- Reports ----- */
 
 func (u *AdminUsecase) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {

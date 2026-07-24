@@ -47,6 +47,25 @@ type AdminRepository interface {
 
 	VisitReport(ctx context.Context) ([]VisitReportRow, error)
 	RegistrationReport(ctx context.Context) ([]RegistrationReportRow, error)
+
+	// Detail pages; each returns ErrNotFound for unknown ids.
+	MemberDetail(ctx context.Context, id int64) (*MemberDetail, error)
+	TenantDetail(ctx context.Context, id int64) (*TenantDetail, error)
+	SeminarDetail(ctx context.Context, id int64) (*SeminarDetail, error)
+}
+
+type NetworkingRepository interface {
+	// Status returns the member's check-in (table + mates with saved flags)
+	// plus the full table list with occupancy.
+	Status(ctx context.Context, memberID int64) (*NetworkingStatus, error)
+	// CheckIn seats the member at the table (moving them if already seated
+	// elsewhere). Returns ErrNotFound for unknown tables, ErrTableFull when
+	// all seats are taken.
+	CheckIn(ctx context.Context, memberID int64, tableNo int) error
+	// SaveContact stores a contact; saving twice is a no-op.
+	SaveContact(ctx context.Context, ownerID, contactID int64) error
+	// SaveAllTableMates saves everyone currently at the member's table.
+	SaveAllTableMates(ctx context.Context, memberID int64) (int, error)
 }
 
 type SeminarRepository interface {

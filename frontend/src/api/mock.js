@@ -53,21 +53,42 @@ function boothEmail(tenant) {
   return `booth-${tenant.booth.toLowerCase().replace('-', '')}@natcon.id`
 }
 
+// Static demo occupants per table so the networking screen feels alive.
+const FAKE_MATES = {
+  12: [
+    { id: 'f-sinta12', name: 'Melly Hartono', company: 'Melly Tax · Konsultan Pajak', chapter: 'Chapter Surabaya One' },
+    { id: 'f-joko12', name: 'Joko Prabowo', company: 'JP Otomotif · Bengkel Premium', chapter: 'Chapter Medan Utama' },
+    { id: 'f-rina12', name: 'Rina Kartika', company: 'Kartika Law · Notaris', chapter: 'Chapter Bali Paradise' },
+    { id: 'f-dedi12', name: 'Dedi Firmansyah', company: 'DF Logistics · Ekspedisi', chapter: 'Chapter Semarang Jaya' },
+    { id: 'f-lusi12', name: 'Lusi Anggraini', company: 'Lusi Catering · F&B', chapter: 'Chapter Jakarta Elite' },
+  ],
+  5: [
+    { id: 'f-budi5', name: 'Budi Hartanto', company: 'Budi Craft Studio', chapter: 'Chapter Yogya Istimewa' },
+    { id: 'f-citra5', name: 'Citra Lestari', company: 'Citra Media', chapter: 'Chapter Tangerang Hebat' },
+  ],
+}
+
 function loadState() {
-  try {
-    const raw = localStorage.getItem(STATE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* corrupt state falls through to fresh */
-  }
-  return {
+  const defaults = {
     // member_code -> [tenantId]; also drives coupons & booth dashboards
     visits: {},
     // member_code -> { [slot]: seminarId }
     registrations: {},
     // tenantId -> [{ code, at }]
     scans: {},
+    // member_code -> tableNo
+    seats: {},
+    // member_code -> [contact ids]
+    contacts: {},
   }
+  try {
+    const raw = localStorage.getItem(STATE_KEY)
+    // Merge so states saved by older app versions gain new fields.
+    if (raw) return { ...defaults, ...JSON.parse(raw) }
+  } catch {
+    /* corrupt state falls through to fresh */
+  }
+  return defaults
 }
 
 function saveState(state) {
@@ -208,6 +229,85 @@ export const mockApi = {
       duplicate,
       coupons: (state.visits[member.member_code] || []).length,
     })
+  },
+
+  /* ----- Speed networking ----- */
+
+  networking() {
+    const state = loadState()
+    const myCode = currentUser?.member_code
+    const tableOf = (n) => ({
+      fake: FAKE_MATES[n] || [],
+      real: MOCK_MEMBERS.filter((m) => state.seats[m.member_code] === n),
+    })
+    const tables = Array.from({ length: 12 }, (_, i) => {
+      const n = i + 1
+      const { fake, real } = tableOf(n)
+      return { table_no: n, hall: 'Hall B', capacity: 8, occupied: fake.length + real.length }
+    })
+
+    const myTable = state.seats[myCode]
+    if (!myTable) return delay({ checked_in: false, tables })
+
+    const { fake, real } = tableOf(myTable)
+    const savedSet = new Set(state.contacts[myCode] || [])
+    let seat = 0
+    const mates = [
+      ...real.map((m) => ({
+        member_id: m.member_code, name: m.name, chapter: m.chapter, company: m.company,
+        seat_no: ++seat, is_me: m.member_code === myCode, saved: savedSet.has(m.member_code),
+      })),
+      ...fake.map((f) => ({
+        member_id: f.id, name: f.name, chapter: f.chapter, company: f.company,
+        seat_no: ++seat, is_me: false, saved: savedSet.has(f.id),
+      })),
+    ]
+    return delay({
+      checked_in: true,
+      tables,
+      table: tables[myTable - 1],
+      seat_no: mates.find((m) => m.is_me)?.seat_no || 1,
+      mates,
+    })
+  },
+
+  networkingCheckIn(tableNo) {
+    const n = Number(tableNo)
+    if (!n || n < 1 || n > 12) return fail(404, 'not found')
+    const state = loadState()
+    const fake = (FAKE_MATES[n] || []).length
+    const real = MOCK_MEMBERS.filter(
+      (m) => state.seats[m.member_code] === n && m.member_code !== currentUser.member_code
+    ).length
+    if (fake + real >= 8) return fail(409, 'meja sudah penuh')
+    state.seats[currentUser.member_code] = n
+    saveState(state)
+    return delay({ status: 'checked_in' })
+  },
+
+  saveContact(contactID) {
+    const state = loadState()
+    const myCode = currentUser.member_code
+    const contacts = state.contacts[myCode] || []
+    if (!contacts.includes(contactID)) contacts.push(contactID)
+    state.contacts[myCode] = contacts
+    saveState(state)
+    return delay({ status: 'saved' })
+  },
+
+  saveAllContacts() {
+    const state = loadState()
+    const myCode = currentUser.member_code
+    const n = state.seats[myCode]
+    if (!n) return fail(404, 'not found')
+    const contacts = new Set(state.contacts[myCode] || [])
+    for (const f of FAKE_MATES[n] || []) contacts.add(f.id)
+    for (const m of MOCK_MEMBERS) {
+      if (state.seats[m.member_code] === n && m.member_code !== myCode) contacts.add(m.member_code)
+    }
+    state.contacts[myCode] = [...contacts]
+    saveState(state)
+    return delay({ status: 'saved', saved: contacts.size })
   },
 
   booth() {

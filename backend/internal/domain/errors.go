@@ -11,4 +11,5 @@ var (
 	ErrForbidden          = errors.New("forbidden")
 	ErrEmailTaken         = errors.New("email is already in use")
 	ErrInvalidInput       = errors.New("invalid input")
+	ErrTableFull          = errors.New("meja sudah penuh")
 )

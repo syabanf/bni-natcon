@@ -12,13 +12,14 @@ import (
 )
 
 type Server struct {
-	jwt     *JWTIssuer
-	auth    *usecase.AuthUsecase
-	member  *usecase.MemberUsecase
-	scan    *usecase.ScanUsecase
-	seminar *usecase.SeminarUsecase
-	booth   *usecase.BoothUsecase
-	admin   *usecase.AdminUsecase
+	jwt        *JWTIssuer
+	auth       *usecase.AuthUsecase
+	member     *usecase.MemberUsecase
+	scan       *usecase.ScanUsecase
+	seminar    *usecase.SeminarUsecase
+	booth      *usecase.BoothUsecase
+	admin      *usecase.AdminUsecase
+	networking *usecase.NetworkingUsecase
 }
 
 func NewServer(
@@ -29,8 +30,12 @@ func NewServer(
 	seminar *usecase.SeminarUsecase,
 	booth *usecase.BoothUsecase,
 	admin *usecase.AdminUsecase,
+	networking *usecase.NetworkingUsecase,
 ) *Server {
-	return &Server{jwt: jwt, auth: auth, member: member, scan: scan, seminar: seminar, booth: booth, admin: admin}
+	return &Server{
+		jwt: jwt, auth: auth, member: member, scan: scan,
+		seminar: seminar, booth: booth, admin: admin, networking: networking,
+	}
 }
 
 func (s *Server) Router() http.Handler {
@@ -65,6 +70,10 @@ func (s *Server) Router() http.Handler {
 				r.Get("/seminars", s.handleListSeminars)
 				r.Post("/seminars/{id}/register", s.handleRegisterSeminar)
 				r.Delete("/seminars/{id}/register", s.handleUnregisterSeminar)
+				r.Get("/networking", s.handleNetworkingStatus)
+				r.Post("/networking/checkin", s.handleNetworkingCheckIn)
+				r.Post("/networking/contacts", s.handleNetworkingSaveContact)
+				r.Post("/networking/contacts/all", s.handleNetworkingSaveAll)
 			})
 
 			r.Group(func(r chi.Router) {
@@ -83,6 +92,9 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/activity", s.handleAdminActivity)
 
 				r.Get("/admin/members", s.handleAdminListMembers)
+				r.Get("/admin/members/{id}", s.handleAdminMemberDetail)
+				r.Get("/admin/tenants/{id}", s.handleAdminTenantDetail)
+				r.Get("/admin/seminars/{id}", s.handleAdminSeminarDetail)
 				r.Post("/admin/members", s.handleAdminCreateMember)
 				r.Put("/admin/members/{id}", s.handleAdminUpdateMember)
 				r.Delete("/admin/members/{id}", s.handleAdminDeleteMember)

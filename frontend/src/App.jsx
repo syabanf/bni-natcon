@@ -6,6 +6,7 @@ import Home from './pages/member/Home'
 import MyQR from './pages/member/MyQR'
 import Passport from './pages/member/Passport'
 import Seminars from './pages/member/Seminars'
+import Networking from './pages/member/Networking'
 import Scanner from './pages/tenant/Scanner'
 import Dashboard from './pages/tenant/Dashboard'
 
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/qr" element={<MyQR />} />
           <Route path="/passport" element={<Passport />} />
           <Route path="/seminar" element={<Seminars />} />
+          <Route path="/network" element={<Networking />} />
         </Route>
 
         <Route

@@ -209,3 +209,76 @@ type RegistrationReportRow struct {
 	SeminarTitle string
 	RegisteredAt time.Time
 }
+
+/* ----- Detail pages (admin) ----- */
+
+type MemberVisitRow struct {
+	TenantName string
+	Booth      string
+	VisitedAt  time.Time
+}
+
+type MemberRegRow struct {
+	Slot         int
+	Room         string
+	Title        string
+	RegisteredAt time.Time
+}
+
+type MemberDetail struct {
+	User
+	Visits        []MemberVisitRow
+	Registrations []MemberRegRow
+}
+
+type TenantDetail struct {
+	Tenant
+	OwnerEmail string
+	TotalScans int
+	ScansToday int
+	Visitors   []Visitor
+}
+
+type SeminarAttendee struct {
+	Name         string
+	MemberCode   string
+	Chapter      string
+	Company      string
+	RegisteredAt time.Time
+}
+
+type SeminarDetail struct {
+	Seminar
+	SeatsTaken int
+	Attendees  []SeminarAttendee
+}
+
+/* ----- Speed networking ----- */
+
+type NetworkingTable struct {
+	ID       int64
+	TableNo  int
+	Hall     string
+	Capacity int
+	Occupied int
+}
+
+// TableMate is one person seated at the member's table.
+type TableMate struct {
+	MemberID int64
+	Name     string
+	Chapter  string
+	Company  string
+	SeatNo   int
+	IsMe     bool
+	Saved    bool
+}
+
+// NetworkingStatus is everything the member's networking screen needs.
+type NetworkingStatus struct {
+	CheckedIn bool
+	Table     *NetworkingTable
+	SeatNo    int
+	Mates     []TableMate
+	Tables    []NetworkingTable
+}

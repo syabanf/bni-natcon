@@ -906,6 +906,232 @@ input {
   text-align: center;
 }
 
+/* ===== Member: Speed Networking ===== */
+.net-hero {
+  margin: 0 20px;
+  background: var(--red);
+  border-radius: 20px;
+  color: #fff;
+  padding: 19px;
+  box-shadow: 0 12px 28px rgba(163, 22, 33, 0.28);
+}
+.net-hero .nh-label {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  font-weight: 700;
+}
+.net-hero h3 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+.net-hero p {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 3px;
+}
+.net-hero .nh-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.round-timer {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 9px 13px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.round-timer .rt-time {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.round-timer .rt-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.table-viz {
+  margin: 16px 20px 0;
+  padding: 20px 16px 12px;
+  text-align: center;
+}
+.table-viz h4 {
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.table-viz > p {
+  font-size: 11.5px;
+  color: var(--gray);
+  margin-bottom: 12px;
+}
+.table-circle {
+  position: relative;
+  width: 225px;
+  height: 225px;
+  margin: 0 auto 10px;
+}
+.table-center {
+  position: absolute;
+  inset: 62px;
+  background: var(--chip);
+  border: 2px dashed #d8d8d8;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.table-center .tc-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.table-center .tc-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+.seat {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  background: var(--white);
+  color: var(--chip-ink);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.seat.me {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+  outline: 3px solid var(--red-tint);
+}
+.net-list {
+  margin: 6px 20px 0;
+}
+.net-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.net-person .np-av {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font-weight: 800;
+  font-size: 12.5px;
+  flex-shrink: 0;
+}
+.net-person.is-me .np-av {
+  background: var(--red);
+  color: #fff;
+}
+.net-person .np-info {
+  flex: 1;
+  min-width: 0;
+}
+.net-person h5 {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.net-person p {
+  font-size: 11px;
+  color: var(--gray);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.np-save {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--red-tint);
+  border-radius: 999px;
+  padding: 8px 13px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.np-save.saved {
+  color: var(--green);
+  background: var(--green-tint);
+}
+.table-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 20px 8px;
+}
+.table-option {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 15px 14px;
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.12s, border-color 0.2s;
+}
+.table-option:not(:disabled):hover {
+  border-color: var(--red);
+}
+.table-option:not(:disabled):active {
+  transform: scale(0.97);
+}
+.table-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.table-option.mine {
+  border-color: var(--red);
+  background: var(--red-tint);
+  opacity: 1;
+}
+.table-option b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.table-option small {
+  font-size: 10.5px;
+  color: var(--gray);
+}
+.table-option .pill {
+  margin-top: 7px;
+  align-self: flex-start;
+}
+
 /* ===== Tenant ===== */
 .tenant-head {
   padding: 12px 20px 0;

@@ -796,6 +796,85 @@ button:disabled {
   padding: 13px 24px;
 }
 
+/* ===== Detail pages ===== */
+.back-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gray);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.back-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+.detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 22px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+.dh-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(207, 32, 48, 0.3);
+}
+.dh-avatar.tenant {
+  background: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.info-grid {
+  flex: 1;
+  min-width: 260px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px 22px;
+}
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.info-item small {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.info-item b {
+  font-size: 13.5px;
+  font-weight: 700;
+  word-break: break-word;
+}
+.md-actions button.detail {
+  background: var(--red-tint);
+  color: var(--red);
+}
+.md-actions button.detail:hover {
+  background: var(--red);
+  color: #fff;
+}
+
 /* ===== Reports ===== */
 .report-panel {
   margin-top: 20px;
