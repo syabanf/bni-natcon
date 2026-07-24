@@ -1,4 +1,5 @@
 import { useAuthStore } from '../store/auth'
+import { mockApi } from './mock'
 
 const BASE = '/api/v1'
 
@@ -37,15 +38,23 @@ async function request(path, { method = 'GET', body } = {}) {
   return data
 }
 
+const isMock = () => useAuthStore.getState().mock
+
+// Every call routes to the local mock layer when demo mode is on.
 export const api = {
-  login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
-  me: () => request('/me'),
-  tenants: () => request('/tenants'),
-  seminars: () => request('/seminars'),
-  registerSeminar: (id) => request(`/seminars/${id}/register`, { method: 'POST' }),
-  unregisterSeminar: (id) => request(`/seminars/${id}/register`, { method: 'DELETE' }),
-  scan: (memberCode) => request('/scans', { method: 'POST', body: { member_code: memberCode } }),
-  booth: () => request('/booth'),
-  boothStats: () => request('/booth/stats'),
-  boothVisitors: (limit = 10) => request(`/booth/visitors?limit=${limit}`),
+  login: (email, password) =>
+    isMock() ? mockApi.login(email, password) : request('/auth/login', { method: 'POST', body: { email, password } }),
+  me: () => (isMock() ? mockApi.me() : request('/me')),
+  tenants: () => (isMock() ? mockApi.tenants() : request('/tenants')),
+  seminars: () => (isMock() ? mockApi.seminars() : request('/seminars')),
+  registerSeminar: (id) =>
+    isMock() ? mockApi.registerSeminar(id) : request(`/seminars/${id}/register`, { method: 'POST' }),
+  unregisterSeminar: (id) =>
+    isMock() ? mockApi.unregisterSeminar(id) : request(`/seminars/${id}/register`, { method: 'DELETE' }),
+  scan: (memberCode) =>
+    isMock() ? mockApi.scan(memberCode) : request('/scans', { method: 'POST', body: { member_code: memberCode } }),
+  booth: () => (isMock() ? mockApi.booth() : request('/booth')),
+  boothStats: () => (isMock() ? mockApi.boothStats() : request('/booth/stats')),
+  boothVisitors: (limit = 10) =>
+    isMock() ? mockApi.boothVisitors(limit) : request(`/booth/visitors?limit=${limit}`),
 }

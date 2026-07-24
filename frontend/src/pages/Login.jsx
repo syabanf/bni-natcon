@@ -34,8 +34,24 @@ const APPS = [
   },
 ]
 
+function MockToggle() {
+  const mock = useAuthStore((s) => s.mock)
+  const setMock = useAuthStore((s) => s.setMock)
+  return (
+    <button
+      type="button"
+      className={`mock-toggle${mock ? ' on' : ''}`}
+      onClick={() => setMock(!mock)}
+    >
+      <span className="mt-dot" />
+      {mock ? 'Mode Demo (Mock) aktif — data lokal, tanpa server' : 'Mode API — klik untuk coba Mode Demo (Mock)'}
+    </button>
+  )
+}
+
 export default function Login() {
   const setAuth = useAuthStore((s) => s.setAuth)
+  const mock = useAuthStore((s) => s.mock)
   const [mode, setMode] = useState(null) // null | 'member' | 'tenant'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -68,6 +84,7 @@ export default function Login() {
           <div className="login-logo">BNI</div>
           <h1>BNI Natcon 2026</h1>
           <p>Mau akses aplikasi yang mana?</p>
+          <MockToggle />
           <div className="app-chooser">
             {APPS.map((a) =>
               a.kind === 'admin' ? (
@@ -162,6 +179,14 @@ export default function Login() {
             ))}
           </div>
         </div>
+
+        <MockToggle />
+        {mock && (
+          <p className="mock-note">
+            Mode demo: data tersimpan di perangkat ini saja, password diabaikan. Scan booth memakai kode
+            member demo (mis. NATCON-2026-08154).
+          </p>
+        )}
       </form>
     </div>
   )

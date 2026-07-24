@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth'
 
 function AppBar() {
   const logout = useAuthStore((s) => s.logout)
+  const mock = useAuthStore((s) => s.mock)
   return (
     <header className="appbar">
       <div className="brand">
@@ -14,9 +15,12 @@ function AppBar() {
           <p>Jakarta Convention Center</p>
         </div>
       </div>
-      <button className="logout-btn" onClick={logout}>
-        Keluar
-      </button>
+      <div className="appbar-right">
+        {mock && <span className="demo-chip">DEMO</span>}
+        <button className="logout-btn" onClick={logout}>
+          Keluar
+        </button>
+      </div>
     </header>
   )
 }

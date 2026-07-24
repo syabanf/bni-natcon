@@ -16,6 +16,12 @@ flat surfaces, single red accent).
 Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
 and pick another session in the same slot.
 
+**Demo mock mode**: a toggle button on the member/tenant login page switches
+the whole app to a localStorage-backed mock layer — no backend needed. State
+is shared across personas on the device (a booth scan shows up in that
+member's passport), a red DEMO chip marks the mode, and toggling back to API
+mode clears the session.
+
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
 ## Run it
