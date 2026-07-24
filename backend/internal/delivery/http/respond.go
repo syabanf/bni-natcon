@@ -27,8 +27,11 @@ func respondDomainError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		respondError(w, http.StatusUnauthorized, err.Error())
 	case errors.Is(err, domain.ErrSeminarFull),
-		errors.Is(err, domain.ErrAlreadyRegistered):
+		errors.Is(err, domain.ErrAlreadyRegistered),
+		errors.Is(err, domain.ErrEmailTaken):
 		respondError(w, http.StatusConflict, err.Error())
+	case errors.Is(err, domain.ErrInvalidInput):
+		respondError(w, http.StatusBadRequest, err.Error())
 	case errors.Is(err, domain.ErrForbidden):
 		respondError(w, http.StatusForbidden, err.Error())
 	default:

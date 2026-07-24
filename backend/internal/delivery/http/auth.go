@@ -55,9 +55,14 @@ func (j *JWTIssuer) Parse(token string) (userID int64, role domain.Role, err err
 	return userID, domain.Role(c.Role), nil
 }
 
-// BcryptVerifier implements usecase.PasswordVerifier.
+// BcryptVerifier implements usecase.PasswordVerifier and usecase.PasswordHasher.
 type BcryptVerifier struct{}
 
 func (BcryptVerifier) Verify(hash, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
+
+func (BcryptVerifier) Hash(password string) (string, error) {
+	b, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(b), err
 }

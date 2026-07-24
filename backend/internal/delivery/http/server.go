@@ -18,6 +18,7 @@ type Server struct {
 	scan    *usecase.ScanUsecase
 	seminar *usecase.SeminarUsecase
 	booth   *usecase.BoothUsecase
+	admin   *usecase.AdminUsecase
 }
 
 func NewServer(
@@ -27,8 +28,9 @@ func NewServer(
 	scan *usecase.ScanUsecase,
 	seminar *usecase.SeminarUsecase,
 	booth *usecase.BoothUsecase,
+	admin *usecase.AdminUsecase,
 ) *Server {
-	return &Server{jwt: jwt, auth: auth, member: member, scan: scan, seminar: seminar, booth: booth}
+	return &Server{jwt: jwt, auth: auth, member: member, scan: scan, seminar: seminar, booth: booth, admin: admin}
 }
 
 func (s *Server) Router() http.Handler {
@@ -38,8 +40,11 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173", "http://127.0.0.1:5173"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowedOrigins: []string{
+			"http://localhost:5173", "http://127.0.0.1:5173",
+			"http://localhost:5174", "http://127.0.0.1:5174",
+		},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	}))
 
@@ -67,6 +72,27 @@ func (s *Server) Router() http.Handler {
 				r.Get("/booth", s.handleBooth)
 				r.Get("/booth/stats", s.handleBoothStats)
 				r.Get("/booth/visitors", s.handleBoothVisitors)
+			})
+
+			r.Group(func(r chi.Router) {
+				r.Use(requireRole(domain.RoleAdmin))
+				r.Get("/admin/overview", s.handleAdminOverview)
+				r.Get("/admin/tenants", s.handleAdminTenants)
+				r.Get("/admin/seminars", s.handleAdminSeminars)
+				r.Get("/admin/activity", s.handleAdminActivity)
+
+				r.Get("/admin/members", s.handleAdminListMembers)
+				r.Post("/admin/members", s.handleAdminCreateMember)
+				r.Put("/admin/members/{id}", s.handleAdminUpdateMember)
+				r.Delete("/admin/members/{id}", s.handleAdminDeleteMember)
+
+				r.Post("/admin/tenants", s.handleAdminCreateTenant)
+				r.Put("/admin/tenants/{id}", s.handleAdminUpdateTenant)
+				r.Delete("/admin/tenants/{id}", s.handleAdminDeleteTenant)
+
+				r.Post("/admin/seminars", s.handleAdminCreateSeminar)
+				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
+				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 			})
 		})
 	})

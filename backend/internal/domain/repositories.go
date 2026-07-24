@@ -23,6 +23,29 @@ type VisitRepository interface {
 	RecentVisitors(ctx context.Context, tenantID int64, limit int) ([]Visitor, error)
 }
 
+type AdminRepository interface {
+	Overview(ctx context.Context) (*AdminOverview, error)
+	TenantRanking(ctx context.Context) ([]TenantScanCount, error)
+	SeminarFill(ctx context.Context) ([]SeminarFill, error)
+	RecentActivity(ctx context.Context, limit int) ([]ActivityItem, error)
+
+	// Master data. Create/Update return ErrEmailTaken on duplicate emails;
+	// Update/Delete return ErrNotFound for unknown ids. Deletes cascade to
+	// dependent rows (visits, registrations, booth login users).
+	ListMembers(ctx context.Context) ([]MemberSummary, error)
+	CreateMember(ctx context.Context, m NewMember) (*User, error)
+	UpdateMember(ctx context.Context, id int64, m MemberUpdate) error
+	DeleteMember(ctx context.Context, id int64) error
+
+	CreateTenant(ctx context.Context, t NewTenant) (*Tenant, error)
+	UpdateTenant(ctx context.Context, id int64, t TenantUpdate) error
+	DeleteTenant(ctx context.Context, id int64) error
+
+	CreateSeminar(ctx context.Context, s SeminarInput) (*Seminar, error)
+	UpdateSeminar(ctx context.Context, id int64, s SeminarInput) error
+	DeleteSeminar(ctx context.Context, id int64) error
+}
+
 type SeminarRepository interface {
 	ListWithStatus(ctx context.Context, memberID int64) ([]SeminarWithStatus, error)
 	// Register enforces capacity and one-registration-per-slot atomically.

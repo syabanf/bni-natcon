@@ -7,6 +7,7 @@ type Role string
 const (
 	RoleMember Role = "member"
 	RoleTenant Role = "tenant"
+	RoleAdmin  Role = "admin"
 )
 
 type User struct {
@@ -97,4 +98,85 @@ type ScanResult struct {
 	MemberCompany string
 	Duplicate     bool
 	Coupons       int
+}
+
+// AdminOverview aggregates event-wide numbers for the admin dashboard.
+type AdminOverview struct {
+	TotalMembers        int
+	TotalTenants        int
+	TotalVisits         int
+	VisitsToday         int
+	SeminarRegistrations int
+	MembersWithVisit    int
+}
+
+// TenantScanCount ranks a booth by collected scans.
+type TenantScanCount struct {
+	Tenant
+	ScanCount int
+}
+
+// SeminarFill is a seminar plus how many seats are taken.
+type SeminarFill struct {
+	Seminar
+	SeatsTaken int
+}
+
+// ActivityItem is one scan event across all booths, newest first.
+type ActivityItem struct {
+	MemberName string
+	Chapter    string
+	TenantName string
+	Booth      string
+	VisitedAt  time.Time
+}
+
+/* ----- Master data (admin CRUD) ----- */
+
+// MemberSummary is a member row in the admin master-data table.
+type MemberSummary struct {
+	User
+	Visits int
+}
+
+// NewMember carries admin input for creating a member. PasswordHash is set by
+// the usecase before it reaches the repository.
+type NewMember struct {
+	Name         string
+	Email        string
+	PasswordHash string
+	Chapter      string
+	Company      string
+}
+
+type MemberUpdate struct {
+	Name    string
+	Email   string
+	Chapter string
+	Company string
+}
+
+// NewTenant creates a booth plus its scanner login user.
+type NewTenant struct {
+	Name         string
+	Category     string
+	Booth        string
+	Initials     string
+	Email        string
+	PasswordHash string
+}
+
+type TenantUpdate struct {
+	Name     string
+	Category string
+	Booth    string
+	Initials string
+}
+
+type SeminarInput struct {
+	Slot     int
+	Room     string
+	Title    string
+	Speaker  string
+	Capacity int
 }
