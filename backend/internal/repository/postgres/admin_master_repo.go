@@ -199,6 +199,56 @@ func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.Semina
 	return nil
 }
 
+func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company,
+		       t.name, t.booth, v.created_at
+		FROM visits v
+		JOIN users u ON u.id = v.member_id
+		JOIN tenants t ON t.id = v.tenant_id
+		ORDER BY v.created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []domain.VisitReportRow
+	for rows.Next() {
+		var v domain.VisitReportRow
+		if err := rows.Scan(&v.MemberName, &v.MemberCode, &v.Chapter, &v.Company,
+			&v.TenantName, &v.Booth, &v.VisitedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, rows.Err()
+}
+
+func (r *AdminRepo) RegistrationReport(ctx context.Context) ([]domain.RegistrationReportRow, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.name, COALESCE(u.member_code, ''), u.chapter,
+		       s.slot, s.room, s.title, sr.created_at
+		FROM seminar_registrations sr
+		JOIN users u ON u.id = sr.member_id
+		JOIN seminars s ON s.id = sr.seminar_id
+		ORDER BY s.slot, s.room, sr.created_at`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []domain.RegistrationReportRow
+	for rows.Next() {
+		var v domain.RegistrationReportRow
+		if err := rows.Scan(&v.MemberName, &v.MemberCode, &v.Chapter,
+			&v.Slot, &v.Room, &v.SeminarTitle, &v.RegisteredAt); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, rows.Err()
+}
+
 func (r *AdminRepo) DeleteSeminar(ctx context.Context, id int64) error {
 	tag, err := r.pool.Exec(ctx, `DELETE FROM seminars WHERE id = $1`, id)
 	if err != nil {

@@ -180,3 +180,32 @@ type SeminarInput struct {
 	Speaker  string
 	Capacity int
 }
+
+// BulkRowError reports why one row of a bulk import failed.
+type BulkRowError struct {
+	Row   int
+	Label string
+	Err   string
+}
+
+// VisitReportRow is one line of the leads/visits report.
+type VisitReportRow struct {
+	MemberName string
+	MemberCode string
+	Chapter    string
+	Company    string
+	TenantName string
+	Booth      string
+	VisitedAt  time.Time
+}
+
+// RegistrationReportRow is one line of the seminar registration report.
+type RegistrationReportRow struct {
+	MemberName   string
+	MemberCode   string
+	Chapter      string
+	Slot         int
+	Room         string
+	SeminarTitle string
+	RegisteredAt time.Time
+}

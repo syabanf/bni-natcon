@@ -93,6 +93,11 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/seminars", s.handleAdminCreateSeminar)
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
+
+				r.Post("/admin/members/bulk", s.handleAdminBulkMembers)
+				r.Post("/admin/tenants/bulk", s.handleAdminBulkTenants)
+				r.Get("/admin/report/visits", s.handleAdminVisitReport)
+				r.Get("/admin/report/registrations", s.handleAdminRegistrationReport)
 			})
 		})
 	})

@@ -44,6 +44,9 @@ type AdminRepository interface {
 	CreateSeminar(ctx context.Context, s SeminarInput) (*Seminar, error)
 	UpdateSeminar(ctx context.Context, id int64, s SeminarInput) error
 	DeleteSeminar(ctx context.Context, id int64) error
+
+	VisitReport(ctx context.Context) ([]VisitReportRow, error)
+	RegistrationReport(ctx context.Context) ([]RegistrationReportRow, error)
 }
 
 type SeminarRepository interface {

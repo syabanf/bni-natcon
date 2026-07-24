@@ -6,9 +6,12 @@ their QR code, and register for parallel seminars. Tenants scan member QRs with
 their device camera and watch a live booth dashboard. A separate admin app
 gives the committee live monitoring plus master-data CRUD.
 
+All UI follows Swiss / International Typographic Style (Inter, hairline rules,
+flat surfaces, single red accent).
+
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.
-- **Admin** (`admin/`, port 5174): committee dashboard — React 18 + Vite (JS), Swiss-design UI. Live overview, booth ranking, seminar fill, activity feed, and master-data CRUD (peserta, tenant, seminar).
+- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for peserta/tenant (SheetJS; headers Nama/Email/Chapter/Perusahaan or Nama/Kategori/Booth), and **Laporan** page with Excel export (leads tenant, registrasi seminar, kupon peserta).
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 

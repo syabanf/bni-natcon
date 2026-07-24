@@ -145,6 +145,59 @@ func (u *AdminUsecase) DeleteSeminar(ctx context.Context, id int64) error {
 	return u.admin.DeleteSeminar(ctx, id)
 }
 
+/* ----- Bulk import ----- */
+
+type MemberImportRow struct {
+	Name    string
+	Email   string
+	Chapter string
+	Company string
+}
+
+func (u *AdminUsecase) BulkCreateMembers(ctx context.Context, rows []MemberImportRow) (int, []domain.BulkRowError) {
+	created := 0
+	var errs []domain.BulkRowError
+	for i, row := range rows {
+		if _, err := u.CreateMember(ctx, row.Name, row.Email, "", row.Chapter, row.Company); err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: err.Error()})
+			continue
+		}
+		created++
+	}
+	return created, errs
+}
+
+type TenantImportRow struct {
+	Name     string
+	Category string
+	Booth    string
+	Initials string
+	Email    string
+}
+
+func (u *AdminUsecase) BulkCreateTenants(ctx context.Context, rows []TenantImportRow) (int, []domain.BulkRowError) {
+	created := 0
+	var errs []domain.BulkRowError
+	for i, row := range rows {
+		if _, err := u.CreateTenant(ctx, row.Name, row.Category, row.Booth, row.Initials, row.Email, ""); err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
+			continue
+		}
+		created++
+	}
+	return created, errs
+}
+
+/* ----- Reports ----- */
+
+func (u *AdminUsecase) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {
+	return u.admin.VisitReport(ctx)
+}
+
+func (u *AdminUsecase) RegistrationReport(ctx context.Context) ([]domain.RegistrationReportRow, error) {
+	return u.admin.RegistrationReport(ctx)
+}
+
 func validateSeminar(s *domain.SeminarInput) error {
 	s.Room, s.Title = strings.TrimSpace(s.Room), strings.TrimSpace(s.Title)
 	s.Speaker = strings.TrimSpace(s.Speaker)

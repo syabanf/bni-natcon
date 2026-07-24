@@ -1,30 +1,30 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
+import Modal from './Modal'
+import { parseSheet } from './excel'
 
 /*
- * Master data CRUD: Peserta / Tenant / Seminar.
- * One generic section component per entity: table + inline add/edit form.
+ * Master data pages: Peserta / Tenant / Seminar.
+ * CRUD runs through modal popups; Peserta & Tenant support Excel import.
  */
 
-const TABS = [
-  { key: 'members', label: 'Peserta' },
-  { key: 'tenants', label: 'Tenant' },
-  { key: 'seminars', label: 'Seminar' },
-]
-
-function Field({ label, ...props }) {
+function Field({ label, hint, ...props }) {
   return (
     <label className="md-field">
-      {label}
+      <span>
+        {label}
+        {hint && <em> — {hint}</em>}
+      </span>
       <input {...props} />
     </label>
   )
 }
 
-function useCrud({ list, create, update, remove, empty }) {
+function useCrud({ list, create, update, remove }) {
   const [rows, setRows] = useState([])
-  const [form, setForm] = useState(null) // null | {..., id?} (id => editing)
+  const [form, setForm] = useState(null) // null | object (id present => edit)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => {
@@ -44,8 +44,10 @@ function useCrud({ list, create, update, remove, empty }) {
     try {
       if (form.id) {
         await update(form.id, form)
+        setNotice('Perubahan tersimpan.')
       } else {
         await create(form)
+        setNotice('Data berhasil ditambahkan.')
       }
       setForm(null)
       load()
@@ -61,48 +63,99 @@ function useCrud({ list, create, update, remove, empty }) {
     setError('')
     try {
       await remove(id)
+      setNotice(`${label} dihapus.`)
       load()
     } catch (err) {
       setError(err.message)
     }
   }
 
-  return { rows, form, setForm, error, busy, submit, del, empty }
+  return { rows, form, setForm, error, setError, notice, setNotice, busy, submit, del, load }
 }
 
-function SectionShell({ no, title, sub, crud, addLabel, children, renderForm }) {
+function ImportButton({ label, aliases, upload, onDone }) {
+  const inputRef = useRef(null)
+  const [busy, setBusy] = useState(false)
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    try {
+      const rows = (await parseSheet(file, aliases)).filter((r) => Object.values(r).some(Boolean))
+      if (rows.length === 0) {
+        onDone({ error: 'File kosong atau header tidak dikenali.' })
+        return
+      }
+      const res = await upload(rows)
+      onDone(res)
+    } catch (err) {
+      onDone({ error: err.message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="panel">
-      <div className="md-head">
-        <div>
-          <h2>
-            <span className="sec-no">{no}</span>
-            {title}
-          </h2>
-          <p className="panel-sub">{sub}</p>
-        </div>
-        {!crud.form && (
-          <button className="md-add" onClick={() => crud.setForm({ ...crud.empty })}>
-            + {addLabel}
-          </button>
-        )}
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        style={{ display: 'none' }}
+        onChange={onFile}
+      />
+      <button className="md-secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
+        {busy ? 'Mengimpor…' : `⇪ ${label}`}
+      </button>
+    </>
+  )
+}
+
+function PageHead({ title, sub, children }) {
+  return (
+    <div className="content-head">
+      <div>
+        <h1>{title}</h1>
+        <p className="micro">{sub}</p>
       </div>
-      {crud.error && <div className="error">{crud.error}</div>}
-      {crud.form && (
-        <form className="md-form" onSubmit={crud.submit}>
-          {renderForm(crud.form, (patch) => crud.setForm({ ...crud.form, ...patch }))}
-          <div className="md-form-actions">
-            <button className="btn" disabled={crud.busy} type="submit">
-              {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
-            </button>
-            <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
-              Batal
-            </button>
-          </div>
-        </form>
-      )}
-      {children}
+      <div className="head-right">{children}</div>
     </div>
+  )
+}
+
+function Notices({ crud, importResult, clearImport }) {
+  return (
+    <>
+      {crud.error && (
+        <div className="error" onClick={() => crud.setError('')}>
+          {crud.error}
+        </div>
+      )}
+      {crud.notice && (
+        <div className="notice" onClick={() => crud.setNotice('')}>
+          {crud.notice}
+        </div>
+      )}
+      {importResult && (
+        <div className={importResult.error ? 'error' : 'notice'} onClick={clearImport}>
+          {importResult.error
+            ? `Import gagal: ${importResult.error}`
+            : `Import selesai — ${importResult.created} dibuat, ${importResult.failed} gagal.`}
+          {importResult.errors?.length > 0 && (
+            <ul>
+              {importResult.errors.slice(0, 5).map((e) => (
+                <li key={e.row}>
+                  Baris {e.row} ({e.label}): {e.error}
+                </li>
+              ))}
+              {importResult.errors.length > 5 && <li>… {importResult.errors.length - 5} lainnya</li>}
+            </ul>
+          )}
+        </div>
+      )}
+    </>
   )
 }
 
@@ -117,31 +170,44 @@ function RowActions({ onEdit, onDelete }) {
   )
 }
 
-function MembersSection() {
+/* ================= Peserta ================= */
+
+export function MembersPage() {
   const crud = useCrud({
     list: () => api.members().then((d) => d.members || []),
     create: (f) => api.createMember(f),
     update: (id, f) => api.updateMember(id, f),
     remove: (id) => api.deleteMember(id),
-    empty: { name: '', email: '', chapter: '', company: '' },
   })
+  const [importResult, setImportResult] = useState(null)
 
   return (
-    <SectionShell
-      no="01"
-      title="Peserta"
-      sub="Member code & password default (natcon2026) dibuat otomatis"
-      crud={crud}
-      addLabel="Tambah Peserta"
-      renderForm={(f, set) => (
-        <>
-          <Field label="Nama" value={f.name} onChange={(e) => set({ name: e.target.value })} required />
-          <Field label="Email" type="email" value={f.email} onChange={(e) => set({ email: e.target.value })} required />
-          <Field label="Chapter" value={f.chapter} onChange={(e) => set({ chapter: e.target.value })} />
-          <Field label="Perusahaan" value={f.company} onChange={(e) => set({ company: e.target.value })} />
-        </>
-      )}
-    >
+    <>
+      <PageHead title="Master Data — Peserta" sub="Member code & password default dibuat otomatis">
+        <ImportButton
+          label="Import Excel"
+          aliases={{
+            name: ['nama', 'name'],
+            email: ['email', 'e-mail'],
+            chapter: ['chapter'],
+            company: ['perusahaan', 'company', 'bisnis'],
+          }}
+          upload={(rows) => api.bulkMembers(rows)}
+          onDone={(res) => {
+            setImportResult(res)
+            crud.load()
+          }}
+        />
+        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '' })}>
+          + Tambah Peserta
+        </button>
+      </PageHead>
+      <p className="import-hint">
+        Format Excel: kolom <b>Nama</b>, <b>Email</b>, <b>Chapter</b>, <b>Perusahaan</b> (baris pertama = header).
+      </p>
+
+      <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
+
       <table className="md-table">
         <thead>
           <tr>
@@ -174,38 +240,72 @@ function MembersSection() {
           ))}
         </tbody>
       </table>
-    </SectionShell>
+
+      {crud.form && (
+        <Modal title={crud.form.id ? 'Ubah Peserta' : 'Tambah Peserta'} onClose={() => crud.setForm(null)}>
+          <form className="modal-form" onSubmit={crud.submit}>
+            <Field label="Nama" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
+            <Field label="Email" type="email" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} required />
+            <Field label="Chapter" value={crud.form.chapter} onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })} />
+            <Field label="Perusahaan" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
+            {crud.error && <div className="error">{crud.error}</div>}
+            <div className="modal-actions">
+              <button className="btn" disabled={crud.busy} type="submit">
+                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+              </button>
+              <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
+                Batal
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   )
 }
 
-function TenantsSection() {
+/* ================= Tenant ================= */
+
+export function TenantsPage() {
   const crud = useCrud({
     list: () => api.tenants().then((d) => d.tenants || []),
     create: (f) => api.createTenant(f),
     update: (id, f) => api.updateTenant(id, f),
     remove: (id) => api.deleteTenant(id),
-    empty: { name: '', category: '', booth: '', initials: '', email: '' },
   })
+  const [importResult, setImportResult] = useState(null)
 
   return (
-    <SectionShell
-      no="02"
-      title="Tenant"
-      sub="Akun scanner booth (booth-xxx@natcon.id / natcon2026) dibuat otomatis"
-      crud={crud}
-      addLabel="Tambah Tenant"
-      renderForm={(f, set) => (
-        <>
-          <Field label="Nama" value={f.name} onChange={(e) => set({ name: e.target.value })} required />
-          <Field label="Kategori" value={f.category} onChange={(e) => set({ category: e.target.value })} />
-          <Field label="Booth" value={f.booth} onChange={(e) => set({ booth: e.target.value })} placeholder="A-03" required />
-          <Field label="Inisial" value={f.initials} onChange={(e) => set({ initials: e.target.value })} placeholder="otomatis" />
-          {!f.id && (
-            <Field label="Email login (opsional)" value={f.email} onChange={(e) => set({ email: e.target.value })} placeholder="otomatis dari booth" />
-          )}
-        </>
-      )}
-    >
+    <>
+      <PageHead title="Master Data — Tenant" sub="Akun scanner booth dibuat otomatis (booth-xxx@natcon.id)">
+        <ImportButton
+          label="Import Excel"
+          aliases={{
+            name: ['nama', 'name'],
+            category: ['kategori', 'category'],
+            booth: ['booth'],
+            initials: ['inisial', 'initials'],
+            email: ['email', 'e-mail'],
+          }}
+          upload={(rows) => api.bulkTenants(rows)}
+          onDone={(res) => {
+            setImportResult(res)
+            crud.load()
+          }}
+        />
+        <button
+          className="md-add"
+          onClick={() => crud.setForm({ name: '', category: '', booth: '', initials: '', email: '' })}
+        >
+          + Tambah Tenant
+        </button>
+      </PageHead>
+      <p className="import-hint">
+        Format Excel: kolom <b>Nama</b>, <b>Kategori</b>, <b>Booth</b>, <b>Inisial</b> (opsional), <b>Email</b> (opsional).
+      </p>
+
+      <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
+
       <table className="md-table">
         <thead>
           <tr>
@@ -236,36 +336,56 @@ function TenantsSection() {
           ))}
         </tbody>
       </table>
-    </SectionShell>
+
+      {crud.form && (
+        <Modal title={crud.form.id ? 'Ubah Tenant' : 'Tambah Tenant'} onClose={() => crud.setForm(null)}>
+          <form className="modal-form" onSubmit={crud.submit}>
+            <Field label="Nama" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
+            <Field label="Kategori" value={crud.form.category} onChange={(e) => crud.setForm({ ...crud.form, category: e.target.value })} />
+            <Field label="Booth" value={crud.form.booth} onChange={(e) => crud.setForm({ ...crud.form, booth: e.target.value })} placeholder="A-03" required />
+            <Field label="Inisial" hint="kosongkan untuk otomatis" value={crud.form.initials} onChange={(e) => crud.setForm({ ...crud.form, initials: e.target.value })} />
+            {!crud.form.id && (
+              <Field label="Email login" hint="kosongkan untuk otomatis" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} />
+            )}
+            {crud.error && <div className="error">{crud.error}</div>}
+            <div className="modal-actions">
+              <button className="btn" disabled={crud.busy} type="submit">
+                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+              </button>
+              <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
+                Batal
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   )
 }
 
-function SeminarsSection() {
+/* ================= Seminar ================= */
+
+export function SeminarsPage() {
   const crud = useCrud({
     list: () => api.seminars().then((d) => d.seminars || []),
     create: (f) => api.createSeminar({ ...f, slot: +f.slot, capacity: +f.capacity }),
     update: (id, f) => api.updateSeminar(id, { ...f, slot: +f.slot, capacity: +f.capacity }),
     remove: (id) => api.deleteSeminar(id),
-    empty: { slot: 1, room: '', title: '', speaker: '', capacity: 40 },
   })
 
   return (
-    <SectionShell
-      no="03"
-      title="Seminar"
-      sub="Sesi paralel — peserta hanya bisa memilih satu seminar per slot"
-      crud={crud}
-      addLabel="Tambah Seminar"
-      renderForm={(f, set) => (
-        <>
-          <Field label="Slot" type="number" min="1" value={f.slot} onChange={(e) => set({ slot: e.target.value })} required />
-          <Field label="Ruang" value={f.room} onChange={(e) => set({ room: e.target.value })} required />
-          <Field label="Judul" value={f.title} onChange={(e) => set({ title: e.target.value })} required />
-          <Field label="Pembicara" value={f.speaker} onChange={(e) => set({ speaker: e.target.value })} />
-          <Field label="Kapasitas" type="number" min="1" value={f.capacity} onChange={(e) => set({ capacity: e.target.value })} required />
-        </>
-      )}
-    >
+    <>
+      <PageHead title="Master Data — Seminar" sub="Peserta hanya bisa memilih satu seminar per slot">
+        <button
+          className="md-add"
+          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', capacity: 40 })}
+        >
+          + Tambah Seminar
+        </button>
+      </PageHead>
+
+      <Notices crud={crud} importResult={null} clearImport={() => {}} />
+
       <table className="md-table">
         <thead>
           <tr>
@@ -277,51 +397,53 @@ function SeminarsSection() {
           </tr>
         </thead>
         <tbody>
-          {crud.rows.map((s) => (
-            <tr key={s.id}>
-              <td className="mono">#{s.slot}</td>
+          {crud.rows.map((sm) => (
+            <tr key={sm.id}>
+              <td className="mono">#{sm.slot}</td>
               <td>
-                <b>{s.room}</b>
+                <b>{sm.room}</b>
               </td>
               <td>
-                <b>{s.title}</b>
-                <small>{s.speaker}</small>
+                <b>{sm.title}</b>
+                <small>{sm.speaker}</small>
               </td>
               <td className="num">
-                {s.seats_taken}/{s.capacity}
+                {sm.seats_taken}/{sm.capacity}
               </td>
               <RowActions
                 onEdit={() =>
                   crud.setForm({
-                    id: s.id, slot: s.slot, room: s.room, title: s.title,
-                    speaker: s.speaker, capacity: s.capacity,
+                    id: sm.id, slot: sm.slot, room: sm.room, title: sm.title,
+                    speaker: sm.speaker, capacity: sm.capacity,
                   })
                 }
-                onDelete={() => crud.del(s.id, s.title)}
+                onDelete={() => crud.del(sm.id, sm.title)}
               />
             </tr>
           ))}
         </tbody>
       </table>
-    </SectionShell>
-  )
-}
 
-export default function MasterData() {
-  const [tab, setTab] = useState('members')
-
-  return (
-    <div>
-      <div className="md-tabs">
-        {TABS.map((t) => (
-          <button key={t.key} className={tab === t.key ? 'active' : ''} onClick={() => setTab(t.key)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {tab === 'members' && <MembersSection />}
-      {tab === 'tenants' && <TenantsSection />}
-      {tab === 'seminars' && <SeminarsSection />}
-    </div>
+      {crud.form && (
+        <Modal title={crud.form.id ? 'Ubah Seminar' : 'Tambah Seminar'} onClose={() => crud.setForm(null)}>
+          <form className="modal-form" onSubmit={crud.submit}>
+            <Field label="Slot" type="number" min="1" value={crud.form.slot} onChange={(e) => crud.setForm({ ...crud.form, slot: e.target.value })} required />
+            <Field label="Ruang" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />
+            <Field label="Judul" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
+            <Field label="Pembicara" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
+            <Field label="Kapasitas" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            {crud.error && <div className="error">{crud.error}</div>}
+            <div className="modal-actions">
+              <button className="btn" disabled={crud.busy} type="submit">
+                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+              </button>
+              <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
+                Batal
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   )
 }

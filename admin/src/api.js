@@ -58,4 +58,9 @@ export const api = {
   createSeminar: (body) => request('/admin/seminars', { method: 'POST', body }),
   updateSeminar: (id, body) => request(`/admin/seminars/${id}`, { method: 'PUT', body }),
   deleteSeminar: (id) => request(`/admin/seminars/${id}`, { method: 'DELETE' }),
+
+  bulkMembers: (members) => request('/admin/members/bulk', { method: 'POST', body: { members } }),
+  bulkTenants: (tenants) => request('/admin/tenants/bulk', { method: 'POST', body: { tenants } }),
+  visitReport: () => request('/admin/report/visits'),
+  registrationReport: () => request('/admin/report/registrations'),
 }
