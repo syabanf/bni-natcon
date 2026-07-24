@@ -339,7 +339,14 @@ export const mockApi = {
       .map((id) => {
         const p = resolve(id)
         return p
-          ? { name: p.name, chapter: p.chapter || '', company: p.company || '', saved_at: times[id] || null }
+          ? {
+              member_id: id,
+              name: p.name,
+              chapter: p.chapter || '',
+              company: p.company || '',
+              member_code: p.member_code || '',
+              saved_at: times[id] || null,
+            }
           : null
       })
       .filter(Boolean)
@@ -351,6 +358,55 @@ export const mockApi = {
         joined_at: t.at,
       })),
       contacts,
+    })
+  },
+
+  networkingTableDetail(tableNo) {
+    const n = Number(tableNo)
+    if (!n || n < 1 || n > 12) return fail(404, 'not found')
+    const state = loadState()
+    const myCode = currentUser?.member_code
+    const savedSet = new Set(state.contacts[myCode] || [])
+    let seat = 0
+    const members = [
+      ...MOCK_MEMBERS.filter((m) => state.seats[m.member_code] === n).map((m) => ({
+        member_id: m.member_code, name: m.name, chapter: m.chapter, company: m.company,
+        seat_no: ++seat, is_me: m.member_code === myCode, saved: savedSet.has(m.member_code),
+      })),
+      ...(FAKE_MATES[n] || []).map((f) => ({
+        member_id: f.id, name: f.name, chapter: f.chapter, company: f.company,
+        seat_no: ++seat, is_me: false, saved: savedSet.has(f.id),
+      })),
+    ]
+    return delay({
+      table: { table_no: n, hall: 'Hall B', capacity: 8, occupied: members.length },
+      members,
+    })
+  },
+
+  networkingContactDetail(id) {
+    const state = loadState()
+    const myCode = currentUser?.member_code
+    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'not found')
+    const allFakes = Object.values(FAKE_MATES).flat()
+    const person =
+      MOCK_MEMBERS.find((m) => m.member_code === id) || allFakes.find((f) => f.id === id)
+    if (!person) return fail(404, 'not found')
+    // Fake personas "sit" at their home table; real members use live seats.
+    let currentTable = 0
+    const fakeHome = Object.entries(FAKE_MATES).find(([, list]) => list.some((f) => f.id === id))
+    if (fakeHome) currentTable = Number(fakeHome[0])
+    if (person.member_code && state.seats[person.member_code]) {
+      currentTable = state.seats[person.member_code]
+    }
+    return delay({
+      member_id: id,
+      name: person.name,
+      chapter: person.chapter || '',
+      company: person.company || '',
+      member_code: person.member_code || '',
+      saved_at: (state.contactTimes[myCode] || {})[id] || null,
+      current_table_no: currentTable,
     })
   },
 

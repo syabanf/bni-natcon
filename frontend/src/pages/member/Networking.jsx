@@ -66,8 +66,154 @@ function fmtTime(iso) {
   })
 }
 
+function TableHistoryDetail({ tableNo, onBack }) {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+
+  const load = () =>
+    api
+      .networkingTableDetail(tableNo)
+      .then(setData)
+      .catch((e) => setError(e.message))
+
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableNo])
+
+  const save = async (m) => {
+    try {
+      await api.saveContact(m.member_id)
+      toast('Kontak tersimpan')
+      await load()
+    } catch (err) {
+      toast(err.message)
+    }
+  }
+
+  return (
+    <>
+      <div className="hero-greet">
+        <button type="button" className="back-link" onClick={onBack}>
+          ← Kembali ke riwayat
+        </button>
+        <h2>Detail Meja {tableNo}</h2>
+        <p>{data ? `${data.table.hall} · ${data.table.occupied}/${data.table.capacity} kursi terisi saat ini` : 'Memuat…'}</p>
+      </div>
+      {error && <div className="empty-note">{error}</div>}
+      {data && (
+        <>
+          <div className="section-title" style={{ margin: '24px 20px 12px' }}>
+            Penghuni meja saat ini
+          </div>
+          <div className="net-list" style={{ marginTop: 0 }}>
+            {data.members.map((m) => (
+              <div key={m.member_id} className={`net-person${m.is_me ? ' is-me' : ''}`}>
+                <div className="np-av">{initials(m.name)}</div>
+                <div className="np-info">
+                  <h5>
+                    {m.name}
+                    {m.is_me && (
+                      <span className="pill red" style={{ marginLeft: 6, fontSize: 9.5, padding: '2px 8px' }}>
+                        KAMU
+                      </span>
+                    )}
+                  </h5>
+                  <p>{m.company || m.chapter}</p>
+                </div>
+                {!m.is_me &&
+                  (m.saved ? (
+                    <span className="np-save saved">Tersimpan</span>
+                  ) : (
+                    <button className="np-save" onClick={() => save(m)}>
+                      + Simpan
+                    </button>
+                  ))}
+              </div>
+            ))}
+            {data.members.length === 0 && (
+              <div className="empty-note">Meja ini sedang kosong.</div>
+            )}
+          </div>
+        </>
+      )}
+      <div style={{ height: 24 }} />
+    </>
+  )
+}
+
+function ContactHistoryDetail({ contactId, onBack }) {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api
+      .networkingContactDetail(contactId)
+      .then(setData)
+      .catch((e) => setError(e.message))
+  }, [contactId])
+
+  return (
+    <>
+      <div className="hero-greet">
+        <button type="button" className="back-link" onClick={onBack}>
+          ← Kembali ke riwayat
+        </button>
+        <h2>Detail Kontak</h2>
+        <p>Simpanan dari speed networking — siap untuk follow-up 1-on-1.</p>
+      </div>
+      {error && <div className="empty-note">{error}</div>}
+      {data && (
+        <>
+          <div className="contact-card">
+            <div className="cc-avatar">{initials(data.name)}</div>
+            <h3>{data.name}</h3>
+            <p className="cc-biz">{data.company || '—'}</p>
+            {data.chapter && <span className="pill red">{data.chapter}</span>}
+          </div>
+          <div className="net-list" style={{ marginTop: 14 }}>
+            {data.member_code && (
+              <div className="net-person">
+                <div className="np-av history">ID</div>
+                <div className="np-info">
+                  <h5>Member Code</h5>
+                  <p>{data.member_code}</p>
+                </div>
+              </div>
+            )}
+            <div className="net-person">
+              <div className="np-av history">
+                <Icon name="save" size={16} />
+              </div>
+              <div className="np-info">
+                <h5>Disimpan pada</h5>
+                <p>{fmtTime(data.saved_at)}</p>
+              </div>
+            </div>
+            <div className="net-person">
+              <div className="np-av history">
+                <Icon name="users" size={16} />
+              </div>
+              <div className="np-info">
+                <h5>Posisi sekarang</h5>
+                <p>
+                  {data.current_table_no
+                    ? `Meja ${data.current_table_no} · Hall B`
+                    : 'Sedang tidak di meja networking'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      <div style={{ height: 24 }} />
+    </>
+  )
+}
+
 function HistoryView({ onBack }) {
   const [history, setHistory] = useState(null)
+  const [detail, setDetail] = useState(null) // null | {type:'table',tableNo} | {type:'contact',id}
 
   useEffect(() => {
     api
@@ -75,6 +221,13 @@ function HistoryView({ onBack }) {
       .then(setHistory)
       .catch(() => setHistory({ tables: [], contacts: [] }))
   }, [])
+
+  if (detail?.type === 'table') {
+    return <TableHistoryDetail tableNo={detail.tableNo} onBack={() => setDetail(null)} />
+  }
+  if (detail?.type === 'contact') {
+    return <ContactHistoryDetail contactId={detail.id} onBack={() => setDetail(null)} />
+  }
 
   if (!history) return <div className="loading-note">Memuat riwayat…</div>
 
@@ -85,7 +238,7 @@ function HistoryView({ onBack }) {
           ← Kembali ke Speed Networking
         </button>
         <h2>Riwayat Networking</h2>
-        <p>Meja yang pernah kamu ikuti dan kontak yang tersimpan.</p>
+        <p>Ketuk meja atau kontak untuk melihat detailnya.</p>
       </div>
 
       <div className="section-title" style={{ margin: '24px 20px 12px' }}>
@@ -96,14 +249,19 @@ function HistoryView({ onBack }) {
       </div>
       <div className="net-list" style={{ marginTop: 0 }}>
         {history.tables.map((t, i) => (
-          <div className="net-person" key={`${t.table_no}-${t.joined_at}-${i}`}>
+          <button
+            className="net-person clickable"
+            key={`${t.table_no}-${t.joined_at}-${i}`}
+            onClick={() => setDetail({ type: 'table', tableNo: t.table_no })}
+          >
             <div className="np-av history">{t.table_no}</div>
             <div className="np-info">
               <h5>Meja {t.table_no}</h5>
               <p>{t.hall}</p>
             </div>
             <span className="np-time">{fmtTime(t.joined_at)}</span>
-          </div>
+            <span className="np-arrow">→</span>
+          </button>
         ))}
         {history.tables.length === 0 && (
           <div className="empty-note">Belum pernah check-in meja — mulai dari halaman Speed Networking.</div>
@@ -118,14 +276,19 @@ function HistoryView({ onBack }) {
       </div>
       <div className="net-list" style={{ marginTop: 0 }}>
         {history.contacts.map((c, i) => (
-          <div className="net-person" key={`${c.name}-${i}`}>
+          <button
+            className="net-person clickable"
+            key={`${c.member_id}-${i}`}
+            onClick={() => setDetail({ type: 'contact', id: c.member_id })}
+          >
             <div className="np-av">{initials(c.name)}</div>
             <div className="np-info">
               <h5>{c.name}</h5>
               <p>{c.company || c.chapter}</p>
             </div>
             <span className="np-time">{fmtTime(c.saved_at)}</span>
-          </div>
+            <span className="np-arrow">→</span>
+          </button>
         ))}
         {history.contacts.length === 0 && (
           <div className="empty-note">Belum ada kontak tersimpan — simpan teman semejamu!</div>

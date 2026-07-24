@@ -72,6 +72,8 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/seminars/{id}/register", s.handleUnregisterSeminar)
 				r.Get("/networking", s.handleNetworkingStatus)
 				r.Get("/networking/history", s.handleNetworkingHistory)
+				r.Get("/networking/tables/{id}", s.handleNetworkingTableDetail)
+				r.Get("/networking/contacts/{id}", s.handleNetworkingContactDetail)
 				r.Post("/networking/checkin", s.handleNetworkingCheckIn)
 				r.Post("/networking/contacts", s.handleNetworkingSaveContact)
 				r.Post("/networking/contacts/all", s.handleNetworkingSaveAll)

@@ -290,10 +290,29 @@ type TableHistoryRow struct {
 }
 
 type SavedContact struct {
-	Name    string
-	Chapter string
-	Company string
-	SavedAt time.Time
+	MemberID   int64
+	Name       string
+	Chapter    string
+	Company    string
+	MemberCode string
+	SavedAt    time.Time
+}
+
+// TableDetail is one networking table plus everyone currently seated there.
+type TableDetail struct {
+	Table   NetworkingTable
+	Members []TableMate
+}
+
+// ContactDetail is a saved contact's profile for the history view.
+type ContactDetail struct {
+	MemberID       int64
+	Name           string
+	Chapter        string
+	Company        string
+	MemberCode     string
+	SavedAt        time.Time
+	CurrentTableNo int // 0 when not checked in anywhere
 }
 
 // NetworkingHistory backs the member's "riwayat" view: which tables they

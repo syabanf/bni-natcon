@@ -36,3 +36,14 @@ func (u *NetworkingUsecase) SaveAll(ctx context.Context, memberID int64) (int, e
 func (u *NetworkingUsecase) History(ctx context.Context, memberID int64) (*domain.NetworkingHistory, error) {
 	return u.networking.History(ctx, memberID)
 }
+
+func (u *NetworkingUsecase) TableDetail(ctx context.Context, memberID int64, tableNo int) (*domain.TableDetail, error) {
+	if tableNo <= 0 {
+		return nil, domain.ErrNotFound
+	}
+	return u.networking.TableDetail(ctx, memberID, tableNo)
+}
+
+func (u *NetworkingUsecase) ContactDetail(ctx context.Context, ownerID, contactID int64) (*domain.ContactDetail, error) {
+	return u.networking.ContactDetail(ctx, ownerID, contactID)
+}

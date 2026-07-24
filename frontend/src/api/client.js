@@ -56,6 +56,10 @@ export const api = {
   networking: () => (isMock() ? mockApi.networking() : request('/networking')),
   networkingHistory: () =>
     isMock() ? mockApi.networkingHistory() : request('/networking/history'),
+  networkingTableDetail: (tableNo) =>
+    isMock() ? mockApi.networkingTableDetail(tableNo) : request(`/networking/tables/${tableNo}`),
+  networkingContactDetail: (id) =>
+    isMock() ? mockApi.networkingContactDetail(id) : request(`/networking/contacts/${id}`),
   networkingCheckIn: (tableNo) =>
     isMock()
       ? mockApi.networkingCheckIn(tableNo)

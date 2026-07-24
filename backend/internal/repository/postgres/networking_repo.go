@@ -160,7 +160,7 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	}
 
 	contactRows, err := r.pool.Query(ctx, `
-		SELECT u.name, u.chapter, u.company, nc.created_at
+		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.created_at
 		FROM networking_contacts nc
 		JOIN users u ON u.id = nc.contact_id
 		WHERE nc.owner_id = $1
@@ -171,12 +171,75 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	defer contactRows.Close()
 	for contactRows.Next() {
 		var c domain.SavedContact
-		if err := contactRows.Scan(&c.Name, &c.Chapter, &c.Company, &c.SavedAt); err != nil {
+		if err := contactRows.Scan(&c.MemberID, &c.Name, &c.Chapter, &c.Company, &c.MemberCode, &c.SavedAt); err != nil {
 			return nil, err
 		}
 		h.Contacts = append(h.Contacts, c)
 	}
 	return h, contactRows.Err()
+}
+
+func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableNo int) (*domain.TableDetail, error) {
+	d := &domain.TableDetail{}
+	var tableID int64
+	err := r.pool.QueryRow(ctx, `
+		SELECT t.id, t.table_no, t.hall, t.capacity,
+		       (SELECT COUNT(*) FROM networking_checkins c WHERE c.table_id = t.id)
+		FROM networking_tables t WHERE t.table_no = $1`, tableNo).
+		Scan(&tableID, &d.Table.TableNo, &d.Table.Hall, &d.Table.Capacity, &d.Table.Occupied)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	d.Table.ID = tableID
+
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.id, u.name, u.chapter, u.company, c.seat_no,
+		       (u.id = $1) AS is_me,
+		       EXISTS (
+		           SELECT 1 FROM networking_contacts nc
+		           WHERE nc.owner_id = $1 AND nc.contact_id = u.id
+		       ) AS saved
+		FROM networking_checkins c
+		JOIN users u ON u.id = c.member_id
+		WHERE c.table_id = $2
+		ORDER BY c.seat_no`, memberID, tableID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var m domain.TableMate
+		if err := rows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved); err != nil {
+			return nil, err
+		}
+		d.Members = append(d.Members, m)
+	}
+	return d, rows.Err()
+}
+
+func (r *NetworkingRepo) ContactDetail(ctx context.Context, ownerID, contactID int64) (*domain.ContactDetail, error) {
+	var d domain.ContactDetail
+	err := r.pool.QueryRow(ctx, `
+		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.created_at,
+		       COALESCE((
+		           SELECT t.table_no FROM networking_checkins c
+		           JOIN networking_tables t ON t.id = c.table_id
+		           WHERE c.member_id = u.id
+		       ), 0)
+		FROM networking_contacts nc
+		JOIN users u ON u.id = nc.contact_id
+		WHERE nc.owner_id = $1 AND nc.contact_id = $2`, ownerID, contactID).
+		Scan(&d.MemberID, &d.Name, &d.Chapter, &d.Company, &d.MemberCode, &d.SavedAt, &d.CurrentTableNo)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &d, nil
 }
 
 func (r *NetworkingRepo) SaveContact(ctx context.Context, ownerID, contactID int64) error {

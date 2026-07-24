@@ -68,6 +68,12 @@ type NetworkingRepository interface {
 	SaveAllTableMates(ctx context.Context, memberID int64) (int, error)
 	// History returns the member's table check-in log and saved contacts.
 	History(ctx context.Context, memberID int64) (*NetworkingHistory, error)
+	// TableDetail returns a table plus its current occupants, with saved
+	// flags relative to memberID. ErrNotFound for unknown table numbers.
+	TableDetail(ctx context.Context, memberID int64, tableNo int) (*TableDetail, error)
+	// ContactDetail returns one of the member's saved contacts;
+	// ErrNotFound when the contact was never saved by this member.
+	ContactDetail(ctx context.Context, ownerID, contactID int64) (*ContactDetail, error)
 }
 
 type SeminarRepository interface {

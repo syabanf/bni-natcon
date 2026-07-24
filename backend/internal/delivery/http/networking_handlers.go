@@ -86,10 +86,56 @@ func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request)
 	contacts := make([]map[string]any, 0, len(h.Contacts))
 	for _, c := range h.Contacts {
 		contacts = append(contacts, map[string]any{
-			"name": c.Name, "chapter": c.Chapter, "company": c.Company, "saved_at": c.SavedAt,
+			"member_id": c.MemberID, "name": c.Name, "chapter": c.Chapter,
+			"company": c.Company, "member_code": c.MemberCode, "saved_at": c.SavedAt,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tables": tables, "contacts": contacts})
+}
+
+func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Request) {
+	tableNo, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "invalid table number")
+		return
+	}
+	d, err := s.networking.TableDetail(r.Context(), userIDFrom(r.Context()), int(tableNo))
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	members := make([]map[string]any, 0, len(d.Members))
+	for _, m := range d.Members {
+		members = append(members, map[string]any{
+			"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
+			"company": m.Company, "seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved,
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{
+		"table": map[string]any{
+			"table_no": d.Table.TableNo, "hall": d.Table.Hall,
+			"capacity": d.Table.Capacity, "occupied": d.Table.Occupied,
+		},
+		"members": members,
+	})
+}
+
+func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "invalid contact id")
+		return
+	}
+	d, err := s.networking.ContactDetail(r.Context(), userIDFrom(r.Context()), id)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{
+		"member_id": d.MemberID, "name": d.Name, "chapter": d.Chapter,
+		"company": d.Company, "member_code": d.MemberCode, "saved_at": d.SavedAt,
+		"current_table_no": d.CurrentTableNo,
+	})
 }
 
 func (s *Server) handleNetworkingSaveAll(w http.ResponseWriter, r *http.Request) {
