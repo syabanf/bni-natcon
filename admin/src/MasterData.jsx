@@ -208,6 +208,7 @@ export function MembersPage() {
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 
+      <div className="table-scroll">
       <table className="md-table">
         <thead>
           <tr>
@@ -240,6 +241,7 @@ export function MembersPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {crud.form && (
         <Modal title={crud.form.id ? 'Ubah Peserta' : 'Tambah Peserta'} onClose={() => crud.setForm(null)}>
@@ -306,6 +308,7 @@ export function TenantsPage() {
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 
+      <div className="table-scroll">
       <table className="md-table">
         <thead>
           <tr>
@@ -336,6 +339,7 @@ export function TenantsPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {crud.form && (
         <Modal title={crud.form.id ? 'Ubah Tenant' : 'Tambah Tenant'} onClose={() => crud.setForm(null)}>
@@ -386,6 +390,7 @@ export function SeminarsPage() {
 
       <Notices crud={crud} importResult={null} clearImport={() => {}} />
 
+      <div className="table-scroll">
       <table className="md-table">
         <thead>
           <tr>
@@ -423,6 +428,7 @@ export function SeminarsPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {crud.form && (
         <Modal title={crud.form.id ? 'Ubah Seminar' : 'Tambah Seminar'} onClose={() => crud.setForm(null)}>

@@ -16,6 +16,7 @@ function ReportTable({ columns, rows }) {
   const visible = showAll ? rows : rows.slice(0, PREVIEW_ROWS)
   return (
     <>
+      <div className="table-scroll">
       <table className="md-table">
         <thead>
           <tr>
@@ -41,6 +42,7 @@ function ReportTable({ columns, rows }) {
           )}
         </tbody>
       </table>
+      </div>
       {rows.length > PREVIEW_ROWS && (
         <button className="show-more" onClick={() => setShowAll(!showAll)}>
           {showAll ? 'Tampilkan lebih sedikit' : `Tampilkan semua (${rows.length})`}

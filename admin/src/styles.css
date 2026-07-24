@@ -606,16 +606,20 @@ button:disabled {
 }
 
 /* ===== Tables ===== */
-.md-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
+.table-scroll {
   margin-top: 12px;
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.md-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 13px;
 }
 .md-table th {
   text-align: left;
