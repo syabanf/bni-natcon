@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { api, getToken, setToken, clearToken } from './api'
 import Dashboard from './Dashboard'
-import Report from './Report'
+import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
 
 const MENU = [
@@ -9,7 +9,12 @@ const MENU = [
   { key: 'members', label: 'Peserta', icon: '◉' },
   { key: 'tenants', label: 'Tenant', icon: '▤' },
   { key: 'seminars', label: 'Seminar', icon: '◈' },
-  { key: 'report', label: 'Laporan', icon: '≣' },
+]
+
+const REPORT_MENU = [
+  { key: 'report-leads', label: 'Leads Tenant', icon: '≣' },
+  { key: 'report-seminars', label: 'Reg. Seminar', icon: '≣' },
+  { key: 'report-coupons', label: 'Kupon Peserta', icon: '≣' },
 ]
 
 function Login({ onLogin }) {
@@ -94,6 +99,17 @@ function Shell({ onLogout }) {
               {m.label}
             </button>
           ))}
+          <div className="sb-section">Laporan</div>
+          {REPORT_MENU.map((m) => (
+            <button
+              key={m.key}
+              className={view === m.key ? 'active' : ''}
+              onClick={() => setView(m.key)}
+            >
+              <span className="sb-ic">{m.icon}</span>
+              {m.label}
+            </button>
+          ))}
         </nav>
         <div className="sb-foot">
           <button className="sb-logout" onClick={onLogout}>
@@ -107,7 +123,9 @@ function Shell({ onLogout }) {
         {view === 'members' && <MembersPage />}
         {view === 'tenants' && <TenantsPage />}
         {view === 'seminars' && <SeminarsPage />}
-        {view === 'report' && <Report onUnauthorized={onLogout} />}
+        {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
+        {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}
+        {view === 'report-coupons' && <ReportCoupons onUnauthorized={onLogout} />}
       </main>
     </div>
   )

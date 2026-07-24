@@ -169,3 +169,35 @@ func TestSeminarRegister(t *testing.T) {
 		t.Fatalf("list[0] = %+v, want registered with 1 seat taken", list[0])
 	}
 }
+
+func TestSeminarUnregisterThenSwitch(t *testing.T) {
+	repo := &fakeSeminarRepo{seminars: []domain.Seminar{
+		{ID: 1, Slot: 1, Room: "Merapi", Capacity: 5},
+		{ID: 2, Slot: 1, Room: "Rinjani", Capacity: 5},
+	}}
+	uc := NewSeminarUsecase(repo)
+	ctx := context.Background()
+
+	if err := uc.Register(ctx, 1, 100); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	// Cancel, then the same slot opens up for another seminar.
+	if err := uc.Unregister(ctx, 1, 100); err != nil {
+		t.Fatalf("unregister: %v", err)
+	}
+	if err := uc.Register(ctx, 2, 100); err != nil {
+		t.Fatalf("register other after cancel: %v", err)
+	}
+	// Cancelling a seminar the member never joined is ErrNotFound.
+	if err := uc.Unregister(ctx, 1, 100); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("unregister not-registered err = %v, want ErrNotFound", err)
+	}
+
+	list, err := uc.List(ctx, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if list[0].Registered || !list[1].Registered {
+		t.Fatalf("expected only seminar 2 registered, got %+v", list)
+	}
+}

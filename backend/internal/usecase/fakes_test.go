@@ -173,6 +173,16 @@ func (f *fakeSeminarRepo) Register(_ context.Context, seminarID, memberID int64)
 	return nil
 }
 
+func (f *fakeSeminarRepo) Unregister(_ context.Context, seminarID, memberID int64) error {
+	for i, r := range f.registrations {
+		if r.SeminarID == seminarID && r.MemberID == memberID {
+			f.registrations = append(f.registrations[:i], f.registrations[i+1:]...)
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
 func (f *fakeSeminarRepo) CountRegistrationsByMember(_ context.Context, memberID int64) (int, error) {
 	n := 0
 	for _, r := range f.registrations {

@@ -145,6 +145,19 @@ func (s *Server) handleRegisterSeminar(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, map[string]string{"status": "registered"})
 }
 
+func (s *Server) handleUnregisterSeminar(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid seminar id")
+		return
+	}
+	if err := s.seminar.Unregister(r.Context(), id, userIDFrom(r.Context())); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "unregistered"})
+}
+
 /* ---------- Tenant / booth ---------- */
 
 func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {

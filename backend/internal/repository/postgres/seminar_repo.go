@@ -90,6 +90,19 @@ func (r *SeminarRepo) Register(ctx context.Context, seminarID, memberID int64) e
 	return tx.Commit(ctx)
 }
 
+func (r *SeminarRepo) Unregister(ctx context.Context, seminarID, memberID int64) error {
+	tag, err := r.pool.Exec(ctx,
+		`DELETE FROM seminar_registrations WHERE seminar_id = $1 AND member_id = $2`,
+		seminarID, memberID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
 func (r *SeminarRepo) CountRegistrationsByMember(ctx context.Context, memberID int64) (int, error) {
 	var n int
 	err := r.pool.QueryRow(ctx,

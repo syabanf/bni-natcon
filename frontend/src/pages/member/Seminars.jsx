@@ -30,6 +30,19 @@ export default function Seminars() {
     }
   }
 
+  const cancel = async (id) => {
+    setBusyID(id)
+    try {
+      await api.unregisterSeminar(id)
+      toast('Pendaftaran dibatalkan — kamu bisa pilih seminar lain')
+    } catch (err) {
+      toast(err.message)
+    } finally {
+      setBusyID(null)
+      load()
+    }
+  }
+
   if (seminars === null) {
     return <div className="loading-note">Memuat seminar…</div>
   }
@@ -69,10 +82,19 @@ export default function Seminars() {
                     </div>
                     <div className="seminar-actions">
                       {s.registered ? (
-                        <button className="btn done">
-                          <Icon name="check" size={15} />
-                          Terdaftar — tunjukkan QR di pintu {s.room}
-                        </button>
+                        <>
+                          <button className="btn done">
+                            <Icon name="check" size={15} />
+                            Terdaftar — tunjukkan QR di pintu {s.room}
+                          </button>
+                          <button
+                            className="btn cancel"
+                            onClick={() => cancel(s.id)}
+                            disabled={busyID === s.id}
+                          >
+                            {busyID === s.id ? 'Membatalkan…' : 'Batal Ikut Seminar Ini'}
+                          </button>
+                        </>
                       ) : locked ? (
                         <button className="btn" disabled>
                           Kamu sudah memilih seminar lain

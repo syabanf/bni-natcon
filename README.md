@@ -11,7 +11,10 @@ flat surfaces, single red accent).
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.
-- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for peserta/tenant (SheetJS; headers Nama/Email/Chapter/Perusahaan or Nama/Kategori/Booth), and **Laporan** page with Excel export (leads tenant, registrasi seminar, kupon peserta).
+- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for peserta/tenant (SheetJS; headers Nama/Email/Chapter/Perusahaan or Nama/Kategori/Booth), and three **Laporan** pages (Leads Tenant, Registrasi Seminar, Kupon Peserta) — each with flat SVG-style charts (scan per booth/jam, keterisian kursi, distribusi kupon) and its own Excel export.
+
+Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
+and pick another session in the same slot.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 

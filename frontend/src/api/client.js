@@ -43,6 +43,7 @@ export const api = {
   tenants: () => request('/tenants'),
   seminars: () => request('/seminars'),
   registerSeminar: (id) => request(`/seminars/${id}/register`, { method: 'POST' }),
+  unregisterSeminar: (id) => request(`/seminars/${id}/register`, { method: 'DELETE' }),
   scan: (memberCode) => request('/scans', { method: 'POST', body: { member_code: memberCode } }),
   booth: () => request('/booth'),
   boothStats: () => request('/booth/stats'),

@@ -54,6 +54,9 @@ type SeminarRepository interface {
 	// Register enforces capacity and one-registration-per-slot atomically.
 	// Returns ErrNotFound, ErrSeminarFull, or ErrAlreadyRegistered.
 	Register(ctx context.Context, seminarID, memberID int64) error
+	// Unregister removes the member's registration; ErrNotFound when the
+	// member is not registered for that seminar.
+	Unregister(ctx context.Context, seminarID, memberID int64) error
 	CountRegistrationsByMember(ctx context.Context, memberID int64) (int, error)
 	CountSlots(ctx context.Context) (int, error)
 }

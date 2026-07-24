@@ -157,8 +157,8 @@ button:disabled {
 .sb-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 22px 20px;
+  gap: 13px;
+  padding: 26px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 .sb-brand b {
@@ -186,7 +186,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 20px;
+  padding: 14px 22px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -226,25 +226,25 @@ button:disabled {
 .content {
   flex: 1;
   min-width: 0;
-  padding: 26px 36px 72px;
-  max-width: 1160px;
+  padding: 34px 48px 88px;
+  max-width: 1180px;
 }
 .content-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
   border-bottom: 3px solid var(--rule);
-  padding-bottom: 16px;
-  margin-bottom: 0;
+  padding-bottom: 20px;
+  margin-bottom: 8px;
 }
 .content-head h1 {
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1.05;
-  margin-bottom: 5px;
+  margin-bottom: 7px;
 }
 .head-right {
   display: flex;
@@ -284,7 +284,7 @@ button:disabled {
   gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);
-  border-top: none;
+  margin-top: 28px;
 }
 @media (max-width: 1100px) {
   .stats-grid {
@@ -298,7 +298,7 @@ button:disabled {
 }
 .stat-card {
   background: var(--bg);
-  padding: 22px 18px 18px;
+  padding: 26px 22px 22px;
 }
 .stat-card .num {
   font-size: 42px;
@@ -323,8 +323,8 @@ button:disabled {
 .columns {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  gap: 40px;
-  margin-top: 36px;
+  gap: 52px;
+  margin-top: 44px;
   align-items: start;
 }
 @media (max-width: 900px) {
@@ -335,11 +335,11 @@ button:disabled {
 .col-right {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 44px;
 }
 .panel {
   border-top: 2px solid var(--rule);
-  padding-top: 14px;
+  padding-top: 18px;
 }
 .panel h2 {
   font-size: 15px;
@@ -362,7 +362,7 @@ button:disabled {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gray);
-  margin: 4px 0 18px;
+  margin: 6px 0 22px;
 }
 
 .rank-list {
@@ -372,8 +372,8 @@ button:disabled {
 .rank-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 0;
+  gap: 16px;
+  padding: 13px 0;
   border-bottom: 1px solid var(--line);
 }
 .rank-no {
@@ -441,7 +441,7 @@ button:disabled {
 }
 
 .seminar-row {
-  padding: 14px 0;
+  padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
 .seminar-top {
@@ -475,8 +475,8 @@ button:disabled {
 .feed-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 0;
+  gap: 14px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }
 .feed-av {
@@ -564,8 +564,8 @@ button:disabled {
   color: var(--ink);
   font-size: 12.5px;
   font-weight: 600;
-  padding: 10px 12px;
-  margin: 14px 0;
+  padding: 13px 15px;
+  margin: 18px 0;
   cursor: pointer;
 }
 .notice {
@@ -574,8 +574,8 @@ button:disabled {
   color: var(--ink);
   font-size: 12.5px;
   font-weight: 600;
-  padding: 10px 12px;
-  margin: 14px 0;
+  padding: 13px 15px;
+  margin: 18px 0;
   cursor: pointer;
 }
 .error ul,
@@ -587,8 +587,8 @@ button:disabled {
 .import-hint {
   font-size: 11.5px;
   color: var(--gray);
-  margin: 12px 0 4px;
-  line-height: 1.6;
+  margin: 16px 0 6px;
+  line-height: 1.7;
 }
 .import-hint b {
   color: var(--ink);
@@ -599,7 +599,7 @@ button:disabled {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  margin-top: 10px;
+  margin-top: 14px;
 }
 .md-table th {
   text-align: left;
@@ -609,11 +609,11 @@ button:disabled {
   text-transform: uppercase;
   color: var(--gray);
   border-bottom: 2px solid var(--rule);
-  padding: 8px 10px 10px 0;
+  padding: 10px 14px 12px 0;
 }
 .md-table td {
   border-bottom: 1px solid var(--line);
-  padding: 11px 10px 11px 0;
+  padding: 14px 14px 14px 0;
   vertical-align: top;
 }
 .md-table td b {
@@ -706,7 +706,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px 0;
+  padding: 24px 28px 0;
 }
 .modal-head h3 {
   font-size: 17px;
@@ -722,12 +722,12 @@ button:disabled {
   color: var(--ink);
 }
 .modal-body {
-  padding: 16px 22px 22px;
+  padding: 20px 28px 28px;
 }
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 .modal-form .error {
   margin: 0;
@@ -766,8 +766,8 @@ button:disabled {
 }
 .modal-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 12px;
+  margin-top: 8px;
 }
 .modal-actions .btn {
   padding: 13px 22px;
@@ -775,7 +775,7 @@ button:disabled {
 
 /* ===== Reports ===== */
 .report-panel {
-  margin-top: 32px;
+  margin-top: 44px;
 }
 .report-head {
   display: flex;
@@ -789,5 +789,163 @@ button:disabled {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--red);
-  padding: 12px 0 0;
+  padding: 14px 0 0;
+}
+
+/* ===== Sidebar section label ===== */
+.sb-section {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 22px 22px 10px;
+}
+
+/* ===== Charts ===== */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 40px;
+}
+@media (max-width: 980px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.chart-wrap {
+  position: relative;
+}
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: var(--ink);
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 11px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chart-tip b {
+  font-weight: 700;
+}
+.chart-tip span {
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  border-bottom: 2px solid var(--rule);
+  padding: 0 4px;
+}
+.bc-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+}
+.bc-value {
+  font-size: 10.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1;
+  min-height: 11px;
+}
+.bc-track {
+  width: 100%;
+  max-width: 44px;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+}
+.bc-fill {
+  width: 100%;
+  background: var(--red);
+  transition: height 0.4s ease;
+}
+.bc-col:hover .bc-fill {
+  background: var(--red-dark, #a31621);
+}
+.bc-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray);
+  padding: 7px 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.hbar-chart {
+  display: flex;
+  flex-direction: column;
+}
+.hb-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: default;
+}
+.hb-label {
+  width: 180px;
+  flex-shrink: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hb-label b {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hb-label small {
+  font-size: 10.5px;
+  color: var(--gray);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hb-track {
+  flex: 1;
+  height: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.hb-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width 0.4s ease;
+}
+.hb-row:hover .hb-fill {
+  background: var(--red-dark, #a31621);
+}
+.hb-value {
+  width: 64px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }

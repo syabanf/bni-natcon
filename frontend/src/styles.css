@@ -63,8 +63,8 @@ input {
 .screen-body {
   flex: 1;
   overflow-y: auto;
-  padding-top: 10px;
-  padding-bottom: 96px;
+  padding-top: 18px;
+  padding-bottom: 104px;
 }
 .bottomnav {
   position: fixed;
@@ -84,13 +84,13 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gray);
-  padding: 7px 0;
+  padding: 9px 0;
 }
 .bottomnav button.active {
   color: var(--red);
@@ -106,7 +106,7 @@ input {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin: 26px 0 12px;
+  margin: 34px 0 16px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -169,6 +169,15 @@ input {
   cursor: not-allowed;
   border: none;
 }
+.btn.cancel {
+  background: #fff;
+  color: var(--red);
+  border: 1px solid var(--red);
+  margin-top: 10px;
+}
+.btn.cancel:hover {
+  background: var(--red-tint);
+}
 .avatar {
   width: 42px;
   height: 42px;
@@ -196,7 +205,7 @@ input {
   width: 100%;
   max-width: 400px;
   border-top: 3px solid var(--rule);
-  padding: 28px 0;
+  padding: 34px 0;
   background: var(--bg);
 }
 .login-logo {
@@ -225,7 +234,7 @@ input {
   line-height: 1.5;
 }
 .field {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .field label {
   display: block;
@@ -261,7 +270,7 @@ input {
 
 /* Quick login */
 .quick-login {
-  margin-top: 20px;
+  margin-top: 26px;
 }
 .quick-login .ql-label {
   font-size: 10px;
@@ -284,15 +293,15 @@ input {
 .ql-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 .ql-btn {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   background: var(--surface);
   border: 1px solid var(--line);
-  padding: 10px;
+  padding: 13px 12px;
   text-align: left;
   transition: border-color 0.15s;
 }
@@ -350,11 +359,11 @@ input {
 .app-tile {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   background: var(--bg);
   border: none;
   border-bottom: 1px solid var(--line);
-  padding: 18px 2px;
+  padding: 22px 4px;
   text-align: left;
   text-decoration: none;
   color: var(--ink);
@@ -421,7 +430,7 @@ input {
 
 /* ===== Member: Home ===== */
 .hero-greet {
-  padding: 10px 20px 0;
+  padding: 14px 20px 0;
 }
 .hero-greet .hg-row {
   display: flex;
@@ -443,11 +452,11 @@ input {
   margin-top: 5px;
 }
 .member-card {
-  margin: 18px 20px 0;
+  margin: 22px 20px 0;
   position: relative;
   background: var(--red);
   color: #fff;
-  padding: 20px;
+  padding: 24px;
 }
 .member-card .mc-top {
   display: flex;
@@ -492,14 +501,14 @@ input {
 .stat-row {
   display: flex;
   gap: 1px;
-  margin: 18px 20px 0;
+  margin: 22px 20px 0;
   background: var(--line);
   border: 1px solid var(--line);
 }
 .stat {
   flex: 1;
   background: var(--bg);
-  padding: 14px;
+  padding: 18px 16px;
 }
 .stat .st-num {
   font-size: 24px;
@@ -533,7 +542,7 @@ input {
 }
 .quick {
   background: var(--bg);
-  padding: 15px 14px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -567,8 +576,8 @@ input {
 }
 .agenda-item {
   display: flex;
-  gap: 14px;
-  padding: 13px 14px;
+  gap: 16px;
+  padding: 16px 18px;
   align-items: center;
 }
 .agenda-item + .agenda-item {
@@ -598,13 +607,13 @@ input {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 18px 20px;
+  padding: 22px 20px;
 }
 .qr-card {
   background: var(--bg);
   border: 1px solid var(--line);
   border-top: 3px solid var(--rule);
-  padding: 26px 24px;
+  padding: 32px 26px;
   width: 100%;
 }
 .qr-card .qp-name {
@@ -636,12 +645,12 @@ input {
 }
 .qr-use {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   background: var(--bg);
   border: 1px solid var(--line);
-  padding: 13px 14px;
-  margin-top: 8px;
+  padding: 16px;
+  margin-top: 10px;
 }
 .qr-use .qu-ic {
   width: 34px;
@@ -666,7 +675,7 @@ input {
 /* ===== Member: Passport ===== */
 .progress-card {
   margin: 0 20px;
-  padding: 16px;
+  padding: 20px;
   border-top: 2px solid var(--rule);
 }
 .progress-head {
@@ -708,13 +717,13 @@ input {
   color: var(--ink);
 }
 .doorprize-banner {
-  margin: 12px 20px 0;
+  margin: 16px 20px 0;
   background: var(--bg);
   border: 1px solid var(--red);
   border-left: 4px solid var(--red);
-  padding: 13px 15px;
+  padding: 16px 18px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
 }
 .doorprize-banner .db-ic {
@@ -748,7 +757,7 @@ input {
 }
 .tenant-card {
   background: var(--bg);
-  padding: 14px 13px;
+  padding: 18px 16px;
   position: relative;
   text-align: left;
 }
@@ -805,7 +814,7 @@ input {
 
 /* ===== Member: Seminar ===== */
 .slot-label {
-  margin: 20px 20px 12px;
+  margin: 26px 20px 16px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -822,7 +831,7 @@ input {
   background: var(--rule);
 }
 .seminar-card {
-  margin: 0 20px 14px;
+  margin: 0 20px 20px;
   border-top: 2px solid var(--rule);
 }
 .seminar-cover {
@@ -830,8 +839,8 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 16px 18px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -849,7 +858,7 @@ input {
   background: #fff;
 }
 .seminar-body {
-  padding: 14px 16px 16px;
+  padding: 18px 18px 20px;
 }
 .seminar-body h4 {
   font-size: 15px;
@@ -866,7 +875,7 @@ input {
   gap: 6px;
 }
 .seminar-actions {
-  margin-top: 14px;
+  margin-top: 18px;
 }
 .seat-note {
   font-size: 11px;
@@ -877,7 +886,7 @@ input {
 
 /* ===== Tenant ===== */
 .tenant-head {
-  padding: 10px 20px 0;
+  padding: 14px 20px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -899,7 +908,7 @@ input {
   background: var(--ink);
 }
 .scanner-zone {
-  margin: 18px 20px 0;
+  margin: 22px 20px 0;
   position: relative;
 }
 .viewfinder {
@@ -933,8 +942,8 @@ input {
   pointer-events: none;
 }
 .scan-result {
-  margin: 14px 20px 0;
-  padding: 15px 16px;
+  margin: 18px 20px 0;
+  padding: 18px;
   animation: pop 0.25s ease;
   background: var(--bg);
 }
@@ -1006,7 +1015,7 @@ input {
   line-height: 1.45;
 }
 .manual-scan {
-  margin: 14px 20px 0;
+  margin: 18px 20px 0;
   display: flex;
   gap: 0;
 }
@@ -1035,7 +1044,7 @@ input {
 .tenant-stats {
   display: flex;
   gap: 1px;
-  margin: 18px 20px 0;
+  margin: 22px 20px 0;
   background: var(--line);
   border: 1px solid var(--line);
 }
@@ -1045,10 +1054,10 @@ input {
 .visitor {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
-  padding: 12px 2px;
+  padding: 15px 2px;
   animation: pop 0.25s ease;
 }
 .visitor .v-av {
@@ -1085,7 +1094,7 @@ input {
   font-variant-numeric: tabular-nums;
 }
 .empty-note {
-  margin: 12px 20px;
+  margin: 16px 20px;
   text-align: center;
   font-size: 11.5px;
   color: var(--gray);
@@ -1101,7 +1110,7 @@ input {
   z-index: 50;
   background: var(--bg);
   border-bottom: 2px solid var(--rule);
-  padding: 12px 20px;
+  padding: 15px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;

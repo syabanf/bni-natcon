@@ -64,6 +64,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/tenants", s.handleListTenants)
 				r.Get("/seminars", s.handleListSeminars)
 				r.Post("/seminars/{id}/register", s.handleRegisterSeminar)
+				r.Delete("/seminars/{id}/register", s.handleUnregisterSeminar)
 			})
 
 			r.Group(func(r chi.Router) {

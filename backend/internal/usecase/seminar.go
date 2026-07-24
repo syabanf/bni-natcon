@@ -21,3 +21,7 @@ func (u *SeminarUsecase) List(ctx context.Context, memberID int64) ([]domain.Sem
 func (u *SeminarUsecase) Register(ctx context.Context, seminarID, memberID int64) error {
 	return u.seminars.Register(ctx, seminarID, memberID)
 }
+
+func (u *SeminarUsecase) Unregister(ctx context.Context, seminarID, memberID int64) error {
+	return u.seminars.Unregister(ctx, seminarID, memberID)
+}
