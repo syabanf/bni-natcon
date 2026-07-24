@@ -127,7 +127,56 @@ func (r *NetworkingRepo) CheckIn(ctx context.Context, memberID int64, tableNo in
 		))`, tableID, memberID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO networking_table_history (member_id, table_no, hall)
+		SELECT $1, table_no, hall FROM networking_tables WHERE id = $2`,
+		memberID, tableID); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
+}
+
+func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.NetworkingHistory, error) {
+	h := &domain.NetworkingHistory{}
+
+	rows, err := r.pool.Query(ctx, `
+		SELECT table_no, hall, created_at
+		FROM networking_table_history
+		WHERE member_id = $1
+		ORDER BY created_at DESC`, memberID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var t domain.TableHistoryRow
+		if err := rows.Scan(&t.TableNo, &t.Hall, &t.JoinedAt); err != nil {
+			return nil, err
+		}
+		h.Tables = append(h.Tables, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	contactRows, err := r.pool.Query(ctx, `
+		SELECT u.name, u.chapter, u.company, nc.created_at
+		FROM networking_contacts nc
+		JOIN users u ON u.id = nc.contact_id
+		WHERE nc.owner_id = $1
+		ORDER BY nc.created_at DESC`, memberID)
+	if err != nil {
+		return nil, err
+	}
+	defer contactRows.Close()
+	for contactRows.Next() {
+		var c domain.SavedContact
+		if err := contactRows.Scan(&c.Name, &c.Chapter, &c.Company, &c.SavedAt); err != nil {
+			return nil, err
+		}
+		h.Contacts = append(h.Contacts, c)
+	}
+	return h, contactRows.Err()
 }
 
 func (r *NetworkingRepo) SaveContact(ctx context.Context, ownerID, contactID int64) error {

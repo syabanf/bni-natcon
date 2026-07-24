@@ -282,3 +282,23 @@ type NetworkingStatus struct {
 	Mates     []TableMate
 	Tables    []NetworkingTable
 }
+
+type TableHistoryRow struct {
+	TableNo  int
+	Hall     string
+	JoinedAt time.Time
+}
+
+type SavedContact struct {
+	Name    string
+	Chapter string
+	Company string
+	SavedAt time.Time
+}
+
+// NetworkingHistory backs the member's "riwayat" view: which tables they
+// joined and every contact they saved.
+type NetworkingHistory struct {
+	Tables   []TableHistoryRow
+	Contacts []SavedContact
+}

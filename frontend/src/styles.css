@@ -1131,6 +1131,47 @@ input {
   margin-top: 7px;
   align-self: flex-start;
 }
+.history-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  transition: transform 0.1s, border-color 0.2s;
+}
+.history-btn:hover {
+  border-color: var(--red);
+}
+.history-btn:active {
+  transform: scale(0.98);
+}
+.history-btn .icon {
+  color: var(--red);
+}
+.history-btn .hb-arrow {
+  margin-left: auto;
+  color: var(--red);
+  font-weight: 800;
+}
+.np-time {
+  font-size: 10.5px;
+  color: var(--gray);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.np-av.history {
+  background: var(--red-tint);
+  color: var(--red);
+  font-size: 15px;
+}
 
 /* ===== Tenant ===== */
 .tenant-head {

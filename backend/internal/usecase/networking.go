@@ -32,3 +32,7 @@ func (u *NetworkingUsecase) SaveContact(ctx context.Context, ownerID, contactID 
 func (u *NetworkingUsecase) SaveAll(ctx context.Context, memberID int64) (int, error) {
 	return u.networking.SaveAllTableMates(ctx, memberID)
 }
+
+func (u *NetworkingUsecase) History(ctx context.Context, memberID int64) (*domain.NetworkingHistory, error) {
+	return u.networking.History(ctx, memberID)
+}

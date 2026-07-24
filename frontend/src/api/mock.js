@@ -80,6 +80,10 @@ function loadState() {
     seats: {},
     // member_code -> [contact ids]
     contacts: {},
+    // member_code -> [{ table_no, hall, at }]
+    tableHistory: {},
+    // member_code -> { contactId: iso }
+    contactTimes: {},
   }
   try {
     const raw = localStorage.getItem(STATE_KEY)
@@ -281,6 +285,9 @@ export const mockApi = {
     ).length
     if (fake + real >= 8) return fail(409, 'meja sudah penuh')
     state.seats[currentUser.member_code] = n
+    const history = state.tableHistory[currentUser.member_code] || []
+    history.unshift({ table_no: n, hall: 'Hall B', at: new Date().toISOString() })
+    state.tableHistory[currentUser.member_code] = history
     saveState(state)
     return delay({ status: 'checked_in' })
   },
@@ -289,7 +296,12 @@ export const mockApi = {
     const state = loadState()
     const myCode = currentUser.member_code
     const contacts = state.contacts[myCode] || []
-    if (!contacts.includes(contactID)) contacts.push(contactID)
+    if (!contacts.includes(contactID)) {
+      contacts.push(contactID)
+      const times = state.contactTimes[myCode] || {}
+      times[contactID] = new Date().toISOString()
+      state.contactTimes[myCode] = times
+    }
     state.contacts[myCode] = contacts
     saveState(state)
     return delay({ status: 'saved' })
@@ -301,13 +313,45 @@ export const mockApi = {
     const n = state.seats[myCode]
     if (!n) return fail(404, 'not found')
     const contacts = new Set(state.contacts[myCode] || [])
-    for (const f of FAKE_MATES[n] || []) contacts.add(f.id)
+    const times = state.contactTimes[myCode] || {}
+    const addAt = (id) => {
+      if (!contacts.has(id)) times[id] = new Date().toISOString()
+      contacts.add(id)
+    }
+    for (const f of FAKE_MATES[n] || []) addAt(f.id)
     for (const m of MOCK_MEMBERS) {
-      if (state.seats[m.member_code] === n && m.member_code !== myCode) contacts.add(m.member_code)
+      if (state.seats[m.member_code] === n && m.member_code !== myCode) addAt(m.member_code)
     }
     state.contacts[myCode] = [...contacts]
+    state.contactTimes[myCode] = times
     saveState(state)
     return delay({ status: 'saved', saved: contacts.size })
+  },
+
+  networkingHistory() {
+    const state = loadState()
+    const myCode = currentUser?.member_code
+    const allFakes = Object.values(FAKE_MATES).flat()
+    const resolve = (id) =>
+      MOCK_MEMBERS.find((m) => m.member_code === id) || allFakes.find((f) => f.id === id)
+    const times = state.contactTimes[myCode] || {}
+    const contacts = (state.contacts[myCode] || [])
+      .map((id) => {
+        const p = resolve(id)
+        return p
+          ? { name: p.name, chapter: p.chapter || '', company: p.company || '', saved_at: times[id] || null }
+          : null
+      })
+      .filter(Boolean)
+      .reverse()
+    return delay({
+      tables: (state.tableHistory[myCode] || []).map((t) => ({
+        table_no: t.table_no,
+        hall: t.hall,
+        joined_at: t.at,
+      })),
+      contacts,
+    })
   },
 
   booth() {

@@ -66,6 +66,8 @@ type NetworkingRepository interface {
 	SaveContact(ctx context.Context, ownerID, contactID int64) error
 	// SaveAllTableMates saves everyone currently at the member's table.
 	SaveAllTableMates(ctx context.Context, memberID int64) (int, error)
+	// History returns the member's table check-in log and saved contacts.
+	History(ctx context.Context, memberID int64) (*NetworkingHistory, error)
 }
 
 type SeminarRepository interface {

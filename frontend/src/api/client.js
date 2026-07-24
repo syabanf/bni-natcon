@@ -54,6 +54,8 @@ export const api = {
   scan: (memberCode) =>
     isMock() ? mockApi.scan(memberCode) : request('/scans', { method: 'POST', body: { member_code: memberCode } }),
   networking: () => (isMock() ? mockApi.networking() : request('/networking')),
+  networkingHistory: () =>
+    isMock() ? mockApi.networkingHistory() : request('/networking/history'),
   networkingCheckIn: (tableNo) =>
     isMock()
       ? mockApi.networkingCheckIn(tableNo)

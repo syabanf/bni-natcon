@@ -71,6 +71,27 @@ func (s *Server) handleNetworkingSaveContact(w http.ResponseWriter, r *http.Requ
 	respondJSON(w, http.StatusOK, map[string]string{"status": "saved"})
 }
 
+func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request) {
+	h, err := s.networking.History(r.Context(), userIDFrom(r.Context()))
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	tables := make([]map[string]any, 0, len(h.Tables))
+	for _, t := range h.Tables {
+		tables = append(tables, map[string]any{
+			"table_no": t.TableNo, "hall": t.Hall, "joined_at": t.JoinedAt,
+		})
+	}
+	contacts := make([]map[string]any, 0, len(h.Contacts))
+	for _, c := range h.Contacts {
+		contacts = append(contacts, map[string]any{
+			"name": c.Name, "chapter": c.Chapter, "company": c.Company, "saved_at": c.SavedAt,
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"tables": tables, "contacts": contacts})
+}
+
 func (s *Server) handleNetworkingSaveAll(w http.ResponseWriter, r *http.Request) {
 	saved, err := s.networking.SaveAll(r.Context(), userIDFrom(r.Context()))
 	if err != nil {

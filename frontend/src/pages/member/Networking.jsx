@@ -59,10 +59,88 @@ function TableCircle({ tableNo, mates }) {
   )
 }
 
+function fmtTime(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('id-ID', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function HistoryView({ onBack }) {
+  const [history, setHistory] = useState(null)
+
+  useEffect(() => {
+    api
+      .networkingHistory()
+      .then(setHistory)
+      .catch(() => setHistory({ tables: [], contacts: [] }))
+  }, [])
+
+  if (!history) return <div className="loading-note">Memuat riwayat…</div>
+
+  return (
+    <>
+      <div className="hero-greet">
+        <button type="button" className="back-link" onClick={onBack}>
+          ← Kembali ke Speed Networking
+        </button>
+        <h2>Riwayat Networking</h2>
+        <p>Meja yang pernah kamu ikuti dan kontak yang tersimpan.</p>
+      </div>
+
+      <div className="section-title" style={{ margin: '24px 20px 12px' }}>
+        Riwayat Meja{' '}
+        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>
+          · {history.tables.length} check-in
+        </span>
+      </div>
+      <div className="net-list" style={{ marginTop: 0 }}>
+        {history.tables.map((t, i) => (
+          <div className="net-person" key={`${t.table_no}-${t.joined_at}-${i}`}>
+            <div className="np-av history">{t.table_no}</div>
+            <div className="np-info">
+              <h5>Meja {t.table_no}</h5>
+              <p>{t.hall}</p>
+            </div>
+            <span className="np-time">{fmtTime(t.joined_at)}</span>
+          </div>
+        ))}
+        {history.tables.length === 0 && (
+          <div className="empty-note">Belum pernah check-in meja — mulai dari halaman Speed Networking.</div>
+        )}
+      </div>
+
+      <div className="section-title" style={{ margin: '28px 20px 12px' }}>
+        Kontak Tersimpan{' '}
+        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>
+          · {history.contacts.length} kontak
+        </span>
+      </div>
+      <div className="net-list" style={{ marginTop: 0 }}>
+        {history.contacts.map((c, i) => (
+          <div className="net-person" key={`${c.name}-${i}`}>
+            <div className="np-av">{initials(c.name)}</div>
+            <div className="np-info">
+              <h5>{c.name}</h5>
+              <p>{c.company || c.chapter}</p>
+            </div>
+            <span className="np-time">{fmtTime(c.saved_at)}</span>
+          </div>
+        ))}
+        {history.contacts.length === 0 && (
+          <div className="empty-note">Belum ada kontak tersimpan — simpan teman semejamu!</div>
+        )}
+      </div>
+      <div style={{ height: 24 }} />
+    </>
+  )
+}
+
 export default function Networking() {
   const [data, setData] = useState(null)
   const [busy, setBusy] = useState(false)
   const [choosing, setChoosing] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   const load = () =>
     api
@@ -115,6 +193,11 @@ export default function Networking() {
 
   if (!data) return <div className="loading-note">Memuat speed networking…</div>
 
+  /* ----- Riwayat meja & kontak ----- */
+  if (showHistory) {
+    return <HistoryView onBack={() => setShowHistory(false)} />
+  }
+
   /* ----- Belum check-in: pilih meja ----- */
   if (!data.checked_in || choosing) {
     return (
@@ -122,6 +205,13 @@ export default function Networking() {
         <div className="hero-greet">
           <h2>Speed Networking</h2>
           <p>Scan QR di mejamu — sistem otomatis menghubungkan 8 orang dalam satu network.</p>
+        </div>
+        <div style={{ padding: '16px 20px 0' }}>
+          <button className="history-btn" onClick={() => setShowHistory(true)}>
+            <Icon name="save" size={15} />
+            Riwayat Meja &amp; Kontak Tersimpan
+            <span className="hb-arrow">→</span>
+          </button>
         </div>
         <div className="section-title" style={{ margin: '20px 20px 12px' }}>
           Pilih meja{' '}
@@ -171,7 +261,13 @@ export default function Networking() {
         <h2>Speed Networking</h2>
         <p>Semua yang check-in di mejamu otomatis saling mendapat kontak.</p>
       </div>
-      <div style={{ height: 16 }} />
+      <div style={{ padding: '16px 20px 16px' }}>
+        <button className="history-btn" onClick={() => setShowHistory(true)}>
+          <Icon name="save" size={15} />
+          Riwayat Meja &amp; Kontak Tersimpan
+          <span className="hb-arrow">→</span>
+        </button>
+      </div>
 
       <div className="net-hero">
         <div className="nh-row">

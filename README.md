@@ -109,6 +109,7 @@ All with password `natcon2026`:
 | GET `/networking`              | member | table list + my table, mates, saved flags |
 | POST `/networking/checkin`     | member | check in / move table (409 when full)   |
 | POST `/networking/contacts`(`/all`) | member | save one / all table-mate contacts |
+| GET `/networking/history`      | member | table check-in log + saved contacts      |
 | GET `/admin/{members,tenants,seminars}/{id}` | admin | detail pages         |
 | GET `/admin/overview`          | admin  | event-wide stats                         |
 | GET `/admin/tenants`           | admin  | booth ranking by scans                   |
