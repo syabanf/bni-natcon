@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"natcon2026/backend/internal/config"
@@ -15,6 +18,14 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	if cfg.JWTSecret == config.DefaultJWTSecret {
+		if cfg.IsProduction() {
+			slog.Error("refusing to start: JWT_SECRET must be set in production")
+			os.Exit(1)
+		}
+		slog.Warn("using default JWT secret — set JWT_SECRET before deploying")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -51,11 +62,40 @@ func main() {
 		usecase.NewBoothUsecase(tenantRepo, visitRepo),
 		usecase.NewAdminUsecase(postgres.NewAdminRepo(pool), httpdelivery.BcryptVerifier{}, cfg.SeedPassword),
 		usecase.NewNetworkingUsecase(postgres.NewNetworkingRepo(pool)),
+		cfg.AllowedOrigins,
 	)
 
-	slog.Info("API listening", "addr", cfg.Addr)
-	if err := http.ListenAndServe(cfg.Addr, server.Router()); err != nil {
-		slog.Error("server stopped", "err", err)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr:              cfg.Addr,
+		Handler:           server.Router(),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	shutdownCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	errCh := make(chan error, 1)
+	go func() {
+		slog.Info("API listening", "addr", cfg.Addr, "env", cfg.Env)
+		errCh <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("server stopped", "err", err)
+			os.Exit(1)
+		}
+	case <-shutdownCtx.Done():
+		slog.Info("shutting down gracefully")
+		graceCtx, graceCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer graceCancel()
+		if err := srv.Shutdown(graceCtx); err != nil {
+			slog.Error("graceful shutdown failed", "err", err)
+			os.Exit(1)
+		}
 	}
 }

@@ -121,10 +121,32 @@ All with password `natcon2026`:
 
 ## Tests
 
+Unit tests (usecase layer, table-driven with fakes):
+
 ```bash
 cd backend
 go test ./...
 ```
+
+End-to-end suite (64 checks: auth, role guards, scan, seminar, networking,
+admin CRUD/import/reports, hardening). Needs a **fresh database**:
+
+```bash
+createdb natcon_e2e   # or: CREATE DATABASE natcon_e2e;
+ADDR=:8082 DATABASE_URL="postgres://natcon:natcon@localhost:5432/natcon_e2e?sslmode=disable" \
+  go run ./backend/cmd/api &
+BASE=http://localhost:8082 python3 scripts/e2e.py
+```
+
+## Hardening
+
+- HTTP server timeouts (read/write/idle/header) + graceful shutdown on SIGINT/SIGTERM
+- Per-request 30 s timeout, 2 MiB request-body cap
+- Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cache-Control: no-store`)
+- Login rate limit: 10 attempts/IP/minute (429 after)
+- CORS origins configurable via `ALLOWED_ORIGINS` (comma-separated)
+- Refuses to start with the default `JWT_SECRET` when `APP_ENV=production`
+- Email format validation on admin-created accounts
 
 ## Deferred (v2 candidates)
 

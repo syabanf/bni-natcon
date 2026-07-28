@@ -2,24 +2,49 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 
 	"natcon2026/backend/internal/domain"
 	"natcon2026/backend/internal/usecase"
 )
 
+// maxBodyBytes caps request bodies; bulk imports are the largest payloads
+// and stay well under this.
+const maxBodyBytes = 2 << 20 // 2 MiB
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "no-referrer")
+		h.Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+		next.ServeHTTP(w, r)
+	})
+}
+
 type Server struct {
-	jwt        *JWTIssuer
-	auth       *usecase.AuthUsecase
-	member     *usecase.MemberUsecase
-	scan       *usecase.ScanUsecase
-	seminar    *usecase.SeminarUsecase
-	booth      *usecase.BoothUsecase
-	admin      *usecase.AdminUsecase
-	networking *usecase.NetworkingUsecase
+	jwt            *JWTIssuer
+	auth           *usecase.AuthUsecase
+	member         *usecase.MemberUsecase
+	scan           *usecase.ScanUsecase
+	seminar        *usecase.SeminarUsecase
+	booth          *usecase.BoothUsecase
+	admin          *usecase.AdminUsecase
+	networking     *usecase.NetworkingUsecase
+	allowedOrigins []string
 }
 
 func NewServer(
@@ -31,10 +56,12 @@ func NewServer(
 	booth *usecase.BoothUsecase,
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
+	allowedOrigins []string,
 ) *Server {
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
+		allowedOrigins: allowedOrigins,
 	}
 }
 
@@ -44,11 +71,11 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(securityHeaders)
+	r.Use(limitBody)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:5173", "http://127.0.0.1:5173",
-			"http://localhost:5174", "http://127.0.0.1:5174",
-		},
+		AllowedOrigins: s.allowedOrigins,
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	}))
@@ -58,7 +85,8 @@ func (s *Server) Router() http.Handler {
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/auth/login", s.handleLogin)
+		// Brute-force protection: 10 login attempts per IP per minute.
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login", s.handleLogin)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)

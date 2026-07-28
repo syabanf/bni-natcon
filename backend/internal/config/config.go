@@ -2,25 +2,43 @@ package config
 
 import (
 	"os"
+	"strings"
 	"time"
 )
 
+// DefaultJWTSecret is only acceptable outside production; main refuses to
+// start in production with this value.
+const DefaultJWTSecret = "dev-secret-change-me"
+
 type Config struct {
-	Addr         string
-	DatabaseURL  string
-	JWTSecret    string
-	JWTTTL       time.Duration
-	SeedPassword string
+	Addr           string
+	DatabaseURL    string
+	JWTSecret      string
+	JWTTTL         time.Duration
+	SeedPassword   string
+	Env            string
+	AllowedOrigins []string
 }
 
 func Load() Config {
-	return Config{
-		Addr:         getenv("ADDR", ":8080"),
-		DatabaseURL:  getenv("DATABASE_URL", "postgres://natcon:natcon@localhost:5432/natcon?sslmode=disable"),
-		JWTSecret:    getenv("JWT_SECRET", "dev-secret-change-me"),
-		JWTTTL:       12 * time.Hour,
-		SeedPassword: getenv("SEED_PASSWORD", "natcon2026"),
+	origins := strings.Split(getenv("ALLOWED_ORIGINS",
+		"http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"), ",")
+	for i := range origins {
+		origins[i] = strings.TrimSpace(origins[i])
 	}
+	return Config{
+		Addr:           getenv("ADDR", ":8080"),
+		DatabaseURL:    getenv("DATABASE_URL", "postgres://natcon:natcon@localhost:5432/natcon?sslmode=disable"),
+		JWTSecret:      getenv("JWT_SECRET", DefaultJWTSecret),
+		JWTTTL:         12 * time.Hour,
+		SeedPassword:   getenv("SEED_PASSWORD", "natcon2026"),
+		Env:            getenv("APP_ENV", "development"),
+		AllowedOrigins: origins,
+	}
+}
+
+func (c Config) IsProduction() bool {
+	return strings.EqualFold(c.Env, "production")
 }
 
 func getenv(key, fallback string) string {

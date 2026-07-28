@@ -3,10 +3,16 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"strings"
 
 	"natcon2026/backend/internal/domain"
 )
+
+func validEmail(email string) bool {
+	addr, err := mail.ParseAddress(email)
+	return err == nil && addr.Address == email
+}
 
 // PasswordHasher abstracts bcrypt hashing for admin-created accounts.
 type PasswordHasher interface {
@@ -57,6 +63,9 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, 
 	if name == "" || email == "" {
 		return nil, invalid("nama dan email wajib diisi")
 	}
+	if !validEmail(email) {
+		return nil, invalid("format email tidak valid")
+	}
 	if password == "" {
 		password = u.defaultPassword
 	}
@@ -75,6 +84,9 @@ func (u *AdminUsecase) UpdateMember(ctx context.Context, id int64, m domain.Memb
 	if m.Name == "" || m.Email == "" {
 		return invalid("nama dan email wajib diisi")
 	}
+	if !validEmail(m.Email) {
+		return invalid("format email tidak valid")
+	}
 	return u.admin.UpdateMember(ctx, id, m)
 }
 
@@ -91,6 +103,8 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, name, category, booth, 
 	if email == "" {
 		email = fmt.Sprintf("booth-%s@natcon.id",
 			strings.ToLower(strings.ReplaceAll(booth, "-", "")))
+	} else if !validEmail(email) {
+		return nil, invalid("format email tidak valid")
 	}
 	if initials == "" {
 		for _, w := range strings.Fields(name) {
