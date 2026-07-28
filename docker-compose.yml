@@ -16,5 +16,39 @@ services:
       timeout: 3s
       retries: 10
 
+  api:
+    build: ./backend
+    container_name: natcon-api
+    environment:
+      DATABASE_URL: postgres://natcon:natcon@db:5432/natcon?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      APP_ENV: ${APP_ENV:-development}
+      SEED_PASSWORD: ${SEED_PASSWORD:-natcon2026}
+      ALLOWED_ORIGINS: http://localhost:8088,http://localhost:8089
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_ADMIN_URL: http://localhost:8089
+    container_name: natcon-frontend
+    depends_on:
+      - api
+    ports:
+      - "8088:80"
+
+  admin:
+    build: ./admin
+    container_name: natcon-admin
+    depends_on:
+      - api
+    ports:
+      - "8089:80"
+
 volumes:
   natcon-pgdata:

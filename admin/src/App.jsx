@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { api, getToken, setToken, clearToken } from './api'
+import { api, getToken, setToken, clearToken, isMockMode, setMockMode } from './api'
 import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
@@ -16,6 +16,25 @@ const REPORT_MENU = [
   { key: 'report-seminars', label: 'Reg. Seminar', icon: '≣' },
   { key: 'report-coupons', label: 'Kupon Peserta', icon: '≣' },
 ]
+
+function MockToggle({ onChange }) {
+  const [mock, setMock] = useState(isMockMode())
+  return (
+    <button
+      type="button"
+      className={`mock-toggle${mock ? ' on' : ''}`}
+      onClick={() => {
+        const next = !mock
+        setMockMode(next)
+        setMock(next)
+        onChange?.(next)
+      }}
+    >
+      <span className="mt-dot" />
+      {mock ? 'Mode Demo (Mock) aktif — data lokal, tanpa server' : 'Mode API — klik untuk coba Mode Demo (Mock)'}
+    </button>
+  )
+}
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('admin@natcon.id')
@@ -67,8 +86,9 @@ function Login({ onLogin }) {
         <button className="btn" disabled={busy}>
           {busy ? 'Masuk…' : 'Masuk'}
         </button>
+        <MockToggle onChange={() => setError('')} />
         <div className="hint">
-          Demo: <code>admin@natcon.id</code> · password <code>natcon2026</code>
+          Demo: <code>admin@natcon.id</code> · password <code>natcon2026</code> (mode mock: password bebas)
         </div>
       </form>
     </div>
@@ -87,6 +107,7 @@ function Shell({ onLogout }) {
             <b>Natcon 2026</b>
             <small>Admin Panel</small>
           </div>
+          {isMockMode() && <span className="demo-chip">DEMO</span>}
         </div>
         <nav className="sb-menu">
           {MENU.map((m) => (

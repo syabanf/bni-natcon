@@ -1,5 +1,7 @@
 # BNI Natcon 2026 — Digital Stamp App
 
+[![CI](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml/badge.svg)](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml)
+
 Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html` mockup.
 Members collect digital "stamps" (door-prize coupons) by having tenants scan
 their QR code, register for parallel seminars, and join **speed networking**
@@ -19,11 +21,33 @@ flat surfaces, single red accent).
 Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
 and pick another session in the same slot.
 
-**Demo mock mode**: a toggle button on the member/tenant login page switches
-the whole app to a localStorage-backed mock layer — no backend needed. State
-is shared across personas on the device (a booth scan shows up in that
-member's passport), a red DEMO chip marks the mode, and toggling back to API
-mode clears the session.
+**Demo mock mode**: toggle buttons on both login pages switch each app to a
+localStorage-backed mock layer — no backend needed. In the member/tenant app
+the state is shared across personas on the device (a booth scan shows up in
+that member's passport); the admin app ships with seeded demo data (8 members,
+12 booths, scattered scans for the charts) and full CRUD/import/report support.
+A red DEMO chip marks the mode; in mock mode any password is accepted.
+
+## One-command deploy (Docker)
+
+```bash
+docker compose up -d --build
+```
+
+Runs the whole stack: PostgreSQL, the Go API (`:8090` on the host), the
+member/tenant app at **http://localhost:8088**, and the admin panel at
+**http://localhost:8089** — nginx in each frontend image serves the static
+build and proxies `/api` to the API container, so no CORS setup is needed.
+Set `JWT_SECRET` and `APP_ENV=production` in the environment for real
+deployments. For local development, start only the database with
+`docker compose up -d db` and run the API/dev servers as described above.
+
+## CI
+
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
+every push/PR: Go vet + unit tests, the 64-check E2E suite against a
+PostgreSQL service container, production builds of both frontends, and
+`docker compose build` for all images.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
