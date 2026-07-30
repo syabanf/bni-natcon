@@ -1,0 +1,17 @@
+{
+  "name": "BNI Natcon 2026",
+  "short_name": "Natcon 2026",
+  "description": "Digital stamp, seminar, dan speed networking BNI Natcon 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f7",
+  "theme_color": "#cf2030",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

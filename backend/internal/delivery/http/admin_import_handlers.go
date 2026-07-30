@@ -118,6 +118,7 @@ func (s *Server) handleAdminRegistrationReport(w http.ResponseWriter, r *http.Re
 			"room":          v.Room,
 			"seminar_title": v.SeminarTitle,
 			"registered_at": v.RegisteredAt,
+			"attended":      v.Attended,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"registrations": out})

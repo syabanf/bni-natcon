@@ -71,13 +71,17 @@ function seedState() {
     { member_id: 6, seminar_id: 2, at: todayAt(11, 20) },
   ]
 
-  return { nextId: 100, nextCode: 9100, members, tenants, seminars, visits, registrations }
+  // Sebagian sudah check-in di pintu untuk demo laporan kehadiran.
+  const attendance = [{ member_id: 1, seminar_id: 1, at: todayAt(12, 55) }]
+
+  return { nextId: 100, nextCode: 9100, members, tenants, seminars, visits, registrations, attendance }
 }
 
 function load() {
   try {
     const raw = localStorage.getItem(STATE_KEY)
-    if (raw) return JSON.parse(raw)
+    // attendance ditambahkan belakangan; state lama perlu default-nya.
+    if (raw) return { attendance: [], ...JSON.parse(raw) }
   } catch {
     /* fresh */
   }
@@ -207,12 +211,50 @@ export const mockAdminApi = {
 
   /* ----- Members CRUD ----- */
 
-  members() {
+  members({ q = '', page = 1, limit = 50 } = {}) {
     const s = load()
-    const rows = [...s.members]
+    const needle = q.trim().toLowerCase()
+    const all = [...s.members]
+      .filter((m) =>
+        !needle ||
+        [m.name, m.email, m.member_code, m.chapter]
+          .some((f) => (f || '').toLowerCase().includes(needle))
+      )
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((m) => ({ ...m, visits: visitCount(s, m.id) }))
-    return delay({ members: rows })
+    const start = (Math.max(1, page) - 1) * limit
+    return delay({
+      members: all.slice(start, start + limit),
+      total: all.length,
+      page: Math.max(1, page),
+      limit,
+    })
+  },
+
+  seminarCheckin(seminarId, memberCode) {
+    const s = load()
+    const sem = s.seminars.find((x) => x.id === Number(seminarId))
+    if (!sem) return fail(404, 'data tidak ditemukan')
+    const member = s.members.find((m) => m.member_code === (memberCode || '').trim())
+    if (!member) return fail(404, 'data tidak ditemukan')
+    const registered = s.registrations.some(
+      (r) => r.seminar_id === sem.id && r.member_id === member.id
+    )
+    if (!registered) return fail(409, 'peserta belum terdaftar di seminar ini')
+    const duplicate = s.attendance.some(
+      (a) => a.seminar_id === sem.id && a.member_id === member.id
+    )
+    if (!duplicate) {
+      s.attendance.push({ seminar_id: sem.id, member_id: member.id, at: new Date().toISOString() })
+      save(s)
+    }
+    return delay({
+      member_name: member.name,
+      member_code: member.member_code,
+      member_chapter: member.chapter,
+      duplicate,
+      attended_count: s.attendance.filter((a) => a.seminar_id === sem.id).length,
+    })
   },
 
   createMember(body) {
@@ -373,12 +415,23 @@ export const mockAdminApi = {
       .sort((a, b) => a.at.localeCompare(b.at))
       .map((r) => {
         const m = memberById(s, r.member_id)
+        const att = s.attendance.find(
+          (a) => a.seminar_id === sem.id && a.member_id === r.member_id
+        )
         return {
           name: m?.name || '?', member_code: m?.member_code || '',
           chapter: m?.chapter || '', company: m?.company || '', registered_at: r.at,
+          checked_in: Boolean(att), checked_in_at: att?.at || null,
         }
       })
-    return delay({ seminar: { ...sem, seats_taken: attendees.length }, attendees })
+    return delay({
+      seminar: {
+        ...sem,
+        seats_taken: attendees.length,
+        attended_count: attendees.filter((a) => a.checked_in).length,
+      },
+      attendees,
+    })
   },
 
   /* ----- Bulk import ----- */
@@ -444,6 +497,9 @@ export const mockAdminApi = {
           member_name: m?.name || '?', member_code: m?.member_code || '',
           chapter: m?.chapter || '', slot: sem?.slot || 0, room: sem?.room || '?',
           seminar_title: sem?.title || '?', registered_at: r.at,
+          attended: s.attendance.some(
+            (a) => a.seminar_id === r.seminar_id && a.member_id === r.member_id
+          ),
         }
       })
     return delay({ registrations: rows })

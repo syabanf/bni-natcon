@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
 import { MemberLayout, TenantLayout } from './components/Layout'
@@ -7,8 +8,10 @@ import MyQR from './pages/member/MyQR'
 import Passport from './pages/member/Passport'
 import Seminars from './pages/member/Seminars'
 import Networking from './pages/member/Networking'
-import Scanner from './pages/tenant/Scanner'
 import Dashboard from './pages/tenant/Dashboard'
+
+// html5-qrcode besar; muat hanya saat tenant membuka Scanner.
+const Scanner = lazy(() => import('./pages/tenant/Scanner'))
 
 function RequireRole({ role, children }) {
   const user = useAuthStore((s) => s.user)
@@ -51,7 +54,14 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route path="/scanner" element={<Scanner />} />
+          <Route
+            path="/scanner"
+            element={
+              <Suspense fallback={<div className="loading-note">Menyiapkan scanner…</div>}>
+                <Scanner />
+              </Suspense>
+            }
+          />
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 

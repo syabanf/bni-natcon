@@ -240,7 +240,7 @@ export function SeminarDetail({ id, onBack }) {
           <span className="sec-no">01</span>Keterisian Kursi
         </h2>
         <p className="panel-sub">
-          {seminar.seats_taken}/{seminar.capacity} kursi · {pct}%
+          {seminar.seats_taken}/{seminar.capacity} kursi · {pct}% · hadir {seminar.attended_count ?? 0}
         </p>
         <div className="bar-track" style={{ height: 12 }}>
           <div className={`bar-fill${pct >= 80 ? ' warn' : ''}`} style={{ width: `${pct}%` }} />
@@ -253,8 +253,18 @@ export function SeminarDetail({ id, onBack }) {
         </h2>
         <p className="panel-sub">Daftar hadir untuk panitia pintu</p>
         <SimpleTable
-          columns={['Peserta', 'Member Code', 'Chapter', 'Waktu Daftar']}
-          rows={attendees.map((a) => [<b key="n">{a.name}</b>, a.member_code, a.chapter, fmtTime(a.registered_at)])}
+          columns={['Peserta', 'Member Code', 'Chapter', 'Hadir', 'Waktu Daftar']}
+          rows={attendees.map((a) => [
+            <b key="n">{a.name}</b>,
+            a.member_code,
+            a.chapter,
+            a.checked_in ? (
+              <span key="h" className="pill-hadir yes">Hadir {a.checked_in_at ? `· ${fmtTime(a.checked_in_at)}` : ''}</span>
+            ) : (
+              <span key="h" className="pill-hadir">Belum</span>
+            ),
+            fmtTime(a.registered_at),
+          ])}
           emptyText="Belum ada peserta terdaftar."
         />
       </div>

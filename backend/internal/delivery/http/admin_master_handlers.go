@@ -26,10 +26,19 @@ type memberPayload struct {
 }
 
 func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) {
-	members, err := s.admin.ListMembers(r.Context())
+	qs := r.URL.Query()
+	page, _ := strconv.Atoi(qs.Get("page"))
+	limit, _ := strconv.Atoi(qs.Get("limit"))
+	members, total, err := s.admin.ListMembers(r.Context(), qs.Get("q"), page, limit)
 	if err != nil {
 		respondDomainError(w, err)
 		return
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 || limit > 1000 {
+		limit = 50
 	}
 	type row struct {
 		ID         int64  `json:"id"`
@@ -47,7 +56,36 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 			Chapter: m.Chapter, Company: m.Company, Visits: m.Visits,
 		})
 	}
-	respondJSON(w, http.StatusOK, map[string]any{"members": out})
+	respondJSON(w, http.StatusOK, map[string]any{
+		"members": out, "total": total, "page": page, "limit": limit,
+	})
+}
+
+func (s *Server) handleAdminSeminarCheckin(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		return
+	}
+	var req struct {
+		MemberCode string `json:"member_code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		return
+	}
+	res, err := s.admin.SeminarCheckin(r.Context(), id, req.MemberCode)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{
+		"member_name":    res.MemberName,
+		"member_code":    res.MemberCode,
+		"member_chapter": res.MemberChapter,
+		"duplicate":      res.Duplicate,
+		"attended_count": res.AttendedCount,
+	})
 }
 
 func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request) {

@@ -168,7 +168,7 @@ export function ReportSeminars({ onUnauthorized }) {
         exportSheet(
           registrations.map((r) => ({
             Peserta: r.member_name, 'Member Code': r.member_code, Chapter: r.chapter,
-            Slot: r.slot, Ruang: r.room, Seminar: r.seminar_title, 'Waktu Daftar': r.registered_at,
+            Slot: r.slot, Ruang: r.room, Seminar: r.seminar_title, Hadir: r.attended ? 'Ya' : 'Belum', 'Waktu Daftar': r.registered_at,
           })),
           'Registrasi', 'natcon2026-registrasi-seminar.xlsx'
         )
@@ -196,9 +196,11 @@ export function ReportSeminars({ onUnauthorized }) {
         </h2>
         <p className="panel-sub">{registrations.length} baris · urut per ruang</p>
         <ReportTable
-          columns={['Peserta', 'Member Code', 'Chapter', 'Slot', 'Ruang', 'Seminar', 'Waktu Daftar']}
+          columns={['Peserta', 'Member Code', 'Chapter', 'Slot', 'Ruang', 'Seminar', 'Hadir', 'Waktu Daftar']}
           rows={registrations.map((r) => [
-            r.member_name, r.member_code, r.chapter, `#${r.slot}`, r.room, r.seminar_title, fmtTime(r.registered_at),
+            r.member_name, r.member_code, r.chapter, `#${r.slot}`, r.room, r.seminar_title,
+            r.attended ? <span key="h" className="pill-hadir yes">Hadir</span> : <span key="h" className="pill-hadir">Belum</span>,
+            fmtTime(r.registered_at),
           ])}
         />
       </div>
@@ -212,7 +214,7 @@ export function ReportCoupons({ onUnauthorized }) {
   const [members, setMembers] = useState([])
 
   useEffect(() => {
-    api.members({ onUnauthorized }).then((d) => setMembers(d.members || [])).catch(() => {})
+    api.members({ onUnauthorized, limit: 1000 }).then((d) => setMembers(d.members || [])).catch(() => {})
   }, [onUnauthorized])
 
   // Distribution: how many members hold 0, 1, 2, … coupons.

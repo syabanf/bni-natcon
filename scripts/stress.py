@@ -136,7 +136,7 @@ status, body = c.req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
                      body={"members": rows})
 assert status == 200 and body["created"] == CONTENDERS, f"bulk create failed: {body}"
 
-status, body = c.req("GET", "/api/v1/admin/members", token=admin_tok)
+status, body = c.req("GET", "/api/v1/admin/members?limit=1000", token=admin_tok)
 members = {m["email"]: m for m in body["members"]}
 contenders = [members[f"stress{i:03d}@natcon.id"] for i in range(CONTENDERS)]
 tokens = [mint_token(m["id"], "member") for m in contenders]

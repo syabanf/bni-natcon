@@ -72,6 +72,7 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(metricsMiddleware)
 	r.Use(securityHeaders)
 	r.Use(limitBody)
 	r.Use(cors.Handler(cors.Options{
@@ -83,6 +84,7 @@ func (s *Server) Router() http.Handler {
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
+	r.Handle("/metrics", metricsHandler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Brute-force protection: 10 login attempts per IP per minute.
@@ -134,6 +136,7 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/tenants/{id}", s.handleAdminUpdateTenant)
 				r.Delete("/admin/tenants/{id}", s.handleAdminDeleteTenant)
 
+				r.Post("/admin/seminars/{id}/checkin", s.handleAdminSeminarCheckin)
 				r.Post("/admin/seminars", s.handleAdminCreateSeminar)
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)

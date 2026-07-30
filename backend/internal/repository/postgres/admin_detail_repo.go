@@ -101,9 +101,10 @@ func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.Semina
 	var d domain.SeminarDetail
 	err := r.pool.QueryRow(ctx, `
 		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity,
-		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id)
+		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id),
+		       (SELECT COUNT(*) FROM seminar_attendance sa WHERE sa.seminar_id = s.id)
 		FROM seminars s WHERE s.id = $1`, id).
-		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Capacity, &d.SeatsTaken)
+		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Capacity, &d.SeatsTaken, &d.AttendedCount)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -112,8 +113,12 @@ func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.Semina
 	}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company, sr.created_at
-		FROM seminar_registrations sr JOIN users u ON u.id = sr.member_id
+		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company, sr.created_at,
+		       sa.created_at
+		FROM seminar_registrations sr
+		JOIN users u ON u.id = sr.member_id
+		LEFT JOIN seminar_attendance sa
+		       ON sa.seminar_id = sr.seminar_id AND sa.member_id = sr.member_id
 		WHERE sr.seminar_id = $1
 		ORDER BY sr.created_at`, id)
 	if err != nil {
@@ -122,9 +127,11 @@ func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.Semina
 	defer rows.Close()
 	for rows.Next() {
 		var a domain.SeminarAttendee
-		if err := rows.Scan(&a.Name, &a.MemberCode, &a.Chapter, &a.Company, &a.RegisteredAt); err != nil {
+		if err := rows.Scan(&a.Name, &a.MemberCode, &a.Chapter, &a.Company,
+			&a.RegisteredAt, &a.CheckedInAt); err != nil {
 			return nil, err
 		}
+		a.CheckedIn = a.CheckedInAt != nil
 		d.Attendees = append(d.Attendees, a)
 	}
 	return &d, rows.Err()

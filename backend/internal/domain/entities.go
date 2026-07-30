@@ -208,6 +208,7 @@ type RegistrationReportRow struct {
 	Room         string
 	SeminarTitle string
 	RegisteredAt time.Time
+	Attended     bool
 }
 
 /* ----- Detail pages (admin) ----- */
@@ -245,12 +246,24 @@ type SeminarAttendee struct {
 	Chapter      string
 	Company      string
 	RegisteredAt time.Time
+	CheckedIn    bool
+	CheckedInAt  *time.Time
 }
 
 type SeminarDetail struct {
 	Seminar
-	SeatsTaken int
-	Attendees  []SeminarAttendee
+	SeatsTaken    int
+	AttendedCount int
+	Attendees     []SeminarAttendee
+}
+
+// CheckinResult is what the door committee sees after scanning a member QR.
+type CheckinResult struct {
+	MemberName    string
+	MemberCode    string
+	MemberChapter string
+	Duplicate     bool
+	AttendedCount int
 }
 
 /* ----- Speed networking ----- */

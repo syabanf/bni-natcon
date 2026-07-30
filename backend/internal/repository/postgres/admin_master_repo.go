@@ -18,15 +18,29 @@ func isUniqueViolation(err error, constraint string) bool {
 
 /* ----- Members ----- */
 
-func (r *AdminRepo) ListMembers(ctx context.Context) ([]domain.MemberSummary, error) {
+func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int) ([]domain.MemberSummary, int, error) {
+	const filter = `
+		u.role = 'member' AND ($1 = '' OR
+			u.name ILIKE '%' || $1 || '%' OR
+			u.email ILIKE '%' || $1 || '%' OR
+			u.member_code ILIKE '%' || $1 || '%' OR
+			u.chapter ILIKE '%' || $1 || '%')`
+
+	var total int
+	if err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM users u WHERE `+filter, q).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
 	rows, err := r.pool.Query(ctx, `
 		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.created_at,
 		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id)
 		FROM users u
-		WHERE u.role = 'member'
-		ORDER BY u.name`)
+		WHERE `+filter+`
+		ORDER BY u.name
+		LIMIT $2 OFFSET $3`, q, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -35,11 +49,62 @@ func (r *AdminRepo) ListMembers(ctx context.Context) ([]domain.MemberSummary, er
 		var m domain.MemberSummary
 		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Role, &m.MemberCode,
 			&m.Chapter, &m.Company, &m.CreatedAt, &m.Visits); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		out = append(out, m)
 	}
-	return out, rows.Err()
+	return out, total, rows.Err()
+}
+
+func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberCode string) (*domain.CheckinResult, error) {
+	var exists bool
+	if err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM seminars WHERE id = $1)`, seminarID).Scan(&exists); err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, domain.ErrNotFound
+	}
+
+	var res domain.CheckinResult
+	var memberID int64
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, name, COALESCE(member_code, ''), chapter
+		FROM users WHERE member_code = $1 AND role = 'member'`, memberCode).
+		Scan(&memberID, &res.MemberName, &res.MemberCode, &res.MemberChapter)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+
+	var registered bool
+	if err := r.pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM seminar_registrations
+			WHERE seminar_id = $1 AND member_id = $2
+		)`, seminarID, memberID).Scan(&registered); err != nil {
+		return nil, err
+	}
+	if !registered {
+		return nil, domain.ErrNotRegistered
+	}
+
+	tag, err := r.pool.Exec(ctx, `
+		INSERT INTO seminar_attendance (seminar_id, member_id)
+		VALUES ($1, $2) ON CONFLICT DO NOTHING`, seminarID, memberID)
+	if err != nil {
+		return nil, err
+	}
+	res.Duplicate = tag.RowsAffected() == 0
+
+	if err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM seminar_attendance WHERE seminar_id = $1`, seminarID).
+		Scan(&res.AttendedCount); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*domain.User, error) {
@@ -227,10 +292,13 @@ func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, e
 func (r *AdminRepo) RegistrationReport(ctx context.Context) ([]domain.RegistrationReportRow, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT u.name, COALESCE(u.member_code, ''), u.chapter,
-		       s.slot, s.room, s.title, sr.created_at
+		       s.slot, s.room, s.title, sr.created_at,
+		       (sa.id IS NOT NULL)
 		FROM seminar_registrations sr
 		JOIN users u ON u.id = sr.member_id
 		JOIN seminars s ON s.id = sr.seminar_id
+		LEFT JOIN seminar_attendance sa
+		       ON sa.seminar_id = sr.seminar_id AND sa.member_id = sr.member_id
 		ORDER BY s.slot, s.room, sr.created_at`)
 	if err != nil {
 		return nil, err
@@ -241,7 +309,7 @@ func (r *AdminRepo) RegistrationReport(ctx context.Context) ([]domain.Registrati
 	for rows.Next() {
 		var v domain.RegistrationReportRow
 		if err := rows.Scan(&v.MemberName, &v.MemberCode, &v.Chapter,
-			&v.Slot, &v.Room, &v.SeminarTitle, &v.RegisteredAt); err != nil {
+			&v.Slot, &v.Room, &v.SeminarTitle, &v.RegisteredAt, &v.Attended); err != nil {
 			return nil, err
 		}
 		out = append(out, v)

@@ -28,11 +28,16 @@ function useCrud({ list, create, update, remove }) {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
+  // list dibuat inline oleh pemanggil (identitasnya berubah tiap render);
+  // simpan di ref supaya load stabil dan effect mount hanya jalan sekali.
+  const listRef = useRef(list)
+  listRef.current = list
+
   const load = useCallback(() => {
-    list()
+    listRef.current()
       .then(setRows)
       .catch((e) => setError(e.message))
-  }, [list])
+  }, [])
 
   useEffect(() => {
     load()
@@ -178,15 +183,37 @@ function RowActions({ onDetail, onEdit, onDelete }) {
 
 /* ================= Peserta ================= */
 
+const MEMBERS_PAGE_SIZE = 25
+
 export function MembersPage() {
+  const [q, setQ] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const crud = useCrud({
-    list: () => api.members().then((d) => d.members || []),
+    list: () =>
+      api.members({ q, page, limit: MEMBERS_PAGE_SIZE }).then((d) => {
+        setTotal(d.total ?? (d.members || []).length)
+        return d.members || []
+      }),
     create: (f) => api.createMember(f),
     update: (id, f) => api.updateMember(id, f),
     remove: (id) => api.deleteMember(id),
   })
   const [importResult, setImportResult] = useState(null)
   const [detailId, setDetailId] = useState(null)
+
+  // Muat ulang saat pencarian/halaman berubah (mount sudah ditangani useCrud).
+  const firstRun = useRef(true)
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false
+      return
+    }
+    crud.load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, page])
+
+  const totalPages = Math.max(1, Math.ceil(total / MEMBERS_PAGE_SIZE))
 
   if (detailId) {
     return (
@@ -225,6 +252,19 @@ export function MembersPage() {
         Format Excel: kolom <b>Nama</b>, <b>Email</b>, <b>Chapter</b>, <b>Perusahaan</b> (baris pertama = header).
       </p>
 
+      <div className="list-toolbar">
+        <input
+          className="search-input"
+          placeholder="Cari nama, email, member code, atau chapter…"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value)
+            setPage(1)
+          }}
+        />
+        <span className="list-count">{total} peserta</span>
+      </div>
+
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 
       <div className="table-scroll">
@@ -261,6 +301,18 @@ export function MembersPage() {
           ))}
         </tbody>
       </table>
+      </div>
+
+      <div className="pager">
+        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          ‹ Sebelumnya
+        </button>
+        <span>
+          Halaman {page} dari {totalPages}
+        </span>
+        <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+          Berikutnya ›
+        </button>
       </div>
 
       {crud.form && (

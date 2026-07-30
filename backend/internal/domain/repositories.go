@@ -29,10 +29,18 @@ type AdminRepository interface {
 	SeminarFill(ctx context.Context) ([]SeminarFill, error)
 	RecentActivity(ctx context.Context, limit int) ([]ActivityItem, error)
 
+	// SeminarCheckin records door attendance for a registered member.
+	// ErrNotFound for unknown seminar/member, ErrNotRegistered when the
+	// member never registered; a repeat check-in sets Duplicate instead
+	// of failing.
+	SeminarCheckin(ctx context.Context, seminarID int64, memberCode string) (*CheckinResult, error)
+
 	// Master data. Create/Update return ErrEmailTaken on duplicate emails;
 	// Update/Delete return ErrNotFound for unknown ids. Deletes cascade to
 	// dependent rows (visits, registrations, booth login users).
-	ListMembers(ctx context.Context) ([]MemberSummary, error)
+	// ListMembers filters by q (name/email/code/chapter) and paginates;
+	// it also returns the total row count for the filter.
+	ListMembers(ctx context.Context, q string, limit, offset int) ([]MemberSummary, int, error)
 	CreateMember(ctx context.Context, m NewMember) (*User, error)
 	UpdateMember(ctx context.Context, id int64, m MemberUpdate) error
 	DeleteMember(ctx context.Context, id int64) error

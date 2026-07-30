@@ -83,12 +83,14 @@ func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request
 		attendees = append(attendees, map[string]any{
 			"name": a.Name, "member_code": a.MemberCode, "chapter": a.Chapter,
 			"company": a.Company, "registered_at": a.RegisteredAt,
+			"checked_in": a.CheckedIn, "checked_in_at": a.CheckedInAt,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"seminar": map[string]any{
 			"id": d.ID, "slot": d.Slot, "room": d.Room, "title": d.Title,
 			"speaker": d.Speaker, "capacity": d.Capacity, "seats_taken": d.SeatsTaken,
+			"attended_count": d.AttendedCount,
 		},
 		"attendees": attendees,
 	})

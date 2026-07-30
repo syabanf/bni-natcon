@@ -920,6 +920,170 @@ button:disabled {
   color: #fff;
 }
 
+/* ===== List toolbar, pager, kehadiran ===== */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.search-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+.search-input:focus {
+  outline: 2px solid var(--red);
+  outline-offset: -1px;
+}
+.list-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray);
+  white-space: nowrap;
+}
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.pager button {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--chip-ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.pager button:not(:disabled):hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+.pager span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+}
+.pill-hadir {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--gray);
+  white-space: nowrap;
+}
+.pill-hadir.yes {
+  background: var(--green-tint);
+  color: var(--green);
+}
+
+/* ===== Check-in Pintu ===== */
+.door-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg);
+}
+.door-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+.door-camera {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #26292e;
+  min-height: 260px;
+}
+.door-camera video {
+  width: 100% !important;
+  border-radius: 16px;
+}
+.door-manual {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.door-manual input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--bg);
+}
+.door-manual input:focus {
+  outline: 2px solid var(--red);
+  outline-offset: -1px;
+}
+.door-result {
+  margin-top: 14px;
+  border-radius: 12px;
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.door-result b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.door-result span {
+  font-size: 12px;
+  color: var(--gray);
+}
+.door-result.ok {
+  background: var(--green-tint);
+  border: 1px solid #c6e2d4;
+}
+.door-result.ok b {
+  color: var(--green);
+}
+.door-result.dup {
+  background: var(--chip);
+  border: 1px solid #ddd;
+}
+.door-result.err {
+  background: var(--red-tint);
+  border: 1px solid #f4c6cb;
+}
+.door-result.err b {
+  color: var(--red-dark);
+}
+.door-recent {
+  margin-top: 14px;
+}
+.door-recent-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+}
+.door-recent-row:last-child {
+  border-bottom: none;
+}
+.door-recent-row small {
+  color: var(--gray);
+}
+
 /* ===== Reports ===== */
 .report-panel {
   margin-top: 20px;

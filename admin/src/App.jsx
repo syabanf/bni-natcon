@@ -3,12 +3,14 @@ import { api, getToken, setToken, clearToken, isMockMode, setMockMode } from './
 import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
+import DoorCheckin from './DoorCheckin'
 
 const MENU = [
   { key: 'dash', label: 'Dashboard', icon: '▦' },
   { key: 'members', label: 'Peserta', icon: '◉' },
   { key: 'tenants', label: 'Tenant', icon: '▤' },
   { key: 'seminars', label: 'Seminar', icon: '◈' },
+  { key: 'door', label: 'Check-in Pintu', icon: '▣' },
 ]
 
 const REPORT_MENU = [
@@ -144,6 +146,7 @@ function Shell({ onLogout }) {
         {view === 'members' && <MembersPage />}
         {view === 'tenants' && <TenantsPage />}
         {view === 'seminars' && <SeminarsPage />}
+        {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
         {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
         {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}
         {view === 'report-coupons' && <ReportCoupons onUnauthorized={onLogout} />}

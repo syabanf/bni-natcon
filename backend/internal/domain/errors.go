@@ -14,4 +14,5 @@ var (
 	ErrEmailTaken         = errors.New("email sudah digunakan akun lain")
 	ErrInvalidInput       = errors.New("input tidak valid")
 	ErrTableFull          = errors.New("meja sudah penuh — pilih meja lain")
+	ErrNotRegistered      = errors.New("peserta belum terdaftar di seminar ini")
 )

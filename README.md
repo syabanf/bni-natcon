@@ -8,11 +8,14 @@ their QR code, register for parallel seminars, and join **speed networking**
 (check in at a table of 8 — everyone at the table is auto-connected and can
 save each other as contacts). Tenants scan member QRs with their device camera
 and watch a live booth dashboard. A separate admin app gives the committee
-live monitoring, master-data CRUD, and **detail pages** per peserta/tenant/
-seminar (profile, visit history, leads, attendee lists).
+live monitoring, master-data CRUD, **detail pages** per peserta/tenant/
+seminar (profile, visit history, leads, attendee lists), and a **door
+check-in station** (Check-in Pintu): scan attendee QRs at the seminar-room
+door — attendance (hadir vs terdaftar) is tracked live and flows into the
+seminar detail page and the registration report.
 
-All UI follows Swiss / International Typographic Style (Inter, hairline rules,
-flat surfaces, single red accent).
+All UI follows the original mockup theme (Plus Jakarta Sans, rounded cards,
+soft shadows, tinted pills, single red `#CF2030` accent).
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.
@@ -27,6 +30,13 @@ the state is shared across personas on the device (a booth scan shows up in
 that member's passport); the admin app ships with seeded demo data (8 members,
 12 booths, scattered scans for the charts) and full CRUD/import/report support.
 A red DEMO chip marks the mode; in mock mode any password is accepted.
+
+**PWA / offline**: the member/tenant app installs as a PWA (manifest + service
+worker, production builds only) — the app shell is cached so it opens without a
+network, and tenant scans made while offline are queued in localStorage and
+auto-synced when the connection returns (or via a "sinkronkan sekarang"
+button). The heavy `html5-qrcode` scanner page is lazy-loaded into its own
+chunk, so first paint stays light.
 
 ## One-command deploy (Docker)
 
@@ -45,9 +55,9 @@ deployments. For local development, start only the database with
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 64-check E2E suite against a
-PostgreSQL service container, production builds of both frontends, and
-`docker compose build` for all images.
+every push/PR: Go vet + unit tests, the 73-check E2E suite and the stress
+suite against PostgreSQL service containers, Vitest + production builds of
+both frontends, and `docker compose build` for all images.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
@@ -139,9 +149,11 @@ All with password `natcon2026`:
 | GET `/admin/tenants`           | admin  | booth ranking by scans                   |
 | GET `/admin/seminars`          | admin  | seminar fill                             |
 | GET `/admin/activity`          | admin  | recent scans across booths               |
-| GET/POST `/admin/members`, PUT/DELETE `/admin/members/{id}`   | admin | member CRUD (auto member code + login)  |
+| GET/POST `/admin/members`, PUT/DELETE `/admin/members/{id}`   | admin | member CRUD (auto member code + login); list takes `?q=&page=&limit=` (search + pagination, default limit 50, max 1000) |
 | POST `/admin/tenants`, PUT/DELETE `/admin/tenants/{id}`       | admin | tenant CRUD (auto booth login)          |
 | POST `/admin/seminars`, PUT/DELETE `/admin/seminars/{id}`     | admin | seminar CRUD                            |
+| POST `/admin/seminars/{id}/checkin` | admin | door check-in by `member_code` (409 if not registered; duplicate flagged, not double-counted) |
+| GET `/metrics`                 | public | Prometheus metrics (request count + latency histograms) |
 
 ## Tests
 
@@ -152,8 +164,16 @@ cd backend
 go test ./...
 ```
 
-End-to-end suite (64 checks: auth, role guards, scan, seminar, networking,
-admin CRUD/import/reports, hardening). Needs a **fresh database**:
+Frontend tests (Vitest, mock-layer behavior in both apps):
+
+```bash
+cd frontend && npm test
+cd admin && npm test
+```
+
+End-to-end suite (73 checks: auth, role guards, scan, seminar + door
+check-in/attendance, networking, admin CRUD/import/reports, pagination,
+metrics, hardening). Needs a **fresh database**:
 
 ```bash
 createdb natcon_e2e   # or: CREATE DATABASE natcon_e2e;
@@ -188,9 +208,10 @@ concurrent scans of one member → exactly 1 counted.
 - CORS origins configurable via `ALLOWED_ORIGINS` (comma-separated)
 - Refuses to start with the default `JWT_SECRET` when `APP_ENV=production`
 - Email format validation on admin-created accounts
+- Prometheus metrics at `/metrics` (`natcon_http_requests_total` by
+  method/code, `natcon_http_request_duration_seconds` histogram)
 
 ## Deferred (v2 candidates)
 
-Speed-networking screens, committee/admin role with visitor export, signed QR
-payloads (anti-forgery), WebSocket live dashboard, code-splitting the scanner
-page (html5-qrcode dominates the JS bundle).
+Signed QR payloads (anti-forgery), WebSocket live dashboard, background sync
+API for the offline scan queue, per-seminar door-crew accounts.

@@ -1304,6 +1304,31 @@ input {
   background: var(--red-tint);
   border: 1px solid #f4c6cb;
 }
+.scan-result.queued {
+  background: #fff8e8;
+  border: 1px solid #f0dcae;
+}
+.scan-result.queued .sr-ic {
+  color: #b45309;
+}
+.scan-result.queued h4 {
+  color: #b45309;
+}
+.queue-note {
+  margin: 14px 20px 0;
+  background: #fff8e8;
+  border: 1px dashed #f0dcae;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+}
+.queue-note button {
+  color: var(--red);
+  font-weight: 700;
+  text-decoration: underline;
+}
 .sr-row {
   display: flex;
   gap: 12px;

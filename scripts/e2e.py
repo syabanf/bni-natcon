@@ -263,6 +263,33 @@ check("visits report has row", status == 200 and len(body["visits"]) == 1)
 status, body, _ = req("GET", "/api/v1/admin/report/registrations", token=admin_tok)
 check("registrations report has row", status == 200 and len(body["registrations"]) == 1)
 
+# ---- attendance (check-in pintu) — Reddie saat ini terdaftar di seminar 2
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{sem2}/checkin", token=admin_tok,
+                      body={"member_code": member_code})
+check("door check-in recorded", status == 200 and body["duplicate"] is False
+      and body["attended_count"] == 1)
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{sem2}/checkin", token=admin_tok,
+                      body={"member_code": member_code})
+check("repeat check-in flagged duplicate", status == 200 and body["duplicate"] is True)
+status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem1}/checkin", token=admin_tok,
+                   body={"member_code": member_code})
+check("check-in without registration -> 409", status == 409)
+status, body, _ = req("GET", f"/api/v1/admin/seminars/{sem2}", token=admin_tok)
+check("seminar detail shows attendance",
+      body["seminar"]["attended_count"] == 1
+      and body["attendees"][0]["checked_in"] is True)
+status, body, _ = req("GET", "/api/v1/admin/report/registrations", token=admin_tok)
+check("registration report carries attended flag",
+      any(r.get("attended") for r in body["registrations"]))
+
+# ---- pagination & search
+status, body, _ = req("GET", "/api/v1/admin/members?limit=2&page=1", token=admin_tok)
+check("members pagination: 2 rows, total tracked",
+      status == 200 and len(body["members"]) == 2 and body["total"] >= 3)
+status, body, _ = req("GET", "/api/v1/admin/members?q=reddie", token=admin_tok)
+check("members search filters", status == 200 and body["total"] == 1
+      and body["members"][0]["name"] == "Reddie Wijaya")
+
 status, _, _ = req("DELETE", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok)
 check("delete seminar 200", status == 200)
 status, _, _ = req("DELETE", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
@@ -273,7 +300,11 @@ status, _, _ = req("DELETE", f"/api/v1/admin/members/{new_member_id}", token=adm
 check("delete member 200", status == 200)
 
 # ---------------------------------------------------------------- hardening
-section("Hardening")
+section("Hardening & metrics")
+with urllib.request.urlopen(BASE + "/metrics", timeout=10) as _r:
+    metrics_status, metrics_text = _r.status, _r.read().decode()
+check("prometheus /metrics exposed", metrics_status == 200)
+check("request counter metric present", "natcon_http_requests_total" in metrics_text)
 big = b'{"member_code": "' + b"A" * (3 * 1024 * 1024) + b'"}'
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, raw_body=big)
 check("3MB body rejected (400/413)", status in (400, 413), f"got {status}")

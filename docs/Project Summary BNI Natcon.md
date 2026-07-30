@@ -39,7 +39,8 @@ Tiga aplikasi terpisah, satu monorepo:
 │       └── delivery/http/           router chi, handler, middleware JWT/role
 ├── frontend/   React 18 + Vite (JS) — app Peserta & Tenant (:5173)
 ├── admin/      React 18 + Vite (JS) — Admin Panel (:5174)
-├── scripts/e2e.py                   suite end-to-end 64 check (stdlib only)
+├── scripts/e2e.py                   suite end-to-end 73 check (stdlib only)
+├── scripts/stress.py                suite stress & concurrency (stdlib only)
 ├── docker-compose.yml               full stack: db + api + frontend + admin
 └── .github/workflows/ci.yml         CI: vet/test, e2e, build FE, build docker
 ```
@@ -68,16 +69,30 @@ Admin Dashboard, dengan **quick login** satu-tap untuk akun demo dan
 | Passport | Progres kunjungan 12 tenant, kupon door prize, grid stempel digital |
 | Seminar | Daftar sesi paralel, kunci satu-per-slot, **batal & pindah sesi**, sisa kursi live |
 | Network | **Speed networking**: pilih/scan meja, visual meja bundar 8 kursi, simpan kontak satu/semua, pindah meja, **riwayat** (log meja + kontak tersimpan) dengan **halaman detail** per meja & per kontak |
-| Scanner (tenant) | Scan kamera (html5-qrcode) + input manual fallback, hasil ok/duplikat/error |
+| Scanner (tenant) | Scan kamera (html5-qrcode, **lazy-loaded** ke chunk terpisah) + input manual fallback, hasil ok/duplikat/error; **antrean offline** — scan saat putus jaringan disimpan di localStorage dan disinkronkan otomatis saat online |
 | Dashboard (tenant) | Statistik booth + daftar pengunjung, polling 5 detik |
+
+App peserta/tenant juga terpasang sebagai **PWA** (manifest + service worker
+di build produksi): shell aplikasi di-cache sehingga tetap terbuka tanpa
+jaringan.
 
 ### 3.2 Admin Panel (`admin/`, :5174)
 
-Sidebar: Dashboard · Peserta · Tenant · Seminar · **Laporan** (3 halaman).
+Sidebar: Dashboard · Peserta · Tenant · Seminar · **Check-in Pintu** ·
+**Laporan** (3 halaman).
 
 - **Dashboard live**: 6 kartu statistik, peringkat booth, keterisian
   seminar, feed aktivitas — polling 5 detik.
+- **Check-in Pintu** (kehadiran seminar beneran): panitia pintu memilih
+  ruang, lalu scan QR peserta (kamera, lazy-loaded) atau input manual —
+  hadir vs terdaftar + % kehadiran tampil live, duplikat ditandai tanpa
+  dihitung dua kali, peserta yang tidak terdaftar di sesi itu ditolak.
+  Kehadiran mengalir ke halaman detail seminar (kolom Hadir) dan laporan
+  Registrasi Seminar (termasuk export Excel).
 - **Master data (CRUD via modal popup)** untuk Peserta / Tenant / Seminar:
+  - List peserta ber-**pagination** (25/halaman) dengan **kotak cari**
+    (nama/email/member code/chapter) — query dieksekusi di server
+    (`?q=&page=&limit=`).
   - Member code & password default dibuat otomatis; akun scanner booth
     (`booth-xxx@natcon.id`) dibuat otomatis saat tambah tenant.
   - **Import Excel** (SheetJS, header fleksibel Indonesia/Inggris) dengan
@@ -112,6 +127,7 @@ dari **localStorage tanpa backend** dengan bentuk respons yang identik:
 | `tenants` | booth + `owner_user_id` (akun scanner) |
 | `visits` | **stempel digital** — unik (tenant, member); kupon = jumlah visit |
 | `seminars`, `seminar_registrations` | unik (seminar, member); satu-per-slot + kapasitas dijaga transaksi `FOR UPDATE` |
+| `seminar_attendance` | check-in pintu — unik (seminar, member), duplikat aman via `ON CONFLICT DO NOTHING` |
 | `networking_tables`, `networking_checkins` | 12 meja × 8 kursi; satu check-in aktif per member (pindah = lepas kursi lama) |
 | `networking_contacts`, `networking_table_history` | kontak tersimpan + log riwayat check-in |
 
@@ -127,8 +143,10 @@ Seeder otomatis saat DB kosong: 3 peserta, 12 tenant + akun booth,
 | Networking | `GET /networking` · `POST /networking/checkin` · `POST /networking/contacts(/all)` · `GET /networking/history` · `GET /networking/tables/{no}` · `GET /networking/contacts/{id}` |
 | Tenant | `POST /scans` · `GET /booth(/stats,/visitors)` |
 | Admin monitor | `GET /admin/overview` · `/admin/tenants` · `/admin/seminars` · `/admin/activity` |
-| Admin CRUD | `GET/POST/PUT/DELETE /admin/{members,tenants,seminars}(/{id})` + `GET .../{id}` detail |
-| Admin import/laporan | `POST /admin/{members,tenants}/bulk` · `GET /admin/report/{visits,registrations}` |
+| Admin CRUD | `GET/POST/PUT/DELETE /admin/{members,tenants,seminars}(/{id})` + `GET .../{id}` detail; list peserta menerima `?q=&page=&limit=` |
+| Admin check-in | `POST /admin/seminars/{id}/checkin` — body `member_code`; 409 bila belum terdaftar, duplikat ditandai |
+| Admin import/laporan | `POST /admin/{members,tenants}/bulk` · `GET /admin/report/{visits,registrations}` (registrasi kini ber-flag `attended`) |
+| Observability | `GET /metrics` — Prometheus (jumlah request per method/kode + histogram latensi) |
 
 Konvensi error: 401 kredensial/token, 403 salah role, 404 tidak ada,
 409 konflik (duplikat email, seminar penuh/sudah terdaftar, meja penuh),
@@ -139,11 +157,20 @@ Konvensi error: 401 kredensial/token, 403 salah role, 404 tidak ada,
 - **Unit test** (`go test ./...`): table-driven di layer usecase dengan
   fake repo — login, scan/duplikat, statistik, aturan slot/kapasitas
   seminar, batal-dan-pindah.
-- **E2E** (`scripts/e2e.py`, Python stdlib, **64 check**): dijalankan
+- **E2E** (`scripts/e2e.py`, Python stdlib, **73 check**): dijalankan
   terhadap API live + DB segar — auth & guard semua role, alur scan,
-  seminar penuh, seluruh alur networking, admin CRUD/detail/bulk/laporan,
-  dan probe hardening (body 3 MB ditolak, rate limit 429). Hasil terakhir:
-  **64 passed, 0 failed** (lokal dan di CI).
+  seminar penuh, check-in pintu (tercatat/duplikat/ditolak), seluruh alur
+  networking, admin CRUD/detail/bulk/laporan, pagination & search,
+  `/metrics`, dan probe hardening (body 3 MB ditolak, rate limit 429).
+  Hasil terakhir: **73 passed, 0 failed** (lokal dan di CI).
+- **Stress & concurrency** (`scripts/stress.py`): beban baca 10k request
+  (~10.000 req/s, p99 45 ms), 100 peserta rebutan 10 kursi seminar →
+  tepat 10 sukses, 100 rebutan meja 8 kursi → tepat 8, 100 scan serentak
+  → tepat 1 dihitung.
+- **Test frontend** (Vitest, `npm test` di `frontend/` dan `admin/`):
+  menguji lapisan mock kedua app — persona login, scan/kupon lintas
+  persona, aturan slot seminar, alur networking, check-in pintu, CRUD +
+  pagination admin.
 
 ## 7. Hardening
 
@@ -172,9 +199,9 @@ nginx di tiap image frontend menyajikan build statis dan mem-proxy `/api`
 ke container API (tanpa urusan CORS). Set `JWT_SECRET` +
 `APP_ENV=production` untuk produksi.
 
-**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 64
-check vs container Postgres → build produksi kedua frontend →
-`docker compose build`.
+**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 73
+check + suite stress vs container Postgres → Vitest + build produksi kedua
+frontend → `docker compose build`.
 
 ## 9. Akun Demo
 

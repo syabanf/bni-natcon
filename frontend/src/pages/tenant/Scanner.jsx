@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
+import { getQueue, enqueueScan, flushQueue } from '../../api/offlineQueue'
+import { toast } from '../../components/Toast'
 
 function initials(name = '') {
   return name
@@ -14,15 +16,27 @@ function initials(name = '') {
 
 export default function Scanner() {
   const [booth, setBooth] = useState(null)
-  const [result, setResult] = useState(null) // {kind:'ok'|'dup'|'err', title, detail}
+  const [result, setResult] = useState(null) // {kind:'ok'|'dup'|'err'|'queued', title, detail}
   const [cameraError, setCameraError] = useState('')
   const [manualCode, setManualCode] = useState('')
+  const [pending, setPending] = useState(() => getQueue().length)
   const scannerRef = useRef(null)
   const busyRef = useRef(false)
   const lastCodeRef = useRef({ code: '', at: 0 })
 
+  // Sinkronkan antrean scan offline saat halaman dibuka & saat online lagi.
+  const sync = async () => {
+    const { synced, remaining } = await flushQueue((code) => api.scan(code))
+    setPending(remaining)
+    if (synced > 0) toast(`${synced} scan offline berhasil disinkronkan`)
+  }
+
   useEffect(() => {
     api.booth().then(setBooth).catch(() => {})
+    sync()
+    window.addEventListener('online', sync)
+    return () => window.removeEventListener('online', sync)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const submitCode = async (code) => {
@@ -50,11 +64,22 @@ export default function Scanner() {
         })
       }
     } catch (err) {
-      setResult({
-        kind: 'err',
-        title: 'Scan gagal',
-        detail: err.status === 404 ? 'QR tidak dikenali sebagai peserta Natcon' : err.message,
-      })
+      if (err.status === 0) {
+        // Offline: simpan ke antrean, sinkron otomatis saat online.
+        const count = enqueueScan(code)
+        setPending(count)
+        setResult({
+          kind: 'queued',
+          title: 'Offline — scan disimpan',
+          detail: `${code} masuk antrean (${count} menunggu) dan akan disinkronkan otomatis saat online`,
+        })
+      } else {
+        setResult({
+          kind: 'err',
+          title: 'Scan gagal',
+          detail: err.status === 404 ? 'QR tidak dikenali sebagai peserta Natcon' : err.message,
+        })
+      }
     } finally {
       busyRef.current = false
     }
@@ -124,13 +149,22 @@ export default function Scanner() {
         <div className={`scan-result ${result.kind}`} key={result.title + result.detail}>
           <div className="sr-row">
             <div className="sr-ic">
-              <Icon name={result.kind === 'ok' ? 'check' : 'alert'} size={20} />
+              <Icon name={result.kind === 'ok' ? 'check' : result.kind === 'queued' ? 'save' : 'alert'} size={20} />
             </div>
             <div>
               <h4>{result.title}</h4>
               <p>{result.detail}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {pending > 0 && (
+        <div className="queue-note">
+          {pending} scan menunggu sinkronisasi —{' '}
+          <button type="button" onClick={sync}>
+            sinkronkan sekarang
+          </button>
         </div>
       )}
 

@@ -72,7 +72,17 @@ export const api = {
   activity: (limit = 15, opts = {}) =>
     isMockMode() ? mock.activity(limit) : request(`/admin/activity?limit=${limit}`, opts),
 
-  members: (opts) => (isMockMode() ? mock.members() : request('/admin/members', opts)),
+  // params: { q, page, limit, onUnauthorized } — respons { members, total, page, limit }
+  members: (params = {}) => {
+    const { q = '', page = 1, limit = 50, ...opts } = params
+    if (isMockMode()) return mock.members({ q, page, limit })
+    const qs = new URLSearchParams({ q, page, limit }).toString()
+    return request(`/admin/members?${qs}`, opts)
+  },
+  seminarCheckin: (id, memberCode) =>
+    isMockMode()
+      ? mock.seminarCheckin(id, memberCode)
+      : request(`/admin/seminars/${id}/checkin`, { method: 'POST', body: { member_code: memberCode } }),
   createMember: (body) =>
     isMockMode() ? mock.createMember(body) : request('/admin/members', { method: 'POST', body }),
   updateMember: (id, body) =>

@@ -54,8 +54,22 @@ func invalid(msg string) error {
 	return fmt.Errorf("%w: %s", domain.ErrInvalidInput, msg)
 }
 
-func (u *AdminUsecase) ListMembers(ctx context.Context) ([]domain.MemberSummary, error) {
-	return u.admin.ListMembers(ctx)
+func (u *AdminUsecase) ListMembers(ctx context.Context, q string, page, limit int) ([]domain.MemberSummary, int, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 50
+	}
+	if page <= 0 {
+		page = 1
+	}
+	return u.admin.ListMembers(ctx, strings.TrimSpace(q), limit, (page-1)*limit)
+}
+
+func (u *AdminUsecase) SeminarCheckin(ctx context.Context, seminarID int64, memberCode string) (*domain.CheckinResult, error) {
+	memberCode = strings.TrimSpace(memberCode)
+	if memberCode == "" {
+		return nil, invalid("kode member wajib diisi")
+	}
+	return u.admin.SeminarCheckin(ctx, seminarID, memberCode)
 }
 
 func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, chapter, company string) (*domain.User, error) {
