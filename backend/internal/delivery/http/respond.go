@@ -19,11 +19,12 @@ func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, map[string]string{"error": message})
 }
 
-// respondDomainError maps domain errors to HTTP status codes.
+// respondDomainError maps domain errors to HTTP status codes. Domain error
+// messages are already user-friendly Indonesian; internals are masked.
 func respondDomainError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
-		respondError(w, http.StatusNotFound, "not found")
+		respondError(w, http.StatusNotFound, err.Error())
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		respondError(w, http.StatusUnauthorized, err.Error())
 	case errors.Is(err, domain.ErrSeminarFull),
@@ -37,6 +38,7 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		respondError(w, http.StatusForbidden, err.Error())
 	default:
 		slog.Error("internal error", "err", err)
-		respondError(w, http.StatusInternalServerError, "internal server error")
+		respondError(w, http.StatusInternalServerError,
+			"terjadi kesalahan pada server — coba beberapa saat lagi")
 	}
 }

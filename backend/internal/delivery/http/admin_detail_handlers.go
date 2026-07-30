@@ -8,7 +8,7 @@ import (
 func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	d, err := s.admin.MemberDetail(r.Context(), id)
@@ -38,7 +38,7 @@ func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	d, err := s.admin.TenantDetail(r.Context(), id)
@@ -70,7 +70,7 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	d, err := s.admin.SeminarDetail(r.Context(), id)

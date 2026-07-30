@@ -28,11 +28,11 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 		} `json:"members"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Members) == 0 {
-		respondError(w, http.StatusBadRequest, "members array is required")
+		respondError(w, http.StatusBadRequest, "daftar peserta kosong — periksa file import")
 		return
 	}
 	if len(req.Members) > maxImportRows {
-		respondError(w, http.StatusBadRequest, "too many rows (max 1000)")
+		respondError(w, http.StatusBadRequest, "terlalu banyak baris — maksimal 1000 per import")
 		return
 	}
 	rows := make([]usecase.MemberImportRow, 0, len(req.Members))
@@ -60,11 +60,11 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 		} `json:"tenants"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Tenants) == 0 {
-		respondError(w, http.StatusBadRequest, "tenants array is required")
+		respondError(w, http.StatusBadRequest, "daftar tenant kosong — periksa file import")
 		return
 	}
 	if len(req.Tenants) > maxImportRows {
-		respondError(w, http.StatusBadRequest, "too many rows (max 1000)")
+		respondError(w, http.StatusBadRequest, "terlalu banyak baris — maksimal 1000 per import")
 		return
 	}
 	rows := make([]usecase.TenantImportRow, 0, len(req.Tenants))

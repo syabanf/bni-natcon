@@ -53,7 +53,7 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request) {
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	user, err := s.admin.CreateMember(r.Context(), req.Name, req.Email, req.Password, req.Chapter, req.Company)
@@ -67,12 +67,12 @@ func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	err := s.admin.UpdateMember(r.Context(), id, domain.MemberUpdate{
@@ -88,7 +88,7 @@ func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminDeleteMember(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	if err := s.admin.DeleteMember(r.Context(), id); err != nil {
@@ -112,7 +112,7 @@ type tenantPayload struct {
 func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request) {
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	tenant, err := s.admin.CreateTenant(r.Context(), req.Name, req.Category, req.Booth, req.Initials, req.Email, req.Password)
@@ -131,12 +131,12 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	err := s.admin.UpdateTenant(r.Context(), id, domain.TenantUpdate{
@@ -152,7 +152,7 @@ func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminDeleteTenant(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	if err := s.admin.DeleteTenant(r.Context(), id); err != nil {
@@ -181,7 +181,7 @@ func (p seminarPayload) toInput() domain.SeminarInput {
 func (s *Server) handleAdminCreateSeminar(w http.ResponseWriter, r *http.Request) {
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	sem, err := s.admin.CreateSeminar(r.Context(), req.toInput())
@@ -200,12 +200,12 @@ func (s *Server) handleAdminCreateSeminar(w http.ResponseWriter, r *http.Request
 func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, http.StatusBadRequest, "format data tidak valid")
 		return
 	}
 	if err := s.admin.UpdateSeminar(r.Context(), id, req.toInput()); err != nil {
@@ -218,7 +218,7 @@ func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request
 func (s *Server) handleAdminDeleteSeminar(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "data tidak dikenali")
 		return
 	}
 	if err := s.admin.DeleteSeminar(r.Context(), id); err != nil {

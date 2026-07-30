@@ -46,7 +46,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" || req.Password == "" {
-		respondError(w, http.StatusBadRequest, "email and password are required")
+		respondError(w, http.StatusBadRequest, "email dan password wajib diisi")
 		return
 	}
 	token, user, err := s.auth.Login(r.Context(), req.Email, req.Password)
@@ -135,7 +135,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRegisterSeminar(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid seminar id")
+		respondError(w, http.StatusBadRequest, "seminar tidak dikenali")
 		return
 	}
 	if err := s.seminar.Register(r.Context(), id, userIDFrom(r.Context())); err != nil {
@@ -148,7 +148,7 @@ func (s *Server) handleRegisterSeminar(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUnregisterSeminar(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid seminar id")
+		respondError(w, http.StatusBadRequest, "seminar tidak dikenali")
 		return
 	}
 	if err := s.seminar.Unregister(r.Context(), id, userIDFrom(r.Context())); err != nil {
@@ -165,7 +165,7 @@ func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {
 		MemberCode string `json:"member_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberCode == "" {
-		respondError(w, http.StatusBadRequest, "member_code is required")
+		respondError(w, http.StatusBadRequest, "kode member wajib diisi")
 		return
 	}
 	result, err := s.scan.Scan(r.Context(), userIDFrom(r.Context()), req.MemberCode)

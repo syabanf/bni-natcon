@@ -46,7 +46,7 @@ func (s *Server) handleNetworkingCheckIn(w http.ResponseWriter, r *http.Request)
 		TableNo int `json:"table_no"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.TableNo <= 0 {
-		respondError(w, http.StatusBadRequest, "table_no is required")
+		respondError(w, http.StatusBadRequest, "nomor meja wajib diisi")
 		return
 	}
 	if err := s.networking.CheckIn(r.Context(), userIDFrom(r.Context()), req.TableNo); err != nil {
@@ -61,7 +61,7 @@ func (s *Server) handleNetworkingSaveContact(w http.ResponseWriter, r *http.Requ
 		MemberID int64 `json:"member_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberID <= 0 {
-		respondError(w, http.StatusBadRequest, "member_id is required")
+		respondError(w, http.StatusBadRequest, "kontak tidak dikenali")
 		return
 	}
 	if err := s.networking.SaveContact(r.Context(), userIDFrom(r.Context()), req.MemberID); err != nil {
@@ -96,7 +96,7 @@ func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Request) {
 	tableNo, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid table number")
+		respondError(w, http.StatusBadRequest, "meja tidak dikenali")
 		return
 	}
 	d, err := s.networking.TableDetail(r.Context(), userIDFrom(r.Context()), int(tableNo))
@@ -123,7 +123,7 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "invalid contact id")
+		respondError(w, http.StatusBadRequest, "kontak tidak dikenali")
 		return
 	}
 	d, err := s.networking.ContactDetail(r.Context(), userIDFrom(r.Context()), id)

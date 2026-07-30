@@ -184,15 +184,15 @@ export const mockApi = {
 
   registerSeminar(id) {
     const seminar = SEMINARS.find((s) => s.id === Number(id))
-    if (!seminar) return fail(404, 'not found')
+    if (!seminar) return fail(404, 'data tidak ditemukan')
     const state = loadState()
     const code = currentUser.member_code
     const regs = state.registrations[code] || {}
     if (regs[seminar.slot]) {
-      return fail(409, 'already registered for a seminar in this slot')
+      return fail(409, 'kamu sudah terdaftar di seminar lain pada slot ini')
     }
     if (seatsTaken(state, seminar.id) >= seminar.capacity) {
-      return fail(409, 'seminar is full')
+      return fail(409, 'kursi seminar sudah penuh — pilih sesi lain')
     }
     regs[seminar.slot] = seminar.id
     state.registrations[code] = regs
@@ -202,10 +202,10 @@ export const mockApi = {
 
   unregisterSeminar(id) {
     const seminar = SEMINARS.find((s) => s.id === Number(id))
-    if (!seminar) return fail(404, 'not found')
+    if (!seminar) return fail(404, 'data tidak ditemukan')
     const state = loadState()
     const regs = state.registrations[currentUser.member_code] || {}
-    if (regs[seminar.slot] !== seminar.id) return fail(404, 'not found')
+    if (regs[seminar.slot] !== seminar.id) return fail(404, 'data tidak ditemukan')
     delete regs[seminar.slot]
     saveState(state)
     return delay({ status: 'unregistered' })
@@ -213,7 +213,7 @@ export const mockApi = {
 
   scan(memberCode) {
     const member = memberByCode(memberCode.trim())
-    if (!member) return fail(404, 'not found')
+    if (!member) return fail(404, 'data tidak ditemukan')
     const state = loadState()
     const tenantId = currentUser.tenantId
     const visits = state.visits[member.member_code] || []
@@ -277,13 +277,13 @@ export const mockApi = {
 
   networkingCheckIn(tableNo) {
     const n = Number(tableNo)
-    if (!n || n < 1 || n > 12) return fail(404, 'not found')
+    if (!n || n < 1 || n > 12) return fail(404, 'data tidak ditemukan')
     const state = loadState()
     const fake = (FAKE_MATES[n] || []).length
     const real = MOCK_MEMBERS.filter(
       (m) => state.seats[m.member_code] === n && m.member_code !== currentUser.member_code
     ).length
-    if (fake + real >= 8) return fail(409, 'meja sudah penuh')
+    if (fake + real >= 8) return fail(409, 'meja sudah penuh — pilih meja lain')
     state.seats[currentUser.member_code] = n
     const history = state.tableHistory[currentUser.member_code] || []
     history.unshift({ table_no: n, hall: 'Hall B', at: new Date().toISOString() })
@@ -311,7 +311,7 @@ export const mockApi = {
     const state = loadState()
     const myCode = currentUser.member_code
     const n = state.seats[myCode]
-    if (!n) return fail(404, 'not found')
+    if (!n) return fail(404, 'data tidak ditemukan')
     const contacts = new Set(state.contacts[myCode] || [])
     const times = state.contactTimes[myCode] || {}
     const addAt = (id) => {
@@ -363,7 +363,7 @@ export const mockApi = {
 
   networkingTableDetail(tableNo) {
     const n = Number(tableNo)
-    if (!n || n < 1 || n > 12) return fail(404, 'not found')
+    if (!n || n < 1 || n > 12) return fail(404, 'data tidak ditemukan')
     const state = loadState()
     const myCode = currentUser?.member_code
     const savedSet = new Set(state.contacts[myCode] || [])
@@ -387,11 +387,11 @@ export const mockApi = {
   networkingContactDetail(id) {
     const state = loadState()
     const myCode = currentUser?.member_code
-    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'not found')
+    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'data tidak ditemukan')
     const allFakes = Object.values(FAKE_MATES).flat()
     const person =
       MOCK_MEMBERS.find((m) => m.member_code === id) || allFakes.find((f) => f.id === id)
-    if (!person) return fail(404, 'not found')
+    if (!person) return fail(404, 'data tidak ditemukan')
     // Fake personas "sit" at their home table; real members use live seats.
     let currentTable = 0
     const fakeHome = Object.entries(FAKE_MATES).find(([, list]) => list.some((f) => f.id === id))
@@ -412,7 +412,7 @@ export const mockApi = {
 
   booth() {
     const t = TENANTS.find((x) => x.id === currentUser?.tenantId)
-    if (!t) return fail(404, 'not found')
+    if (!t) return fail(404, 'data tidak ditemukan')
     return delay({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials })
   },
 

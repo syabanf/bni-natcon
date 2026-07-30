@@ -30,12 +30,12 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		header := r.Header.Get("Authorization")
 		token, ok := strings.CutPrefix(header, "Bearer ")
 		if !ok || token == "" {
-			respondError(w, http.StatusUnauthorized, "missing bearer token")
+			respondError(w, http.StatusUnauthorized, "kamu belum login — silakan masuk dulu")
 			return
 		}
 		userID, role, err := s.jwt.Parse(token)
 		if err != nil {
-			respondError(w, http.StatusUnauthorized, "invalid or expired token")
+			respondError(w, http.StatusUnauthorized, "sesi kamu sudah berakhir — silakan login ulang")
 			return
 		}
 		ctx := context.WithValue(r.Context(), ctxUserID, userID)
@@ -48,7 +48,7 @@ func requireRole(role domain.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if roleFrom(r.Context()) != role {
-				respondError(w, http.StatusForbidden, "insufficient role")
+				respondError(w, http.StatusForbidden, "akun ini tidak memiliki akses ke fitur tersebut")
 				return
 			}
 			next.ServeHTTP(w, r)

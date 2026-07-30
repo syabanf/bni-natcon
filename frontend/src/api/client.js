@@ -10,30 +10,48 @@ export class ApiError extends Error {
   }
 }
 
+// Fallback ramah saat server tidak mengirim pesan (mis. proxy error,
+// rate limit, atau server tumbang).
+const FRIENDLY_STATUS = {
+  429: 'Terlalu banyak percobaan — tunggu sebentar lalu coba lagi.',
+  500: 'Server sedang bermasalah. Coba beberapa saat lagi, atau gunakan Mode Demo (Mock).',
+  502: 'Server tidak dapat dihubungi. Coba beberapa saat lagi.',
+  503: 'Server sedang sibuk. Coba beberapa saat lagi.',
+  504: 'Server terlalu lama merespons. Coba beberapa saat lagi.',
+}
+
 async function request(path, { method = 'GET', body } = {}) {
   const token = useAuthStore.getState().token
-  const res = await fetch(BASE + path, {
-    method,
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  let res
+  try {
+    res = await fetch(BASE + path, {
+      method,
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    throw new ApiError(0, 'Tidak bisa terhubung ke server — periksa koneksi, atau coba Mode Demo (Mock).')
+  }
 
   if (res.status === 401 && path !== '/auth/login') {
     useAuthStore.getState().logout()
-    throw new ApiError(401, 'Sesi berakhir, silakan login kembali')
+    throw new ApiError(401, 'Sesi kamu sudah berakhir — silakan login kembali.')
   }
 
   let data = null
   try {
     data = await res.json()
   } catch {
-    /* empty body */
+    /* empty/non-JSON body (proxy error page etc.) */
   }
   if (!res.ok) {
-    throw new ApiError(res.status, data?.error || `Request gagal (${res.status})`)
+    throw new ApiError(
+      res.status,
+      data?.error || FRIENDLY_STATUS[res.status] || `Terjadi kesalahan (kode ${res.status}). Coba lagi ya.`
+    )
   }
   return data
 }
