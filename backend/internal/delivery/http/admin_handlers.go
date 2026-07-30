@@ -34,13 +34,14 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 		Category  string `json:"category"`
 		Booth     string `json:"booth"`
 		Initials  string `json:"initials"`
+		Kind      string `json:"kind"`
 		ScanCount int    `json:"scan_count"`
 	}
 	out := make([]row, 0, len(ranking))
 	for _, t := range ranking {
 		out = append(out, row{
 			ID: t.ID, Name: t.Name, Category: t.Category,
-			Booth: t.Booth, Initials: t.Initials, ScanCount: t.ScanCount,
+			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind, ScanCount: t.ScanCount,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})

@@ -4,7 +4,7 @@ import { api } from './api'
 const CameraScanner = lazy(() => import('./CameraScanner'))
 
 function fmtClock(d) {
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 /*
@@ -49,18 +49,18 @@ export default function DoorCheckin({ onUnauthorized }) {
     try {
       const res = await api.seminarCheckin(seminarId, code)
       if (res.duplicate) {
-        setResult({ kind: 'dup', title: 'Sudah check-in', sub: `${res.member_name} sudah tercatat hadir` })
+        setResult({ kind: 'dup', title: 'Already checked in', sub: `${res.member_name} is already recorded as present` })
       } else {
         setResult({
           kind: 'ok',
-          title: 'Hadir tercatat',
+          title: 'Attendance recorded',
           sub: `${res.member_name} · ${res.member_chapter}`,
         })
         setRecent((r) => [{ name: res.member_name, at: fmtClock(new Date()) }, ...r].slice(0, 6))
       }
       loadDetail(seminarId)
     } catch (err) {
-      setResult({ kind: 'err', title: 'Ditolak', sub: err.message })
+      setResult({ kind: 'err', title: 'Rejected', sub: err.message })
     }
   }
 
@@ -79,16 +79,16 @@ export default function DoorCheckin({ onUnauthorized }) {
     <>
       <div className="content-head">
         <div>
-          <h1>Check-in Pintu</h1>
-          <p className="micro">Scan QR peserta di pintu ruang seminar — hadir vs terdaftar tercatat live</p>
+          <h1>Door Check-in</h1>
+          <p className="micro">Scan attendee QRs at the seminar room door — attended vs registered updates live. Attendance = totebag claimed.</p>
         </div>
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Pilih Seminar
+          <span className="sec-no">01</span>Choose Seminar
         </h2>
-        <p className="panel-sub">Panitia pintu bertugas untuk satu ruang</p>
+        <p className="panel-sub">Each door crew covers one room</p>
         <select
           className="door-select"
           value={seminarId ?? ''}
@@ -104,11 +104,11 @@ export default function DoorCheckin({ onUnauthorized }) {
           <div className="door-stats">
             <div className="stat-card">
               <div className="num accent">{detail.seminar.attended_count ?? 0}</div>
-              <div className="label">Hadir</div>
+              <div className="label">Attended</div>
             </div>
             <div className="stat-card">
               <div className="num">{detail.seminar.seats_taken}</div>
-              <div className="label">Terdaftar</div>
+              <div className="label">Registered</div>
             </div>
             <div className="stat-card">
               <div className="num">
@@ -117,7 +117,7 @@ export default function DoorCheckin({ onUnauthorized }) {
                   : 0}
                 %
               </div>
-              <div className="label">Kehadiran</div>
+              <div className="label">Attendance</div>
             </div>
           </div>
         )}
@@ -125,14 +125,14 @@ export default function DoorCheckin({ onUnauthorized }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Scan Peserta
+          <span className="sec-no">02</span>Scan Attendees
         </h2>
         <p className="panel-sub">
-          {selected ? `Pintu ${selected.room}` : 'Memuat…'} · kamera atau input manual
+          {selected ? `${selected.room} door` : 'Loading…'} · camera or manual input
         </p>
 
         {cameraOn ? (
-          <Suspense fallback={<div className="empty">Menyiapkan kamera…</div>}>
+          <Suspense fallback={<div className="empty">Starting camera…</div>}>
             <CameraScanner
               onScan={checkin}
               onError={(msg) => {
@@ -143,16 +143,16 @@ export default function DoorCheckin({ onUnauthorized }) {
           </Suspense>
         ) : (
           <button className="md-secondary" onClick={() => setCameraOn(true)}>
-            📷 Nyalakan Kamera Scanner
+            📷 Turn on Camera Scanner
           </button>
         )}
-        {cameraError && <div className="error">Kamera tidak tersedia ({cameraError}) — gunakan input manual.</div>}
+        {cameraError && <div className="error">Camera unavailable ({cameraError}) — use the manual input.</div>}
 
         <form className="door-manual" onSubmit={submitManual}>
           <input
             value={manual}
             onChange={(e) => setManual(e.target.value)}
-            placeholder="Input manual: NATCON-2026-XXXXX"
+            placeholder="Manual input: NATCON-2026-XXXXX"
           />
           <button type="submit" className="md-add">
             Check-in

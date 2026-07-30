@@ -6,11 +6,11 @@ import { api } from '../../api/client'
 import { useAuthStore } from '../../store/auth'
 
 const AGENDA = [
-  { time: '08:00', title: 'Registrasi & Expo Tenant dibuka', place: 'Main Lobby · Hall A' },
+  { time: '08:00', title: 'Registration & Tenant Expo opens', place: 'Main Lobby · Hall A' },
   { time: '10:00', title: 'Opening Ceremony', place: 'Plenary Hall' },
-  { time: '13:00', title: 'Seminar Paralel', place: 'Ruang Merapi & Rinjani' },
-  { time: '16:00', title: 'Speed Networking', place: 'Hall B · 40 meja × 8 orang' },
-  { time: '19:00', title: 'Gala Dinner & Door Prize', place: 'Plenary Hall' },
+  { time: '13:00', title: 'Parallel Seminars', place: 'Merapi & Rinjani Rooms' },
+  { time: '16:00', title: 'Speed Networking', place: 'Hall B · 40 tables × 8 people' },
+  { time: '19:00', title: 'Gala Dinner & Lucky Draw', place: 'Plenary Hall' },
 ]
 
 function initials(name = '') {
@@ -45,7 +45,7 @@ export default function Home() {
       <div className="hero-greet">
         <div className="hg-row">
           <div>
-            <h2>Halo, {firstName}</h2>
+            <h2>Hello, {firstName}</h2>
             <p>BNI Natcon 2026 · Jakarta Convention Center</p>
           </div>
           <div className="avatar">{initials(user?.name)}</div>
@@ -82,56 +82,56 @@ export default function Home() {
           <div className="st-num">
             <span className="accent">{stats?.tenants_visited ?? '–'}</span>/{stats?.tenants_total ?? '–'}
           </div>
-          <div className="st-label">Tenant dikunjungi</div>
+          <div className="st-label">Booths visited</div>
         </div>
         <div className="stat">
           <div className="st-num">{stats?.coupons ?? '–'}</div>
-          <div className="st-label">Kupon Door Prize</div>
+          <div className="st-label">Pins collected</div>
         </div>
         <div className="stat">
           <div className="st-num">
             <span className="accent">{stats?.seminars_picked ?? '–'}</span>/{stats?.seminars_total ?? '–'}
           </div>
-          <div className="st-label">Seminar dipilih</div>
+          <div className="st-label">Seminar picked</div>
         </div>
       </div>
 
       <div className="section-title" style={{ marginLeft: 20 }}>
-        Menu cepat
+        Quick menu
       </div>
       <div className="quick-grid">
         <button className="quick" onClick={() => navigate('/qr')}>
           <span className="q-ic">
             <Icon name="qr" size={18} />
           </span>
-          <h4>QR Code Saya</h4>
-          <p>Satu QR untuk semua: tenant &amp; seminar</p>
+          <h4>My QR Code</h4>
+          <p>One QR for everything: booths &amp; seminars</p>
         </button>
         <button className="quick" onClick={() => navigate('/passport')}>
           <span className="q-ic">
             <Icon name="pin" size={18} />
           </span>
           <h4>Tenant Passport</h4>
-          <p>Kumpulkan scan, ganti stempel manual</p>
+          <p>Collect scans, claim your pin</p>
         </button>
         <button className="quick" onClick={() => navigate('/seminar')}>
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
-          <h4>Seminar Paralel</h4>
-          <p>Pilih sesi, daftar via scan QR</p>
+          <h4>Parallel Seminars</h4>
+          <p>Pick a session, claim a totebag</p>
         </button>
         <button className="quick" onClick={() => navigate('/network')}>
           <span className="q-ic">
             <Icon name="users" size={18} />
           </span>
           <h4>Speed Networking</h4>
-          <p>8 orang · 1 meja · otomatis terkoneksi</p>
+          <p>Scan your table · 8 people auto-connected</p>
         </button>
       </div>
 
       <div className="section-title" style={{ marginLeft: 20 }}>
-        Agenda hari ini
+        Today's agenda
       </div>
       <div className="card agenda-strip">
         {AGENDA.map((a) => (

@@ -2,17 +2,24 @@
 
 [![CI](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml/badge.svg)](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml)
 
-Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html` mockup.
-Members collect digital "stamps" (door-prize coupons) by having tenants scan
-their QR code, register for parallel seminars, and join **speed networking**
-(check in at a table of 8 — everyone at the table is auto-connected and can
-save each other as contacts). Tenants scan member QRs with their device camera
-and watch a live booth dashboard. A separate admin app gives the committee
-live monitoring, master-data CRUD, **detail pages** per peserta/tenant/
-seminar (profile, visit history, leads, attendee lists), and a **door
-check-in station** (Check-in Pintu): scan attendee QRs at the seminar-room
-door — attendance (hadir vs terdaftar) is tracked live and flows into the
-seminar detail page and the registration report.
+Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html`
+mockup. The entire UI is in **English** (MoM revision). Members collect
+**pins** by having sponsors & booths scan their QR (passport groups
+**sponsors on top**, visited tenants sink to the bottom; every tenant card
+carries a description), register for parallel seminars (**totebag on
+door check-in**, with a **separate seminar entry QR**, full seminar detail
++ cover, and a live attendance badge), and join **speed networking** —
+**scan the table QR first** (or type the table number) to drop straight
+into the table's network, with per-person **notes** and contact details
+carrying **email & phone** that open the mail/phone app on tap. Tenants
+scan member QRs with the camera or **manual input by member ID / phone
+number**, keep **notes per visitor** (shown in the visitor list), and open
+a **visitor detail** page from the booth dashboard. A separate admin app
+gives the committee live monitoring, master-data CRUD (tenants have
+**booth/sponsor kind** + description; seminars have description + cover),
+**detail pages**, the **door check-in station**, and a **Lucky Draw** page
+with a card-shuffle animation where every pin is a ticket and top
+collectors lead the deck.
 
 All UI follows the original mockup theme (Plus Jakarta Sans, rounded cards,
 soft shadows, tinted pills, single red `#CF2030` accent).
@@ -55,7 +62,7 @@ deployments. For local development, start only the database with
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 73-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 84-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -162,13 +169,15 @@ All with password `natcon2026`:
 | GET `/tenants`                 | member | tenants with `visited` flag              |
 | GET `/seminars`                | member | seminars with seats left + `registered`  |
 | POST `/seminars/{id}/register` | member | register (409 when full/already picked)  |
-| POST `/scans`                  | tenant | record visit from `member_code`          |
+| POST `/scans`                  | tenant | record visit — `member_code` accepts a member code **or phone number** |
 | GET `/booth`                   | tenant | booth profile                            |
 | GET `/booth/stats`             | tenant | total + today scan counts                |
-| GET `/booth/visitors`          | tenant | recent visitors                          |
+| GET `/booth/visitors`          | tenant | recent visitors (incl. per-visitor note) |
+| GET `/booth/visitors/{id}`, PUT `.../note` | tenant | visitor detail + lead note |
 | GET `/networking`              | member | table list + my table, mates, saved flags |
 | POST `/networking/checkin`     | member | check in / move table (409 when full)   |
 | POST `/networking/contacts`(`/all`) | member | save one / all table-mate contacts |
+| PUT `/networking/contacts/{id}/note` | member | private note on a saved contact |
 | GET `/networking/history`      | member | table check-in log + saved contacts      |
 | GET `/admin/{members,tenants,seminars}/{id}` | admin | detail pages         |
 | GET `/admin/overview`          | admin  | event-wide stats                         |
@@ -197,9 +206,10 @@ cd frontend && npm test
 cd admin && npm test
 ```
 
-End-to-end suite (73 checks: auth, role guards, scan, seminar + door
-check-in/attendance, networking, admin CRUD/import/reports, pagination,
-metrics, hardening). Needs a **fresh database**:
+End-to-end suite (84 checks: auth, role guards, scan by code & phone,
+visitor notes/detail, seminar + door check-in/attendance, networking incl.
+contact notes/email/phone, sponsor kinds, admin CRUD/import/reports,
+pagination, metrics, hardening). Needs a **fresh database**:
 
 ```bash
 createdb natcon_e2e   # or: CREATE DATABASE natcon_e2e;

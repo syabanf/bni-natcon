@@ -40,6 +40,6 @@ func respondDomainError(w http.ResponseWriter, err error) {
 	default:
 		slog.Error("internal error", "err", err)
 		respondError(w, http.StatusInternalServerError,
-			"terjadi kesalahan pada server — coba beberapa saat lagi")
+			"something went wrong on our side — please try again shortly")
 	}
 }

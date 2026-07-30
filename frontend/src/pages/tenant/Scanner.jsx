@@ -24,11 +24,11 @@ export default function Scanner() {
   const busyRef = useRef(false)
   const lastCodeRef = useRef({ code: '', at: 0 })
 
-  // Sinkronkan antrean scan offline saat halaman dibuka & saat online lagi.
+  // Flush the offline scan queue on mount and whenever we come back online.
   const sync = async () => {
     const { synced, remaining } = await flushQueue((code) => api.scan(code))
     setPending(remaining)
-    if (synced > 0) toast(`${synced} scan offline berhasil disinkronkan`)
+    if (synced > 0) toast(`${synced} offline scan(s) synced`)
   }
 
   useEffect(() => {
@@ -53,31 +53,31 @@ export default function Scanner() {
       if (res.duplicate) {
         setResult({
           kind: 'dup',
-          title: 'Sudah pernah di-scan',
-          detail: `${res.member_name} sudah tercatat di booth ini — kupon tidak bertambah`,
+          title: 'Already scanned',
+          detail: `${res.member_name} is already recorded at this booth — pin count unchanged`,
         })
       } else {
         setResult({
           kind: 'ok',
-          title: 'Scan berhasil',
-          detail: `${res.member_name} · ${res.member_chapter} — kupon door prize +1 (total ${res.coupons})`,
+          title: 'Scan successful',
+          detail: `${res.member_name} · ${res.member_chapter} — pin +1 (total ${res.coupons})`,
         })
       }
     } catch (err) {
       if (err.status === 0) {
-        // Offline: simpan ke antrean, sinkron otomatis saat online.
+        // Offline: queue the scan; it syncs automatically when back online.
         const count = enqueueScan(code)
         setPending(count)
         setResult({
           kind: 'queued',
-          title: 'Offline — scan disimpan',
-          detail: `${code} masuk antrean (${count} menunggu) dan akan disinkronkan otomatis saat online`,
+          title: 'Offline — scan queued',
+          detail: `${code} queued (${count} waiting) — syncs automatically once you're back online`,
         })
       } else {
         setResult({
           kind: 'err',
-          title: 'Scan gagal',
-          detail: err.status === 404 ? 'QR tidak dikenali sebagai peserta Natcon' : err.message,
+          title: 'Scan failed',
+          detail: err.status === 404 ? 'Not recognized as a Natcon attendee — check the ID or phone number' : err.message,
         })
       }
     } finally {
@@ -97,9 +97,9 @@ export default function Scanner() {
       )
       .catch((err) => {
         setCameraError(
-          'Kamera tidak tersedia (' +
+          'Camera unavailable (' +
             (err?.message || err) +
-            '). Gunakan input manual di bawah.'
+            '). Use the manual input below.'
         )
       })
 
@@ -127,7 +127,7 @@ export default function Scanner() {
       <div className="tenant-head">
         <div>
           <h2>Booth Scanner</h2>
-          <p>{booth ? `${booth.name} · Booth ${booth.booth}` : 'Memuat…'}</p>
+          <p>{booth ? `${booth.name} · ${booth.kind === 'sponsor' ? 'Sponsor' : 'Booth'} ${booth.booth}` : 'Loading…'}</p>
         </div>
         <div className="avatar">{booth ? booth.initials : initials(booth?.name)}</div>
       </div>
@@ -140,7 +140,7 @@ export default function Scanner() {
               {cameraError}
             </div>
           ) : (
-            <div className="vf-hint">Arahkan ke QR Code peserta</div>
+            <div className="vf-hint">Point at the attendee QR code</div>
           )}
         </div>
       </div>
@@ -161,9 +161,9 @@ export default function Scanner() {
 
       {pending > 0 && (
         <div className="queue-note">
-          {pending} scan menunggu sinkronisasi —{' '}
+          {pending} scan(s) waiting to sync —{' '}
           <button type="button" onClick={sync}>
-            sinkronkan sekarang
+            sync now
           </button>
         </div>
       )}
@@ -172,9 +172,9 @@ export default function Scanner() {
         <input
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}
-          placeholder="Input manual: NATCON-2026-XXXXX"
+          placeholder="Manual input: member ID or phone number"
         />
-        <button type="submit">Cek</button>
+        <button type="submit">Check</button>
       </form>
       <div style={{ height: 24 }} />
     </>

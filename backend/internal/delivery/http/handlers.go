@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -21,12 +20,14 @@ type userDTO struct {
 	MemberCode string `json:"member_code,omitempty"`
 	Chapter    string `json:"chapter,omitempty"`
 	Company    string `json:"company,omitempty"`
+	Phone      string `json:"phone,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
 	return userDTO{
 		ID: u.ID, Name: u.Name, Email: u.Email, Role: string(u.Role),
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
+		Phone: u.Phone,
 	}
 }
 
@@ -46,7 +47,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" || req.Password == "" {
-		respondError(w, http.StatusBadRequest, "email dan password wajib diisi")
+		respondError(w, http.StatusBadRequest, "email and password are required")
 		return
 	}
 	token, user, err := s.auth.Login(r.Context(), req.Email, req.Password)
@@ -88,18 +89,21 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	type tenantDTO struct {
-		ID       int64  `json:"id"`
-		Name     string `json:"name"`
-		Category string `json:"category"`
-		Booth    string `json:"booth"`
-		Initials string `json:"initials"`
-		Visited  bool   `json:"visited"`
+		ID          int64  `json:"id"`
+		Name        string `json:"name"`
+		Category    string `json:"category"`
+		Booth       string `json:"booth"`
+		Initials    string `json:"initials"`
+		Kind        string `json:"kind"`
+		Description string `json:"description"`
+		Visited     bool   `json:"visited"`
 	}
 	out := make([]tenantDTO, 0, len(tenants))
 	for _, t := range tenants {
 		out = append(out, tenantDTO{
 			ID: t.ID, Name: t.Name, Category: t.Category,
-			Booth: t.Booth, Initials: t.Initials, Visited: t.Visited,
+			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
+			Description: t.Description, Visited: t.Visited,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})
@@ -112,14 +116,17 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	type seminarDTO struct {
-		ID        int64  `json:"id"`
-		Slot      int    `json:"slot"`
-		Room      string `json:"room"`
-		Title     string `json:"title"`
-		Speaker   string `json:"speaker"`
-		Capacity  int    `json:"capacity"`
-		SeatsLeft int    `json:"seats_left"`
-		Registered bool  `json:"registered"`
+		ID          int64  `json:"id"`
+		Slot        int    `json:"slot"`
+		Room        string `json:"room"`
+		Title       string `json:"title"`
+		Speaker     string `json:"speaker"`
+		Capacity    int    `json:"capacity"`
+		SeatsLeft   int    `json:"seats_left"`
+		Registered  bool   `json:"registered"`
+		Attended    bool   `json:"attended"`
+		Description string `json:"description"`
+		CoverURL    string `json:"cover_url"`
 	}
 	out := make([]seminarDTO, 0, len(seminars))
 	for _, sem := range seminars {
@@ -127,6 +134,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 			ID: sem.ID, Slot: sem.Slot, Room: sem.Room, Title: sem.Title,
 			Speaker: sem.Speaker, Capacity: sem.Capacity,
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
+			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"seminars": out})
@@ -135,7 +143,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRegisterSeminar(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "seminar tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown seminar")
 		return
 	}
 	if err := s.seminar.Register(r.Context(), id, userIDFrom(r.Context())); err != nil {
@@ -148,7 +156,7 @@ func (s *Server) handleRegisterSeminar(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUnregisterSeminar(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "seminar tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown seminar")
 		return
 	}
 	if err := s.seminar.Unregister(r.Context(), id, userIDFrom(r.Context())); err != nil {
@@ -165,7 +173,7 @@ func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {
 		MemberCode string `json:"member_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberCode == "" {
-		respondError(w, http.StatusBadRequest, "kode member wajib diisi")
+		respondError(w, http.StatusBadRequest, "member code is required")
 		return
 	}
 	result, err := s.scan.Scan(r.Context(), userIDFrom(r.Context()), req.MemberCode)
@@ -174,6 +182,7 @@ func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
+		"member_id":      result.MemberID,
 		"member_name":    result.MemberName,
 		"member_chapter": result.MemberChapter,
 		"member_company": result.MemberCompany,
@@ -191,6 +200,7 @@ func (s *Server) handleBooth(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{
 		"id": booth.ID, "name": booth.Name, "category": booth.Category,
 		"booth": booth.Booth, "initials": booth.Initials,
+		"kind": booth.Kind, "description": booth.Description,
 	})
 }
 
@@ -213,15 +223,56 @@ func (s *Server) handleBoothVisitors(w http.ResponseWriter, r *http.Request) {
 		respondDomainError(w, err)
 		return
 	}
-	type visitorDTO struct {
-		Name      string    `json:"name"`
-		Chapter   string    `json:"chapter"`
-		Company   string    `json:"company"`
-		VisitedAt time.Time `json:"visited_at"`
-	}
-	out := make([]visitorDTO, 0, len(visitors))
+	out := make([]map[string]any, 0, len(visitors))
 	for _, v := range visitors {
-		out = append(out, visitorDTO{Name: v.Name, Chapter: v.Chapter, Company: v.Company, VisitedAt: v.VisitedAt})
+		out = append(out, visitorToDTO(&v))
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"visitors": out})
+}
+
+func visitorToDTO(v *domain.Visitor) map[string]any {
+	return map[string]any{
+		"member_id":   v.MemberID,
+		"name":        v.Name,
+		"chapter":     v.Chapter,
+		"company":     v.Company,
+		"member_code": v.MemberCode,
+		"phone":       v.Phone,
+		"note":        v.Note,
+		"visited_at":  v.VisitedAt,
+	}
+}
+
+func (s *Server) handleVisitorDetail(w http.ResponseWriter, r *http.Request) {
+	memberID, err := strconv.ParseInt(chi.URLParam(r, "memberID"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "unknown visitor")
+		return
+	}
+	v, err := s.booth.VisitorDetail(r.Context(), userIDFrom(r.Context()), memberID)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"visitor": visitorToDTO(v)})
+}
+
+func (s *Server) handleVisitorNote(w http.ResponseWriter, r *http.Request) {
+	memberID, err := strconv.ParseInt(chi.URLParam(r, "memberID"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "unknown visitor")
+		return
+	}
+	var req struct {
+		Note string `json:"note"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	if err := s.booth.SetVisitorNote(r.Context(), userIDFrom(r.Context()), memberID, req.Note); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "saved"})
 }

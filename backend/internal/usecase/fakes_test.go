@@ -40,6 +40,15 @@ func (f *fakeUserRepo) GetByMemberCode(_ context.Context, code string) (*domain.
 	return nil, domain.ErrNotFound
 }
 
+func (f *fakeUserRepo) GetByCodeOrPhone(_ context.Context, key string) (*domain.User, error) {
+	for _, u := range f.users {
+		if u.Role == domain.RoleMember && (u.MemberCode == key || (u.Phone != "" && u.Phone == key)) {
+			return u, nil
+		}
+	}
+	return nil, domain.ErrNotFound
+}
+
 type fakeTenantRepo struct {
 	tenants []domain.Tenant
 	visits  *fakeVisitRepo
@@ -119,6 +128,24 @@ func (f *fakeVisitRepo) RecentVisitors(_ context.Context, tenantID int64, limit 
 		}
 	}
 	return out, nil
+}
+
+func (f *fakeVisitRepo) SetNote(_ context.Context, tenantID, memberID int64, note string) error {
+	for _, v := range f.visits {
+		if v.TenantID == tenantID && v.MemberID == memberID {
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
+func (f *fakeVisitRepo) VisitorDetail(_ context.Context, tenantID, memberID int64) (*domain.Visitor, error) {
+	for _, v := range f.visits {
+		if v.TenantID == tenantID && v.MemberID == memberID {
+			return &domain.Visitor{MemberID: memberID, VisitedAt: v.CreatedAt}, nil
+		}
+	}
+	return nil, domain.ErrNotFound
 }
 
 type fakeSeminarRepo struct {

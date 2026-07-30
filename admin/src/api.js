@@ -15,14 +15,14 @@ export class ApiError extends Error {
   }
 }
 
-// Fallback ramah saat server tidak mengirim pesan (proxy error, rate
-// limit, server tumbang, dsb).
+// Friendly fallbacks when the server sends no message (proxy errors,
+// rate limits, downtime).
 const FRIENDLY_STATUS = {
-  429: 'Terlalu banyak percobaan — tunggu sebentar lalu coba lagi.',
-  500: 'Server sedang bermasalah. Coba beberapa saat lagi, atau aktifkan Mode Demo (Mock).',
-  502: 'Server tidak dapat dihubungi. Coba beberapa saat lagi.',
-  503: 'Server sedang sibuk. Coba beberapa saat lagi.',
-  504: 'Server terlalu lama merespons. Coba beberapa saat lagi.',
+  429: 'Too many attempts — wait a moment and try again.',
+  500: 'The server is having trouble. Try again shortly, or turn on Demo (Mock) mode.',
+  502: 'The server cannot be reached. Try again shortly.',
+  503: 'The server is busy. Try again shortly.',
+  504: 'The server took too long to respond. Try again shortly.',
 }
 
 async function request(path, { method = 'GET', body, onUnauthorized } = {}) {
@@ -38,12 +38,12 @@ async function request(path, { method = 'GET', body, onUnauthorized } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Tidak bisa terhubung ke server — periksa koneksi, atau aktifkan Mode Demo (Mock).')
+    throw new ApiError(0, 'Cannot reach the server — check your connection, or turn on Demo (Mock) mode.')
   }
   if (res.status === 401 && path !== '/auth/login') {
     clearToken()
     onUnauthorized?.()
-    throw new ApiError(401, 'Sesi kamu sudah berakhir — silakan login kembali.')
+    throw new ApiError(401, 'Your session has expired — please log in again.')
   }
   let data = null
   try {
@@ -54,7 +54,7 @@ async function request(path, { method = 'GET', body, onUnauthorized } = {}) {
   if (!res.ok) {
     throw new ApiError(
       res.status,
-      data?.error || FRIENDLY_STATUS[res.status] || `Terjadi kesalahan (kode ${res.status}). Coba lagi ya.`
+      data?.error || FRIENDLY_STATUS[res.status] || `Something went wrong (code ${res.status}). Please try again.`
     )
   }
   return data

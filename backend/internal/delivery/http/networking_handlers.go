@@ -29,6 +29,7 @@ func (s *Server) handleNetworkingStatus(w http.ResponseWriter, r *http.Request) 
 			mates = append(mates, map[string]any{
 				"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
 				"company": m.Company, "seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved,
+				"note": m.Note,
 			})
 		}
 		resp["table"] = tableDTO(map[string]any{
@@ -46,7 +47,7 @@ func (s *Server) handleNetworkingCheckIn(w http.ResponseWriter, r *http.Request)
 		TableNo int `json:"table_no"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.TableNo <= 0 {
-		respondError(w, http.StatusBadRequest, "nomor meja wajib diisi")
+		respondError(w, http.StatusBadRequest, "table number is required")
 		return
 	}
 	if err := s.networking.CheckIn(r.Context(), userIDFrom(r.Context()), req.TableNo); err != nil {
@@ -61,7 +62,7 @@ func (s *Server) handleNetworkingSaveContact(w http.ResponseWriter, r *http.Requ
 		MemberID int64 `json:"member_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberID <= 0 {
-		respondError(w, http.StatusBadRequest, "kontak tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown contact")
 		return
 	}
 	if err := s.networking.SaveContact(r.Context(), userIDFrom(r.Context()), req.MemberID); err != nil {
@@ -87,7 +88,8 @@ func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request)
 	for _, c := range h.Contacts {
 		contacts = append(contacts, map[string]any{
 			"member_id": c.MemberID, "name": c.Name, "chapter": c.Chapter,
-			"company": c.Company, "member_code": c.MemberCode, "saved_at": c.SavedAt,
+			"company": c.Company, "member_code": c.MemberCode, "note": c.Note,
+			"saved_at": c.SavedAt,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tables": tables, "contacts": contacts})
@@ -96,7 +98,7 @@ func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Request) {
 	tableNo, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "meja tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown table")
 		return
 	}
 	d, err := s.networking.TableDetail(r.Context(), userIDFrom(r.Context()), int(tableNo))
@@ -109,6 +111,7 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 		members = append(members, map[string]any{
 			"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
 			"company": m.Company, "seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved,
+			"note": m.Note,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
@@ -123,7 +126,7 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "kontak tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown contact")
 		return
 	}
 	d, err := s.networking.ContactDetail(r.Context(), userIDFrom(r.Context()), id)
@@ -133,9 +136,30 @@ func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Re
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"member_id": d.MemberID, "name": d.Name, "chapter": d.Chapter,
-		"company": d.Company, "member_code": d.MemberCode, "saved_at": d.SavedAt,
+		"company": d.Company, "member_code": d.MemberCode, "email": d.Email,
+		"phone": d.Phone, "note": d.Note, "saved_at": d.SavedAt,
 		"current_table_no": d.CurrentTableNo,
 	})
+}
+
+func (s *Server) handleNetworkingContactNote(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "unknown contact")
+		return
+	}
+	var req struct {
+		Note string `json:"note"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	if err := s.networking.SetContactNote(r.Context(), userIDFrom(r.Context()), id, req.Note); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "saved"})
 }
 
 func (s *Server) handleNetworkingSaveAll(w http.ResponseWriter, r *http.Request) {

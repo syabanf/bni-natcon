@@ -20,9 +20,10 @@ func NewSeminarRepo(pool *pgxpool.Pool) *SeminarRepo {
 
 func (r *SeminarRepo) ListWithStatus(ctx context.Context, memberID int64) ([]domain.SeminarWithStatus, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity,
+		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity, s.description, s.cover_url,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id) AS taken,
-		       EXISTS (SELECT 1 FROM seminar_registrations sr WHERE sr.seminar_id = s.id AND sr.member_id = $1) AS registered
+		       EXISTS (SELECT 1 FROM seminar_registrations sr WHERE sr.seminar_id = s.id AND sr.member_id = $1) AS registered,
+		       EXISTS (SELECT 1 FROM seminar_attendance sa WHERE sa.seminar_id = s.id AND sa.member_id = $1) AS attended
 		FROM seminars s
 		ORDER BY s.slot, s.room`, memberID)
 	if err != nil {
@@ -33,7 +34,7 @@ func (r *SeminarRepo) ListWithStatus(ctx context.Context, memberID int64) ([]dom
 	var out []domain.SeminarWithStatus
 	for rows.Next() {
 		var s domain.SeminarWithStatus
-		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Capacity, &s.SeatsTaken, &s.Registered); err != nil {
+		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Capacity, &s.Description, &s.CoverURL, &s.SeatsTaken, &s.Registered, &s.Attended); err != nil {
 			return nil, err
 		}
 		out = append(out, s)

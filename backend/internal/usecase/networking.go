@@ -20,7 +20,7 @@ func (u *NetworkingUsecase) Status(ctx context.Context, memberID int64) (*domain
 
 func (u *NetworkingUsecase) CheckIn(ctx context.Context, memberID int64, tableNo int) error {
 	if tableNo <= 0 {
-		return invalid("nomor meja tidak valid")
+		return invalid("invalid table number")
 	}
 	return u.networking.CheckIn(ctx, memberID, tableNo)
 }
@@ -46,4 +46,12 @@ func (u *NetworkingUsecase) TableDetail(ctx context.Context, memberID int64, tab
 
 func (u *NetworkingUsecase) ContactDetail(ctx context.Context, ownerID, contactID int64) (*domain.ContactDetail, error) {
 	return u.networking.ContactDetail(ctx, ownerID, contactID)
+}
+
+// SetContactNote stores the member's private note about a saved contact.
+func (u *NetworkingUsecase) SetContactNote(ctx context.Context, ownerID, contactID int64, note string) error {
+	if len(note) > 500 {
+		return invalid("note is too long — maximum 500 characters")
+	}
+	return u.networking.SetContactNote(ctx, ownerID, contactID, note)
 }

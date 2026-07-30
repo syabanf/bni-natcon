@@ -1555,6 +1555,141 @@ input {
   padding: 40px 20px;
 }
 
+/* ===== MoM revision: tenant desc, seminar detail, notes, contacts ===== */
+.tenant-card .t-desc {
+  font-size: 10.5px;
+  color: var(--gray);
+  line-height: 1.45;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.seminar-hero-cover {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3px;
+  padding: 16px 18px;
+  color: #fff;
+}
+.seminar-hero-cover.tall {
+  height: 170px;
+}
+.seminar-hero-cover .shc-room {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.seminar-hero-cover .shc-title {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.seminar-desc {
+  font-size: 12px;
+  color: var(--gray);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+.seminar-desc.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.seminar-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.seminar-qr {
+  margin-top: 12px;
+  background: var(--bg);
+  border: 1px dashed #d8d8d8;
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.seminar-qr b {
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+.seminar-qr p {
+  font-size: 11.5px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+.note-editor {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+.note-editor input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 12.5px;
+  background: var(--bg);
+}
+.note-editor input:focus {
+  outline: 2px solid var(--red);
+  outline-offset: -1px;
+}
+.note-editor button {
+  padding: 10px 16px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.np-note {
+  font-size: 11px;
+  color: var(--chip-ink);
+  background: var(--chip);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin-top: 5px;
+  display: inline-block;
+}
+.contact-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.contact-actions .btn {
+  text-decoration: none;
+  font-size: 13px;
+  padding: 12px;
+}
+.visitor.clickable {
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.2s;
+}
+.visitor.clickable:hover {
+  border-color: var(--red);
+}
+.visitor.clickable:active {
+  transform: scale(0.98);
+}
+
 /* ===== Responsive ===== */
 /* Toast tidak boleh lebih lebar dari layar */
 .toast {

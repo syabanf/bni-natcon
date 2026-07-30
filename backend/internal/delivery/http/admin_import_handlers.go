@@ -28,11 +28,11 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 		} `json:"members"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Members) == 0 {
-		respondError(w, http.StatusBadRequest, "daftar peserta kosong — periksa file import")
+		respondError(w, http.StatusBadRequest, "member list is empty — check the import file")
 		return
 	}
 	if len(req.Members) > maxImportRows {
-		respondError(w, http.StatusBadRequest, "terlalu banyak baris — maksimal 1000 per import")
+		respondError(w, http.StatusBadRequest, "too many rows — maximum 1000 per import")
 		return
 	}
 	rows := make([]usecase.MemberImportRow, 0, len(req.Members))
@@ -57,20 +57,22 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 			Booth    string `json:"booth"`
 			Initials string `json:"initials"`
 			Email    string `json:"email"`
+			Kind     string `json:"kind"`
 		} `json:"tenants"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Tenants) == 0 {
-		respondError(w, http.StatusBadRequest, "daftar tenant kosong — periksa file import")
+		respondError(w, http.StatusBadRequest, "tenant list is empty — check the import file")
 		return
 	}
 	if len(req.Tenants) > maxImportRows {
-		respondError(w, http.StatusBadRequest, "terlalu banyak baris — maksimal 1000 per import")
+		respondError(w, http.StatusBadRequest, "too many rows — maximum 1000 per import")
 		return
 	}
 	rows := make([]usecase.TenantImportRow, 0, len(req.Tenants))
 	for _, t := range req.Tenants {
 		rows = append(rows, usecase.TenantImportRow{
 			Name: t.Name, Category: t.Category, Booth: t.Booth, Initials: t.Initials, Email: t.Email,
+			Kind: t.Kind,
 		})
 	}
 	created, errs := s.admin.BulkCreateTenants(r.Context(), rows)

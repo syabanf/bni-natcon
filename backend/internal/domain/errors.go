@@ -3,16 +3,16 @@ package domain
 import "errors"
 
 // Error messages double as user-facing copy, so they are written as
-// friendly Indonesian sentences.
+// friendly English sentences (MoM revision: UI language is English).
 var (
-	ErrNotFound           = errors.New("data tidak ditemukan")
-	ErrInvalidCredentials = errors.New("email atau password salah — coba periksa kembali")
-	ErrDuplicateVisit     = errors.New("peserta ini sudah pernah di-scan di booth ini")
-	ErrSeminarFull        = errors.New("kursi seminar sudah penuh — pilih sesi lain")
-	ErrAlreadyRegistered  = errors.New("kamu sudah terdaftar di seminar lain pada slot ini")
-	ErrForbidden          = errors.New("akun ini tidak memiliki akses ke fitur tersebut")
-	ErrEmailTaken         = errors.New("email sudah digunakan akun lain")
-	ErrInvalidInput       = errors.New("input tidak valid")
-	ErrTableFull          = errors.New("meja sudah penuh — pilih meja lain")
-	ErrNotRegistered      = errors.New("peserta belum terdaftar di seminar ini")
+	ErrNotFound           = errors.New("data not found")
+	ErrInvalidCredentials = errors.New("incorrect email or password — please double-check")
+	ErrDuplicateVisit     = errors.New("this attendee has already been scanned at this booth")
+	ErrSeminarFull        = errors.New("this seminar is fully booked — please pick another session")
+	ErrAlreadyRegistered  = errors.New("you are already registered for another seminar in this slot")
+	ErrForbidden          = errors.New("this account does not have access to that feature")
+	ErrEmailTaken         = errors.New("that email is already used by another account")
+	ErrInvalidInput       = errors.New("invalid input")
+	ErrTableFull          = errors.New("this table is full — please join another one")
+	ErrNotRegistered      = errors.New("this attendee is not registered for this seminar")
 )

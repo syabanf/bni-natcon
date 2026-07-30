@@ -10,14 +10,14 @@ export class ApiError extends Error {
   }
 }
 
-// Fallback ramah saat server tidak mengirim pesan (mis. proxy error,
-// rate limit, atau server tumbang).
+// Friendly fallbacks when the server sends no message (proxy errors,
+// rate limits, downtime).
 const FRIENDLY_STATUS = {
-  429: 'Terlalu banyak percobaan — tunggu sebentar lalu coba lagi.',
-  500: 'Server sedang bermasalah. Coba beberapa saat lagi, atau gunakan Mode Demo (Mock).',
-  502: 'Server tidak dapat dihubungi. Coba beberapa saat lagi.',
-  503: 'Server sedang sibuk. Coba beberapa saat lagi.',
-  504: 'Server terlalu lama merespons. Coba beberapa saat lagi.',
+  429: 'Too many attempts — wait a moment and try again.',
+  500: 'The server is having trouble. Try again shortly, or switch to Demo (Mock) mode.',
+  502: 'The server cannot be reached. Try again shortly.',
+  503: 'The server is busy. Try again shortly.',
+  504: 'The server took too long to respond. Try again shortly.',
 }
 
 async function request(path, { method = 'GET', body } = {}) {
@@ -33,12 +33,12 @@ async function request(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Tidak bisa terhubung ke server — periksa koneksi, atau coba Mode Demo (Mock).')
+    throw new ApiError(0, 'Cannot reach the server — check your connection, or try Demo (Mock) mode.')
   }
 
   if (res.status === 401 && path !== '/auth/login') {
     useAuthStore.getState().logout()
-    throw new ApiError(401, 'Sesi kamu sudah berakhir — silakan login kembali.')
+    throw new ApiError(401, 'Your session has expired — please log in again.')
   }
 
   let data = null
@@ -50,7 +50,7 @@ async function request(path, { method = 'GET', body } = {}) {
   if (!res.ok) {
     throw new ApiError(
       res.status,
-      data?.error || FRIENDLY_STATUS[res.status] || `Terjadi kesalahan (kode ${res.status}). Coba lagi ya.`
+      data?.error || FRIENDLY_STATUS[res.status] || `Something went wrong (code ${res.status}). Please try again.`
     )
   }
   return data
@@ -88,8 +88,18 @@ export const api = {
       : request('/networking/contacts', { method: 'POST', body: { member_id: memberId } }),
   saveAllContacts: () =>
     isMock() ? mockApi.saveAllContacts() : request('/networking/contacts/all', { method: 'POST' }),
+  setContactNote: (id, note) =>
+    isMock()
+      ? mockApi.setContactNote(id, note)
+      : request(`/networking/contacts/${id}/note`, { method: 'PUT', body: { note } }),
   booth: () => (isMock() ? mockApi.booth() : request('/booth')),
   boothStats: () => (isMock() ? mockApi.boothStats() : request('/booth/stats')),
   boothVisitors: (limit = 10) =>
     isMock() ? mockApi.boothVisitors(limit) : request(`/booth/visitors?limit=${limit}`),
+  visitorDetail: (memberId) =>
+    isMock() ? mockApi.visitorDetail(memberId) : request(`/booth/visitors/${memberId}`),
+  setVisitorNote: (memberId, note) =>
+    isMock()
+      ? mockApi.setVisitorNote(memberId, note)
+      : request(`/booth/visitors/${memberId}/note`, { method: 'PUT', body: { note } }),
 }

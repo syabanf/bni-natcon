@@ -25,15 +25,15 @@ export default function MyQR() {
 
       <div className="qr-uses">
         <div className="section-title" style={{ margin: '18px 0 4px' }}>
-          Satu QR untuk semuanya
+          What this QR is for
         </div>
         <div className="qr-use">
           <div className="qu-ic">
             <Icon name="store" size={17} />
           </div>
           <div>
-            <h5>Kunjungan Tenant</h5>
-            <p>Di-scan tenant, kupon door prize bertambah</p>
+            <h5>Booth Visits</h5>
+            <p>Scanned by sponsors &amp; booths — collect pins for every visit</p>
           </div>
         </div>
         <div className="qr-use">
@@ -41,8 +41,8 @@ export default function MyQR() {
             <Icon name="mic" size={17} />
           </div>
           <div>
-            <h5>Registrasi Seminar</h5>
-            <p>Di-scan panitia di pintu ruang seminar</p>
+            <h5>Seminar Entry</h5>
+            <p>Your seminar entry QR lives on the Seminar page — separate from this one</p>
           </div>
         </div>
       </div>

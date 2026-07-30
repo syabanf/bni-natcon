@@ -4,7 +4,7 @@ import { exportSheet } from './excel'
 import { BarChart, HBarChart } from './Charts'
 
 function fmtTime(iso) {
-  return new Date(iso).toLocaleString('id-ID', {
+  return new Date(iso).toLocaleString('en-GB', {
     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -36,7 +36,7 @@ function ReportTable({ columns, rows }) {
           {rows.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="empty">
-                Belum ada data.
+                No data yet.
               </td>
             </tr>
           )}
@@ -45,7 +45,7 @@ function ReportTable({ columns, rows }) {
       </div>
       {rows.length > PREVIEW_ROWS && (
         <button className="show-more" onClick={() => setShowAll(!showAll)}>
-          {showAll ? 'Tampilkan lebih sedikit' : `Tampilkan semua (${rows.length})`}
+          {showAll ? 'Show fewer' : `Show all (${rows.length})`}
         </button>
       )}
     </>
@@ -95,49 +95,49 @@ export function ReportLeads({ onUnauthorized }) {
     hours.length > 0
       ? Array.from({ length: hours[hours.length - 1] - hours[0] + 1 }, (_, i) => {
           const h = hours[0] + i
-          return { label: `${String(h).padStart(2, '0')}`, hint: `Pukul ${String(h).padStart(2, '0')}.00`, value: perHour[h] || 0 }
+          return { label: `${String(h).padStart(2, '0')}`, hint: `${String(h).padStart(2, '0')}:00`, value: perHour[h] || 0 }
         })
       : []
 
   return (
     <ReportShell
-      title="Laporan — Leads Tenant"
-      sub="Semua scan kunjungan booth · bahan follow-up tenant"
+      title="Report — Tenant Leads"
+      sub="Every booth visit scan · tenant follow-up material"
       exportDisabled={visits.length === 0}
       onExport={() =>
         exportSheet(
           visits.map((v) => ({
-            Peserta: v.member_name, 'Member Code': v.member_code, Chapter: v.chapter,
-            Perusahaan: v.company, Tenant: v.tenant_name, Booth: v.booth, Waktu: v.visited_at,
+            Attendee: v.member_name, 'Member Code': v.member_code, Chapter: v.chapter,
+            Company: v.company, Tenant: v.tenant_name, Booth: v.booth, Time: v.visited_at,
           })),
-          'Leads', 'natcon2026-leads-tenant.xlsx'
+          'Leads', 'natcon2026-tenant-leads.xlsx'
         )
       }
     >
       <div className="chart-grid">
         <div className="panel">
           <h2>
-            <span className="sec-no">01</span>Scan per Booth
+            <span className="sec-no">01</span>Scans per Booth
           </h2>
-          <p className="panel-sub">Jumlah kunjungan tercatat per tenant</p>
-          {boothData.length > 0 ? <BarChart data={boothData} valueLabel="scan" /> : <div className="empty">Belum ada data.</div>}
+          <p className="panel-sub">Recorded visits per tenant</p>
+          {boothData.length > 0 ? <BarChart data={boothData} valueLabel="scans" /> : <div className="empty">No data yet.</div>}
         </div>
         <div className="panel">
           <h2>
-            <span className="sec-no">02</span>Scan per Jam
+            <span className="sec-no">02</span>Scans per Hour
           </h2>
-          <p className="panel-sub">Distribusi traffic sepanjang hari</p>
-          {hourData.length > 0 ? <BarChart data={hourData} valueLabel="scan" /> : <div className="empty">Belum ada data.</div>}
+          <p className="panel-sub">Traffic distribution through the day</p>
+          {hourData.length > 0 ? <BarChart data={hourData} valueLabel="scans" /> : <div className="empty">No data yet.</div>}
         </div>
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">03</span>Rincian Kunjungan
+          <span className="sec-no">03</span>Visit Details
         </h2>
-        <p className="panel-sub">{visits.length} baris · terbaru di atas</p>
+        <p className="panel-sub">{visits.length} rows · newest first</p>
         <ReportTable
-          columns={['Peserta', 'Member Code', 'Chapter', 'Perusahaan', 'Tenant', 'Booth', 'Waktu']}
+          columns={['Attendee', 'Member Code', 'Chapter', 'Company', 'Tenant', 'Booth', 'Time']}
           rows={visits.map((v) => [
             v.member_name, v.member_code, v.chapter, v.company, v.tenant_name, v.booth, fmtTime(v.visited_at),
           ])}
@@ -161,24 +161,24 @@ export function ReportSeminars({ onUnauthorized }) {
 
   return (
     <ReportShell
-      title="Laporan — Registrasi Seminar"
-      sub="Daftar hadir per ruang untuk panitia pintu"
+      title="Report — Seminar Registrations"
+      sub="Attendance sheet per room for the door crew"
       exportDisabled={registrations.length === 0}
       onExport={() =>
         exportSheet(
           registrations.map((r) => ({
-            Peserta: r.member_name, 'Member Code': r.member_code, Chapter: r.chapter,
-            Slot: r.slot, Ruang: r.room, Seminar: r.seminar_title, Hadir: r.attended ? 'Ya' : 'Belum', 'Waktu Daftar': r.registered_at,
+            Attendee: r.member_name, 'Member Code': r.member_code, Chapter: r.chapter,
+            Slot: r.slot, Room: r.room, Seminar: r.seminar_title, Attended: r.attended ? 'Yes' : 'Not yet', 'Registered At': r.registered_at,
           })),
-          'Registrasi', 'natcon2026-registrasi-seminar.xlsx'
+          'Registrations', 'natcon2026-seminar-registrations.xlsx'
         )
       }
     >
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Keterisian Kursi
+          <span className="sec-no">01</span>Seat Fill
         </h2>
-        <p className="panel-sub">Kursi terisi vs kapasitas per seminar</p>
+        <p className="panel-sub">Seats taken vs capacity per seminar</p>
         <HBarChart
           data={seminars.map((s) => ({
             label: s.room,
@@ -186,20 +186,20 @@ export function ReportSeminars({ onUnauthorized }) {
             value: s.seats_taken,
             total: s.capacity,
           }))}
-          valueLabel="kursi"
+          valueLabel="seats"
         />
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Daftar Peserta Terdaftar
+          <span className="sec-no">02</span>Registered Attendees
         </h2>
-        <p className="panel-sub">{registrations.length} baris · urut per ruang</p>
+        <p className="panel-sub">{registrations.length} rows · ordered by room</p>
         <ReportTable
-          columns={['Peserta', 'Member Code', 'Chapter', 'Slot', 'Ruang', 'Seminar', 'Hadir', 'Waktu Daftar']}
+          columns={['Attendee', 'Member Code', 'Chapter', 'Slot', 'Room', 'Seminar', 'Attended', 'Registered At']}
           rows={registrations.map((r) => [
             r.member_name, r.member_code, r.chapter, `#${r.slot}`, r.room, r.seminar_title,
-            r.attended ? <span key="h" className="pill-hadir yes">Hadir</span> : <span key="h" className="pill-hadir">Belum</span>,
+            r.attended ? <span key="h" className="pill-hadir yes">Yes</span> : <span key="h" className="pill-hadir">Not yet</span>,
             fmtTime(r.registered_at),
           ])}
         />
@@ -223,7 +223,7 @@ export function ReportCoupons({ onUnauthorized }) {
   const maxCoupon = Math.max(0, ...Object.keys(dist).map(Number))
   const distData = Array.from({ length: maxCoupon + 1 }, (_, i) => ({
     label: `${i}`,
-    hint: `${i} kupon`,
+    hint: `${i} pins`,
     value: dist[i] || 0,
   }))
 
@@ -231,46 +231,46 @@ export function ReportCoupons({ onUnauthorized }) {
 
   return (
     <ReportShell
-      title="Laporan — Kupon Peserta"
-      sub="Kupon door prize per peserta untuk undian gala dinner"
+      title="Report — Attendee Pins"
+      sub="Pins per attendee — tickets for the gala dinner lucky draw"
       exportDisabled={members.length === 0}
       onExport={() =>
         exportSheet(
           members.map((m) => ({
-            'Member Code': m.member_code, Nama: m.name, Email: m.email,
-            Chapter: m.chapter, Perusahaan: m.company, Kupon: m.visits,
+            'Member Code': m.member_code, Name: m.name, Email: m.email,
+            Chapter: m.chapter, Company: m.company, Pins: m.visits,
           })),
-          'Peserta', 'natcon2026-peserta-kupon.xlsx'
+          'Attendees', 'natcon2026-attendee-pins.xlsx'
         )
       }
     >
       <div className="chart-grid">
         <div className="panel">
           <h2>
-            <span className="sec-no">01</span>Distribusi Kupon
+            <span className="sec-no">01</span>Pin Distribution
           </h2>
-          <p className="panel-sub">Jumlah peserta per jumlah kupon</p>
-          {members.length > 0 ? <BarChart data={distData} valueLabel="peserta" /> : <div className="empty">Belum ada data.</div>}
+          <p className="panel-sub">Attendees per pin count</p>
+          {members.length > 0 ? <BarChart data={distData} valueLabel="attendees" /> : <div className="empty">No data yet.</div>}
         </div>
         <div className="panel">
           <h2>
-            <span className="sec-no">02</span>Peserta Teraktif
+            <span className="sec-no">02</span>Top Collectors
           </h2>
-          <p className="panel-sub">10 kolektor kupon terbanyak</p>
+          <p className="panel-sub">Top 10 pin collectors</p>
           <HBarChart
             data={top.map((m) => ({ label: m.name, sub: m.chapter, value: m.visits }))}
-            valueLabel="kupon"
+            valueLabel="pins"
           />
         </div>
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">03</span>Semua Peserta
+          <span className="sec-no">03</span>All Attendees
         </h2>
-        <p className="panel-sub">{members.length} baris</p>
+        <p className="panel-sub">{members.length} rows</p>
         <ReportTable
-          columns={['Member Code', 'Nama', 'Email', 'Chapter', 'Kupon']}
+          columns={['Member Code', 'Name', 'Email', 'Chapter', 'Pins']}
           rows={members.map((m) => [m.member_code, m.name, m.email, m.chapter, m.visits])}
         />
       </div>

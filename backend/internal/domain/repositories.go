@@ -6,6 +6,9 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id int64) (*User, error)
 	GetByMemberCode(ctx context.Context, code string) (*User, error)
+	// GetByCodeOrPhone resolves a member by member code OR phone number —
+	// the booth scanner's manual input accepts either.
+	GetByCodeOrPhone(ctx context.Context, key string) (*User, error)
 }
 
 type TenantRepository interface {
@@ -21,6 +24,11 @@ type VisitRepository interface {
 	CountByMember(ctx context.Context, memberID int64) (int, error)
 	StatsByTenant(ctx context.Context, tenantID int64) (*BoothStats, error)
 	RecentVisitors(ctx context.Context, tenantID int64, limit int) ([]Visitor, error)
+	// SetNote stores the booth's private note about a visitor.
+	// ErrNotFound when the member never visited this booth.
+	SetNote(ctx context.Context, tenantID, memberID int64, note string) error
+	// VisitorDetail returns one visitor's profile + note for this booth.
+	VisitorDetail(ctx context.Context, tenantID, memberID int64) (*Visitor, error)
 }
 
 type AdminRepository interface {
@@ -82,6 +90,9 @@ type NetworkingRepository interface {
 	// ContactDetail returns one of the member's saved contacts;
 	// ErrNotFound when the contact was never saved by this member.
 	ContactDetail(ctx context.Context, ownerID, contactID int64) (*ContactDetail, error)
+	// SetContactNote stores the owner's private note about a saved contact.
+	// ErrNotFound when the contact was never saved by this member.
+	SetContactNote(ctx context.Context, ownerID, contactID int64, note string) error
 }
 
 type SeminarRepository interface {

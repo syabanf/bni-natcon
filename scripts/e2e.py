@@ -57,6 +57,10 @@ def req(method, path, token=None, body=None, raw_body=None):
         except json.JSONDecodeError:
             parsed = None
         return e.code, parsed, dict(e.headers)
+    except urllib.error.URLError:
+        # The server may slam the connection shut mid-upload (e.g. the
+        # oversized-body guard) — treat it as a connection-level reject.
+        return 0, None, {}
 
 
 def login(email, password=PASSWORD):
@@ -112,13 +116,16 @@ check("member cannot admin -> 403", status == 403)
 # ---------------------------------------------------------------- member basics
 section("Member basics")
 status, body, _ = req("GET", "/api/v1/me", token=member_tok)
-check("me: 12 tenants, 0 visited", status == 200
-      and body["stats"]["tenants_total"] == 12 and body["stats"]["tenants_visited"] == 0)
+check("me: 14 tenants, 0 visited", status == 200
+      and body["stats"]["tenants_total"] == 14 and body["stats"]["tenants_visited"] == 0)
 
 status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
-check("tenants list 12, none visited",
-      status == 200 and len(body["tenants"]) == 12
+check("tenants list 14, none visited",
+      status == 200 and len(body["tenants"]) == 14
       and not any(t["visited"] for t in body["tenants"]))
+check("sponsors listed first with kind + description",
+      body["tenants"][0]["kind"] == "sponsor" and body["tenants"][0]["description"] != ""
+      and body["tenants"][-1]["kind"] == "booth")
 
 # ---------------------------------------------------------------- scan flow
 section("Booth scan (digital stamp)")
@@ -126,6 +133,10 @@ status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok, body={"member_c
 check("first scan ok, coupon 1", status == 200 and body["duplicate"] is False and body["coupons"] == 1)
 status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok, body={"member_code": member_code})
 check("re-scan duplicate, coupon still 1", status == 200 and body["duplicate"] is True and body["coupons"] == 1)
+status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok, body={"member_code": "+62811000201"})
+check("scan by phone number resolves member (Sinta)",
+      status == 200 and body["member_name"] == "Sinta Dewi" and body["duplicate"] is False)
+sinta_member_id = body["member_id"]
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, body={"member_code": "NATCON-2026-99999"})
 check("unknown code -> 404", status == 404)
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, body={})
@@ -136,14 +147,29 @@ check("stats reflect 1 visit/coupon",
       body["stats"]["tenants_visited"] == 1 and body["stats"]["coupons"] == 1)
 
 status, body, _ = req("GET", "/api/v1/booth/stats", token=tenant_tok)
-check("booth stats total 1", status == 200 and body["total_scans"] == 1)
+check("booth stats total 2 (Reddie + Sinta)", status == 200 and body["total_scans"] == 2)
 status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
-check("booth visitors has member", status == 200 and body["visitors"][0]["name"] == "Reddie Wijaya")
+check("booth visitors has newest member first", status == 200 and body["visitors"][0]["name"] == "Sinta Dewi")
+
+status, _, _ = req("PUT", f"/api/v1/booth/visitors/{sinta_member_id}/note", token=tenant_tok,
+                   body={"note": "interested in bulk order"})
+check("set visitor note -> 200", status == 200)
+status, body, _ = req("GET", f"/api/v1/booth/visitors/{sinta_member_id}", token=tenant_tok)
+check("visitor detail carries note + phone", status == 200
+      and body["visitor"]["note"] == "interested in bulk order"
+      and body["visitor"]["phone"] == "+62811000201")
+status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
+check("visitor list shows the note",
+      any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
+status, _, _ = req("PUT", "/api/v1/booth/visitors/999999/note", token=tenant_tok, body={"note": "x"})
+check("note for non-visitor -> 404", status == 404)
 
 # ---------------------------------------------------------------- seminars
 section("Seminars (register / slot lock / cancel / switch)")
 status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
 check("2 seminars listed", status == 200 and len(body["seminars"]) == 2)
+check("seminar carries description + attended flag",
+      body["seminars"][0]["description"] != "" and body["seminars"][0]["attended"] is False)
 sem1, sem2 = body["seminars"][0]["id"], body["seminars"][1]["id"]
 
 status, _, _ = req("POST", f"/api/v1/seminars/{sem1}/register", token=member_tok)
@@ -197,6 +223,16 @@ check("table detail unknown -> 404", status == 404)
 status, body, _ = req("GET", f"/api/v1/networking/contacts/{sinta_id}", token=member_tok)
 check("contact detail shows current table 12",
       status == 200 and body["current_table_no"] == 12)
+check("contact detail carries email + phone",
+      body["email"] == "sinta@natcon.id" and body["phone"] == "+62811000201")
+
+status, _, _ = req("PUT", f"/api/v1/networking/contacts/{sinta_id}/note", token=member_tok,
+                   body={"note": "great referral fit"})
+check("set contact note -> 200", status == 200)
+status, body, _ = req("GET", f"/api/v1/networking/contacts/{sinta_id}", token=member_tok)
+check("contact note persisted", body["note"] == "great referral fit")
+status, _, _ = req("PUT", "/api/v1/networking/contacts/999/note", token=member_tok, body={"note": "x"})
+check("note for unsaved contact -> 404", status == 404)
 status, _, _ = req("GET", "/api/v1/networking/contacts/999", token=member_tok)
 check("contact not owned -> 404", status == 404)
 
@@ -207,9 +243,9 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 # ---------------------------------------------------------------- admin CRUD
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
-check("overview: 3 members, 12 tenants, 1 visit",
+check("overview: 3 members, 14 tenants, 2 visits",
       status == 200 and body["total_members"] == 3
-      and body["total_tenants"] == 12 and body["total_visits"] == 1)
+      and body["total_tenants"] == 14 and body["total_visits"] == 2)
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E"})
@@ -259,7 +295,7 @@ status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
 check("bulk import: 1 created 1 failed", status == 200 and body["created"] == 1 and body["failed"] == 1)
 
 status, body, _ = req("GET", "/api/v1/admin/report/visits", token=admin_tok)
-check("visits report has row", status == 200 and len(body["visits"]) == 1)
+check("visits report has both scans", status == 200 and len(body["visits"]) == 2)
 status, body, _ = req("GET", "/api/v1/admin/report/registrations", token=admin_tok)
 check("registrations report has row", status == 200 and len(body["registrations"]) == 1)
 
@@ -307,7 +343,7 @@ check("prometheus /metrics exposed", metrics_status == 200)
 check("request counter metric present", "natcon_http_requests_total" in metrics_text)
 big = b'{"member_code": "' + b"A" * (3 * 1024 * 1024) + b'"}'
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, raw_body=big)
-check("3MB body rejected (400/413)", status in (400, 413), f"got {status}")
+check("3MB body rejected (400/413/conn-reset)", status in (400, 413, 0), f"got {status}")
 
 statuses = []
 for _ in range(12):

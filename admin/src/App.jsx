@@ -4,19 +4,21 @@ import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
 import DoorCheckin from './DoorCheckin'
+import LuckyDraw from './LuckyDraw'
 
 const MENU = [
   { key: 'dash', label: 'Dashboard', icon: '▦' },
-  { key: 'members', label: 'Peserta', icon: '◉' },
-  { key: 'tenants', label: 'Tenant', icon: '▤' },
-  { key: 'seminars', label: 'Seminar', icon: '◈' },
-  { key: 'door', label: 'Check-in Pintu', icon: '▣' },
+  { key: 'members', label: 'Attendees', icon: '◉' },
+  { key: 'tenants', label: 'Tenants', icon: '▤' },
+  { key: 'seminars', label: 'Seminars', icon: '◈' },
+  { key: 'door', label: 'Door Check-in', icon: '▣' },
+  { key: 'draw', label: 'Lucky Draw', icon: '✦' },
 ]
 
 const REPORT_MENU = [
-  { key: 'report-leads', label: 'Leads Tenant', icon: '≣' },
-  { key: 'report-seminars', label: 'Reg. Seminar', icon: '≣' },
-  { key: 'report-coupons', label: 'Kupon Peserta', icon: '≣' },
+  { key: 'report-leads', label: 'Tenant Leads', icon: '≣' },
+  { key: 'report-seminars', label: 'Seminar Reg.', icon: '≣' },
+  { key: 'report-coupons', label: 'Attendee Pins', icon: '≣' },
 ]
 
 function MockToggle({ onChange }) {
@@ -33,7 +35,7 @@ function MockToggle({ onChange }) {
       }}
     >
       <span className="mt-dot" />
-      {mock ? 'Mode Demo (Mock) aktif — data lokal, tanpa server' : 'Mode API — klik untuk coba Mode Demo (Mock)'}
+      {mock ? 'Demo (Mock) mode is on — local data, no server' : 'API mode — tap to try Demo (Mock) mode'}
     </button>
   )
 }
@@ -51,7 +53,7 @@ function Login({ onLogin }) {
     try {
       const { token, user } = await api.login(email, password)
       if (user.role !== 'admin') {
-        setError('Akun ini bukan akun panitia/admin')
+        setError('This is not a committee/admin account')
         return
       }
       setToken(token)
@@ -68,7 +70,7 @@ function Login({ onLogin }) {
       <form className="login-card" onSubmit={submit}>
         <div className="logo">BNI</div>
         <h1>Natcon 2026 · Admin</h1>
-        <p>Dashboard panitia — monitoring, master data &amp; laporan</p>
+        <p>Committee dashboard — monitoring, master data &amp; reports</p>
         {error && <div className="error">{error}</div>}
         <label>
           Email
@@ -86,11 +88,11 @@ function Login({ onLogin }) {
           />
         </label>
         <button className="btn" disabled={busy}>
-          {busy ? 'Masuk…' : 'Masuk'}
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
         <MockToggle onChange={() => setError('')} />
         <div className="hint">
-          Demo: <code>admin@natcon.id</code> · password <code>natcon2026</code> (mode mock: password bebas)
+          Demo: <code>admin@natcon.id</code> · password <code>natcon2026</code> (mock mode: any password). Attendee demo account <code>reddie@natcon.id</code> lives in the Attendee App.
         </div>
       </form>
     </div>
@@ -122,7 +124,7 @@ function Shell({ onLogout }) {
               {m.label}
             </button>
           ))}
-          <div className="sb-section">Laporan</div>
+          <div className="sb-section">Reports</div>
           {REPORT_MENU.map((m) => (
             <button
               key={m.key}
@@ -136,7 +138,7 @@ function Shell({ onLogout }) {
         </nav>
         <div className="sb-foot">
           <button className="sb-logout" onClick={onLogout}>
-            ← Keluar
+            ← Log out
           </button>
         </div>
       </aside>
@@ -147,6 +149,7 @@ function Shell({ onLogout }) {
         {view === 'tenants' && <TenantsPage />}
         {view === 'seminars' && <SeminarsPage />}
         {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
+        {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}
         {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
         {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}
         {view === 'report-coupons' && <ReportCoupons onUnauthorized={onLogout} />}

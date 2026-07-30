@@ -32,36 +32,39 @@ function seedState() {
     ['Lusi Anggraini', 'lusi@natcon.id', 'NATCON-2026-09005', 'Chapter Jakarta Elite', 'Lusi Catering'],
   ].map(([name, email, code, chapter, company], i) => ({
     id: i + 1, name, email, member_code: code, chapter, company,
+    phone: `+62811${String(1000 + i)}`,
   }))
 
   const tenants = [
-    ['Kopi Nusantara', 'F&B', 'A-03', 'KN'],
-    ['Bank Mitra Sejahtera', 'Finansial', 'A-05', 'BM'],
-    ['Garuda Print Media', 'Percetakan', 'A-08', 'GP'],
-    ['TechNesia Solutions', 'IT & Software', 'B-01', 'TS'],
-    ['Sehat Selalu Clinic', 'Kesehatan', 'B-04', 'SS'],
-    ['Properti Prima', 'Properti', 'B-07', 'PP'],
-    ['Logistik Cepat', 'Logistik', 'C-02', 'LC'],
-    ['Asuransi Aman', 'Asuransi', 'C-05', 'AA'],
-    ['Kreasi Digital', 'Marketing', 'C-08', 'KD'],
-    ['Hukum & Rekan', 'Legal', 'D-01', 'HR'],
-    ['EduPro Training', 'Pelatihan', 'D-04', 'EP'],
-    ['Katering Rasa', 'F&B', 'D-06', 'KR'],
-  ].map(([name, category, booth, initials], i) => ({
-    id: i + 1, name, category, booth, initials,
+    ['BNI Xpora', 'Main Sponsor', 'SP-01', 'BX', 'sponsor', "BNI's one-stop export hub."],
+    ['Wondr by BNI', 'Digital Sponsor', 'SP-02', 'WB', 'sponsor', 'Personal finance super-app.'],
+    ['Kopi Nusantara', 'F&B', 'A-03', 'KN', 'booth', 'Single-origin Indonesian coffee.'],
+    ['Bank Mitra Sejahtera', 'Finance', 'A-05', 'BM', 'booth', 'SME lending partner.'],
+    ['Garuda Print Media', 'Printing', 'A-08', 'GP', 'booth', 'Large-format printing.'],
+    ['TechNesia Solutions', 'IT & Software', 'B-01', 'TS', 'booth', 'Custom software & cloud.'],
+    ['Sehat Selalu Clinic', 'Healthcare', 'B-04', 'SS', 'booth', 'Corporate health checks.'],
+    ['Properti Prima', 'Property', 'B-07', 'PP', 'booth', 'Commercial property advisory.'],
+    ['Logistik Cepat', 'Logistics', 'C-02', 'LC', 'booth', 'Same-day nationwide delivery.'],
+    ['Asuransi Aman', 'Insurance', 'C-05', 'AA', 'booth', 'Business insurance for SMEs.'],
+    ['Kreasi Digital', 'Marketing', 'C-08', 'KD', 'booth', 'Performance marketing studio.'],
+    ['Hukum & Rekan', 'Legal', 'D-01', 'HR', 'booth', 'Corporate legal counsel.'],
+    ['EduPro Training', 'Training', 'D-04', 'EP', 'booth', 'Certified professional training.'],
+    ['Katering Rasa', 'F&B', 'D-06', 'KR', 'booth', 'Premium event catering.'],
+  ].map(([name, category, booth, initials, kind, description], i) => ({
+    id: i + 1, name, category, booth, initials, kind, description,
     owner_email: `booth-${booth.toLowerCase().replace('-', '')}@natcon.id`,
   }))
 
   const seminars = [
-    { id: 1, slot: 1, room: 'R. Merapi', title: 'Scaling Referral: Dari Chapter ke Nasional', speaker: 'Ir. Bambang Wicaksono — National Director', capacity: 60 },
-    { id: 2, slot: 1, room: 'R. Rinjani', title: 'AI untuk UKM: Praktis, Bukan Hype', speaker: 'Dr. Sarah Kusuma — Witid Intelligence', capacity: 40 },
+    { id: 1, slot: 1, room: 'R. Merapi', title: 'Scaling Referral: From Chapter to Nationwide', speaker: 'Ir. Bambang Wicaksono — National Director', capacity: 60, description: 'Turning one-to-one referrals into a national pipeline.', cover_url: '' },
+    { id: 2, slot: 1, room: 'R. Rinjani', title: 'AI for SMEs: Practical, Not Hype', speaker: 'Dr. Sarah Kusuma — Witid Intelligence', capacity: 40, description: 'AI tools an SME can deploy this quarter.', cover_url: '' },
   ]
 
   // (member_id, tenant_id, jam, menit) — tersebar supaya grafik hidup.
   const visits = [
-    [1, 1, 9, 5], [2, 1, 9, 34], [3, 4, 9, 44], [4, 1, 10, 12],
-    [5, 2, 10, 30], [6, 4, 11, 2], [7, 3, 11, 15], [1, 4, 11, 40],
-    [2, 2, 12, 5], [8, 1, 13, 20], [4, 4, 13, 45], [6, 2, 14, 10],
+    [1, 3, 9, 5], [2, 3, 9, 34], [3, 6, 9, 44], [4, 3, 10, 12],
+    [5, 4, 10, 30], [6, 6, 11, 2], [7, 5, 11, 15], [1, 6, 11, 40],
+    [2, 1, 12, 5], [8, 3, 13, 20], [4, 2, 13, 45], [6, 1, 14, 10],
   ].map(([member_id, tenant_id, h, m]) => ({ member_id, tenant_id, at: todayAt(h, m) }))
 
   const registrations = [
@@ -127,9 +130,9 @@ function seatsTaken(s, seminarId) {
 function createMemberRow(s, { name, email, chapter = '', company = '' }) {
   name = (name || '').trim()
   email = (email || '').trim().toLowerCase()
-  if (!name || !email) throw { status: 400, message: 'input tidak valid: nama dan email wajib diisi' }
-  if (!validEmail(email)) throw { status: 400, message: 'input tidak valid: format email tidak valid' }
-  if (s.members.some((m) => m.email === email)) throw { status: 409, message: 'email sudah digunakan akun lain' }
+  if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
+  if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
+  if (s.members.some((m) => m.email === email)) throw { status: 409, message: 'that email is already used by another account' }
   const row = {
     id: s.nextId++, name, email, chapter, company,
     member_code: `NATCON-2026-0${s.nextCode++}`,
@@ -138,16 +141,17 @@ function createMemberRow(s, { name, email, chapter = '', company = '' }) {
   return row
 }
 
-function createTenantRow(s, { name, category = '', booth, initials = '', email = '' }) {
+function createTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '' }) {
   name = (name || '').trim()
   booth = (booth || '').trim()
-  if (!name || !booth) throw { status: 400, message: 'input tidak valid: nama dan booth wajib diisi' }
+  if (!name || !booth) throw { status: 400, message: 'invalid input: name and booth are required' }
   email = (email || '').trim().toLowerCase() ||
     `booth-${booth.toLowerCase().replace(/-/g, '')}@natcon.id`
-  if (!validEmail(email)) throw { status: 400, message: 'input tidak valid: format email tidak valid' }
-  if (s.tenants.some((t) => t.owner_email === email)) throw { status: 409, message: 'email sudah digunakan akun lain' }
+  if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
+  if (s.tenants.some((t) => t.owner_email === email)) throw { status: 409, message: 'that email is already used by another account' }
   initials = (initials || name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2)).toUpperCase()
-  const row = { id: s.nextId++, name, category, booth, initials, owner_email: email }
+  kind = String(kind).toLowerCase() === 'sponsor' ? 'sponsor' : 'booth'
+  const row = { id: s.nextId++, name, category, booth, initials, kind, description, owner_email: email }
   s.tenants.push(row)
   return row
 }
@@ -155,11 +159,11 @@ function createTenantRow(s, { name, category = '', booth, initials = '', email =
 export const mockAdminApi = {
   login(email) {
     if ((email || '').trim().toLowerCase() !== 'admin@natcon.id') {
-      return fail(401, 'Mode demo: gunakan admin@natcon.id (password bebas)')
+      return fail(401, 'Demo mode: use admin@natcon.id (any password)')
     }
     return delay({
       token: 'mock-admin-token',
-      user: { id: 0, name: 'Panitia Natcon', email: 'admin@natcon.id', role: 'admin' },
+      user: { id: 0, name: 'Natcon Committee', email: 'admin@natcon.id', role: 'admin' },
     })
   },
 
@@ -234,13 +238,13 @@ export const mockAdminApi = {
   seminarCheckin(seminarId, memberCode) {
     const s = load()
     const sem = s.seminars.find((x) => x.id === Number(seminarId))
-    if (!sem) return fail(404, 'data tidak ditemukan')
+    if (!sem) return fail(404, 'data not found')
     const member = s.members.find((m) => m.member_code === (memberCode || '').trim())
-    if (!member) return fail(404, 'data tidak ditemukan')
+    if (!member) return fail(404, 'data not found')
     const registered = s.registrations.some(
       (r) => r.seminar_id === sem.id && r.member_id === member.id
     )
-    if (!registered) return fail(409, 'peserta belum terdaftar di seminar ini')
+    if (!registered) return fail(409, 'this attendee is not registered for this seminar')
     const duplicate = s.attendance.some(
       (a) => a.seminar_id === sem.id && a.member_id === member.id
     )
@@ -271,12 +275,12 @@ export const mockAdminApi = {
   updateMember(id, body) {
     const s = load()
     const m = memberById(s, id)
-    if (!m) return fail(404, 'data tidak ditemukan')
+    if (!m) return fail(404, 'data not found')
     const email = (body.email || '').trim().toLowerCase()
-    if (!body.name?.trim() || !email) return fail(400, 'input tidak valid: nama dan email wajib diisi')
-    if (!validEmail(email)) return fail(400, 'input tidak valid: format email tidak valid')
+    if (!body.name?.trim() || !email) return fail(400, 'invalid input: name and email are required')
+    if (!validEmail(email)) return fail(400, 'invalid input: invalid email format')
     if (s.members.some((x) => x.email === email && x.id !== m.id)) {
-      return fail(409, 'email sudah digunakan akun lain')
+      return fail(409, 'that email is already used by another account')
     }
     Object.assign(m, { name: body.name.trim(), email, chapter: body.chapter || '', company: body.company || '' })
     save(s)
@@ -285,7 +289,7 @@ export const mockAdminApi = {
 
   deleteMember(id) {
     const s = load()
-    if (!memberById(s, id)) return fail(404, 'data tidak ditemukan')
+    if (!memberById(s, id)) return fail(404, 'data not found')
     s.members = s.members.filter((m) => m.id !== Number(id))
     s.visits = s.visits.filter((v) => v.member_id !== Number(id))
     s.registrations = s.registrations.filter((r) => r.member_id !== Number(id))
@@ -296,7 +300,7 @@ export const mockAdminApi = {
   memberDetail(id) {
     const s = load()
     const m = memberById(s, id)
-    if (!m) return fail(404, 'data tidak ditemukan')
+    if (!m) return fail(404, 'data not found')
     const visits = s.visits
       .filter((v) => v.member_id === m.id)
       .sort((a, b) => b.at.localeCompare(a.at))
@@ -329,13 +333,15 @@ export const mockAdminApi = {
   updateTenant(id, body) {
     const s = load()
     const t = tenantById(s, id)
-    if (!t) return fail(404, 'data tidak ditemukan')
+    if (!t) return fail(404, 'data not found')
     if (!body.name?.trim() || !body.booth?.trim()) {
-      return fail(400, 'input tidak valid: nama dan booth wajib diisi')
+      return fail(400, 'invalid input: name and booth are required')
     }
     Object.assign(t, {
       name: body.name.trim(), category: body.category || '',
       booth: body.booth.trim(), initials: (body.initials || t.initials).toUpperCase(),
+      kind: String(body.kind || t.kind || 'booth').toLowerCase() === 'sponsor' ? 'sponsor' : 'booth',
+      description: body.description ?? t.description ?? '',
     })
     save(s)
     return delay({ status: 'updated' })
@@ -343,7 +349,7 @@ export const mockAdminApi = {
 
   deleteTenant(id) {
     const s = load()
-    if (!tenantById(s, id)) return fail(404, 'data tidak ditemukan')
+    if (!tenantById(s, id)) return fail(404, 'data not found')
     s.tenants = s.tenants.filter((t) => t.id !== Number(id))
     s.visits = s.visits.filter((v) => v.tenant_id !== Number(id))
     save(s)
@@ -353,7 +359,7 @@ export const mockAdminApi = {
   tenantDetail(id) {
     const s = load()
     const t = tenantById(s, id)
-    if (!t) return fail(404, 'data tidak ditemukan')
+    if (!t) return fail(404, 'data not found')
     const rows = s.visits
       .filter((v) => v.tenant_id === t.id)
       .sort((a, b) => b.at.localeCompare(a.at))
@@ -372,11 +378,12 @@ export const mockAdminApi = {
 
   createSeminar(body) {
     const s = load()
-    if (!body.room?.trim() || !body.title?.trim()) return fail(400, 'input tidak valid: ruang dan judul wajib diisi')
-    if (!(Number(body.capacity) > 0)) return fail(400, 'input tidak valid: kapasitas harus lebih dari 0')
+    if (!body.room?.trim() || !body.title?.trim()) return fail(400, 'invalid input: room and title are required')
+    if (!(Number(body.capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
     const row = {
       id: s.nextId++, slot: Number(body.slot) || 1, room: body.room.trim(),
       title: body.title.trim(), speaker: body.speaker || '', capacity: Number(body.capacity),
+      description: body.description || '', cover_url: body.cover_url || '',
     }
     s.seminars.push(row)
     save(s)
@@ -386,12 +393,13 @@ export const mockAdminApi = {
   updateSeminar(id, body) {
     const s = load()
     const sem = s.seminars.find((x) => x.id === Number(id))
-    if (!sem) return fail(404, 'data tidak ditemukan')
-    if (!body.room?.trim() || !body.title?.trim()) return fail(400, 'input tidak valid: ruang dan judul wajib diisi')
-    if (!(Number(body.capacity) > 0)) return fail(400, 'input tidak valid: kapasitas harus lebih dari 0')
+    if (!sem) return fail(404, 'data not found')
+    if (!body.room?.trim() || !body.title?.trim()) return fail(400, 'invalid input: room and title are required')
+    if (!(Number(body.capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
     Object.assign(sem, {
       slot: Number(body.slot) || 1, room: body.room.trim(), title: body.title.trim(),
       speaker: body.speaker || '', capacity: Number(body.capacity),
+      description: body.description ?? sem.description ?? '', cover_url: body.cover_url ?? sem.cover_url ?? '',
     })
     save(s)
     return delay({ status: 'updated' })
@@ -399,7 +407,7 @@ export const mockAdminApi = {
 
   deleteSeminar(id) {
     const s = load()
-    if (!s.seminars.some((x) => x.id === Number(id))) return fail(404, 'data tidak ditemukan')
+    if (!s.seminars.some((x) => x.id === Number(id))) return fail(404, 'data not found')
     s.seminars = s.seminars.filter((x) => x.id !== Number(id))
     s.registrations = s.registrations.filter((r) => r.seminar_id !== Number(id))
     save(s)
@@ -409,7 +417,7 @@ export const mockAdminApi = {
   seminarDetail(id) {
     const s = load()
     const sem = s.seminars.find((x) => x.id === Number(id))
-    if (!sem) return fail(404, 'data tidak ditemukan')
+    if (!sem) return fail(404, 'data not found')
     const attendees = s.registrations
       .filter((r) => r.seminar_id === sem.id)
       .sort((a, b) => a.at.localeCompare(b.at))

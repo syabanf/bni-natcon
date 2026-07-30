@@ -29,7 +29,7 @@ describe('overview & seed', () => {
   it('angka overview sesuai data seed', async () => {
     const o = await mockAdminApi.overview()
     expect(o.total_members).toBe(8)
-    expect(o.total_tenants).toBe(12)
+    expect(o.total_tenants).toBe(14)
     expect(o.total_visits).toBe(12)
     expect(o.seminar_registrations).toBe(4)
   })
@@ -96,7 +96,7 @@ describe('check-in pintu seminar', () => {
 describe('hapus tenant ber-cascade', () => {
   it('menghapus tenant ikut menghapus kunjungannya', async () => {
     const before = await mockAdminApi.overview()
-    await mockAdminApi.deleteTenant(1) // Kopi Nusantara punya 4 kunjungan seed
+    await mockAdminApi.deleteTenant(3) // Kopi Nusantara has 4 seed visits
     const after = await mockAdminApi.overview()
     expect(after.total_tenants).toBe(before.total_tenants - 1)
     expect(after.total_visits).toBe(before.total_visits - 4)

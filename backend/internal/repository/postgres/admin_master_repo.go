@@ -179,11 +179,11 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 
 	var tenant domain.Tenant
 	err = tx.QueryRow(ctx, `
-		INSERT INTO tenants (name, category, booth, initials, owner_user_id)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, name, category, booth, initials, owner_user_id`,
-		t.Name, t.Category, t.Booth, t.Initials, ownerID).
-		Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials, &tenant.OwnerUserID)
+		INSERT INTO tenants (name, category, booth, initials, kind, description, owner_user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
+		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, ownerID).
+		Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials, &tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,9 +195,10 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 
 func (r *AdminRepo) UpdateTenant(ctx context.Context, id int64, t domain.TenantUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
-		UPDATE tenants SET name = $1, category = $2, booth = $3, initials = $4
-		WHERE id = $5`,
-		t.Name, t.Category, t.Booth, t.Initials, id)
+		UPDATE tenants SET name = $1, category = $2, booth = $3, initials = $4,
+		       kind = $5, description = $6
+		WHERE id = $7`,
+		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, id)
 	if err != nil {
 		return err
 	}
@@ -239,11 +240,11 @@ func (r *AdminRepo) DeleteTenant(ctx context.Context, id int64) error {
 func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*domain.Seminar, error) {
 	var sem domain.Seminar
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO seminars (slot, room, title, speaker, capacity)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, slot, room, title, speaker, capacity`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity).
-		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Capacity)
+		INSERT INTO seminars (slot, room, title, speaker, capacity, description, cover_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, slot, room, title, speaker, capacity, description, cover_url`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity, s.Description, s.CoverURL).
+		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Capacity, &sem.Description, &sem.CoverURL)
 	if err != nil {
 		return nil, err
 	}
@@ -252,9 +253,10 @@ func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*
 
 func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.SeminarInput) error {
 	tag, err := r.pool.Exec(ctx, `
-		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, capacity = $5
-		WHERE id = $6`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity, id)
+		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, capacity = $5,
+		       description = $6, cover_url = $7
+		WHERE id = $8`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity, s.Description, s.CoverURL, id)
 	if err != nil {
 		return err
 	}

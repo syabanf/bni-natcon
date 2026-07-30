@@ -64,13 +64,13 @@ func (r *AdminRepo) MemberDetail(ctx context.Context, id int64) (*domain.MemberD
 func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantDetail, error) {
 	var d domain.TenantDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT t.id, t.name, t.category, t.booth, t.initials, t.owner_user_id, u.email,
+		SELECT t.id, t.name, t.category, t.booth, t.initials, t.kind, t.description, t.owner_user_id, u.email,
 		       (SELECT COUNT(*) FROM visits v WHERE v.tenant_id = t.id),
 		       (SELECT COUNT(*) FROM visits v WHERE v.tenant_id = t.id AND v.created_at::date = CURRENT_DATE)
 		FROM tenants t JOIN users u ON u.id = t.owner_user_id
 		WHERE t.id = $1`, id).
-		Scan(&d.ID, &d.Name, &d.Category, &d.Booth, &d.Initials, &d.OwnerUserID,
-			&d.OwnerEmail, &d.TotalScans, &d.ScansToday)
+		Scan(&d.ID, &d.Name, &d.Category, &d.Booth, &d.Initials, &d.Kind, &d.Description,
+			&d.OwnerUserID, &d.OwnerEmail, &d.TotalScans, &d.ScansToday)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -100,11 +100,11 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.SeminarDetail, error) {
 	var d domain.SeminarDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity,
+		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity, s.description, s.cover_url,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id),
 		       (SELECT COUNT(*) FROM seminar_attendance sa WHERE sa.seminar_id = s.id)
 		FROM seminars s WHERE s.id = $1`, id).
-		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Capacity, &d.SeatsTaken, &d.AttendedCount)
+		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Capacity, &d.Description, &d.CoverURL, &d.SeatsTaken, &d.AttendedCount)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

@@ -67,7 +67,11 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 		       EXISTS (
 		           SELECT 1 FROM networking_contacts nc
 		           WHERE nc.owner_id = $1 AND nc.contact_id = u.id
-		       ) AS saved
+		       ) AS saved,
+		       COALESCE((
+		           SELECT nc.note FROM networking_contacts nc
+		           WHERE nc.owner_id = $1 AND nc.contact_id = u.id
+		       ), '') AS note
 		FROM networking_checkins c
 		JOIN users u ON u.id = c.member_id
 		WHERE c.table_id = $2
@@ -78,7 +82,7 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 	defer mateRows.Close()
 	for mateRows.Next() {
 		var m domain.TableMate
-		if err := mateRows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved); err != nil {
+		if err := mateRows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
 			return nil, err
 		}
 		status.Mates = append(status.Mates, m)
@@ -160,7 +164,7 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	}
 
 	contactRows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.created_at
+		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.note, nc.created_at
 		FROM networking_contacts nc
 		JOIN users u ON u.id = nc.contact_id
 		WHERE nc.owner_id = $1
@@ -171,7 +175,7 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	defer contactRows.Close()
 	for contactRows.Next() {
 		var c domain.SavedContact
-		if err := contactRows.Scan(&c.MemberID, &c.Name, &c.Chapter, &c.Company, &c.MemberCode, &c.SavedAt); err != nil {
+		if err := contactRows.Scan(&c.MemberID, &c.Name, &c.Chapter, &c.Company, &c.MemberCode, &c.Note, &c.SavedAt); err != nil {
 			return nil, err
 		}
 		h.Contacts = append(h.Contacts, c)
@@ -201,7 +205,11 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 		       EXISTS (
 		           SELECT 1 FROM networking_contacts nc
 		           WHERE nc.owner_id = $1 AND nc.contact_id = u.id
-		       ) AS saved
+		       ) AS saved,
+		       COALESCE((
+		           SELECT nc.note FROM networking_contacts nc
+		           WHERE nc.owner_id = $1 AND nc.contact_id = u.id
+		       ), '') AS note
 		FROM networking_checkins c
 		JOIN users u ON u.id = c.member_id
 		WHERE c.table_id = $2
@@ -212,7 +220,7 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 	defer rows.Close()
 	for rows.Next() {
 		var m domain.TableMate
-		if err := rows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved); err != nil {
+		if err := rows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
 			return nil, err
 		}
 		d.Members = append(d.Members, m)
@@ -223,7 +231,7 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 func (r *NetworkingRepo) ContactDetail(ctx context.Context, ownerID, contactID int64) (*domain.ContactDetail, error) {
 	var d domain.ContactDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.created_at,
+		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), u.email, u.phone, nc.note, nc.created_at,
 		       COALESCE((
 		           SELECT t.table_no FROM networking_checkins c
 		           JOIN networking_tables t ON t.id = c.table_id
@@ -232,7 +240,7 @@ func (r *NetworkingRepo) ContactDetail(ctx context.Context, ownerID, contactID i
 		FROM networking_contacts nc
 		JOIN users u ON u.id = nc.contact_id
 		WHERE nc.owner_id = $1 AND nc.contact_id = $2`, ownerID, contactID).
-		Scan(&d.MemberID, &d.Name, &d.Chapter, &d.Company, &d.MemberCode, &d.SavedAt, &d.CurrentTableNo)
+		Scan(&d.MemberID, &d.Name, &d.Chapter, &d.Company, &d.MemberCode, &d.Email, &d.Phone, &d.Note, &d.SavedAt, &d.CurrentTableNo)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -270,4 +278,17 @@ func (r *NetworkingRepo) SaveAllTableMates(ctx context.Context, memberID int64) 
 		return 0, err
 	}
 	return int(tag.RowsAffected()), nil
+}
+
+func (r *NetworkingRepo) SetContactNote(ctx context.Context, ownerID, contactID int64, note string) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE networking_contacts SET note = $3 WHERE owner_id = $1 AND contact_id = $2`,
+		ownerID, contactID, note)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
 }

@@ -107,6 +107,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/networking/checkin", s.handleNetworkingCheckIn)
 				r.Post("/networking/contacts", s.handleNetworkingSaveContact)
 				r.Post("/networking/contacts/all", s.handleNetworkingSaveAll)
+				r.Put("/networking/contacts/{id}/note", s.handleNetworkingContactNote)
 			})
 
 			r.Group(func(r chi.Router) {
@@ -115,6 +116,8 @@ func (s *Server) Router() http.Handler {
 				r.Get("/booth", s.handleBooth)
 				r.Get("/booth/stats", s.handleBoothStats)
 				r.Get("/booth/visitors", s.handleBoothVisitors)
+				r.Get("/booth/visitors/{memberID}", s.handleVisitorDetail)
+				r.Put("/booth/visitors/{memberID}/note", s.handleVisitorNote)
 			})
 
 			r.Group(func(r chi.Router) {

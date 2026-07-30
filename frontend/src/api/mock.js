@@ -10,42 +10,51 @@ export const MOCK_MEMBERS = [
   {
     id: 1, name: 'Reddie Wijaya', email: 'reddie@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08154', chapter: 'BNI Chapter Jakarta Elite', company: 'Witid Intelligence',
+    phone: '+62811000154',
   },
   {
     id: 2, name: 'Sinta Dewi', email: 'sinta@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08201', chapter: 'BNI Chapter Jakarta Elite', company: 'Sinta Florist',
+    phone: '+62811000201',
   },
   {
     id: 3, name: 'Agus Santoso', email: 'agus@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08322', chapter: 'BNI Chapter Bandung Raya', company: 'Santoso Baja',
+    phone: '+62811000322',
   },
 ]
 
 const TENANTS = [
-  { id: 1, name: 'Kopi Nusantara', category: 'F&B', booth: 'A-03', initials: 'KN' },
-  { id: 2, name: 'Bank Mitra Sejahtera', category: 'Finansial', booth: 'A-05', initials: 'BM' },
-  { id: 3, name: 'Garuda Print Media', category: 'Percetakan', booth: 'A-08', initials: 'GP' },
-  { id: 4, name: 'TechNesia Solutions', category: 'IT & Software', booth: 'B-01', initials: 'TS' },
-  { id: 5, name: 'Sehat Selalu Clinic', category: 'Kesehatan', booth: 'B-04', initials: 'SS' },
-  { id: 6, name: 'Properti Prima', category: 'Properti', booth: 'B-07', initials: 'PP' },
-  { id: 7, name: 'Logistik Cepat', category: 'Logistik', booth: 'C-02', initials: 'LC' },
-  { id: 8, name: 'Asuransi Aman', category: 'Asuransi', booth: 'C-05', initials: 'AA' },
-  { id: 9, name: 'Kreasi Digital', category: 'Marketing', booth: 'C-08', initials: 'KD' },
-  { id: 10, name: 'Hukum & Rekan', category: 'Legal', booth: 'D-01', initials: 'HR' },
-  { id: 11, name: 'EduPro Training', category: 'Pelatihan', booth: 'D-04', initials: 'EP' },
-  { id: 12, name: 'Katering Rasa', category: 'F&B', booth: 'D-06', initials: 'KR' },
+  { id: 13, name: 'BNI Xpora', category: 'Main Sponsor', booth: 'SP-01', initials: 'BX', kind: 'sponsor', description: "BNI's one-stop export hub — banking solutions for members going global." },
+  { id: 14, name: 'Wondr by BNI', category: 'Digital Sponsor', booth: 'SP-02', initials: 'WB', kind: 'sponsor', description: 'Personal finance super-app: payments, savings goals, and lifestyle deals.' },
+  { id: 1, name: 'Kopi Nusantara', category: 'F&B', booth: 'A-03', initials: 'KN', kind: 'booth', description: 'Single-origin Indonesian coffee, roasted in-house. Free cupping session at the booth.' },
+  { id: 2, name: 'Bank Mitra Sejahtera', category: 'Finance', booth: 'A-05', initials: 'BM', kind: 'booth', description: 'SME lending and cash-management partner for BNI chapter businesses.' },
+  { id: 3, name: 'Garuda Print Media', category: 'Printing', booth: 'A-08', initials: 'GP', kind: 'booth', description: 'Large-format printing and event branding with same-day turnaround.' },
+  { id: 4, name: 'TechNesia Solutions', category: 'IT & Software', booth: 'B-01', initials: 'TS', kind: 'booth', description: 'Custom software, ERP integrations, and managed cloud for growing teams.' },
+  { id: 5, name: 'Sehat Selalu Clinic', category: 'Healthcare', booth: 'B-04', initials: 'SS', kind: 'booth', description: 'Corporate health checks and on-site wellness programs.' },
+  { id: 6, name: 'Properti Prima', category: 'Property', booth: 'B-07', initials: 'PP', kind: 'booth', description: 'Commercial property advisory — office, warehouse, and retail spaces.' },
+  { id: 7, name: 'Logistik Cepat', category: 'Logistics', booth: 'C-02', initials: 'LC', kind: 'booth', description: 'Nationwide same-day and next-day delivery with live tracking.' },
+  { id: 8, name: 'Asuransi Aman', category: 'Insurance', booth: 'C-05', initials: 'AA', kind: 'booth', description: 'Business insurance tailored for SMEs: assets, liability, and health.' },
+  { id: 9, name: 'Kreasi Digital', category: 'Marketing', booth: 'C-08', initials: 'KD', kind: 'booth', description: 'Performance marketing and brand studios for ambitious businesses.' },
+  { id: 10, name: 'Hukum & Rekan', category: 'Legal', booth: 'D-01', initials: 'HR', kind: 'booth', description: 'Corporate legal counsel: contracts, compliance, and dispute resolution.' },
+  { id: 11, name: 'EduPro Training', category: 'Training', booth: 'D-04', initials: 'EP', kind: 'booth', description: 'Certified professional training for sales, leadership, and finance.' },
+  { id: 12, name: 'Katering Rasa', category: 'F&B', booth: 'D-06', initials: 'KR', kind: 'booth', description: 'Premium event catering with authentic archipelago menus.' },
 ]
 
 const SEMINARS = [
   {
     id: 1, slot: 1, room: 'R. Merapi', capacity: 60,
-    title: 'Scaling Referral: Dari Chapter ke Nasional',
+    title: 'Scaling Referral: From Chapter to Nationwide',
     speaker: 'Ir. Bambang Wicaksono — National Director',
+    cover_url: '',
+    description: 'How top chapters turn one-to-one referrals into a national pipeline: contact-sphere mapping, power teams, and a measurable ask culture — with live case studies from three chapters that tripled closed business in a year.',
   },
   {
     id: 2, slot: 1, room: 'R. Rinjani', capacity: 40,
-    title: 'AI untuk UKM: Praktis, Bukan Hype',
+    title: 'AI for SMEs: Practical, Not Hype',
     speaker: 'Dr. Sarah Kusuma — Witid Intelligence',
+    cover_url: '',
+    description: 'A no-jargon tour of AI tools an SME can deploy this quarter: lead scoring, follow-up automation, and customer insight dashboards — with real budgets and ROI numbers from Indonesian businesses.',
   },
 ]
 
@@ -54,17 +63,18 @@ function boothEmail(tenant) {
 }
 
 // Static demo occupants per table so the networking screen feels alive.
+// Fake personas carry email + phone so tel:/mailto: links work in demo.
 const FAKE_MATES = {
   12: [
-    { id: 'f-sinta12', name: 'Melly Hartono', company: 'Melly Tax · Konsultan Pajak', chapter: 'Chapter Surabaya One' },
-    { id: 'f-joko12', name: 'Joko Prabowo', company: 'JP Otomotif · Bengkel Premium', chapter: 'Chapter Medan Utama' },
-    { id: 'f-rina12', name: 'Rina Kartika', company: 'Kartika Law · Notaris', chapter: 'Chapter Bali Paradise' },
-    { id: 'f-dedi12', name: 'Dedi Firmansyah', company: 'DF Logistics · Ekspedisi', chapter: 'Chapter Semarang Jaya' },
-    { id: 'f-lusi12', name: 'Lusi Anggraini', company: 'Lusi Catering · F&B', chapter: 'Chapter Jakarta Elite' },
+    { id: 'f-sinta12', name: 'Melly Hartono', company: 'Melly Tax · Konsultan Pajak', chapter: 'Chapter Surabaya One', email: 'sinta12@natcon.id', phone: '+62855029300' },
+    { id: 'f-joko12', name: 'Joko Prabowo', company: 'JP Otomotif · Bengkel Premium', chapter: 'Chapter Medan Utama', email: 'joko12@natcon.id', phone: '+62827973000' },
+    { id: 'f-rina12', name: 'Rina Kartika', company: 'Kartika Law · Notaris', chapter: 'Chapter Bali Paradise', email: 'rina12@natcon.id', phone: '+62885093000' },
+    { id: 'f-dedi12', name: 'Dedi Firmansyah', company: 'DF Logistics · Ekspedisi', chapter: 'Chapter Semarang Jaya', email: 'dedi12@natcon.id', phone: '+62807053000' },
+    { id: 'f-lusi12', name: 'Lusi Anggraini', company: 'Lusi Catering · F&B', chapter: 'Chapter Jakarta Elite', email: 'lusi12@natcon.id', phone: '+62869553000' },
   ],
   5: [
-    { id: 'f-budi5', name: 'Budi Hartanto', company: 'Budi Craft Studio', chapter: 'Chapter Yogya Istimewa' },
-    { id: 'f-citra5', name: 'Citra Lestari', company: 'Citra Media', chapter: 'Chapter Tangerang Hebat' },
+    { id: 'f-budi5', name: 'Budi Hartanto', company: 'Budi Craft Studio', chapter: 'Chapter Yogya Istimewa', email: 'budi5@natcon.id', phone: '+62869051000' },
+    { id: 'f-citra5', name: 'Citra Lestari', company: 'Citra Media', chapter: 'Chapter Tangerang Hebat', email: 'citra5@natcon.id', phone: '+62835289100' },
   ],
 }
 
@@ -84,6 +94,10 @@ function loadState() {
     tableHistory: {},
     // member_code -> { contactId: iso }
     contactTimes: {},
+    // member_code -> { contactId: note }
+    contactNotes: {},
+    // tenantId -> { member_code: note }
+    visitorNotes: {},
   }
   try {
     const raw = localStorage.getItem(STATE_KEY)
@@ -137,7 +151,7 @@ export const mockApi = {
       }
       return delay({ token: 'mock-token', user: currentUser })
     }
-    return fail(401, 'Mode demo: pakai akun demo (reddie@, sinta@, agus@, booth-a03@ dst)')
+    return fail(401, 'Demo mode: use a demo account (reddie@, sinta@, agus@, booth-a03@, booth-sp01@ …)')
   },
 
   restore(user) {
@@ -145,7 +159,7 @@ export const mockApi = {
   },
 
   me() {
-    if (!currentUser) return fail(401, 'Belum login')
+    if (!currentUser) return fail(401, 'Not signed in')
     if (currentUser.role !== 'member') return delay({ user: currentUser })
     const state = loadState()
     const visited = (state.visits[currentUser.member_code] || []).length
@@ -178,21 +192,22 @@ export const mockApi = {
         ...s,
         seats_left: s.capacity - seatsTaken(state, s.id),
         registered: regs[s.slot] === s.id,
+        attended: Boolean((state.attendance || {})[`${currentUser?.member_code}:${s.id}`]),
       })),
     })
   },
 
   registerSeminar(id) {
     const seminar = SEMINARS.find((s) => s.id === Number(id))
-    if (!seminar) return fail(404, 'data tidak ditemukan')
+    if (!seminar) return fail(404, 'data not found')
     const state = loadState()
     const code = currentUser.member_code
     const regs = state.registrations[code] || {}
     if (regs[seminar.slot]) {
-      return fail(409, 'kamu sudah terdaftar di seminar lain pada slot ini')
+      return fail(409, 'you are already registered for another seminar in this slot')
     }
     if (seatsTaken(state, seminar.id) >= seminar.capacity) {
-      return fail(409, 'kursi seminar sudah penuh — pilih sesi lain')
+      return fail(409, 'this seminar is fully booked — please pick another session')
     }
     regs[seminar.slot] = seminar.id
     state.registrations[code] = regs
@@ -202,18 +217,19 @@ export const mockApi = {
 
   unregisterSeminar(id) {
     const seminar = SEMINARS.find((s) => s.id === Number(id))
-    if (!seminar) return fail(404, 'data tidak ditemukan')
+    if (!seminar) return fail(404, 'data not found')
     const state = loadState()
     const regs = state.registrations[currentUser.member_code] || {}
-    if (regs[seminar.slot] !== seminar.id) return fail(404, 'data tidak ditemukan')
+    if (regs[seminar.slot] !== seminar.id) return fail(404, 'data not found')
     delete regs[seminar.slot]
     saveState(state)
     return delay({ status: 'unregistered' })
   },
 
-  scan(memberCode) {
-    const member = memberByCode(memberCode.trim())
-    if (!member) return fail(404, 'data tidak ditemukan')
+  scan(memberKey) {
+    const key = String(memberKey).trim()
+    const member = memberByCode(key) || MOCK_MEMBERS.find((m) => m.phone === key)
+    if (!member) return fail(404, 'data not found')
     const state = loadState()
     const tenantId = currentUser.tenantId
     const visits = state.visits[member.member_code] || []
@@ -227,6 +243,7 @@ export const mockApi = {
       saveState(state)
     }
     return delay({
+      member_id: member.member_code,
       member_name: member.name,
       member_chapter: member.chapter,
       member_company: member.company,
@@ -255,15 +272,18 @@ export const mockApi = {
 
     const { fake, real } = tableOf(myTable)
     const savedSet = new Set(state.contacts[myCode] || [])
+    const notes = state.contactNotes[myCode] || {}
     let seat = 0
     const mates = [
       ...real.map((m) => ({
         member_id: m.member_code, name: m.name, chapter: m.chapter, company: m.company,
         seat_no: ++seat, is_me: m.member_code === myCode, saved: savedSet.has(m.member_code),
+        note: notes[m.member_code] || '',
       })),
       ...fake.map((f) => ({
         member_id: f.id, name: f.name, chapter: f.chapter, company: f.company,
         seat_no: ++seat, is_me: false, saved: savedSet.has(f.id),
+        note: notes[f.id] || '',
       })),
     ]
     return delay({
@@ -277,13 +297,13 @@ export const mockApi = {
 
   networkingCheckIn(tableNo) {
     const n = Number(tableNo)
-    if (!n || n < 1 || n > 12) return fail(404, 'data tidak ditemukan')
+    if (!n || n < 1 || n > 12) return fail(404, 'data not found')
     const state = loadState()
     const fake = (FAKE_MATES[n] || []).length
     const real = MOCK_MEMBERS.filter(
       (m) => state.seats[m.member_code] === n && m.member_code !== currentUser.member_code
     ).length
-    if (fake + real >= 8) return fail(409, 'meja sudah penuh — pilih meja lain')
+    if (fake + real >= 8) return fail(409, 'this table is full — please join another one')
     state.seats[currentUser.member_code] = n
     const history = state.tableHistory[currentUser.member_code] || []
     history.unshift({ table_no: n, hall: 'Hall B', at: new Date().toISOString() })
@@ -311,7 +331,7 @@ export const mockApi = {
     const state = loadState()
     const myCode = currentUser.member_code
     const n = state.seats[myCode]
-    if (!n) return fail(404, 'data tidak ditemukan')
+    if (!n) return fail(404, 'data not found')
     const contacts = new Set(state.contacts[myCode] || [])
     const times = state.contactTimes[myCode] || {}
     const addAt = (id) => {
@@ -345,6 +365,7 @@ export const mockApi = {
               chapter: p.chapter || '',
               company: p.company || '',
               member_code: p.member_code || '',
+              note: (state.contactNotes[myCode] || {})[id] || '',
               saved_at: times[id] || null,
             }
           : null
@@ -363,7 +384,7 @@ export const mockApi = {
 
   networkingTableDetail(tableNo) {
     const n = Number(tableNo)
-    if (!n || n < 1 || n > 12) return fail(404, 'data tidak ditemukan')
+    if (!n || n < 1 || n > 12) return fail(404, 'data not found')
     const state = loadState()
     const myCode = currentUser?.member_code
     const savedSet = new Set(state.contacts[myCode] || [])
@@ -387,11 +408,11 @@ export const mockApi = {
   networkingContactDetail(id) {
     const state = loadState()
     const myCode = currentUser?.member_code
-    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'data tidak ditemukan')
+    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'data not found')
     const allFakes = Object.values(FAKE_MATES).flat()
     const person =
       MOCK_MEMBERS.find((m) => m.member_code === id) || allFakes.find((f) => f.id === id)
-    if (!person) return fail(404, 'data tidak ditemukan')
+    if (!person) return fail(404, 'data not found')
     // Fake personas "sit" at their home table; real members use live seats.
     let currentTable = 0
     const fakeHome = Object.entries(FAKE_MATES).find(([, list]) => list.some((f) => f.id === id))
@@ -405,15 +426,32 @@ export const mockApi = {
       chapter: person.chapter || '',
       company: person.company || '',
       member_code: person.member_code || '',
+      email: person.email || '',
+      phone: person.phone || '',
+      note: (state.contactNotes[myCode] || {})[id] || '',
       saved_at: (state.contactTimes[myCode] || {})[id] || null,
       current_table_no: currentTable,
     })
   },
 
+  setContactNote(id, note) {
+    const state = loadState()
+    const myCode = currentUser?.member_code
+    if (!(state.contacts[myCode] || []).includes(id)) return fail(404, 'data not found')
+    const notes = state.contactNotes[myCode] || {}
+    notes[id] = note
+    state.contactNotes[myCode] = notes
+    saveState(state)
+    return delay({ status: 'saved' })
+  },
+
   booth() {
     const t = TENANTS.find((x) => x.id === currentUser?.tenantId)
-    if (!t) return fail(404, 'data tidak ditemukan')
-    return delay({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials })
+    if (!t) return fail(404, 'data not found')
+    return delay({
+      id: t.id, name: t.name, category: t.category, booth: t.booth,
+      initials: t.initials, kind: t.kind, description: t.description,
+    })
   },
 
   boothStats() {
@@ -428,12 +466,44 @@ export const mockApi = {
 
   boothVisitors(limit = 10) {
     const state = loadState()
+    const notes = state.visitorNotes[currentUser?.tenantId] || {}
     const scans = (state.scans[currentUser?.tenantId] || []).slice(0, limit)
     return delay({
       visitors: scans.map((s) => {
         const m = memberByCode(s.code)
-        return { name: m?.name || s.code, chapter: m?.chapter || '', company: m?.company || '', visited_at: s.at }
+        return {
+          member_id: s.code, name: m?.name || s.code, chapter: m?.chapter || '',
+          company: m?.company || '', member_code: s.code, phone: m?.phone || '',
+          note: notes[s.code] || '', visited_at: s.at,
+        }
       }),
     })
+  },
+
+  visitorDetail(memberId) {
+    const state = loadState()
+    const scans = state.scans[currentUser?.tenantId] || []
+    const scan = scans.find((s) => s.code === memberId)
+    if (!scan) return fail(404, 'data not found')
+    const m = memberByCode(scan.code)
+    const notes = state.visitorNotes[currentUser?.tenantId] || {}
+    return delay({
+      visitor: {
+        member_id: scan.code, name: m?.name || scan.code, chapter: m?.chapter || '',
+        company: m?.company || '', member_code: scan.code, phone: m?.phone || '',
+        note: notes[scan.code] || '', visited_at: scan.at,
+      },
+    })
+  },
+
+  setVisitorNote(memberId, note) {
+    const state = loadState()
+    const scans = state.scans[currentUser?.tenantId] || []
+    if (!scans.some((s) => s.code === memberId)) return fail(404, 'data not found')
+    const notes = state.visitorNotes[currentUser?.tenantId] || {}
+    notes[memberId] = note
+    state.visitorNotes[currentUser?.tenantId] = notes
+    saveState(state)
+    return delay({ status: 'saved' })
   },
 }

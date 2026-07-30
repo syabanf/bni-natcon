@@ -64,14 +64,14 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleAdminSeminarCheckin(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	var req struct {
 		MemberCode string `json:"member_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	res, err := s.admin.SeminarCheckin(r.Context(), id, req.MemberCode)
@@ -91,7 +91,7 @@ func (s *Server) handleAdminSeminarCheckin(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request) {
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	user, err := s.admin.CreateMember(r.Context(), req.Name, req.Email, req.Password, req.Chapter, req.Company)
@@ -105,12 +105,12 @@ func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	err := s.admin.UpdateMember(r.Context(), id, domain.MemberUpdate{
@@ -126,7 +126,7 @@ func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminDeleteMember(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	if err := s.admin.DeleteMember(r.Context(), id); err != nil {
@@ -139,21 +139,23 @@ func (s *Server) handleAdminDeleteMember(w http.ResponseWriter, r *http.Request)
 /* ----- Tenants ----- */
 
 type tenantPayload struct {
-	Name     string `json:"name"`
-	Category string `json:"category"`
-	Booth    string `json:"booth"`
-	Initials string `json:"initials"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name        string `json:"name"`
+	Category    string `json:"category"`
+	Booth       string `json:"booth"`
+	Initials    string `json:"initials"`
+	Kind        string `json:"kind"`
+	Description string `json:"description"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
 }
 
 func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request) {
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
-	tenant, err := s.admin.CreateTenant(r.Context(), req.Name, req.Category, req.Booth, req.Initials, req.Email, req.Password)
+	tenant, err := s.admin.CreateTenant(r.Context(), req.Name, req.Category, req.Booth, req.Initials, req.Email, req.Password, req.Kind, req.Description)
 	if err != nil {
 		respondDomainError(w, err)
 		return
@@ -162,6 +164,7 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 		"tenant": map[string]any{
 			"id": tenant.ID, "name": tenant.Name, "category": tenant.Category,
 			"booth": tenant.Booth, "initials": tenant.Initials,
+			"kind": tenant.Kind, "description": tenant.Description,
 		},
 	})
 }
@@ -169,16 +172,17 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	err := s.admin.UpdateTenant(r.Context(), id, domain.TenantUpdate{
 		Name: req.Name, Category: req.Category, Booth: req.Booth, Initials: req.Initials,
+		Kind: req.Kind, Description: req.Description,
 	})
 	if err != nil {
 		respondDomainError(w, err)
@@ -190,7 +194,7 @@ func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminDeleteTenant(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	if err := s.admin.DeleteTenant(r.Context(), id); err != nil {
@@ -203,23 +207,26 @@ func (s *Server) handleAdminDeleteTenant(w http.ResponseWriter, r *http.Request)
 /* ----- Seminars ----- */
 
 type seminarPayload struct {
-	Slot     int    `json:"slot"`
-	Room     string `json:"room"`
-	Title    string `json:"title"`
-	Speaker  string `json:"speaker"`
-	Capacity int    `json:"capacity"`
+	Slot        int    `json:"slot"`
+	Room        string `json:"room"`
+	Title       string `json:"title"`
+	Speaker     string `json:"speaker"`
+	Capacity    int    `json:"capacity"`
+	Description string `json:"description"`
+	CoverURL    string `json:"cover_url"`
 }
 
 func (p seminarPayload) toInput() domain.SeminarInput {
 	return domain.SeminarInput{
 		Slot: p.Slot, Room: p.Room, Title: p.Title, Speaker: p.Speaker, Capacity: p.Capacity,
+		Description: p.Description, CoverURL: p.CoverURL,
 	}
 }
 
 func (s *Server) handleAdminCreateSeminar(w http.ResponseWriter, r *http.Request) {
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	sem, err := s.admin.CreateSeminar(r.Context(), req.toInput())
@@ -238,12 +245,12 @@ func (s *Server) handleAdminCreateSeminar(w http.ResponseWriter, r *http.Request
 func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "format data tidak valid")
+		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
 	if err := s.admin.UpdateSeminar(r.Context(), id, req.toInput()); err != nil {
@@ -256,7 +263,7 @@ func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request
 func (s *Server) handleAdminDeleteSeminar(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	if err := s.admin.DeleteSeminar(r.Context(), id); err != nil {

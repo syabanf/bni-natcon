@@ -50,10 +50,10 @@ function useCrud({ list, create, update, remove }) {
     try {
       if (form.id) {
         await update(form.id, form)
-        setNotice('Perubahan tersimpan.')
+        setNotice('Changes saved.')
       } else {
         await create(form)
-        setNotice('Data berhasil ditambahkan.')
+        setNotice('Record added.')
       }
       setForm(null)
       load()
@@ -65,11 +65,11 @@ function useCrud({ list, create, update, remove }) {
   }
 
   const del = async (id, label) => {
-    if (!window.confirm(`Hapus ${label}? Data terkait (scan/registrasi) ikut terhapus.`)) return
+    if (!window.confirm(`Delete ${label}? Related data (scans/registrations) is deleted too.`)) return
     setError('')
     try {
       await remove(id)
-      setNotice(`${label} dihapus.`)
+      setNotice(`${label} deleted.`)
       load()
     } catch (err) {
       setError(err.message)
@@ -91,7 +91,7 @@ function ImportButton({ label, aliases, upload, onDone }) {
     try {
       const rows = (await parseSheet(file, aliases)).filter((r) => Object.values(r).some(Boolean))
       if (rows.length === 0) {
-        onDone({ error: 'File kosong atau header tidak dikenali.' })
+        onDone({ error: 'File is empty or the header row was not recognized.' })
         return
       }
       const res = await upload(rows)
@@ -113,7 +113,7 @@ function ImportButton({ label, aliases, upload, onDone }) {
         onChange={onFile}
       />
       <button className="md-secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
-        {busy ? 'Mengimpor…' : `⇪ ${label}`}
+        {busy ? 'Importing…' : `⇪ ${label}`}
       </button>
     </>
   )
@@ -147,16 +147,16 @@ function Notices({ crud, importResult, clearImport }) {
       {importResult && (
         <div className={importResult.error ? 'error' : 'notice'} onClick={clearImport}>
           {importResult.error
-            ? `Import gagal: ${importResult.error}`
-            : `Import selesai — ${importResult.created} dibuat, ${importResult.failed} gagal.`}
+            ? `Import failed: ${importResult.error}`
+            : `Import finished — ${importResult.created} created, ${importResult.failed} failed.`}
           {importResult.errors?.length > 0 && (
             <ul>
               {importResult.errors.slice(0, 5).map((e) => (
                 <li key={e.row}>
-                  Baris {e.row} ({e.label}): {e.error}
+                  Row {e.row} ({e.label}): {e.error}
                 </li>
               ))}
-              {importResult.errors.length > 5 && <li>… {importResult.errors.length - 5} lainnya</li>}
+              {importResult.errors.length > 5 && <li>… {importResult.errors.length - 5} more</li>}
             </ul>
           )}
         </div>
@@ -173,9 +173,9 @@ function RowActions({ onDetail, onEdit, onDelete }) {
           Detail
         </button>
       )}
-      <button onClick={onEdit}>Ubah</button>
+      <button onClick={onEdit}>Edit</button>
       <button className="danger" onClick={onDelete}>
-        Hapus
+        Delete
       </button>
     </td>
   )
@@ -229,7 +229,7 @@ export function MembersPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Peserta" sub="Member code & password default dibuat otomatis">
+      <PageHead title="Master Data — Attendees" sub="Member code & default password are generated automatically">
         <ImportButton
           label="Import Excel"
           aliases={{
@@ -245,24 +245,24 @@ export function MembersPage() {
           }}
         />
         <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '' })}>
-          + Tambah Peserta
+          + Add Attendee
         </button>
       </PageHead>
       <p className="import-hint">
-        Format Excel: kolom <b>Nama</b>, <b>Email</b>, <b>Chapter</b>, <b>Perusahaan</b> (baris pertama = header).
+        Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b> (first row = header).
       </p>
 
       <div className="list-toolbar">
         <input
           className="search-input"
-          placeholder="Cari nama, email, member code, atau chapter…"
+          placeholder="Search name, email, member code, or chapter…"
           value={q}
           onChange={(e) => {
             setQ(e.target.value)
             setPage(1)
           }}
         />
-        <span className="list-count">{total} peserta</span>
+        <span className="list-count">{total} attendees</span>
       </div>
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
@@ -272,10 +272,10 @@ export function MembersPage() {
         <thead>
           <tr>
             <th>Member Code</th>
-            <th>Nama</th>
+            <th>Name</th>
             <th>Email</th>
             <th>Chapter</th>
-            <th className="num">Kupon</th>
+            <th className="num">Pins</th>
             <th />
           </tr>
         </thead>
@@ -305,30 +305,30 @@ export function MembersPage() {
 
       <div className="pager">
         <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-          ‹ Sebelumnya
+          ‹ Previous
         </button>
         <span>
-          Halaman {page} dari {totalPages}
+          Page {page} of {totalPages}
         </span>
         <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-          Berikutnya ›
+          Next ›
         </button>
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Ubah Peserta' : 'Tambah Peserta'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Attendee' : 'Add Attendee'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
-            <Field label="Nama" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
+            <Field label="Name" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
             <Field label="Email" type="email" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} required />
             <Field label="Chapter" value={crud.form.chapter} onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })} />
-            <Field label="Perusahaan" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
+            <Field label="Company" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">
-                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+                {crud.form.id ? 'Save Changes' : 'Add'}
               </button>
               <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
-                Batal
+                Cancel
               </button>
             </div>
           </form>
@@ -364,7 +364,7 @@ export function TenantsPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Tenant" sub="Akun scanner booth dibuat otomatis (booth-xxx@natcon.id)">
+      <PageHead title="Master Data — Tenants" sub="Booth/sponsor scanner accounts are generated automatically (booth-xxx@natcon.id)">
         <ImportButton
           label="Import Excel"
           aliases={{
@@ -373,6 +373,7 @@ export function TenantsPage() {
             booth: ['booth'],
             initials: ['inisial', 'initials'],
             email: ['email', 'e-mail'],
+            kind: ['kind', 'jenis', 'tipe'],
           }}
           upload={(rows) => api.bulkTenants(rows)}
           onDone={(res) => {
@@ -382,13 +383,13 @@ export function TenantsPage() {
         />
         <button
           className="md-add"
-          onClick={() => crud.setForm({ name: '', category: '', booth: '', initials: '', email: '' })}
+          onClick={() => crud.setForm({ name: '', category: '', booth: '', initials: '', email: '', kind: 'booth', description: '' })}
         >
-          + Tambah Tenant
+          + Add Tenant
         </button>
       </PageHead>
       <p className="import-hint">
-        Format Excel: kolom <b>Nama</b>, <b>Kategori</b>, <b>Booth</b>, <b>Inisial</b> (opsional), <b>Email</b> (opsional).
+        Excel format: columns <b>Name</b>, <b>Category</b>, <b>Booth</b>, <b>Initials</b> (optional), <b>Email</b> (optional), <b>Kind</b> (booth/sponsor, optional).
       </p>
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
@@ -398,9 +399,9 @@ export function TenantsPage() {
         <thead>
           <tr>
             <th>Booth</th>
-            <th>Nama</th>
-            <th>Kategori</th>
-            <th className="num">Scan</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th className="num">Scans</th>
             <th />
           </tr>
         </thead>
@@ -410,14 +411,16 @@ export function TenantsPage() {
               <td className="mono">{t.booth}</td>
               <td>
                 <b>{t.name}</b>
-                <small>{t.initials}</small>
+                <small>
+                  {t.kind === 'sponsor' ? '★ Sponsor' : 'Booth'} · {t.initials}
+                </small>
               </td>
               <td>{t.category}</td>
               <td className="num">{t.scan_count}</td>
               <RowActions
                 onDetail={() => setDetailId(t.id)}
                 onEdit={() =>
-                  crud.setForm({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials })
+                  crud.setForm({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials, kind: t.kind || 'booth', description: t.description || '' })
                 }
                 onDelete={() => crud.del(t.id, t.name)}
               />
@@ -428,22 +431,34 @@ export function TenantsPage() {
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Ubah Tenant' : 'Tambah Tenant'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Tenant' : 'Add Tenant'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
-            <Field label="Nama" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
-            <Field label="Kategori" value={crud.form.category} onChange={(e) => crud.setForm({ ...crud.form, category: e.target.value })} />
+            <Field label="Name" value={crud.form.name} onChange={(e) => crud.setForm({ ...crud.form, name: e.target.value })} required autoFocus />
+            <Field label="Category" value={crud.form.category} onChange={(e) => crud.setForm({ ...crud.form, category: e.target.value })} />
             <Field label="Booth" value={crud.form.booth} onChange={(e) => crud.setForm({ ...crud.form, booth: e.target.value })} placeholder="A-03" required />
-            <Field label="Inisial" hint="kosongkan untuk otomatis" value={crud.form.initials} onChange={(e) => crud.setForm({ ...crud.form, initials: e.target.value })} />
+            <Field label="Initials" hint="leave blank to auto-fill" value={crud.form.initials} onChange={(e) => crud.setForm({ ...crud.form, initials: e.target.value })} />
+            <label className="md-field">
+              <span>Kind — sponsors are listed on top of the passport</span>
+              <select
+                className="door-select"
+                value={crud.form.kind || 'booth'}
+                onChange={(e) => crud.setForm({ ...crud.form, kind: e.target.value })}
+              >
+                <option value="booth">Booth</option>
+                <option value="sponsor">Sponsor</option>
+              </select>
+            </label>
+            <Field label="Description" hint="shown on the attendee passport" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             {!crud.form.id && (
-              <Field label="Email login" hint="kosongkan untuk otomatis" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} />
+              <Field label="Login email" hint="leave blank to auto-fill" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} />
             )}
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">
-                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+                {crud.form.id ? 'Save Changes' : 'Add'}
               </button>
               <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
-                Batal
+                Cancel
               </button>
             </div>
           </form>
@@ -479,12 +494,12 @@ export function SeminarsPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Seminar" sub="Peserta hanya bisa memilih satu seminar per slot">
+      <PageHead title="Master Data — Seminars" sub="Attendees can only pick one seminar per slot">
         <button
           className="md-add"
-          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', capacity: 40 })}
+          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', capacity: 40, description: '', cover_url: '' })}
         >
-          + Tambah Seminar
+          + Add Seminar
         </button>
       </PageHead>
 
@@ -495,9 +510,9 @@ export function SeminarsPage() {
         <thead>
           <tr>
             <th>Slot</th>
-            <th>Ruang</th>
-            <th>Judul</th>
-            <th className="num">Terisi</th>
+            <th>Room</th>
+            <th>Title</th>
+            <th className="num">Filled</th>
             <th />
           </tr>
         </thead>
@@ -521,6 +536,7 @@ export function SeminarsPage() {
                   crud.setForm({
                     id: sm.id, slot: sm.slot, room: sm.room, title: sm.title,
                     speaker: sm.speaker, capacity: sm.capacity,
+                    description: sm.description || '', cover_url: sm.cover_url || '',
                   })
                 }
                 onDelete={() => crud.del(sm.id, sm.title)}
@@ -532,20 +548,22 @@ export function SeminarsPage() {
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Ubah Seminar' : 'Tambah Seminar'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Seminar' : 'Add Seminar'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
             <Field label="Slot" type="number" min="1" value={crud.form.slot} onChange={(e) => crud.setForm({ ...crud.form, slot: e.target.value })} required />
-            <Field label="Ruang" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />
-            <Field label="Judul" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
-            <Field label="Pembicara" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
-            <Field label="Kapasitas" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <Field label="Room" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />
+            <Field label="Title" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
+            <Field label="Speaker" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
+            <Field label="Capacity" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <Field label="Description" hint="shown on the attendee seminar detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
+            <Field label="Cover image URL" hint="optional — gradient cover when blank" value={crud.form.cover_url || ''} onChange={(e) => crud.setForm({ ...crud.form, cover_url: e.target.value })} />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">
-                {crud.form.id ? 'Simpan Perubahan' : 'Tambah'}
+                {crud.form.id ? 'Save Changes' : 'Add'}
               </button>
               <button type="button" className="md-cancel" onClick={() => crud.setForm(null)}>
-                Batal
+                Cancel
               </button>
             </div>
           </form>

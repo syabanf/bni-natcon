@@ -8,7 +8,7 @@ import (
 func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	d, err := s.admin.MemberDetail(r.Context(), id)
@@ -38,7 +38,7 @@ func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	d, err := s.admin.TenantDetail(r.Context(), id)
@@ -59,7 +59,8 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 	respondJSON(w, http.StatusOK, map[string]any{
 		"tenant": map[string]any{
 			"id": d.ID, "name": d.Name, "category": d.Category, "booth": d.Booth,
-			"initials": d.Initials, "owner_email": d.OwnerEmail,
+			"initials": d.Initials, "kind": d.Kind, "description": d.Description,
+			"owner_email": d.OwnerEmail,
 		},
 		"total_scans": d.TotalScans,
 		"scans_today": d.ScansToday,
@@ -70,7 +71,7 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {
-		respondError(w, http.StatusBadRequest, "data tidak dikenali")
+		respondError(w, http.StatusBadRequest, "unknown record")
 		return
 	}
 	d, err := s.admin.SeminarDetail(r.Context(), id)
@@ -91,6 +92,7 @@ func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request
 			"id": d.ID, "slot": d.Slot, "room": d.Room, "title": d.Title,
 			"speaker": d.Speaker, "capacity": d.Capacity, "seats_taken": d.SeatsTaken,
 			"attended_count": d.AttendedCount,
+			"description": d.Description, "cover_url": d.CoverURL,
 		},
 		"attendees": attendees,
 	})

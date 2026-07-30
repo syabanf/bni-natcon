@@ -5,10 +5,10 @@ const POLL_MS = 5000
 
 function timeAgo(iso) {
   const secs = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
-  if (secs < 60) return 'baru saja'
+  if (secs < 60) return 'just now'
   const mins = Math.floor(secs / 60)
-  if (mins < 60) return `${mins} mnt lalu`
-  return `${Math.floor(mins / 60)} jam lalu`
+  if (mins < 60) return `${mins} min ago`
+  return `${Math.floor(mins / 60)} h ago`
 }
 
 function initials(name = '') {
@@ -58,29 +58,29 @@ export default function Dashboard({ onUnauthorized }) {
       <div className="content-head">
         <div>
           <h1>Dashboard</h1>
-          <p className="micro">Monitoring langsung · Jakarta Convention Center</p>
+          <p className="micro">Live monitoring · Jakarta Convention Center</p>
         </div>
         <div className="head-right">
           <span className="pill live">LIVE</span>
-          {updatedAt && <span className="updated">diperbarui {updatedAt.toLocaleTimeString('id-ID')}</span>}
+          {updatedAt && <span className="updated">updated {updatedAt.toLocaleTimeString('en-GB')}</span>}
         </div>
       </div>
 
       <section className="stats-grid">
-        <StatCard value={overview?.total_members} label="Peserta terdaftar" />
-        <StatCard value={overview?.total_tenants} label="Tenant / booth" />
-        <StatCard value={overview?.total_visits} label="Total scan kunjungan" accent />
-        <StatCard value={overview?.visits_today} label="Scan hari ini" accent />
-        <StatCard value={overview?.members_with_visit} label="Peserta aktif (≥1 scan)" />
-        <StatCard value={overview?.seminar_registrations} label="Registrasi seminar" />
+        <StatCard value={overview?.total_members} label="Registered attendees" />
+        <StatCard value={overview?.total_tenants} label="Tenants / booths" />
+        <StatCard value={overview?.total_visits} label="Total visit scans" accent />
+        <StatCard value={overview?.visits_today} label="Scans today" accent />
+        <StatCard value={overview?.members_with_visit} label="Active attendees (≥1 scan)" />
+        <StatCard value={overview?.seminar_registrations} label="Seminar registrations" />
       </section>
 
       <section className="columns">
         <div className="panel">
           <h2>
-            <span className="sec-no">01</span>Peringkat Booth
+            <span className="sec-no">01</span>Booth Ranking
           </h2>
-          <p className="panel-sub">Jumlah scan per tenant — kandidat booth terbaik</p>
+          <p className="panel-sub">Scans per tenant — best-booth candidates</p>
           <div className="rank-list">
             {tenants.map((t, i) => (
               <div className="rank-row" key={t.id}>
@@ -103,9 +103,9 @@ export default function Dashboard({ onUnauthorized }) {
         <div className="col-right">
           <div className="panel">
             <h2>
-              <span className="sec-no">02</span>Kapasitas Seminar
+              <span className="sec-no">02</span>Seminar Capacity
             </h2>
-            <p className="panel-sub">Sesi paralel</p>
+            <p className="panel-sub">Parallel sessions</p>
             {seminars.map((s) => {
               const pct = Math.round((s.seats_taken / s.capacity) * 100)
               return (
@@ -127,9 +127,9 @@ export default function Dashboard({ onUnauthorized }) {
 
           <div className="panel">
             <h2>
-              <span className="sec-no">03</span>Aktivitas Terbaru
+              <span className="sec-no">03</span>Latest Activity
             </h2>
-            <p className="panel-sub">Scan kunjungan lintas semua booth</p>
+            <p className="panel-sub">Visit scans across all booths</p>
             <div className="feed">
               {activity.map((a, i) => (
                 <div className="feed-row" key={`${a.visited_at}-${i}`}>
@@ -137,13 +137,13 @@ export default function Dashboard({ onUnauthorized }) {
                   <div className="feed-info">
                     <b>{a.member_name}</b>
                     <small>
-                      di {a.tenant_name} · {a.booth}
+                      at {a.tenant_name} · {a.booth}
                     </small>
                   </div>
                   <span className="feed-time">{timeAgo(a.visited_at)}</span>
                 </div>
               ))}
-              {activity.length === 0 && <div className="empty">Belum ada aktivitas scan.</div>}
+              {activity.length === 0 && <div className="empty">No scan activity yet.</div>}
             </div>
           </div>
         </div>

@@ -7,30 +7,32 @@ const DEMO_PASSWORD = 'natcon2026'
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
 
 const QUICK_ACCOUNTS = [
-  { email: 'reddie@natcon.id', label: 'Reddie', sub: 'Peserta', initials: 'RW', kind: 'member' },
-  { email: 'sinta@natcon.id', label: 'Sinta', sub: 'Peserta', initials: 'SD', kind: 'member' },
-  { email: 'booth-a03@natcon.id', label: 'Kopi Nusantara', sub: 'Tenant · A-03', initials: 'KN', kind: 'tenant' },
-  { email: 'booth-b01@natcon.id', label: 'TechNesia', sub: 'Tenant · B-01', initials: 'TS', kind: 'tenant' },
+  { email: 'reddie@natcon.id', label: 'Reddie', sub: 'Member', initials: 'RW', kind: 'member' },
+  { email: 'sinta@natcon.id', label: 'Sinta', sub: 'Member', initials: 'SD', kind: 'member' },
+  { email: 'agus@natcon.id', label: 'Agus', sub: 'Member', initials: 'AS', kind: 'member' },
+  { email: 'booth-sp01@natcon.id', label: 'BNI Xpora', sub: 'Sponsor · SP-01', initials: 'BX', kind: 'tenant' },
+  { email: 'booth-a03@natcon.id', label: 'Kopi Nusantara', sub: 'Booth · A-03', initials: 'KN', kind: 'tenant' },
+  { email: 'booth-b01@natcon.id', label: 'TechNesia', sub: 'Booth · B-01', initials: 'TS', kind: 'tenant' },
 ]
 
 const APPS = [
   {
     kind: 'member',
     icon: 'user',
-    title: 'Aplikasi Peserta',
-    desc: 'QR pass, tenant passport, seminar',
+    title: 'Attendee App',
+    desc: 'QR pass, tenant passport, seminars',
   },
   {
     kind: 'tenant',
     icon: 'store',
-    title: 'Aplikasi Tenant',
-    desc: 'Scanner booth & dashboard pengunjung',
+    title: 'Tenant App',
+    desc: 'Booth scanner & visitor dashboard',
   },
   {
     kind: 'admin',
     icon: 'chart',
     title: 'Admin Dashboard',
-    desc: 'Monitoring & master data panitia',
+    desc: 'Committee monitoring & master data',
   },
 ]
 
@@ -44,7 +46,7 @@ function MockToggle() {
       onClick={() => setMock(!mock)}
     >
       <span className="mt-dot" />
-      {mock ? 'Mode Demo (Mock) aktif — data lokal, tanpa server' : 'Mode API — klik untuk coba Mode Demo (Mock)'}
+      {mock ? 'Demo (Mock) mode is on — local data, no server' : 'API mode — tap to try Demo (Mock) mode'}
     </button>
   )
 }
@@ -83,7 +85,7 @@ export default function Login() {
         <div className="login-card">
           <div className="login-logo">BNI</div>
           <h1>BNI Natcon 2026</h1>
-          <p>Mau akses aplikasi yang mana?</p>
+          <p>Which app do you want to open?</p>
           <MockToggle />
           <div className="app-chooser">
             {APPS.map((a) =>
@@ -112,6 +114,20 @@ export default function Login() {
               )
             )}
           </div>
+          {error && <div className="login-error" style={{ marginTop: 14 }}>{error}</div>}
+          <button
+            type="button"
+            className="ql-btn"
+            style={{ width: '100%', marginTop: 14 }}
+            onClick={() => doLogin('reddie@natcon.id', DEMO_PASSWORD)}
+            disabled={busy}
+          >
+            <span className="ql-av">RW</span>
+            <span className="ql-info">
+              <b>{busy ? 'Signing in…' : 'Quick demo — sign in as Reddie'}</b>
+              <small>Member · one tap, straight to the app</small>
+            </span>
+          </button>
         </div>
       </div>
     )
@@ -124,10 +140,10 @@ export default function Login() {
     <div className="login-page">
       <form className="login-card" onSubmit={submit}>
         <button type="button" className="back-link" onClick={() => setMode(null)}>
-          ← Pilih aplikasi lain
+          ← Choose another app
         </button>
         <div className="login-logo">BNI</div>
-        <h1>{mode === 'member' ? 'Aplikasi Peserta' : 'Aplikasi Tenant'}</h1>
+        <h1>{mode === 'member' ? 'Attendee App' : 'Tenant App'}</h1>
         <p>BNI Natcon 2026 · Jakarta Convention Center</p>
 
         {error && <div className="login-error">{error}</div>}
@@ -139,7 +155,7 @@ export default function Login() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={mode === 'member' ? 'nama@natcon.id' : 'booth-a03@natcon.id'}
+            placeholder={mode === 'member' ? 'name@natcon.id' : 'booth-a03@natcon.id'}
             required
             autoFocus
           />
@@ -156,11 +172,11 @@ export default function Login() {
           />
         </div>
         <button className="btn" type="submit" disabled={busy}>
-          {busy ? 'Masuk…' : 'Masuk'}
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
 
         <div className="quick-login">
-          <div className="ql-label">Quick login — akun demo</div>
+          <div className="ql-label">Quick login — demo accounts</div>
           <div className="ql-grid">
             {accounts.map((a) => (
               <button
@@ -183,8 +199,8 @@ export default function Login() {
         <MockToggle />
         {mock && (
           <p className="mock-note">
-            Mode demo: data tersimpan di perangkat ini saja, password diabaikan. Scan booth memakai kode
-            member demo (mis. NATCON-2026-08154).
+            Demo mode: data lives on this device only and any password works. Scan booths with a demo
+            member code (e.g. NATCON-2026-08154) or phone (+62811000154).
           </p>
         )}
       </form>

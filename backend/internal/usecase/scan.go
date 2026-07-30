@@ -19,14 +19,15 @@ func NewScanUsecase(users domain.UserRepository, tenants domain.TenantRepository
 }
 
 // Scan records a member's visit at the booth owned by tenantUserID.
-// A duplicate scan is not an error: the scanner UI still needs the member's
-// identity, so the result carries a Duplicate flag instead.
-func (u *ScanUsecase) Scan(ctx context.Context, tenantUserID int64, memberCode string) (*domain.ScanResult, error) {
+// The key is either a member code (QR payload) or a phone number (manual
+// input). A duplicate scan is not an error: the scanner UI still needs the
+// member's identity, so the result carries a Duplicate flag instead.
+func (u *ScanUsecase) Scan(ctx context.Context, tenantUserID int64, memberKey string) (*domain.ScanResult, error) {
 	booth, err := u.tenants.GetByOwnerUserID(ctx, tenantUserID)
 	if err != nil {
 		return nil, err
 	}
-	member, err := u.users.GetByMemberCode(ctx, strings.TrimSpace(memberCode))
+	member, err := u.users.GetByCodeOrPhone(ctx, strings.TrimSpace(memberKey))
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +45,7 @@ func (u *ScanUsecase) Scan(ctx context.Context, tenantUserID int64, memberCode s
 		return nil, err
 	}
 	return &domain.ScanResult{
+		MemberID:      member.ID,
 		MemberName:    member.Name,
 		MemberChapter: member.Chapter,
 		MemberCompany: member.Company,

@@ -18,7 +18,7 @@ function AppBar() {
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}
         <button className="logout-btn" onClick={logout}>
-          Keluar
+          Log out
         </button>
       </div>
     </header>
@@ -45,8 +45,8 @@ export function MemberLayout() {
         <Outlet />
       </div>
       <nav className="bottomnav">
-        <NavButton to="/" icon="home" label="Beranda" />
-        <NavButton to="/qr" icon="qr" label="QR Saya" />
+        <NavButton to="/" icon="home" label="Home" />
+        <NavButton to="/qr" icon="qr" label="My QR" />
         <NavButton to="/passport" icon="pin" label="Passport" />
         <NavButton to="/seminar" icon="mic" label="Seminar" />
         <NavButton to="/network" icon="users" label="Network" />

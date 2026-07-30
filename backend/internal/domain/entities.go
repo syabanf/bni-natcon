@@ -19,8 +19,15 @@ type User struct {
 	MemberCode   string // empty for tenant-role users
 	Chapter      string
 	Company      string
+	Phone        string
 	CreatedAt    time.Time
 }
+
+// Tenant kinds: sponsors are listed above booths on the passport.
+const (
+	TenantKindBooth   = "booth"
+	TenantKindSponsor = "sponsor"
+)
 
 type Tenant struct {
 	ID          int64
@@ -28,6 +35,8 @@ type Tenant struct {
 	Category    string
 	Booth       string
 	Initials    string
+	Kind        string // "booth" | "sponsor"
+	Description string
 	OwnerUserID int64
 }
 
@@ -47,19 +56,25 @@ type Visit struct {
 
 // Visitor is a visit joined with member info, for the booth dashboard.
 type Visitor struct {
-	Name      string
-	Chapter   string
-	Company   string
-	VisitedAt time.Time
+	MemberID   int64
+	Name       string
+	Chapter    string
+	Company    string
+	MemberCode string
+	Phone      string
+	Note       string
+	VisitedAt  time.Time
 }
 
 type Seminar struct {
-	ID       int64
-	Slot     int
-	Room     string
-	Title    string
-	Speaker  string
-	Capacity int
+	ID          int64
+	Slot        int
+	Room        string
+	Title       string
+	Speaker     string
+	Capacity    int
+	Description string
+	CoverURL    string
 }
 
 // SeminarWithStatus is a seminar plus registration info for a given member.
@@ -67,6 +82,7 @@ type SeminarWithStatus struct {
 	Seminar
 	SeatsTaken int
 	Registered bool
+	Attended   bool
 }
 
 type SeminarRegistration struct {
@@ -91,13 +107,15 @@ type BoothStats struct {
 	ScansToday int
 }
 
-// ScanResult is what the booth scanner shows after scanning a member QR.
+// ScanResult is what the booth scanner shows after scanning a member QR
+// (or manually entering a member ID / phone number).
 type ScanResult struct {
+	MemberID      int64
 	MemberName    string
 	MemberChapter string
 	MemberCompany string
 	Duplicate     bool
-	Coupons       int
+	Coupons       int // pins collected (one per booth visit)
 }
 
 // AdminOverview aggregates event-wide numbers for the admin dashboard.
@@ -156,29 +174,35 @@ type MemberUpdate struct {
 	Company string
 }
 
-// NewTenant creates a booth plus its scanner login user.
+// NewTenant creates a booth/sponsor plus its scanner login user.
 type NewTenant struct {
 	Name         string
 	Category     string
 	Booth        string
 	Initials     string
+	Kind         string
+	Description  string
 	Email        string
 	PasswordHash string
 }
 
 type TenantUpdate struct {
-	Name     string
-	Category string
-	Booth    string
-	Initials string
+	Name        string
+	Category    string
+	Booth       string
+	Initials    string
+	Kind        string
+	Description string
 }
 
 type SeminarInput struct {
-	Slot     int
-	Room     string
-	Title    string
-	Speaker  string
-	Capacity int
+	Slot        int
+	Room        string
+	Title       string
+	Speaker     string
+	Capacity    int
+	Description string
+	CoverURL    string
 }
 
 // BulkRowError reports why one row of a bulk import failed.
@@ -276,7 +300,8 @@ type NetworkingTable struct {
 	Occupied int
 }
 
-// TableMate is one person seated at the member's table.
+// TableMate is one person seated at the member's table. Note is the
+// owner's private note on that person (set after saving the contact).
 type TableMate struct {
 	MemberID int64
 	Name     string
@@ -285,6 +310,7 @@ type TableMate struct {
 	SeatNo   int
 	IsMe     bool
 	Saved    bool
+	Note     string
 }
 
 // NetworkingStatus is everything the member's networking screen needs.
@@ -308,6 +334,7 @@ type SavedContact struct {
 	Chapter    string
 	Company    string
 	MemberCode string
+	Note       string
 	SavedAt    time.Time
 }
 
@@ -324,6 +351,9 @@ type ContactDetail struct {
 	Chapter        string
 	Company        string
 	MemberCode     string
+	Email          string
+	Phone          string
+	Note           string
 	SavedAt        time.Time
 	CurrentTableNo int // 0 when not checked in anywhere
 }
