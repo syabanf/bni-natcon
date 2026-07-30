@@ -188,6 +188,14 @@ Konvensi error: 401 kredensial/token, 403 salah role, 404 tidak ada,
 `go run ./backend/cmd/api` → `npm run dev` di `frontend/` dan `admin/`.
 Override port API via `VITE_API_PROXY` di `.env.local` masing-masing app.
 
+**Konfigurasi env**: template variabel predefined tersedia —
+`.env.example` (root, dipakai docker compose **dan** di-auto-load API Go;
+env asli selalu menang), `frontend/.env.example`, `admin/.env.example`.
+Salin ke `.env` / `.env.local` lalu sesuaikan; semua variabel punya
+default development yang aman. Compose sepenuhnya terparameterisasi
+(kredensial DB, port host tiap service, `JWT_SECRET`, `APP_ENV`,
+`ALLOWED_ORIGINS`, `VITE_ADMIN_URL`).
+
 **Deploy sekali perintah**:
 
 ```bash

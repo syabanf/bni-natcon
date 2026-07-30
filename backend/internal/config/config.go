@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bufio"
 	"os"
 	"strings"
 	"time"
@@ -20,7 +21,39 @@ type Config struct {
 	AllowedOrigins []string
 }
 
+// loadDotEnv reads KEY=VALUE pairs from the given file into the process
+// environment. Real environment variables always win; missing file is fine.
+func loadDotEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		value = strings.Trim(value, `"'`)
+		if key == "" || os.Getenv(key) != "" {
+			continue
+		}
+		os.Setenv(key, value)
+	}
+}
+
 func Load() Config {
+	// `.env` di working directory (repo root saat `go run ./backend/cmd/api`)
+	// atau di folder backend saat dijalankan dari sana.
+	loadDotEnv(".env")
+	loadDotEnv("../.env")
 	origins := strings.Split(getenv("ALLOWED_ORIGINS",
 		"http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"), ",")
 	for i := range origins {

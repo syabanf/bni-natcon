@@ -61,6 +61,31 @@ both frontends, and `docker compose build` for all images.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
+## Environment configuration
+
+Predefined variable templates ship with the repo — copy, adjust, done
+(every variable has a safe development default, so empty/no env also works):
+
+```bash
+cp .env.example .env                          # backend + docker compose
+cp frontend/.env.example frontend/.env.local  # member/tenant dev server
+cp admin/.env.example admin/.env.local        # admin dev server
+```
+
+- **`.env` (root)** — read automatically by both `docker compose` and the Go
+  API (`go run ./backend/cmd/api` auto-loads `.env` from the working
+  directory; real environment variables always take precedence). Holds
+  `APP_ENV`, `JWT_SECRET`, `SEED_PASSWORD`, `ADDR`, `DATABASE_URL`,
+  `ALLOWED_ORIGINS`, plus compose-only knobs: `DB_USER/DB_PASSWORD/DB_NAME`,
+  host ports (`DB_PORT`, `API_PORT`, `FRONTEND_PORT`, `ADMIN_PORT`) and
+  `VITE_ADMIN_URL`.
+- **`frontend/.env.local`** — `VITE_API_PROXY` (where the dev server proxies
+  `/api`), `VITE_ADMIN_URL` (target of the "Admin Dashboard" tile).
+- **`admin/.env.local`** — `VITE_API_PROXY`.
+
+`.env` and `*.local` are gitignored; only the `.env.example` templates are
+committed.
+
 ## Run it
 
 ### 1. Database
@@ -78,7 +103,8 @@ cd backend
 go run ./cmd/api
 ```
 
-Defaults (override via env): `ADDR=:8080`,
+Defaults (override via env or the root `.env` — see
+[Environment configuration](#environment-configuration)): `ADDR=:8080`,
 `DATABASE_URL=postgres://natcon:natcon@localhost:5432/natcon?sslmode=disable`,
 `JWT_SECRET=dev-secret-change-me`, `SEED_PASSWORD=natcon2026`.
 
