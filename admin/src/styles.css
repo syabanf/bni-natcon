@@ -284,6 +284,8 @@ button:disabled {
   min-width: 0;
   padding: 30px 40px 80px;
   max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
 }
 .content-head {
   display: flex;
@@ -376,7 +378,6 @@ button:disabled {
   grid-template-columns: 1.25fr 1fr;
   gap: 20px;
   margin-top: 22px;
-  align-items: start;
 }
 @media (max-width: 900px) {
   .columns {
@@ -387,6 +388,19 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+/* Panel terakhir (Aktivitas Terbaru) mengisi sisa tinggi kolom supaya
+   dasar kedua kolom sejajar — tidak ada ruang mati di kanan bawah. */
+.col-right .panel:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.col-right .panel:last-child .feed {
+  flex: 1;
+  min-height: 120px;
+  max-height: none;
 }
 .panel {
   background: var(--white);
