@@ -1250,3 +1250,146 @@ button:disabled {
   font-weight: 800;
   flex-shrink: 0;
 }
+
+/* ===== Responsive: tablet & mobile ===== */
+@media (max-width: 1100px) {
+  .content {
+    padding: 26px 24px 70px;
+  }
+}
+
+/* Sidebar berubah jadi top bar dengan menu scroll horizontal */
+@media (max-width: 900px) {
+  .shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .sb-brand {
+    padding: 13px 16px;
+    padding-right: 96px;
+    border-bottom: none;
+  }
+  .sb-brand .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+  .sb-menu {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sb-menu::-webkit-scrollbar {
+    display: none;
+  }
+  .sb-menu button {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 9px 13px;
+    font-size: 12.5px;
+  }
+  .sb-section {
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  .sb-foot {
+    position: absolute;
+    top: 14px;
+    right: 12px;
+    padding: 0;
+    border-top: none;
+  }
+  .content {
+    padding: 22px 18px 60px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 18px 14px 52px;
+  }
+  .content-head h1 {
+    font-size: 19px;
+  }
+  .panel {
+    padding: 16px;
+  }
+  .stat-card {
+    padding: 14px 13px;
+  }
+  .stat-card .num {
+    font-size: 24px;
+  }
+  .door-stats {
+    gap: 8px;
+  }
+  .list-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .search-input {
+    flex: 1 1 100%;
+  }
+  .report-head {
+    flex-wrap: wrap;
+  }
+  .hb-label {
+    width: 108px;
+  }
+  .hb-value {
+    width: 42px;
+    font-size: 12.5px;
+  }
+  .bar-chart {
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .bc-col {
+    min-width: 30px;
+  }
+  .modal-backdrop {
+    padding: 4vh 12px 12px;
+  }
+  .modal-head {
+    padding: 20px 18px 0;
+  }
+  .modal-body {
+    padding: 16px 18px 20px;
+  }
+  .detail-hero {
+    padding: 16px;
+    gap: 16px;
+  }
+  .info-grid {
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+  .md-actions button {
+    margin-left: 4px;
+    padding: 7px 10px;
+  }
+  .door-manual {
+    flex-wrap: wrap;
+  }
+  .door-manual input {
+    flex: 1 1 100%;
+  }
+  .door-manual .md-add {
+    flex: 1;
+  }
+}

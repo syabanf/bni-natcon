@@ -1554,3 +1554,73 @@ input {
   font-size: 13px;
   padding: 40px 20px;
 }
+
+/* ===== Responsive ===== */
+/* Toast tidak boleh lebih lebar dari layar */
+.toast {
+  max-width: calc(100vw - 32px);
+  white-space: normal;
+  text-align: center;
+}
+
+/* Tablet / desktop: kolom app terlihat disengaja di tengah */
+@media (min-width: 768px) {
+  body {
+    background: #efefef;
+  }
+  .app-shell {
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.07);
+  }
+}
+
+/* Ponsel kecil (<=360px): grid 2 kolom jadi 1, spacing dirapatkan */
+@media (max-width: 360px) {
+  .ql-grid,
+  .quick-grid,
+  .tenant-grid,
+  .table-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-row {
+    flex-direction: column;
+  }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .stat .st-label {
+    margin-top: 0;
+  }
+  .login-card {
+    padding: 24px 18px;
+  }
+  .hero-greet,
+  .qr-page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .member-card,
+  .stat-row,
+  .quick-grid,
+  .agenda-strip,
+  .tenant-grid,
+  .progress-card,
+  .doorprize-banner,
+  .seminar-card,
+  .net-hero,
+  .table-viz,
+  .net-list,
+  .table-grid,
+  .scanner-zone,
+  .scan-result,
+  .manual-scan,
+  .tenant-stats,
+  .visitor-list,
+  .queue-note,
+  .contact-card,
+  .empty-note {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}
