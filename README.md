@@ -162,6 +162,23 @@ ADDR=:8082 DATABASE_URL="postgres://natcon:natcon@localhost:5432/natcon_e2e?sslm
 BASE=http://localhost:8082 python3 scripts/e2e.py
 ```
 
+Stress & concurrency suite (read-heavy load with latency percentiles, plus
+correctness under contention: seminar seats, networking tables, scan bursts —
+worker tokens are minted locally so the login rate limit stays untouched):
+
+```bash
+createdb natcon_stress
+ADDR=:8083 DATABASE_URL="postgres://natcon:natcon@localhost:5432/natcon_stress?sslmode=disable" \
+  go run ./backend/cmd/api &
+BASE=http://localhost:8083 python3 scripts/stress.py
+# heavier: WORKERS=100 REQS=100 CONTENDERS=100 BASE=... python3 scripts/stress.py
+```
+
+Reference numbers (M-series laptop, 10k requests): ~10,000 req/s,
+p50 7 ms / p99 45 ms, zero errors; 100 members racing for 10 seminar seats →
+exactly 10 succeed; 100 racing for an 8-seat table → exactly 8; 100
+concurrent scans of one member → exactly 1 counted.
+
 ## Hardening
 
 - HTTP server timeouts (read/write/idle/header) + graceful shutdown on SIGINT/SIGTERM

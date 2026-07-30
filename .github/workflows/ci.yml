@@ -62,6 +62,47 @@ jobs:
           python3 scripts/e2e.py
           kill $API_PID
 
+  stress:
+    name: Stress & concurrency suite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: natcon
+          POSTGRES_PASSWORD: natcon
+          POSTGRES_DB: natcon_stress
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U natcon -d natcon_stress"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Build API
+        working-directory: backend
+        run: go build -o /tmp/natcon-api ./cmd/api
+      - name: Run API + stress suite
+        env:
+          ADDR: ":8083"
+          DATABASE_URL: postgres://natcon:natcon@localhost:5432/natcon_stress?sslmode=disable
+          BASE: http://localhost:8083
+        run: |
+          /tmp/natcon-api &
+          API_PID=$!
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8083/healthz && break
+            sleep 1
+          done
+          python3 scripts/stress.py
+          kill $API_PID
+
   frontend:
     name: Frontend builds
     runs-on: ubuntu-latest
