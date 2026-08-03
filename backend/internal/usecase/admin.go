@@ -87,6 +87,9 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, 
 	if err != nil {
 		return nil, err
 	}
+	if err := u.admin.EnsureChapter(ctx, strings.TrimSpace(chapter)); err != nil {
+		return nil, err
+	}
 	return u.admin.CreateMember(ctx, domain.NewMember{
 		Name: name, Email: email, PasswordHash: hash,
 		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(company),
@@ -103,6 +106,10 @@ func (u *AdminUsecase) UpdateMember(ctx context.Context, id int64, m domain.Memb
 		return invalid("invalid email format")
 	}
 	m.Phone = strings.TrimSpace(m.Phone)
+	m.Chapter = strings.TrimSpace(m.Chapter)
+	if err := u.admin.EnsureChapter(ctx, m.Chapter); err != nil {
+		return err
+	}
 	return u.admin.UpdateMember(ctx, id, m)
 }
 
@@ -196,17 +203,80 @@ type MemberImportRow struct {
 	Phone   string
 }
 
-func (u *AdminUsecase) BulkCreateMembers(ctx context.Context, rows []MemberImportRow) (int, []domain.BulkRowError) {
-	created := 0
-	var errs []domain.BulkRowError
+// BulkUpsertMembers imports rows create-or-update keyed by email: new
+// emails become members (default password, generated code), existing member
+// emails get their name/chapter/company/phone refreshed. Every distinct
+// chapter is registered in the chapters master data.
+func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImportRow) (created, updated int, errs []domain.BulkRowError) {
+	hash := ""
 	for i, row := range rows {
-		if _, err := u.CreateMember(ctx, row.Name, row.Email, "", row.Chapter, row.Company, row.Phone); err != nil {
-			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: err.Error()})
+		name := strings.TrimSpace(row.Name)
+		email := strings.ToLower(strings.TrimSpace(row.Email))
+		if name == "" || email == "" {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: "name and email are required"})
 			continue
 		}
-		created++
+		if !validEmail(email) {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: "invalid email format"})
+			continue
+		}
+		// One bcrypt hash for the whole batch — every new member starts on
+		// the default password anyway, and hashing dominates import time.
+		if hash == "" {
+			h, err := u.hasher.Hash(u.defaultPassword)
+			if err != nil {
+				errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
+				continue
+			}
+			hash = h
+		}
+		chapter := strings.TrimSpace(row.Chapter)
+		if err := u.admin.EnsureChapter(ctx, chapter); err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
+			continue
+		}
+		res, err := u.admin.UpsertMember(ctx, domain.NewMember{
+			Name: name, Email: email, PasswordHash: hash,
+			Chapter: chapter, Company: strings.TrimSpace(row.Company),
+			Phone: strings.TrimSpace(row.Phone),
+		})
+		if err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
+			continue
+		}
+		if res.Created {
+			created++
+		} else {
+			updated++
+		}
 	}
-	return created, errs
+	return created, updated, errs
+}
+
+/* ----- Chapters ----- */
+
+func (u *AdminUsecase) ListChapters(ctx context.Context) ([]domain.Chapter, error) {
+	return u.admin.ListChapters(ctx)
+}
+
+func (u *AdminUsecase) CreateChapter(ctx context.Context, name string) (*domain.Chapter, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, invalid("chapter name is required")
+	}
+	return u.admin.CreateChapter(ctx, name)
+}
+
+func (u *AdminUsecase) RenameChapter(ctx context.Context, id int64, name string) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return invalid("chapter name is required")
+	}
+	return u.admin.RenameChapter(ctx, id, name)
+}
+
+func (u *AdminUsecase) DeleteChapter(ctx context.Context, id int64) error {
+	return u.admin.DeleteChapter(ctx, id)
 }
 
 type TenantImportRow struct {

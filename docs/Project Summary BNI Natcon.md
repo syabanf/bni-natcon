@@ -49,7 +49,7 @@ Tiga aplikasi terpisah, satu monorepo:
 │       └── delivery/http/           router chi, handler, middleware JWT/role
 ├── frontend/   React 18 + Vite (JS) — app Peserta & Tenant (:5173)
 ├── admin/      React 18 + Vite (JS) — Admin Panel (:5174)
-├── scripts/e2e.py                   suite end-to-end 84 check (stdlib only)
+├── scripts/e2e.py                   suite end-to-end 94 check (stdlib only)
 ├── scripts/stress.py                suite stress & concurrency (stdlib only)
 ├── docker-compose.yml               full stack: db + api + frontend + admin
 └── .github/workflows/ci.yml         CI: vet/test, e2e, build FE, build docker
@@ -133,7 +133,8 @@ dari **localStorage tanpa backend** dengan bentuk respons yang identik:
 
 | Tabel | Inti |
 |---|---|
-| `users` | role `member` / `tenant` / `admin`, bcrypt, `member_code` unik |
+| `users` | role `member` / `tenant` / `admin`, bcrypt, `member_code` unik, `phone` |
+| `chapters` | master data chapter — diisi otomatis dari import/CRUD member; rename ber-cascade ke member |
 | `tenants` | booth + `owner_user_id` (akun scanner) |
 | `visits` | **stempel digital** — unik (tenant, member); kupon = jumlah visit |
 | `seminars`, `seminar_registrations` | unik (seminar, member); satu-per-slot + kapasitas dijaga transaksi `FOR UPDATE` |
@@ -167,12 +168,12 @@ Konvensi error: 401 kredensial/token, 403 salah role, 404 tidak ada,
 - **Unit test** (`go test ./...`): table-driven di layer usecase dengan
   fake repo — login, scan/duplikat, statistik, aturan slot/kapasitas
   seminar, batal-dan-pindah.
-- **E2E** (`scripts/e2e.py`, Python stdlib, **84 check**): dijalankan
+- **E2E** (`scripts/e2e.py`, Python stdlib, **94 check**): dijalankan
   terhadap API live + DB segar — auth & guard semua role, alur scan,
   seminar penuh, check-in pintu (tercatat/duplikat/ditolak), seluruh alur
   networking, admin CRUD/detail/bulk/laporan, pagination & search,
   `/metrics`, dan probe hardening (body 3 MB ditolak, rate limit 429).
-  Hasil terakhir: **84 passed, 0 failed** (lokal dan di CI).
+  Hasil terakhir: **94 passed, 0 failed** (lokal dan di CI).
 - **Stress & concurrency** (`scripts/stress.py`): beban baca 10k request
   (~10.000 req/s, p99 45 ms), 100 peserta rebutan 10 kursi seminar →
   tepat 10 sukses, 100 rebutan meja 8 kursi → tepat 8, 100 scan serentak
@@ -217,7 +218,7 @@ nginx di tiap image frontend menyajikan build statis dan mem-proxy `/api`
 ke container API (tanpa urusan CORS). Set `JWT_SECRET` +
 `APP_ENV=production` untuk produksi.
 
-**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 84
+**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 94
 check + suite stress vs container Postgres → Vitest + build produksi kedua
 frontend → `docker compose build`.
 

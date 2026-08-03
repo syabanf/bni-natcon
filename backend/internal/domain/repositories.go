@@ -50,6 +50,11 @@ type AdminRepository interface {
 	// it also returns the total row count for the filter.
 	ListMembers(ctx context.Context, q string, limit, offset int) ([]MemberSummary, int, error)
 	CreateMember(ctx context.Context, m NewMember) (*User, error)
+	// UpsertMember creates the member, or — when the email already belongs
+	// to a member — updates name/chapter/company/phone in place (the stored
+	// password and member code are kept). ErrEmailTaken when the email
+	// belongs to a non-member account.
+	UpsertMember(ctx context.Context, m NewMember) (*UpsertResult, error)
 	UpdateMember(ctx context.Context, id int64, m MemberUpdate) error
 	DeleteMember(ctx context.Context, id int64) error
 
@@ -60,6 +65,15 @@ type AdminRepository interface {
 	CreateSeminar(ctx context.Context, s SeminarInput) (*Seminar, error)
 	UpdateSeminar(ctx context.Context, id int64, s SeminarInput) error
 	DeleteSeminar(ctx context.Context, id int64) error
+
+	// Chapters master data. EnsureChapter registers a chapter name
+	// idempotently; RenameChapter also moves every member carrying the old
+	// name; DeleteChapter refuses (ErrInvalidInput) while members still use it.
+	ListChapters(ctx context.Context) ([]Chapter, error)
+	EnsureChapter(ctx context.Context, name string) error
+	CreateChapter(ctx context.Context, name string) (*Chapter, error)
+	RenameChapter(ctx context.Context, id int64, name string) error
+	DeleteChapter(ctx context.Context, id int64) error
 
 	VisitReport(ctx context.Context) ([]VisitReportRow, error)
 	RegistrationReport(ctx context.Context) ([]RegistrationReportRow, error)

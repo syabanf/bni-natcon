@@ -31,7 +31,9 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		errors.Is(err, domain.ErrAlreadyRegistered),
 		errors.Is(err, domain.ErrTableFull),
 		errors.Is(err, domain.ErrNotRegistered),
-		errors.Is(err, domain.ErrEmailTaken):
+		errors.Is(err, domain.ErrEmailTaken),
+		errors.Is(err, domain.ErrNameTaken),
+		errors.Is(err, domain.ErrChapterInUse):
 		respondError(w, http.StatusConflict, err.Error())
 	case errors.Is(err, domain.ErrInvalidInput):
 		respondError(w, http.StatusBadRequest, err.Error())

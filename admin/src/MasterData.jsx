@@ -148,7 +148,7 @@ function Notices({ crud, importResult, clearImport }) {
         <div className={importResult.error ? 'error' : 'notice'} onClick={clearImport}>
           {importResult.error
             ? `Import failed: ${importResult.error}`
-            : `Import finished — ${importResult.created} created, ${importResult.failed} failed${
+            : `Import finished — ${importResult.created} created, ${importResult.updated || 0} updated, ${importResult.failed} failed${
                 importResult.skippedDuplicates ? `, ${importResult.skippedDuplicates} in-file duplicates skipped` : ''
               }.`}
           {importResult.errors?.length > 0 && (
@@ -253,7 +253,9 @@ export function MembersPage() {
       <p className="import-hint">
         Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b>, <b>Phone</b> — the official
         ticketing export (&quot;Data Peserta&quot;: First/Last Name, Phone, Bni Chapter, Company Name) is also
-        recognized as-is. Duplicate emails inside the file are skipped automatically.
+        recognized as-is. Import is <b>create-or-update by email</b>: existing attendees get their
+        name/chapter/company/phone refreshed (password &amp; member code kept), and every distinct
+        chapter is registered under <b>Chapters</b>. In-file duplicate emails are skipped.
       </p>
 
       <div className="list-toolbar">

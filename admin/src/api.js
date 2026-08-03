@@ -113,13 +113,14 @@ export const api = {
   bulkMembers: async (members) => {
     const CHUNK = 200
     if (isMockMode()) return mock.bulkMembers(members)
-    const total = { created: 0, failed: 0, errors: [] }
+    const total = { created: 0, updated: 0, failed: 0, errors: [] }
     for (let start = 0; start < members.length; start += CHUNK) {
       const res = await request('/admin/members/bulk', {
         method: 'POST',
         body: { members: members.slice(start, start + CHUNK) },
       })
       total.created += res.created
+      total.updated += res.updated || 0
       total.failed += res.failed
       total.errors.push(...(res.errors || []).map((e) => ({ ...e, row: e.row + start })))
     }
@@ -127,6 +128,13 @@ export const api = {
   },
   bulkTenants: (tenants) =>
     isMockMode() ? mock.bulkTenants(tenants) : request('/admin/tenants/bulk', { method: 'POST', body: { tenants } }),
+  chapters: (opts) => (isMockMode() ? mock.chapters() : request('/admin/chapters', opts)),
+  createChapter: (name) =>
+    isMockMode() ? mock.createChapter(name) : request('/admin/chapters', { method: 'POST', body: { name } }),
+  renameChapter: (id, name) =>
+    isMockMode() ? mock.renameChapter(id, name) : request(`/admin/chapters/${id}`, { method: 'PUT', body: { name } }),
+  deleteChapter: (id) =>
+    isMockMode() ? mock.deleteChapter(id) : request(`/admin/chapters/${id}`, { method: 'DELETE' }),
   visitReport: () => (isMockMode() ? mock.visitReport() : request('/admin/report/visits')),
   registrationReport: () => (isMockMode() ? mock.registrationReport() : request('/admin/report/registrations')),
 }

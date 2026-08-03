@@ -330,3 +330,161 @@ func (r *AdminRepo) DeleteSeminar(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+/* ----- Member upsert (Excel import) ----- */
+
+func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*domain.UpsertResult, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var existingID int64
+	var role string
+	err = tx.QueryRow(ctx,
+		`SELECT id, role FROM users WHERE email = $1 FOR UPDATE`, m.Email).
+		Scan(&existingID, &role)
+	switch {
+	case err == nil && role != string(domain.RoleMember):
+		return nil, domain.ErrEmailTaken
+	case err == nil:
+		var u domain.User
+		err = tx.QueryRow(ctx, `
+			UPDATE users SET name = $1, chapter = $2, company = $3, phone = $4
+			WHERE id = $5
+			RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
+			m.Name, m.Chapter, m.Company, m.Phone, existingID).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return nil, err
+		}
+		return &domain.UpsertResult{User: &u, Created: false}, nil
+	case errors.Is(err, pgx.ErrNoRows):
+		var u domain.User
+		err = tx.QueryRow(ctx, `
+			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone)
+			VALUES ($1, $2, $3, 'member',
+			        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
+			        $4, $5, $6)
+			RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
+			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
+		if err != nil {
+			if isUniqueViolation(err, "users_email_key") {
+				return nil, domain.ErrEmailTaken
+			}
+			return nil, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return nil, err
+		}
+		return &domain.UpsertResult{User: &u, Created: true}, nil
+	default:
+		return nil, err
+	}
+}
+
+/* ----- Chapters ----- */
+
+func (r *AdminRepo) ListChapters(ctx context.Context) ([]domain.Chapter, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT c.id, c.name,
+		       (SELECT COUNT(*) FROM users u WHERE u.role = 'member' AND u.chapter = c.name)
+		FROM chapters c
+		ORDER BY c.name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []domain.Chapter
+	for rows.Next() {
+		var c domain.Chapter
+		if err := rows.Scan(&c.ID, &c.Name, &c.Members); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+func (r *AdminRepo) EnsureChapter(ctx context.Context, name string) error {
+	if name == "" {
+		return nil
+	}
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO chapters (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, name)
+	return err
+}
+
+func (r *AdminRepo) CreateChapter(ctx context.Context, name string) (*domain.Chapter, error) {
+	var c domain.Chapter
+	err := r.pool.QueryRow(ctx,
+		`INSERT INTO chapters (name) VALUES ($1) RETURNING id, name`, name).
+		Scan(&c.ID, &c.Name)
+	if err != nil {
+		if isUniqueViolation(err, "chapters_name_key") {
+			return nil, domain.ErrNameTaken
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *AdminRepo) RenameChapter(ctx context.Context, id int64, name string) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var oldName string
+	err = tx.QueryRow(ctx,
+		`SELECT name FROM chapters WHERE id = $1 FOR UPDATE`, id).Scan(&oldName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrNotFound
+		}
+		return err
+	}
+	if _, err := tx.Exec(ctx,
+		`UPDATE chapters SET name = $1 WHERE id = $2`, name, id); err != nil {
+		if isUniqueViolation(err, "chapters_name_key") {
+			return domain.ErrNameTaken
+		}
+		return err
+	}
+	// Members follow the chapter rename.
+	if _, err := tx.Exec(ctx,
+		`UPDATE users SET chapter = $1 WHERE role = 'member' AND chapter = $2`,
+		name, oldName); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func (r *AdminRepo) DeleteChapter(ctx context.Context, id int64) error {
+	var name string
+	err := r.pool.QueryRow(ctx, `SELECT name FROM chapters WHERE id = $1`, id).Scan(&name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrNotFound
+		}
+		return err
+	}
+	var members int
+	if err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM users WHERE role = 'member' AND chapter = $1`, name).
+		Scan(&members); err != nil {
+		return err
+	}
+	if members > 0 {
+		return domain.ErrChapterInUse
+	}
+	_, err = r.pool.Exec(ctx, `DELETE FROM chapters WHERE id = $1`, id)
+	return err
+}

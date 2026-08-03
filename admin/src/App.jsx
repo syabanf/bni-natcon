@@ -5,11 +5,13 @@ import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
 import DoorCheckin from './DoorCheckin'
 import LuckyDraw from './LuckyDraw'
+import Chapters from './Chapters'
 
 const MENU = [
   { key: 'dash', label: 'Dashboard', icon: '▦' },
   { key: 'members', label: 'Attendees', icon: '◉' },
   { key: 'tenants', label: 'Tenants', icon: '▤' },
+  { key: 'chapters', label: 'Chapters', icon: '⬡' },
   { key: 'seminars', label: 'Seminars', icon: '◈' },
   { key: 'door', label: 'Door Check-in', icon: '▣' },
   { key: 'draw', label: 'Lucky Draw', icon: '✦' },
@@ -147,6 +149,7 @@ function Shell({ onLogout }) {
         {view === 'dash' && <Dashboard onUnauthorized={onLogout} />}
         {view === 'members' && <MembersPage />}
         {view === 'tenants' && <TenantsPage />}
+        {view === 'chapters' && <Chapters onUnauthorized={onLogout} />}
         {view === 'seminars' && <SeminarsPage />}
         {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
         {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}

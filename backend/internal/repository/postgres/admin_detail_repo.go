@@ -12,9 +12,9 @@ import (
 func (r *AdminRepo) MemberDetail(ctx context.Context, id int64) (*domain.MemberDetail, error) {
 	var d domain.MemberDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT id, name, email, role, COALESCE(member_code, ''), chapter, company, created_at
+		SELECT id, name, email, role, COALESCE(member_code, ''), chapter, company, phone, created_at
 		FROM users WHERE id = $1 AND role = 'member'`, id).
-		Scan(&d.ID, &d.Name, &d.Email, &d.Role, &d.MemberCode, &d.Chapter, &d.Company, &d.CreatedAt)
+		Scan(&d.ID, &d.Name, &d.Email, &d.Role, &d.MemberCode, &d.Chapter, &d.Company, &d.Phone, &d.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

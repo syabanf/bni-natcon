@@ -43,9 +43,10 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 			Phone: m.Phone,
 		})
 	}
-	created, errs := s.admin.BulkCreateMembers(r.Context(), rows)
+	created, updated, errs := s.admin.BulkUpsertMembers(r.Context(), rows)
 	respondJSON(w, http.StatusOK, map[string]any{
 		"created": created,
+		"updated": updated,
 		"failed":  len(errs),
 		"errors":  bulkErrorsDTO(errs),
 	})

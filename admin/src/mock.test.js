@@ -102,3 +102,42 @@ describe('hapus tenant ber-cascade', () => {
     expect(after.total_visits).toBe(before.total_visits - 4)
   })
 })
+
+describe('bulk import upsert & chapters', () => {
+  it('creates then updates by email, and registers chapters', async () => {
+    const first = await mockAdminApi.bulkMembers([
+      { name: 'Upsert One', email: 'upsert@natcon.id', chapter: 'Chapter Baru', phone: '+62810000001' },
+    ])
+    expect(first.created).toBe(1)
+    expect(first.updated).toBe(0)
+
+    const second = await mockAdminApi.bulkMembers([
+      { name: 'Upsert One Renamed', email: 'upsert@natcon.id', chapter: 'Chapter Baru', phone: '+62810000002' },
+    ])
+    expect(second.created).toBe(0)
+    expect(second.updated).toBe(1)
+
+    const found = await mockAdminApi.members({ q: 'upsert@natcon.id' })
+    expect(found.total).toBe(1)
+    expect(found.members[0].name).toBe('Upsert One Renamed')
+    expect(found.members[0].phone).toBe('+62810000002')
+
+    const chapters = await mockAdminApi.chapters()
+    const baru = chapters.chapters.find((c) => c.name === 'Chapter Baru')
+    expect(baru.members).toBe(1)
+  })
+
+  it('rename cascades to members; delete refuses while in use', async () => {
+    await mockAdminApi.bulkMembers([
+      { name: 'Casc Ade', email: 'casc@natcon.id', chapter: 'Chapter Lama' },
+    ])
+    const { chapters } = await mockAdminApi.chapters()
+    const lama = chapters.find((c) => c.name === 'Chapter Lama')
+
+    await expect(mockAdminApi.deleteChapter(lama.id)).rejects.toMatchObject({ status: 409 })
+
+    await mockAdminApi.renameChapter(lama.id, 'Chapter Hebat')
+    const found = await mockAdminApi.members({ q: 'casc@natcon.id' })
+    expect(found.members[0].chapter).toBe('Chapter Hebat')
+  })
+})

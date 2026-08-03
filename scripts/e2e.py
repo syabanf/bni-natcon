@@ -294,10 +294,43 @@ check("seminar detail 200", status == 200 and body["seminar"]["room"] == "R. E2E
 
 status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
                       body={"members": [
-                          {"name": "Bulk Satu", "email": "bulk1@natcon.id"},
-                          {"name": "Bulk Dup", "email": "e2e-budi@natcon.id"},
+                          {"name": "Bulk Satu", "email": "bulk1@natcon.id",
+                           "chapter": "Chapter Import", "phone": "+62810009001"},
+                          {"name": "Budi Refreshed", "email": "e2e-budi@natcon.id",
+                           "chapter": "Chapter Import", "phone": "+62810009002"},
                       ]})
-check("bulk import: 1 created 1 failed", status == 200 and body["created"] == 1 and body["failed"] == 1)
+check("bulk import upserts: 1 created, 1 updated, 0 failed",
+      status == 200 and body["created"] == 1 and body["updated"] == 1 and body["failed"] == 0)
+status, body, _ = req("GET", f"/api/v1/admin/members/{new_member_id}", token=admin_tok)
+check("upsert refreshed existing member (name/chapter/phone; code kept)",
+      body["user"]["name"] == "Budi Refreshed"
+      and body["user"]["chapter"] == "Chapter Import"
+      and body["user"]["phone"] == "+62810009002"
+      and body["user"]["member_code"].startswith("NATCON-2026-"))
+
+# ---- chapters master data
+status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
+chapter_names = {c["name"]: c for c in body["chapters"]}
+check("chapters registered from import + CRUD",
+      status == 200 and "Chapter Import" in chapter_names
+      and chapter_names["Chapter Import"]["members"] == 2)
+imp_chapter_id = chapter_names["Chapter Import"]["id"]
+
+status, _, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok, body={"name": "Chapter Import"})
+check("duplicate chapter name -> 409", status == 409)
+status, _, _ = req("DELETE", f"/api/v1/admin/chapters/{imp_chapter_id}", token=admin_tok)
+check("delete chapter in use -> 409", status == 409)
+status, _, _ = req("PUT", f"/api/v1/admin/chapters/{imp_chapter_id}", token=admin_tok,
+                   body={"name": "Chapter Imported"})
+check("rename chapter 200", status == 200)
+status, body, _ = req("GET", f"/api/v1/admin/members/{new_member_id}", token=admin_tok)
+check("rename cascades to members", body["user"]["chapter"] == "Chapter Imported")
+
+status, body, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok, body={"name": "Chapter Kosong"})
+check("create empty chapter 201", status == 201)
+empty_id = body["chapter"]["id"]
+status, _, _ = req("DELETE", f"/api/v1/admin/chapters/{empty_id}", token=admin_tok)
+check("delete empty chapter 200", status == 200)
 
 status, body, _ = req("GET", "/api/v1/admin/report/visits", token=admin_tok)
 check("visits report has both scans", status == 200 and len(body["visits"]) == 2)

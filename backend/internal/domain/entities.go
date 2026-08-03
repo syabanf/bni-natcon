@@ -151,6 +151,19 @@ type ActivityItem struct {
 
 /* ----- Master data (admin CRUD) ----- */
 
+// Chapter is first-class master data, fed by member imports and CRUD.
+type Chapter struct {
+	ID      int64
+	Name    string
+	Members int
+}
+
+// UpsertResult reports what a bulk member upsert did to one row.
+type UpsertResult struct {
+	User    *User
+	Created bool
+}
+
 // MemberSummary is a member row in the admin master-data table.
 type MemberSummary struct {
 	User

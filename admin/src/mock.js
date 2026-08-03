@@ -77,14 +77,18 @@ function seedState() {
   // Sebagian sudah check-in di pintu untuk demo laporan kehadiran.
   const attendance = [{ member_id: 1, seminar_id: 1, at: todayAt(12, 55) }]
 
-  return { nextId: 100, nextCode: 9100, members, tenants, seminars, visits, registrations, attendance }
+    const chapters = [...new Set(members.map((m) => m.chapter).filter(Boolean))]
+    .sort()
+    .map((name, i) => ({ id: 900 + i, name }))
+
+  return { nextId: 1000, nextCode: 9100, members, tenants, seminars, visits, registrations, attendance, chapters }
 }
 
 function load() {
   try {
     const raw = localStorage.getItem(STATE_KEY)
     // attendance ditambahkan belakangan; state lama perlu default-nya.
-    if (raw) return { attendance: [], ...JSON.parse(raw) }
+    if (raw) return { attendance: [], chapters: [], ...JSON.parse(raw) }
   } catch {
     /* fresh */
   }
@@ -127,18 +131,51 @@ function seatsTaken(s, seminarId) {
   return s.registrations.filter((r) => r.seminar_id === seminarId).length
 }
 
+function ensureChapter(s, name) {
+  name = (name || '').trim()
+  if (!name) return
+  if (!s.chapters.some((c) => c.name === name)) {
+    s.chapters.push({ id: s.nextId++, name })
+  }
+}
+
 function createMemberRow(s, { name, email, chapter = '', company = '', phone = '' }) {
   name = (name || '').trim()
   email = (email || '').trim().toLowerCase()
   if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
   if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
   if (s.members.some((m) => m.email === email)) throw { status: 409, message: 'that email is already used by another account' }
+  ensureChapter(s, chapter)
   const row = {
     id: s.nextId++, name, email, chapter, company, phone: String(phone || '').trim(),
     member_code: `NATCON-2026-0${s.nextCode++}`,
   }
   s.members.push(row)
   return row
+}
+
+// Create-or-update keyed by email (import semantics).
+function upsertMemberRow(s, { name, email, chapter = '', company = '', phone = '' }) {
+  name = (name || '').trim()
+  email = (email || '').trim().toLowerCase()
+  if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
+  if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
+  ensureChapter(s, chapter)
+  const existing = s.members.find((m) => m.email === email)
+  if (existing) {
+    Object.assign(existing, {
+      name, chapter: (chapter || '').trim(), company: (company || '').trim(),
+      phone: String(phone || '').trim(),
+    })
+    return { created: false }
+  }
+  const row = {
+    id: s.nextId++, name, email, chapter: (chapter || '').trim(), company: (company || '').trim(),
+    phone: String(phone || '').trim(),
+    member_code: `NATCON-2026-0${s.nextCode++}`,
+  }
+  s.members.push(row)
+  return { created: true }
 }
 
 function createTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '' }) {
@@ -282,6 +319,7 @@ export const mockAdminApi = {
     if (s.members.some((x) => x.email === email && x.id !== m.id)) {
       return fail(409, 'that email is already used by another account')
     }
+    ensureChapter(s, body.chapter)
     Object.assign(m, { name: body.name.trim(), email, chapter: body.chapter || '', company: body.company || '', phone: (body.phone || m.phone || '').trim() })
     save(s)
     return delay({ status: 'updated' })
@@ -447,17 +485,73 @@ export const mockAdminApi = {
   bulkMembers(rows) {
     const s = load()
     let created = 0
+    let updated = 0
     const errors = []
     rows.forEach((row, i) => {
       try {
-        createMemberRow(s, row)
-        created++
+        const res = upsertMemberRow(s, row)
+        if (res.created) created++
+        else updated++
       } catch (e) {
         errors.push({ row: i + 1, label: row.email || row.name || '?', error: e.message })
       }
     })
     save(s)
-    return delay({ created, failed: errors.length, errors })
+    return delay({ created, updated, failed: errors.length, errors })
+  },
+
+  /* ----- Chapters ----- */
+
+  chapters() {
+    const s = load()
+    const rows = [...s.chapters]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => ({
+        ...c,
+        members: s.members.filter((m) => m.chapter === c.name).length,
+      }))
+    return delay({ chapters: rows })
+  },
+
+  createChapter(name) {
+    const s = load()
+    name = (name || '').trim()
+    if (!name) return fail(400, 'invalid input: chapter name is required')
+    if (s.chapters.some((c) => c.name === name)) return fail(409, 'that name is already in use')
+    const row = { id: s.nextId++, name }
+    s.chapters.push(row)
+    save(s)
+    return delay({ chapter: { ...row, members: 0 } })
+  },
+
+  renameChapter(id, name) {
+    const s = load()
+    const c = s.chapters.find((x) => x.id === Number(id))
+    if (!c) return fail(404, 'data not found')
+    name = (name || '').trim()
+    if (!name) return fail(400, 'invalid input: chapter name is required')
+    if (s.chapters.some((x) => x.name === name && x.id !== c.id)) {
+      return fail(409, 'that name is already in use')
+    }
+    const oldName = c.name
+    c.name = name
+    for (const m of s.members) {
+      if (m.chapter === oldName) m.chapter = name
+    }
+    save(s)
+    return delay({ status: 'updated' })
+  },
+
+  deleteChapter(id) {
+    const s = load()
+    const c = s.chapters.find((x) => x.id === Number(id))
+    if (!c) return fail(404, 'data not found')
+    if (s.members.some((m) => m.chapter === c.name)) {
+      return fail(409, 'this chapter still has members — move or rename them first')
+    }
+    s.chapters = s.chapters.filter((x) => x.id !== c.id)
+    save(s)
+    return delay({ status: 'deleted' })
   },
 
   bulkTenants(rows) {

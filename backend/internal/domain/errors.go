@@ -15,4 +15,6 @@ var (
 	ErrInvalidInput       = errors.New("invalid input")
 	ErrTableFull          = errors.New("this table is full — please join another one")
 	ErrNotRegistered      = errors.New("this attendee is not registered for this seminar")
+	ErrNameTaken          = errors.New("that name is already in use")
+	ErrChapterInUse       = errors.New("this chapter still has members — move or rename them first")
 )

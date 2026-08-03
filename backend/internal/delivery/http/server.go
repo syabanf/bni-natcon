@@ -144,6 +144,11 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 
+				r.Get("/admin/chapters", s.handleAdminListChapters)
+				r.Post("/admin/chapters", s.handleAdminCreateChapter)
+				r.Put("/admin/chapters/{id}", s.handleAdminRenameChapter)
+				r.Delete("/admin/chapters/{id}", s.handleAdminDeleteChapter)
+
 				r.Post("/admin/members/bulk", s.handleAdminBulkMembers)
 				r.Post("/admin/tenants/bulk", s.handleAdminBulkTenants)
 				r.Get("/admin/report/visits", s.handleAdminVisitReport)
