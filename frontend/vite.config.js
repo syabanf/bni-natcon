@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': env.VITE_API_PROXY || 'http://localhost:8080',
+        '/uploads': env.VITE_API_PROXY || 'http://localhost:8080',
       },
     },
   }

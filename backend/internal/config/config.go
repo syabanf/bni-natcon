@@ -19,6 +19,7 @@ type Config struct {
 	SeedPassword   string
 	Env            string
 	AllowedOrigins []string
+	UploadDir      string
 }
 
 // loadDotEnv reads KEY=VALUE pairs from the given file into the process
@@ -67,6 +68,7 @@ func Load() Config {
 		SeedPassword:   getenv("SEED_PASSWORD", "natcon2026"),
 		Env:            getenv("APP_ENV", "development"),
 		AllowedOrigins: origins,
+		UploadDir:      getenv("UPLOAD_DIR", "uploads"),
 	}
 }
 

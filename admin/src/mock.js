@@ -500,6 +500,25 @@ export const mockAdminApi = {
     return delay({ created, updated, failed: errors.length, errors })
   },
 
+  // Demo mode keeps the image on-device as a data URL (small files only —
+  // localStorage is the backing store).
+  uploadImage(file) {
+    if (!file.type.startsWith('image/')) return fail(400, 'only images are accepted')
+    if (file.size > 300 * 1024) {
+      return fail(400, 'demo mode stores images locally — keep them under 300 KB')
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve({ url: reader.result })
+      reader.onerror = () => {
+        const err = new Error('could not read the file')
+        err.status = 400
+        reject(err)
+      }
+      reader.readAsDataURL(file)
+    })
+  },
+
   /* ----- Chapters ----- */
 
   chapters() {

@@ -21,6 +21,55 @@ function Field({ label, hint, ...props }) {
   )
 }
 
+// Manual cover upload — the image is stored locally on the server
+// (UPLOAD_DIR, served at /uploads/…) and the returned URL saved on the
+// seminar. Gradient cover is used while empty.
+function CoverUpload({ value, onChange, onError }) {
+  const inputRef = useRef(null)
+  const [busy, setBusy] = useState(false)
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    try {
+      const { url } = await api.uploadImage(file)
+      onChange(url)
+    } catch (err) {
+      onError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="md-field">
+      <span>
+        Cover image<em> — optional, uploaded &amp; stored locally; gradient cover when blank</em>
+      </span>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        style={{ display: 'none' }}
+        onChange={onFile}
+      />
+      {value && <img className="cover-preview" src={value} alt="Seminar cover preview" />}
+      <div className="cover-actions">
+        <button type="button" className="md-secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
+          {busy ? 'Uploading…' : value ? '⇪ Replace image' : '⇪ Upload image'}
+        </button>
+        {value && (
+          <button type="button" className="md-cancel" onClick={() => onChange('')}>
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function useCrud({ list, create, update, remove }) {
   const [rows, setRows] = useState([])
   const [form, setForm] = useState(null) // null | object (id present => edit)
@@ -568,7 +617,11 @@ export function SeminarsPage() {
             <Field label="Speaker" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
             <Field label="Capacity" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
             <Field label="Description" hint="shown on the attendee seminar detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
-            <Field label="Cover image URL" hint="optional — gradient cover when blank" value={crud.form.cover_url || ''} onChange={(e) => crud.setForm({ ...crud.form, cover_url: e.target.value })} />
+            <CoverUpload
+              value={crud.form.cover_url || ''}
+              onChange={(url) => crud.setForm({ ...crud.form, cover_url: url })}
+              onError={(msg) => crud.setError(msg)}
+            />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">

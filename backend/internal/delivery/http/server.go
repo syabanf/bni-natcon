@@ -30,7 +30,13 @@ func securityHeaders(next http.Handler) http.Handler {
 
 func limitBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+		limit := int64(maxBodyBytes)
+		// Image uploads get their own, larger cap (validated again in the
+		// handler); everything else stays at the tight JSON limit.
+		if r.URL.Path == "/api/v1/admin/uploads" {
+			limit = maxUploadBytes + (1 << 20)
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, limit)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -45,6 +51,7 @@ type Server struct {
 	admin          *usecase.AdminUsecase
 	networking     *usecase.NetworkingUsecase
 	allowedOrigins []string
+	uploadDir      string
 }
 
 func NewServer(
@@ -57,11 +64,12 @@ func NewServer(
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
 	allowedOrigins []string,
+	uploadDir string,
 ) *Server {
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
-		allowedOrigins: allowedOrigins,
+		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
 	}
 }
 
@@ -85,6 +93,7 @@ func (s *Server) Router() http.Handler {
 		respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	r.Handle("/metrics", metricsHandler())
+	r.Handle("/uploads/*", s.uploadsHandler())
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Brute-force protection: 10 login attempts per IP per minute.
@@ -148,6 +157,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/chapters", s.handleAdminCreateChapter)
 				r.Put("/admin/chapters/{id}", s.handleAdminRenameChapter)
 				r.Delete("/admin/chapters/{id}", s.handleAdminDeleteChapter)
+
+				r.Post("/admin/uploads", s.handleAdminUpload)
 
 				r.Post("/admin/members/bulk", s.handleAdminBulkMembers)
 				r.Post("/admin/tenants/bulk", s.handleAdminBulkTenants)

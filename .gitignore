@@ -6,6 +6,10 @@ backend/bin/
 node_modules/
 dist/
 
+# Uploaded images (local storage)
+backend/uploads/
+uploads/
+
 # Env
 .env
 *.local

@@ -1265,6 +1265,19 @@ button:disabled {
   flex-shrink: 0;
 }
 
+/* ===== Cover upload ===== */
+.cover-preview {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+.cover-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ===== Lucky Draw ===== */
 .draw-stage {
   text-align: center;

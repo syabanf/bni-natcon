@@ -128,6 +128,27 @@ export const api = {
   },
   bulkTenants: (tenants) =>
     isMockMode() ? mock.bulkTenants(tenants) : request('/admin/tenants/bulk', { method: 'POST', body: { tenants } }),
+  // Multipart image upload — returns { url } (served from /uploads/…).
+  uploadImage: async (file) => {
+    if (isMockMode()) return mock.uploadImage(file)
+    const form = new FormData()
+    form.append('file', file)
+    let res
+    try {
+      res = await fetch(BASE + '/admin/uploads', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: form,
+      })
+    } catch {
+      throw new ApiError(0, 'Cannot reach the server — check your connection, or turn on Demo (Mock) mode.')
+    }
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new ApiError(res.status, data?.error || FRIENDLY_STATUS[res.status] || `Upload failed (code ${res.status}).`)
+    }
+    return data
+  },
   chapters: (opts) => (isMockMode() ? mock.chapters() : request('/admin/chapters', opts)),
   createChapter: (name) =>
     isMockMode() ? mock.createChapter(name) : request('/admin/chapters', { method: 'POST', body: { name } }),

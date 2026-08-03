@@ -320,6 +320,60 @@ check("upsert refreshed existing member (name/chapter/phone; code kept)",
       and body["user"]["phone"] == "+62810009002"
       and body["user"]["member_code"].startswith("NATCON-2026-"))
 
+# ---- cover image upload (stored locally, served at /uploads)
+def multipart(field, filename, content_type, payload):
+    boundary = "e2eboundary123"
+    body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{field}\"; "
+            f"filename=\"{filename}\"\r\nContent-Type: {content_type}\r\n\r\n").encode() \
+        + payload + f"\r\n--{boundary}--\r\n".encode()
+    return body, f"multipart/form-data; boundary={boundary}"
+
+PNG_1PX = bytes.fromhex(
+    "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+    "0000000d49444154789c626001000000ffff03000006000557bfabd40000000049454e44ae426082")
+
+upload_body, upload_ct = multipart("file", "cover.png", "image/png", PNG_1PX)
+upload_req = urllib.request.Request(BASE + "/api/v1/admin/uploads", data=upload_body, method="POST")
+upload_req.add_header("Content-Type", upload_ct)
+upload_req.add_header("Authorization", f"Bearer {admin_tok}")
+try:
+    with urllib.request.urlopen(upload_req, timeout=15) as resp:
+        up = json.loads(resp.read())
+        upload_status = resp.status
+except urllib.error.HTTPError as e:
+    up, upload_status = json.loads(e.read() or b"{}"), e.code
+check("cover upload stored locally -> 201 + /uploads url",
+      upload_status == 201 and up.get("url", "").startswith("/uploads/"))
+
+img_status = 0
+try:
+    with urllib.request.urlopen(BASE + up["url"], timeout=15) as resp:
+        img_status = resp.status
+        img_bytes = resp.read()
+except urllib.error.HTTPError as e:
+    img_status = e.code
+    img_bytes = b""
+check("uploaded image served back intact", img_status == 200 and img_bytes == PNG_1PX)
+
+bad_body, bad_ct = multipart("file", "notes.txt", "text/plain", b"just text, not an image")
+bad_req = urllib.request.Request(BASE + "/api/v1/admin/uploads", data=bad_body, method="POST")
+bad_req.add_header("Content-Type", bad_ct)
+bad_req.add_header("Authorization", f"Bearer {admin_tok}")
+try:
+    with urllib.request.urlopen(bad_req, timeout=15) as resp:
+        bad_status = resp.status
+except urllib.error.HTTPError as e:
+    bad_status = e.code
+check("non-image upload rejected -> 400", bad_status == 400)
+
+status, _, _ = req("PUT", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok,
+                   body={"slot": 2, "room": "R. E2E", "title": "Uji E2E", "speaker": "Bot",
+                         "capacity": 5, "cover_url": up["url"]})
+check("seminar takes uploaded cover", status == 200)
+status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
+check("member sees uploaded cover on seminar",
+      any(sm.get("cover_url") == up["url"] for sm in body["seminars"]))
+
 # ---- chapters master data
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 chapter_names = {c["name"]: c for c in body["chapters"]}

@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
       port: 5174,
       proxy: {
         '/api': env.VITE_API_PROXY || 'http://localhost:8080',
+        '/uploads': env.VITE_API_PROXY || 'http://localhost:8080',
       },
     },
   }

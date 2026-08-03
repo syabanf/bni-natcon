@@ -63,6 +63,7 @@ func main() {
 		usecase.NewAdminUsecase(postgres.NewAdminRepo(pool), httpdelivery.BcryptVerifier{}, cfg.SeedPassword),
 		usecase.NewNetworkingUsecase(postgres.NewNetworkingRepo(pool)),
 		cfg.AllowedOrigins,
+		cfg.UploadDir,
 	)
 
 	srv := &http.Server{

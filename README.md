@@ -92,7 +92,8 @@ cp admin/.env.example admin/.env.local        # admin dev server
   API (`go run ./backend/cmd/api` auto-loads `.env` from the working
   directory; real environment variables always take precedence). Holds
   `APP_ENV`, `JWT_SECRET`, `SEED_PASSWORD`, `ADDR`, `DATABASE_URL`,
-  `ALLOWED_ORIGINS`, plus compose-only knobs: `DB_USER/DB_PASSWORD/DB_NAME`,
+  `ALLOWED_ORIGINS`, `UPLOAD_DIR` (local image storage, default `uploads`),
+  plus compose-only knobs: `DB_USER/DB_PASSWORD/DB_NAME`,
   host ports (`DB_PORT`, `API_PORT`, `FRONTEND_PORT`, `ADMIN_PORT`) and
   `VITE_ADMIN_URL`.
 - **`frontend/.env.local`** — `VITE_API_PROXY` (where the dev server proxies
@@ -197,6 +198,7 @@ All with password `natcon2026`:
 | POST `/admin/tenants`, PUT/DELETE `/admin/tenants/{id}`       | admin | tenant CRUD (auto booth login)          |
 | POST `/admin/seminars`, PUT/DELETE `/admin/seminars/{id}`     | admin | seminar CRUD                            |
 | POST `/admin/seminars/{id}/checkin` | admin | door check-in by `member_code` (409 if not registered; duplicate flagged, not double-counted) |
+| POST `/admin/uploads` | admin | multipart image upload (JPG/PNG/WEBP/GIF ≤5 MB) → stored locally in `UPLOAD_DIR`, served at GET `/uploads/{name}` — used for seminar covers |
 | GET `/metrics`                 | public | Prometheus metrics (request count + latency histograms) |
 
 ## Tests
