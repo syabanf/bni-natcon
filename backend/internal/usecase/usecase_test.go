@@ -201,3 +201,21 @@ func TestSeminarUnregisterThenSwitch(t *testing.T) {
 		t.Fatalf("expected only seminar 2 registered, got %+v", list)
 	}
 }
+
+func TestImportPassword(t *testing.T) {
+	cases := []struct {
+		chapter, name, want string
+	}{
+		{"Heritage", "Abraham Sebastian", "heritageabraham"},
+		{"Chapter Jakarta Elite", "Reddie Wijaya", "chapterjakartaelitereddie"},
+		{"", "Sinta Dewi", "sinta"},
+		{"Grow", "", "grow"},
+		{"", "", ""},
+		{"BNI Ampang, KLCC", "D'Angelo Jr.", "bniampangklccdangelo"},
+	}
+	for _, c := range cases {
+		if got := importPassword(c.chapter, c.name); got != c.want {
+			t.Errorf("importPassword(%q, %q) = %q, want %q", c.chapter, c.name, got, c.want)
+		}
+	}
+}

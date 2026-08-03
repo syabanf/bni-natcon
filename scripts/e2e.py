@@ -34,7 +34,7 @@ def check(name, cond, detail=""):
         print(f"  FAIL {name} {detail}")
 
 
-def req(method, path, token=None, body=None, raw_body=None):
+def req(method, path, token=None, body=None, raw_body=None, xff=None):
     """Returns (status, parsed-json-or-None, headers)."""
     url = BASE + path
     data = raw_body if raw_body is not None else (
@@ -45,6 +45,9 @@ def req(method, path, token=None, body=None, raw_body=None):
         r.add_header("Content-Type", "application/json")
     if token:
         r.add_header("Authorization", f"Bearer {token}")
+    if xff:
+        # Distinct client IP for the login rate limiter (RealIP middleware).
+        r.add_header("X-Forwarded-For", xff)
     try:
         with urllib.request.urlopen(r, timeout=15) as resp:
             payload = resp.read()
@@ -63,8 +66,9 @@ def req(method, path, token=None, body=None, raw_body=None):
         return 0, None, {}
 
 
-def login(email, password=PASSWORD):
-    status, body, _ = req("POST", "/api/v1/auth/login", body={"email": email, "password": password})
+def login(email, password=PASSWORD, xff=None):
+    status, body, _ = req("POST", "/api/v1/auth/login",
+                          body={"email": email, "password": password}, xff=xff)
     return status, body
 
 
@@ -301,6 +305,14 @@ status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
                       ]})
 check("bulk import upserts: 1 created, 1 updated, 0 failed",
       status == 200 and body["created"] == 1 and body["updated"] == 1 and body["failed"] == 0)
+
+# Imported accounts: username = email, password = chapter+firstname slug.
+status, _ = login("bulk1@natcon.id", "chapterimportbulk", xff="10.99.0.1")
+check("imported member logs in with generated chapter+firstname password", status == 200)
+status, _ = login("bulk1@natcon.id", PASSWORD, xff="10.99.0.1")
+check("default password rejected for imported member", status == 401)
+status, _ = login("e2e-budi@natcon.id", PASSWORD, xff="10.99.0.1")
+check("updated member keeps original password", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/members/{new_member_id}", token=admin_tok)
 check("upsert refreshed existing member (name/chapter/phone; code kept)",
       body["user"]["name"] == "Budi Refreshed"

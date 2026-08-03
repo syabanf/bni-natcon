@@ -203,12 +203,35 @@ type MemberImportRow struct {
 	Phone   string
 }
 
+// importPassword derives the initial account password for an imported
+// attendee: chapter + first name, lowercased with everything but letters
+// and digits stripped — e.g. chapter "Heritage" + "Abraham Sebastian"
+// becomes "heritageabraham". Easy for the committee to communicate:
+// "your password is your chapter name plus your first name".
+func importPassword(chapter, name string) string {
+	slug := func(v string) string {
+		var b strings.Builder
+		for _, r := range strings.ToLower(v) {
+			if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+				b.WriteRune(r)
+			}
+		}
+		return b.String()
+	}
+	first := ""
+	if fields := strings.Fields(name); len(fields) > 0 {
+		first = fields[0]
+	}
+	return slug(chapter) + slug(first)
+}
+
 // BulkUpsertMembers imports rows create-or-update keyed by email: new
-// emails become members (default password, generated code), existing member
-// emails get their name/chapter/company/phone refreshed. Every distinct
-// chapter is registered in the chapters master data.
+// emails become member accounts — username is the email, password is
+// generated from chapter+first name (importPassword; default password
+// when both are empty) — while existing member emails get their
+// name/chapter/company/phone refreshed with the stored password kept.
+// Every distinct chapter is registered in the chapters master data.
 func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImportRow) (created, updated int, errs []domain.BulkRowError) {
-	hash := ""
 	for i, row := range rows {
 		name := strings.TrimSpace(row.Name)
 		email := strings.ToLower(strings.TrimSpace(row.Email))
@@ -220,15 +243,14 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: "invalid email format"})
 			continue
 		}
-		// One bcrypt hash for the whole batch — every new member starts on
-		// the default password anyway, and hashing dominates import time.
-		if hash == "" {
-			h, err := u.hasher.Hash(u.defaultPassword)
-			if err != nil {
-				errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
-				continue
-			}
-			hash = h
+		password := importPassword(row.Chapter, name)
+		if password == "" {
+			password = u.defaultPassword
+		}
+		hash, err := u.hasher.Hash(password)
+		if err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
+			continue
 		}
 		chapter := strings.TrimSpace(row.Chapter)
 		if err := u.admin.EnsureChapter(ctx, chapter); err != nil {

@@ -253,9 +253,11 @@ export function MembersPage() {
       <p className="import-hint">
         Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b>, <b>Phone</b> — the official
         ticketing export (&quot;Data Peserta&quot;: First/Last Name, Phone, Bni Chapter, Company Name) is also
-        recognized as-is. Import is <b>create-or-update by email</b>: existing attendees get their
-        name/chapter/company/phone refreshed (password &amp; member code kept), and every distinct
-        chapter is registered under <b>Chapters</b>. In-file duplicate emails are skipped.
+        recognized as-is. Import is <b>create-or-update by email</b>: new attendees get an account
+        with <b>username = email</b> and <b>password = chapter + first name</b> (lowercase, no
+        spaces — e.g. Heritage + Abraham → <code>heritageabraham</code>); existing attendees get
+        name/chapter/company/phone refreshed with their password &amp; member code kept. Every
+        distinct chapter is registered under <b>Chapters</b>. In-file duplicate emails are skipped.
       </p>
 
       <div className="list-toolbar">
