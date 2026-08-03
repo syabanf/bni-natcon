@@ -31,6 +31,15 @@ soft shadows, tinted pills, single red `#CF2030` accent).
 Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
 and pick another session in the same slot.
 
+**Real attendee import**: the admin "Import Excel" on the Attendees page
+accepts the official ticketing export (*Data Peserta* sheet) as-is — it
+combines First/Last Name (falling back to Ktp Name), normalizes phones
+(`'+62`, `08…` → `+62…`), maps *Bni Chapter* / *Company Name*, skips
+duplicate emails inside the file, and uploads in chunks of 200 so big files
+never hit the request timeout. Imported members can immediately log in with
+the default password and be scanned by member code or phone. The simple
+template (Name/Email/Chapter/Company/Phone) still works too.
+
 **Demo mock mode**: toggle buttons on both login pages switch each app to a
 localStorage-backed mock layer — no backend needed. In the member/tenant app
 the state is shared across personas on the device (a booth scan shows up in
@@ -62,7 +71,7 @@ deployments. For local development, start only the database with
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 84-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 86-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -184,7 +193,7 @@ All with password `natcon2026`:
 | GET `/admin/tenants`           | admin  | booth ranking by scans                   |
 | GET `/admin/seminars`          | admin  | seminar fill                             |
 | GET `/admin/activity`          | admin  | recent scans across booths               |
-| GET/POST `/admin/members`, PUT/DELETE `/admin/members/{id}`   | admin | member CRUD (auto member code + login); list takes `?q=&page=&limit=` (search + pagination, default limit 50, max 1000) |
+| GET/POST `/admin/members`, PUT/DELETE `/admin/members/{id}`   | admin | member CRUD incl. phone (auto member code + login); list takes `?q=&page=&limit=` — q also matches phone |
 | POST `/admin/tenants`, PUT/DELETE `/admin/tenants/{id}`       | admin | tenant CRUD (auto booth login)          |
 | POST `/admin/seminars`, PUT/DELETE `/admin/seminars/{id}`     | admin | seminar CRUD                            |
 | POST `/admin/seminars/{id}/checkin` | admin | door check-in by `member_code` (409 if not registered; duplicate flagged, not double-counted) |
@@ -206,7 +215,7 @@ cd frontend && npm test
 cd admin && npm test
 ```
 
-End-to-end suite (84 checks: auth, role guards, scan by code & phone,
+End-to-end suite (86 checks: auth, role guards, scan by code & phone,
 visitor notes/detail, seminar + door check-in/attendance, networking incl.
 contact notes/email/phone, sponsor kinds, admin CRUD/import/reports,
 pagination, metrics, hardening). Needs a **fresh database**:

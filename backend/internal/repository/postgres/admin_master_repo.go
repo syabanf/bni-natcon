@@ -24,7 +24,8 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 			u.name ILIKE '%' || $1 || '%' OR
 			u.email ILIKE '%' || $1 || '%' OR
 			u.member_code ILIKE '%' || $1 || '%' OR
-			u.chapter ILIKE '%' || $1 || '%')`
+			u.chapter ILIKE '%' || $1 || '%' OR
+			u.phone ILIKE '%' || $1 || '%')`
 
 	var total int
 	if err := r.pool.QueryRow(ctx,
@@ -33,7 +34,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.created_at,
+		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.created_at,
 		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id)
 		FROM users u
 		WHERE `+filter+`
@@ -48,7 +49,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	for rows.Next() {
 		var m domain.MemberSummary
 		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Role, &m.MemberCode,
-			&m.Chapter, &m.Company, &m.CreatedAt, &m.Visits); err != nil {
+			&m.Chapter, &m.Company, &m.Phone, &m.CreatedAt, &m.Visits); err != nil {
 			return nil, 0, err
 		}
 		out = append(out, m)
@@ -110,13 +111,13 @@ func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberC
 func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*domain.User, error) {
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company)
+		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone)
 		VALUES ($1, $2, $3, 'member',
 		        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-		        $4, $5)
-		RETURNING id, name, email, role, member_code, chapter, company, created_at`,
-		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company).
-		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.CreatedAt)
+		        $4, $5, $6)
+		RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
+		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone).
+		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_key") {
 			return nil, domain.ErrEmailTaken
@@ -128,9 +129,9 @@ func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*doma
 
 func (r *AdminRepo) UpdateMember(ctx context.Context, id int64, m domain.MemberUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
-		UPDATE users SET name = $1, email = $2, chapter = $3, company = $4
-		WHERE id = $5 AND role = 'member'`,
-		m.Name, m.Email, m.Chapter, m.Company, id)
+		UPDATE users SET name = $1, email = $2, chapter = $3, company = $4, phone = $5
+		WHERE id = $6 AND role = 'member'`,
+		m.Name, m.Email, m.Chapter, m.Company, m.Phone, id)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_key") {
 			return domain.ErrEmailTaken

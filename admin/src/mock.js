@@ -127,14 +127,14 @@ function seatsTaken(s, seminarId) {
   return s.registrations.filter((r) => r.seminar_id === seminarId).length
 }
 
-function createMemberRow(s, { name, email, chapter = '', company = '' }) {
+function createMemberRow(s, { name, email, chapter = '', company = '', phone = '' }) {
   name = (name || '').trim()
   email = (email || '').trim().toLowerCase()
   if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
   if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
   if (s.members.some((m) => m.email === email)) throw { status: 409, message: 'that email is already used by another account' }
   const row = {
-    id: s.nextId++, name, email, chapter, company,
+    id: s.nextId++, name, email, chapter, company, phone: String(phone || '').trim(),
     member_code: `NATCON-2026-0${s.nextCode++}`,
   }
   s.members.push(row)
@@ -282,7 +282,7 @@ export const mockAdminApi = {
     if (s.members.some((x) => x.email === email && x.id !== m.id)) {
       return fail(409, 'that email is already used by another account')
     }
-    Object.assign(m, { name: body.name.trim(), email, chapter: body.chapter || '', company: body.company || '' })
+    Object.assign(m, { name: body.name.trim(), email, chapter: body.chapter || '', company: body.company || '', phone: (body.phone || m.phone || '').trim() })
     save(s)
     return delay({ status: 'updated' })
   },

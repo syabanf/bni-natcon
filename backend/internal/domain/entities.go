@@ -165,6 +165,7 @@ type NewMember struct {
 	PasswordHash string
 	Chapter      string
 	Company      string
+	Phone        string
 }
 
 type MemberUpdate struct {
@@ -172,6 +173,7 @@ type MemberUpdate struct {
 	Email   string
 	Chapter string
 	Company string
+	Phone   string
 }
 
 // NewTenant creates a booth/sponsor plus its scanner login user.

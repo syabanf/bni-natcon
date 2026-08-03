@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import Modal from './Modal'
-import { parseSheet } from './excel'
+import { parseSheet, transformMemberRows, MEMBER_IMPORT_ALIASES } from './excel'
 import { MemberDetail, TenantDetail, SeminarDetail } from './Detail'
 
 /*
@@ -148,7 +148,9 @@ function Notices({ crud, importResult, clearImport }) {
         <div className={importResult.error ? 'error' : 'notice'} onClick={clearImport}>
           {importResult.error
             ? `Import failed: ${importResult.error}`
-            : `Import finished — ${importResult.created} created, ${importResult.failed} failed.`}
+            : `Import finished — ${importResult.created} created, ${importResult.failed} failed${
+                importResult.skippedDuplicates ? `, ${importResult.skippedDuplicates} in-file duplicates skipped` : ''
+              }.`}
           {importResult.errors?.length > 0 && (
             <ul>
               {importResult.errors.slice(0, 5).map((e) => (
@@ -232,24 +234,26 @@ export function MembersPage() {
       <PageHead title="Master Data — Attendees" sub="Member code & default password are generated automatically">
         <ImportButton
           label="Import Excel"
-          aliases={{
-            name: ['nama', 'name'],
-            email: ['email', 'e-mail'],
-            chapter: ['chapter'],
-            company: ['perusahaan', 'company', 'bisnis'],
+          aliases={MEMBER_IMPORT_ALIASES}
+          upload={async (parsed) => {
+            const { rows, skippedDuplicates } = transformMemberRows(parsed)
+            if (rows.length === 0) return { error: 'No usable rows found in the file.' }
+            const res = await api.bulkMembers(rows)
+            return { ...res, skippedDuplicates }
           }}
-          upload={(rows) => api.bulkMembers(rows)}
           onDone={(res) => {
             setImportResult(res)
             crud.load()
           }}
         />
-        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '' })}>
+        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '' })}>
           + Add Attendee
         </button>
       </PageHead>
       <p className="import-hint">
-        Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b> (first row = header).
+        Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b>, <b>Phone</b> — the official
+        ticketing export (&quot;Data Peserta&quot;: First/Last Name, Phone, Bni Chapter, Company Name) is also
+        recognized as-is. Duplicate emails inside the file are skipped automatically.
       </p>
 
       <div className="list-toolbar">
@@ -287,13 +291,16 @@ export function MembersPage() {
                 <b>{m.name}</b>
                 <small>{m.company}</small>
               </td>
-              <td>{m.email}</td>
+              <td>
+                {m.email}
+                {m.phone && <small>{m.phone}</small>}
+              </td>
               <td>{m.chapter}</td>
               <td className="num">{m.visits}</td>
               <RowActions
                 onDetail={() => setDetailId(m.id)}
                 onEdit={() =>
-                  crud.setForm({ id: m.id, name: m.name, email: m.email, chapter: m.chapter, company: m.company })
+                  crud.setForm({ id: m.id, name: m.name, email: m.email, chapter: m.chapter, company: m.company, phone: m.phone || '' })
                 }
                 onDelete={() => crud.del(m.id, m.name)}
               />
@@ -322,6 +329,7 @@ export function MembersPage() {
             <Field label="Email" type="email" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} required />
             <Field label="Chapter" value={crud.form.chapter} onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })} />
             <Field label="Company" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
+            <Field label="Phone" hint="used by the booth scanner's manual input" value={crud.form.phone || ''} onChange={(e) => crud.setForm({ ...crud.form, phone: e.target.value })} />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">

@@ -72,7 +72,7 @@ func (u *AdminUsecase) SeminarCheckin(ctx context.Context, seminarID int64, memb
 	return u.admin.SeminarCheckin(ctx, seminarID, memberCode)
 }
 
-func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, chapter, company string) (*domain.User, error) {
+func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, chapter, company, phone string) (*domain.User, error) {
 	name, email = strings.TrimSpace(name), strings.ToLower(strings.TrimSpace(email))
 	if name == "" || email == "" {
 		return nil, invalid("name and email are required")
@@ -90,6 +90,7 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, 
 	return u.admin.CreateMember(ctx, domain.NewMember{
 		Name: name, Email: email, PasswordHash: hash,
 		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(company),
+		Phone: strings.TrimSpace(phone),
 	})
 }
 
@@ -101,6 +102,7 @@ func (u *AdminUsecase) UpdateMember(ctx context.Context, id int64, m domain.Memb
 	if !validEmail(m.Email) {
 		return invalid("invalid email format")
 	}
+	m.Phone = strings.TrimSpace(m.Phone)
 	return u.admin.UpdateMember(ctx, id, m)
 }
 
@@ -191,13 +193,14 @@ type MemberImportRow struct {
 	Email   string
 	Chapter string
 	Company string
+	Phone   string
 }
 
 func (u *AdminUsecase) BulkCreateMembers(ctx context.Context, rows []MemberImportRow) (int, []domain.BulkRowError) {
 	created := 0
 	var errs []domain.BulkRowError
 	for i, row := range rows {
-		if _, err := u.CreateMember(ctx, row.Name, row.Email, "", row.Chapter, row.Company); err != nil {
+		if _, err := u.CreateMember(ctx, row.Name, row.Email, "", row.Chapter, row.Company, row.Phone); err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: err.Error()})
 			continue
 		}

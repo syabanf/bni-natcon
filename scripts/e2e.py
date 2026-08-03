@@ -248,9 +248,14 @@ check("overview: 3 members, 14 tenants, 2 visits",
       and body["total_tenants"] == 14 and body["total_visits"] == 2)
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
-                      body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E"})
+                      body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E",
+                            "phone": "+628999000111"})
 check("create member 201 with code", status == 201 and body["user"]["member_code"].startswith("NATCON-2026-"))
+check("created member stores phone", body["user"].get("phone") == "+628999000111")
 new_member_id = body["user"]["id"]
+status, body, _ = req("GET", "/api/v1/admin/members?q=%2B628999000111", token=admin_tok)
+check("member searchable by phone", status == 200 and body["total"] == 1
+      and body["members"][0]["phone"] == "+628999000111")
 
 status, _ = login("e2e-budi@natcon.id")
 check("new member can log in", status == 200)

@@ -23,6 +23,7 @@ type memberPayload struct {
 	Password string `json:"password"`
 	Chapter  string `json:"chapter"`
 	Company  string `json:"company"`
+	Phone    string `json:"phone"`
 }
 
 func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +48,14 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 		MemberCode string `json:"member_code"`
 		Chapter    string `json:"chapter"`
 		Company    string `json:"company"`
+		Phone      string `json:"phone"`
 		Visits     int    `json:"visits"`
 	}
 	out := make([]row, 0, len(members))
 	for _, m := range members {
 		out = append(out, row{
 			ID: m.ID, Name: m.Name, Email: m.Email, MemberCode: m.MemberCode,
-			Chapter: m.Chapter, Company: m.Company, Visits: m.Visits,
+			Chapter: m.Chapter, Company: m.Company, Phone: m.Phone, Visits: m.Visits,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
@@ -94,7 +96,7 @@ func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request)
 		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
-	user, err := s.admin.CreateMember(r.Context(), req.Name, req.Email, req.Password, req.Chapter, req.Company)
+	user, err := s.admin.CreateMember(r.Context(), req.Name, req.Email, req.Password, req.Chapter, req.Company, req.Phone)
 	if err != nil {
 		respondDomainError(w, err)
 		return
@@ -115,6 +117,7 @@ func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request)
 	}
 	err := s.admin.UpdateMember(r.Context(), id, domain.MemberUpdate{
 		Name: req.Name, Email: req.Email, Chapter: req.Chapter, Company: req.Company,
+		Phone: req.Phone,
 	})
 	if err != nil {
 		respondDomainError(w, err)

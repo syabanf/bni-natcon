@@ -108,8 +108,23 @@ export const api = {
   tenantDetail: (id, opts) => (isMockMode() ? mock.tenantDetail(id) : request(`/admin/tenants/${id}`, opts)),
   seminarDetail: (id, opts) => (isMockMode() ? mock.seminarDetail(id) : request(`/admin/seminars/${id}`, opts)),
 
-  bulkMembers: (members) =>
-    isMockMode() ? mock.bulkMembers(members) : request('/admin/members/bulk', { method: 'POST', body: { members } }),
+  // Chunked so huge imports (bcrypt per row server-side) never outlast the
+  // 30 s request timeout; row numbers in errors are re-offset per chunk.
+  bulkMembers: async (members) => {
+    const CHUNK = 200
+    if (isMockMode()) return mock.bulkMembers(members)
+    const total = { created: 0, failed: 0, errors: [] }
+    for (let start = 0; start < members.length; start += CHUNK) {
+      const res = await request('/admin/members/bulk', {
+        method: 'POST',
+        body: { members: members.slice(start, start + CHUNK) },
+      })
+      total.created += res.created
+      total.failed += res.failed
+      total.errors.push(...(res.errors || []).map((e) => ({ ...e, row: e.row + start })))
+    }
+    return total
+  },
   bulkTenants: (tenants) =>
     isMockMode() ? mock.bulkTenants(tenants) : request('/admin/tenants/bulk', { method: 'POST', body: { tenants } }),
   visitReport: () => (isMockMode() ? mock.visitReport() : request('/admin/report/visits')),
