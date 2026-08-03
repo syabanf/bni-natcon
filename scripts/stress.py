@@ -129,18 +129,31 @@ status, body = c.req("POST", "/api/v1/auth/login",
 assert status == 200, "tenant login failed"
 tenant_tok = body["token"]
 
-# Bulk-create contenders, then resolve their ids.
-rows = [{"name": f"Stress {i:03d}", "email": f"stress{i:03d}@natcon.id",
+# Bulk-create contenders in chunks (bcrypt hashing makes one huge batch
+# outlast the 30 s request timeout), then resolve their ids via search.
+rows = [{"name": f"Stress {i:04d}", "email": f"stress{i:04d}@natcon.id",
          "chapter": "Chapter Stress"} for i in range(CONTENDERS)]
-status, body = c.req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
-                     body={"members": rows})
-assert status == 200 and body["created"] == CONTENDERS, f"bulk create failed: {body}"
+created_total = 0
+for start in range(0, CONTENDERS, 200):
+    chunk = rows[start:start + 200]
+    status, body = c.req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
+                         body={"members": chunk})
+    assert status == 200, f"bulk create failed: {status} {body}"
+    created_total += body["created"]
+assert created_total == CONTENDERS, f"created {created_total}/{CONTENDERS}"
 
-status, body = c.req("GET", "/api/v1/admin/members?limit=1000", token=admin_tok)
-members = {m["email"]: m for m in body["members"]}
-contenders = [members[f"stress{i:03d}@natcon.id"] for i in range(CONTENDERS)]
+members = {}
+for start in range(0, CONTENDERS, 1000):
+    status, body = c.req(
+        "GET", f"/api/v1/admin/members?q=Stress&limit=1000&page={start // 1000 + 1}",
+        token=admin_tok)
+    for m in body["members"]:
+        members[m["email"]] = m
+contenders = [members[f"stress{i:04d}@natcon.id"] for i in range(CONTENDERS)]
 tokens = [mint_token(m["id"], "member") for m in contenders]
-reddie_code = members["reddie@natcon.id"]["member_code"]
+
+status, body = c.req("GET", "/api/v1/admin/members?q=reddie", token=admin_tok)
+reddie_code = body["members"][0]["member_code"]
 
 status, body = c.req("POST", "/api/v1/admin/seminars", token=admin_tok,
                      body={"slot": 9, "room": "R. Stress", "title": "Uji Beban",
