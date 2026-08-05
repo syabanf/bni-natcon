@@ -56,14 +56,6 @@ button:disabled {
   height: 30px;
   margin: 0;
 }
-.sb-role {
-  display: block;
-  font-size: 11px;
-  color: var(--gray);
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  margin-top: 4px;
-}
 .micro {
   font-size: 12.5px;
   color: var(--gray);

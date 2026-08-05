@@ -317,15 +317,6 @@ export function MembersPage() {
           + Add Attendee
         </button>
       </PageHead>
-      <p className="import-hint">
-        Excel format: columns <b>Name</b>, <b>Email</b>, <b>Chapter</b>, <b>Company</b>, <b>Phone</b> — the official
-        ticketing export (&quot;Data Peserta&quot;: First/Last Name, Phone, Bni Chapter, Company Name) is also
-        recognized as-is. Import is <b>create-or-update by email</b>: new attendees get an account
-        with <b>username = email</b> and <b>password = chapter + first name</b> (lowercase, no
-        spaces — e.g. Heritage + Abraham → <code>heritageabraham</code>); existing attendees get
-        name/chapter/company/phone refreshed with their password &amp; member code kept. Every
-        distinct chapter is registered under <b>Chapters</b>. In-file duplicate emails are skipped.
-      </p>
 
       <div className="list-toolbar">
         <input
@@ -466,14 +457,6 @@ export function TenantsPage() {
           + Add Tenant
         </button>
       </PageHead>
-      <p className="import-hint">
-        Excel format: columns <b>Name</b>, <b>Booth</b>, <b>Category</b>, <b>Kind</b> (booth/sponsor),
-        <b> Initials</b>, <b>Email</b>, <b>Description</b> — only Name and Booth are required; initials
-        and the scanner login (<code>booth-&lt;code&gt;@natcon.id</code>, password{' '}
-        <code>natcon2026</code>) are generated when blank. Import is{' '}
-        <b>create-or-update by booth code</b>: an existing booth keeps its login and collected scans
-        while its details are refreshed. Tap <b>Download format</b> for a ready-to-fill template.
-      </p>
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 

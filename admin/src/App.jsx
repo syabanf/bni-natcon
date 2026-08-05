@@ -164,7 +164,6 @@ function Shell({ onLogout }) {
       <aside className="sidebar">
         <div className="sb-brand">
           <img className="logo-mark sb" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
-          <small className="sb-role">Admin Panel</small>
           {isMockMode() && <span className="demo-chip">DEMO</span>}
         </div>
         <nav className="sb-menu">
