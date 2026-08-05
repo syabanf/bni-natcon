@@ -59,6 +59,10 @@ type AdminRepository interface {
 	DeleteMember(ctx context.Context, id int64) error
 
 	CreateTenant(ctx context.Context, t NewTenant) (*Tenant, error)
+	// UpsertTenant creates the tenant, or — when the booth code already
+	// exists — updates name/category/initials/kind/description in place,
+	// keeping the booth's scanner account and its collected scans.
+	UpsertTenant(ctx context.Context, t NewTenant) (*TenantUpsertResult, error)
 	UpdateTenant(ctx context.Context, id int64, t TenantUpdate) error
 	DeleteTenant(ctx context.Context, id int64) error
 

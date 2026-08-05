@@ -193,6 +193,29 @@ function createTenantRow(s, { name, category = '', booth, initials = '', email =
   return row
 }
 
+// Create-or-update keyed by booth code (import semantics).
+function upsertTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '' }) {
+  name = (name || '').trim()
+  booth = (booth || '').trim()
+  if (!name || !booth) throw { status: 400, message: 'invalid input: name and booth are required' }
+  email = (email || '').trim().toLowerCase() ||
+    `booth-${booth.toLowerCase().replace(/-/g, '')}@natcon.id`
+  if (!validEmail(email)) throw { status: 400, message: 'invalid input: invalid email format' }
+  kind = String(kind).toLowerCase() === 'sponsor' ? 'sponsor' : 'booth'
+  initials = (initials || name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2)).toUpperCase()
+
+  const existing = s.tenants.find((t) => t.booth === booth)
+  if (existing) {
+    Object.assign(existing, { name, category, initials, kind, description })
+    return { created: false }
+  }
+  if (s.tenants.some((t) => t.owner_email === email)) {
+    throw { status: 409, message: 'that email is already used by another account' }
+  }
+  s.tenants.push({ id: s.nextId++, name, category, booth, initials, kind, description, owner_email: email })
+  return { created: true }
+}
+
 export const mockAdminApi = {
   login(email) {
     if ((email || '').trim().toLowerCase() !== 'admin@natcon.id') {
@@ -576,17 +599,19 @@ export const mockAdminApi = {
   bulkTenants(rows) {
     const s = load()
     let created = 0
+    let updated = 0
     const errors = []
     rows.forEach((row, i) => {
       try {
-        createTenantRow(s, row)
-        created++
+        const res = upsertTenantRow(s, row)
+        if (res.created) created++
+        else updated++
       } catch (e) {
         errors.push({ row: i + 1, label: row.name || '?', error: e.message })
       }
     })
     save(s)
-    return delay({ created, failed: errors.length, errors })
+    return delay({ created, updated, failed: errors.length, errors })
   },
 
   /* ----- Reports ----- */

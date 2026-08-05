@@ -26,19 +26,29 @@ soft shadows, tinted pills, single red `#CF2030` accent).
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.
-- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for peserta/tenant (SheetJS; headers Nama/Email/Chapter/Perusahaan or Nama/Kategori/Booth), and three **Laporan** pages (Leads Tenant, Registrasi Seminar, Kupon Peserta) — each with flat SVG-style charts (scan per booth/jam, keterisian kursi, distribusi kupon) and its own Excel export.
+- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three **Laporan** pages (Leads Tenant, Registrasi Seminar, Kupon Peserta) — each with flat SVG-style charts (scan per booth/jam, keterisian kursi, distribusi kupon) and its own Excel export.
 
 Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
 and pick another session in the same slot.
 
-**Real attendee import**: the admin "Import Excel" on the Attendees page
-accepts the official ticketing export (*Data Peserta* sheet) as-is — it
-combines First/Last Name (falling back to Ktp Name), normalizes phones
-(`'+62`, `08…` → `+62…`), maps *Bni Chapter* / *Company Name*, skips
-duplicate emails inside the file, and uploads in chunks of 200 so big files
-never hit the request timeout. Imported members can immediately log in with
-the default password and be scanned by member code or phone. The simple
-template (Name/Email/Chapter/Company/Phone) still works too.
+**Excel import (attendees & tenants)**: both master-data pages carry an
+**Import Excel** button and a **Download format** button that generates a
+ready-to-fill template (headers + example rows).
+
+- *Attendees* — accepts the official ticketing export (*Data Peserta*
+  sheet) as-is: combines First/Last Name (falling back to Ktp Name),
+  normalizes phones (`'+62`, `08…` → `+62…`), maps *Bni Chapter* /
+  *Company Name*, and skips duplicate emails inside the file. Rows
+  **create-or-update by email**; new accounts sign in with username =
+  email and password = chapter + first name (lowercase, no spaces).
+- *Tenants* — headers Name/Booth/Category/Kind/Initials/Email/Description
+  (only Name and Booth required). Rows **create-or-update by booth code**:
+  a new booth gets auto initials and an auto scanner login
+  (`booth-<code>@natcon.id`, default password), an existing booth keeps
+  its login and collected scans while its details are refreshed.
+
+Both upload in chunks of 200 so big files never hit the request timeout,
+and report `created / updated / failed` per import.
 
 **Demo mock mode**: toggle buttons on both login pages switch each app to a
 localStorage-backed mock layer — no backend needed. In the member/tenant app
@@ -71,7 +81,7 @@ deployments. For local development, start only the database with
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 86-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 108-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -217,7 +227,7 @@ cd frontend && npm test
 cd admin && npm test
 ```
 
-End-to-end suite (86 checks: auth, role guards, scan by code & phone,
+End-to-end suite (108 checks: auth, role guards, scan by code & phone,
 visitor notes/detail, seminar + door check-in/attendance, networking incl.
 contact notes/email/phone, sponsor kinds, admin CRUD/import/reports,
 pagination, metrics, hardening). Needs a **fresh database**:

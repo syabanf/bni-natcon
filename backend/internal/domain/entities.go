@@ -164,6 +164,12 @@ type UpsertResult struct {
 	Created bool
 }
 
+// TenantUpsertResult reports what a bulk tenant upsert did to one row.
+type TenantUpsertResult struct {
+	Tenant  *Tenant
+	Created bool
+}
+
 // MemberSummary is a member row in the admin master-data table.
 type MemberSummary struct {
 	User

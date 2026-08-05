@@ -320,6 +320,36 @@ check("upsert refreshed existing member (name/chapter/phone; code kept)",
       and body["user"]["phone"] == "+62810009002"
       and body["user"]["member_code"].startswith("NATCON-2026-"))
 
+# ---- tenant bulk import (create-or-update keyed by booth code)
+status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
+                      body={"tenants": [
+                          {"name": "Bulk Sponsor", "booth": "SP-99", "category": "Main Sponsor",
+                           "kind": "sponsor", "description": "seeded by import"},
+                          {"name": "E2E Booth Refreshed", "booth": "Z-01", "category": "Updated",
+                           "kind": "booth"},
+                      ]})
+check("tenant import upserts: 1 created, 1 updated, 0 failed",
+      status == 200 and body["created"] == 1 and body["updated"] == 1 and body["failed"] == 0)
+
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+tenants_by_booth = {t["booth"]: t for t in body["tenants"]}
+check("imported sponsor created with kind + auto initials",
+      tenants_by_booth["SP-99"]["kind"] == "sponsor"
+      and tenants_by_booth["SP-99"]["initials"] == "BS")
+check("existing booth refreshed in place (single row, new details)",
+      sum(1 for t in body["tenants"] if t["booth"] == "Z-01") == 1
+      and tenants_by_booth["Z-01"]["name"] == "E2E Booth Refreshed"
+      and tenants_by_booth["Z-01"]["category"] == "Updated")
+
+status, _ = login("booth-z01@natcon.id", xff="10.99.0.2")
+check("refreshed booth keeps its scanner login", status == 200)
+status, _ = login("booth-sp99@natcon.id", xff="10.99.0.3")
+check("imported booth gets an auto scanner login", status == 200)
+
+status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
+                      body={"tenants": [{"name": "No Booth", "booth": ""}]})
+check("tenant row without booth -> failed row", status == 200 and body["failed"] == 1)
+
 # ---- cover image upload (stored locally, served at /uploads)
 def multipart(field, filename, content_type, payload):
     boundary = "e2eboundary123"

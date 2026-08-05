@@ -130,15 +130,7 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, name, category, booth, 
 	} else if !validEmail(email) {
 		return nil, invalid("invalid email format")
 	}
-	if initials == "" {
-		for _, w := range strings.Fields(name) {
-			initials += string([]rune(w)[0])
-		}
-		if len(initials) > 2 {
-			initials = initials[:2]
-		}
-		initials = strings.ToUpper(initials)
-	}
+	initials = tenantInitials(initials, name)
 	if password == "" {
 		password = u.defaultPassword
 	}
@@ -151,6 +143,21 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, name, category, booth, 
 		Initials: strings.ToUpper(strings.TrimSpace(initials)), Kind: kind,
 		Description: strings.TrimSpace(description), Email: email, PasswordHash: hash,
 	})
+}
+
+// tenantInitials keeps the given initials, or derives them from the first
+// letters of the name (max 2 characters) when blank.
+func tenantInitials(initials, name string) string {
+	initials = strings.TrimSpace(initials)
+	if initials == "" {
+		for _, w := range strings.Fields(name) {
+			initials += string([]rune(w)[0])
+		}
+		if len(initials) > 2 {
+			initials = initials[:2]
+		}
+	}
+	return strings.ToUpper(initials)
 }
 
 func normalizeTenantKind(kind string) string {
@@ -302,25 +309,63 @@ func (u *AdminUsecase) DeleteChapter(ctx context.Context, id int64) error {
 }
 
 type TenantImportRow struct {
-	Name     string
-	Category string
-	Booth    string
-	Initials string
-	Email    string
-	Kind     string
+	Name        string
+	Category    string
+	Booth       string
+	Initials    string
+	Email       string
+	Kind        string
+	Description string
 }
 
-func (u *AdminUsecase) BulkCreateTenants(ctx context.Context, rows []TenantImportRow) (int, []domain.BulkRowError) {
-	created := 0
-	var errs []domain.BulkRowError
+// BulkUpsertTenants imports rows create-or-update keyed by the booth code:
+// a new booth becomes a tenant plus its scanner account (email defaults to
+// booth-<code>@natcon.id, default password), while an existing booth gets
+// name/category/initials/kind/description refreshed — its login and the
+// scans it already collected are kept.
+func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImportRow) (created, updated int, errs []domain.BulkRowError) {
+	hash := ""
 	for i, row := range rows {
-		if _, err := u.CreateTenant(ctx, row.Name, row.Category, row.Booth, row.Initials, row.Email, "", row.Kind, ""); err != nil {
+		name := strings.TrimSpace(row.Name)
+		booth := strings.TrimSpace(row.Booth)
+		if name == "" || booth == "" {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: "name and booth are required"})
+			continue
+		}
+		email := strings.ToLower(strings.TrimSpace(row.Email))
+		if email == "" {
+			email = fmt.Sprintf("booth-%s@natcon.id",
+				strings.ToLower(strings.ReplaceAll(booth, "-", "")))
+		} else if !validEmail(email) {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: "invalid email format"})
+			continue
+		}
+		// Every new booth account starts on the default password, so one
+		// bcrypt hash covers the whole batch.
+		if hash == "" {
+			h, err := u.hasher.Hash(u.defaultPassword)
+			if err != nil {
+				errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
+				continue
+			}
+			hash = h
+		}
+		res, err := u.admin.UpsertTenant(ctx, domain.NewTenant{
+			Name: name, Category: strings.TrimSpace(row.Category), Booth: booth,
+			Initials: tenantInitials(row.Initials, name), Kind: normalizeTenantKind(row.Kind),
+			Description: strings.TrimSpace(row.Description), Email: email, PasswordHash: hash,
+		})
+		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
 			continue
 		}
-		created++
+		if res.Created {
+			created++
+		} else {
+			updated++
+		}
 	}
-	return created, errs
+	return created, updated, errs
 }
 
 /* ----- Detail pages ----- */

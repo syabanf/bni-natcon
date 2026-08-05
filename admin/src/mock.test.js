@@ -141,3 +141,29 @@ describe('bulk import upsert & chapters', () => {
     expect(found.members[0].chapter).toBe('Chapter Hebat')
   })
 })
+
+describe('tenant import upsert', () => {
+  it('creates by booth then refreshes it, keeping the booth login', async () => {
+    const first = await mockAdminApi.bulkTenants([
+      { name: 'Import Booth', booth: 'Z-09', category: 'Retail', kind: 'booth', description: 'first' },
+    ])
+    expect(first.created).toBe(1)
+    expect(first.updated).toBe(0)
+
+    const second = await mockAdminApi.bulkTenants([
+      { name: 'Import Booth Renamed', booth: 'Z-09', category: 'Wholesale', kind: 'sponsor', description: 'second' },
+    ])
+    expect(second.created).toBe(0)
+    expect(second.updated).toBe(1)
+
+    const { tenants } = await mockAdminApi.tenants()
+    const row = tenants.filter((t) => t.booth === 'Z-09')
+    expect(row).toHaveLength(1)
+    expect(row[0]).toMatchObject({
+      name: 'Import Booth Renamed',
+      category: 'Wholesale',
+      kind: 'sponsor',
+      owner_email: 'booth-z09@natcon.id',
+    })
+  })
+})

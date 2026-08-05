@@ -126,8 +126,22 @@ export const api = {
     }
     return total
   },
-  bulkTenants: (tenants) =>
-    isMockMode() ? mock.bulkTenants(tenants) : request('/admin/tenants/bulk', { method: 'POST', body: { tenants } }),
+  bulkTenants: async (tenants) => {
+    const CHUNK = 200
+    if (isMockMode()) return mock.bulkTenants(tenants)
+    const total = { created: 0, updated: 0, failed: 0, errors: [] }
+    for (let start = 0; start < tenants.length; start += CHUNK) {
+      const res = await request('/admin/tenants/bulk', {
+        method: 'POST',
+        body: { tenants: tenants.slice(start, start + CHUNK) },
+      })
+      total.created += res.created
+      total.updated += res.updated || 0
+      total.failed += res.failed
+      total.errors.push(...(res.errors || []).map((e) => ({ ...e, row: e.row + start })))
+    }
+    return total
+  },
   // Multipart image upload — returns { url } (served from /uploads/…).
   uploadImage: async (file) => {
     if (isMockMode()) return mock.uploadImage(file)

@@ -488,3 +488,70 @@ func (r *AdminRepo) DeleteChapter(ctx context.Context, id int64) error {
 	_, err = r.pool.Exec(ctx, `DELETE FROM chapters WHERE id = $1`, id)
 	return err
 }
+
+// UpsertTenant keys on the booth code: an existing booth is refreshed in
+// place (scanner account and its scans survive), a new one is created
+// along with its login user.
+func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*domain.TenantUpsertResult, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var existingID, ownerID int64
+	err = tx.QueryRow(ctx,
+		`SELECT id, owner_user_id FROM tenants WHERE booth = $1 FOR UPDATE`, t.Booth).
+		Scan(&existingID, &ownerID)
+
+	var tenant domain.Tenant
+	created := false
+	switch {
+	case err == nil:
+		err = tx.QueryRow(ctx, `
+			UPDATE tenants SET name = $1, category = $2, initials = $3, kind = $4, description = $5
+			WHERE id = $6
+			RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
+			t.Name, t.Category, t.Initials, t.Kind, t.Description, existingID).
+			Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
+				&tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
+		if err != nil {
+			return nil, err
+		}
+		// Keep the scanner login's display name in sync with the booth.
+		if _, err := tx.Exec(ctx,
+			`UPDATE users SET name = $1, company = $1 WHERE id = $2`, t.Name, ownerID); err != nil {
+			return nil, err
+		}
+	case errors.Is(err, pgx.ErrNoRows):
+		created = true
+		err = tx.QueryRow(ctx, `
+			INSERT INTO users (name, email, password_hash, role, company)
+			VALUES ($1, $2, $3, 'tenant', $1)
+			RETURNING id`,
+			t.Name, t.Email, t.PasswordHash).Scan(&ownerID)
+		if err != nil {
+			if isUniqueViolation(err, "users_email_key") {
+				return nil, domain.ErrEmailTaken
+			}
+			return nil, err
+		}
+		err = tx.QueryRow(ctx, `
+			INSERT INTO tenants (name, category, booth, initials, kind, description, owner_user_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
+			t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, ownerID).
+			Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
+				&tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return &domain.TenantUpsertResult{Tenant: &tenant, Created: created}, nil
+}

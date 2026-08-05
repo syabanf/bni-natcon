@@ -61,6 +61,7 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 			Initials string `json:"initials"`
 			Email    string `json:"email"`
 			Kind     string `json:"kind"`
+			Desc     string `json:"description"`
 		} `json:"tenants"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Tenants) == 0 {
@@ -75,12 +76,13 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 	for _, t := range req.Tenants {
 		rows = append(rows, usecase.TenantImportRow{
 			Name: t.Name, Category: t.Category, Booth: t.Booth, Initials: t.Initials, Email: t.Email,
-			Kind: t.Kind,
+			Kind: t.Kind, Description: t.Desc,
 		})
 	}
-	created, errs := s.admin.BulkCreateTenants(r.Context(), rows)
+	created, updated, errs := s.admin.BulkUpsertTenants(r.Context(), rows)
 	respondJSON(w, http.StatusOK, map[string]any{
 		"created": created,
+		"updated": updated,
 		"failed":  len(errs),
 		"errors":  bulkErrorsDTO(errs),
 	})

@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import Modal from './Modal'
-import { parseSheet, transformMemberRows, MEMBER_IMPORT_ALIASES } from './excel'
+import {
+  parseSheet,
+  transformMemberRows,
+  transformTenantRows,
+  downloadTemplate,
+  MEMBER_IMPORT_ALIASES,
+  TENANT_IMPORT_ALIASES,
+  MEMBER_TEMPLATE,
+  TENANT_TEMPLATE,
+} from './excel'
 import { MemberDetail, TenantDetail, SeminarDetail } from './Detail'
 
 /*
@@ -168,6 +177,14 @@ function ImportButton({ label, aliases, upload, onDone }) {
   )
 }
 
+function TemplateButton({ template }) {
+  return (
+    <button className="md-secondary" onClick={() => downloadTemplate(template)}>
+      ⇩ Download format
+    </button>
+  )
+}
+
 function PageHead({ title, sub, children }) {
   return (
     <div className="content-head">
@@ -295,6 +312,7 @@ export function MembersPage() {
             crud.load()
           }}
         />
+        <TemplateButton template={MEMBER_TEMPLATE} />
         <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '' })}>
           + Add Attendee
         </button>
@@ -428,20 +446,19 @@ export function TenantsPage() {
       <PageHead title="Master Data — Tenants" sub="Booth/sponsor scanner accounts are generated automatically (booth-xxx@natcon.id)">
         <ImportButton
           label="Import Excel"
-          aliases={{
-            name: ['nama', 'name'],
-            category: ['kategori', 'category'],
-            booth: ['booth'],
-            initials: ['inisial', 'initials'],
-            email: ['email', 'e-mail'],
-            kind: ['kind', 'jenis', 'tipe'],
+          aliases={TENANT_IMPORT_ALIASES}
+          upload={async (parsed) => {
+            const { rows, skippedDuplicates } = transformTenantRows(parsed)
+            if (rows.length === 0) return { error: 'No usable rows found in the file.' }
+            const res = await api.bulkTenants(rows)
+            return { ...res, skippedDuplicates }
           }}
-          upload={(rows) => api.bulkTenants(rows)}
           onDone={(res) => {
             setImportResult(res)
             crud.load()
           }}
         />
+        <TemplateButton template={TENANT_TEMPLATE} />
         <button
           className="md-add"
           onClick={() => crud.setForm({ name: '', category: '', booth: '', initials: '', email: '', kind: 'booth', description: '' })}
@@ -450,7 +467,12 @@ export function TenantsPage() {
         </button>
       </PageHead>
       <p className="import-hint">
-        Excel format: columns <b>Name</b>, <b>Category</b>, <b>Booth</b>, <b>Initials</b> (optional), <b>Email</b> (optional), <b>Kind</b> (booth/sponsor, optional).
+        Excel format: columns <b>Name</b>, <b>Booth</b>, <b>Category</b>, <b>Kind</b> (booth/sponsor),
+        <b> Initials</b>, <b>Email</b>, <b>Description</b> — only Name and Booth are required; initials
+        and the scanner login (<code>booth-&lt;code&gt;@natcon.id</code>, password{' '}
+        <code>natcon2026</code>) are generated when blank. Import is{' '}
+        <b>create-or-update by booth code</b>: an existing booth keeps its login and collected scans
+        while its details are refreshed. Tap <b>Download format</b> for a ready-to-fill template.
       </p>
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
