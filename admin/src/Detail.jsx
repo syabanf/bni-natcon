@@ -158,20 +158,24 @@ export function TenantDetail({ id, onBack }) {
     api.tenantDetail(id).then(setData).catch((e) => setError(e.message))
   }, [id])
 
-  if (error) return <DetailShell title="Detail Tenant" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
+  if (error) return <DetailShell title="Tenant Detail" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
   if (!data) return <DetailShell title="Tenant Detail" sub="Loading…" onBack={onBack} />
 
   const { tenant, total_scans, scans_today, visitors } = data
   return (
-    <DetailShell title={tenant.name} sub={`Detail tenant · Booth ${tenant.booth}`} onBack={onBack}>
+    <DetailShell
+      title={tenant.name}
+      sub={`${tenant.kind === 'sponsor' ? 'Official sponsor' : 'Booth tenant'} · ${tenant.booth}`}
+      onBack={onBack}
+    >
       <div className="detail-hero">
-        <div className="dh-avatar tenant">{tenant.initials}</div>
+        <div className={`dh-avatar${tenant.kind === 'sponsor' ? '' : ' tenant'}`}>{tenant.initials}</div>
         <InfoGrid
           items={[
+            ['Kind', tenant.kind === 'sponsor' ? 'Official sponsor' : 'Booth tenant'],
             ['Booth', tenant.booth],
-            ['Kategori', tenant.category],
-            ['Email login scanner', tenant.owner_email],
-            ['Inisial', tenant.initials],
+            ['Category', tenant.category],
+            ['Scanner login', tenant.owner_email],
           ]}
         />
       </div>

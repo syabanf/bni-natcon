@@ -15,6 +15,8 @@ func (s *Server) handleAdminOverview(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{
 		"total_members":         o.TotalMembers,
 		"total_tenants":         o.TotalTenants,
+		"total_sponsors":        o.TotalSponsors,
+		"total_booths":          o.TotalBooths,
 		"total_visits":          o.TotalVisits,
 		"visits_today":          o.VisitsToday,
 		"seminar_registrations": o.SeminarRegistrations,

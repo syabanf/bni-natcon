@@ -4,9 +4,10 @@
 
 Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html`
 mockup. The entire UI is in **English** (MoM revision). Members collect
-**pins** by having sponsors & booths scan their QR (passport groups
-**sponsors on top**, visited tenants sink to the bottom; every tenant card
-carries a description), register for parallel seminars (**totebag on
+**pins** by having sponsors & booths scan their QR (the passport opens with
+an **Official Sponsors** band and red-framed, ribboned sponsor cards above
+a plain Booths section, visited tenants sink to the bottom; every tenant
+card carries a description), register for parallel seminars (**totebag on
 door check-in**, with a **separate seminar entry QR**, full seminar detail
 + cover, and a live attendance badge), and join **speed networking** —
 **scan the table QR first** (or type the table number) to drop straight
@@ -15,8 +16,10 @@ carrying **email & phone** that open the mail/phone app on tap. Tenants
 scan member QRs with the camera or **manual input by member ID / phone
 number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
-gives the committee live monitoring, master-data CRUD (tenants have
-**booth/sponsor kind** + description; seminars have description + cover),
+gives the committee live monitoring (**Sponsors** and **Booths** are counted
+as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
+description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
+sponsor rows; seminars have description + cover),
 **detail pages**, the **door check-in station**, a **Tables** page that
 generates the speed-networking tables, a **QR Prints** page with
 print-ready QR cards (tables, seminar rooms, booth signage), and a

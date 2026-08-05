@@ -30,6 +30,8 @@ describe('overview & seed', () => {
     const o = await mockAdminApi.overview()
     expect(o.total_members).toBe(8)
     expect(o.total_tenants).toBe(14)
+    expect(o.total_sponsors).toBe(2)
+    expect(o.total_booths).toBe(12)
     expect(o.total_visits).toBe(12)
     expect(o.seminar_registrations).toBe(4)
   })
@@ -192,5 +194,26 @@ describe('networking tables', () => {
 
     await mockAdminApi.deleteTable(t13.id)
     expect((await mockAdminApi.tables()).tables).toHaveLength(14)
+  })
+})
+
+describe('sponsor category', () => {
+  it('sponsors are counted apart from booths and survive an import', async () => {
+    const before = await mockAdminApi.overview()
+    expect(before.total_sponsors + before.total_booths).toBe(before.total_tenants)
+
+    await mockAdminApi.bulkTenants([
+      { name: 'Gold Sponsor Co', booth: 'SP-09', category: 'Gold Sponsor', kind: 'sponsor' },
+      { name: 'Plain Booth Co', booth: 'E-09', category: 'Retail', kind: '' },
+    ])
+
+    const after = await mockAdminApi.overview()
+    expect(after.total_sponsors).toBe(before.total_sponsors + 1)
+    expect(after.total_booths).toBe(before.total_booths + 1)
+
+    const { tenants } = await mockAdminApi.tenants()
+    expect(tenants.find((t) => t.booth === 'SP-09').kind).toBe('sponsor')
+    // A blank kind falls back to booth, never to sponsor.
+    expect(tenants.find((t) => t.booth === 'E-09').kind).toBe('booth')
   })
 })

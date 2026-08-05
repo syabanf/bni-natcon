@@ -411,6 +411,7 @@ export function MembersPage() {
 /* ================= Tenant ================= */
 
 export function TenantsPage() {
+  const [kindFilter, setKindFilter] = useState('all') // all | sponsor | booth
   const crud = useCrud({
     list: () => api.tenants().then((d) => d.tenants || []),
     create: (f) => api.createTenant(f),
@@ -419,6 +420,11 @@ export function TenantsPage() {
   })
   const [importResult, setImportResult] = useState(null)
   const [detailId, setDetailId] = useState(null)
+
+  const visibleTenants =
+    kindFilter === 'all'
+      ? crud.rows
+      : crud.rows.filter((t) => (t.kind === 'sponsor') === (kindFilter === 'sponsor'))
 
   if (detailId) {
     return (
@@ -452,7 +458,12 @@ export function TenantsPage() {
         <TemplateButton template={TENANT_TEMPLATE} />
         <button
           className="md-add"
-          onClick={() => crud.setForm({ name: '', category: '', booth: '', initials: '', email: '', kind: 'booth', description: '' })}
+          onClick={() =>
+            crud.setForm({
+              name: '', category: '', booth: '', initials: '', email: '',
+              kind: kindFilter === 'sponsor' ? 'sponsor' : 'booth', description: '',
+            })
+          }
         >
           + Add Tenant
         </button>
@@ -460,10 +471,34 @@ export function TenantsPage() {
 
       <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 
+      <div className="list-toolbar">
+        <div className="kind-tabs">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'sponsor', label: 'Sponsors' },
+            { key: 'booth', label: 'Booths' },
+          ].map((k) => (
+            <button
+              key={k.key}
+              className={kindFilter === k.key ? 'active' : ''}
+              onClick={() => setKindFilter(k.key)}
+            >
+              {k.label}
+              {` (${
+                k.key === 'all'
+                  ? crud.rows.length
+                  : crud.rows.filter((t) => (t.kind === 'sponsor') === (k.key === 'sponsor')).length
+              })`}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="table-scroll">
       <table className="md-table">
         <thead>
           <tr>
+            <th>Kind</th>
             <th>Booth</th>
             <th>Name</th>
             <th>Category</th>
@@ -472,14 +507,17 @@ export function TenantsPage() {
           </tr>
         </thead>
         <tbody>
-          {crud.rows.map((t) => (
-            <tr key={t.id}>
+          {visibleTenants.map((t) => (
+            <tr key={t.id} className={t.kind === 'sponsor' ? 'sponsor-row' : ''}>
+              <td>
+                <span className={`kind-pill${t.kind === 'sponsor' ? ' sponsor' : ''}`}>
+                  {t.kind === 'sponsor' ? 'Sponsor' : 'Booth'}
+                </span>
+              </td>
               <td className="mono">{t.booth}</td>
               <td>
                 <b>{t.name}</b>
-                <small>
-                  {t.kind === 'sponsor' ? '★ Sponsor' : 'Booth'} · {t.initials}
-                </small>
+                <small>{t.initials}</small>
               </td>
               <td>{t.category}</td>
               <td className="num">{t.scan_count}</td>

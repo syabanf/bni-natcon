@@ -247,6 +247,9 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 # ---------------------------------------------------------------- admin CRUD
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("overview splits sponsors from booths",
+      body["total_sponsors"] == 2 and body["total_booths"] == 12
+      and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
 check("overview: 3 members, 14 tenants, 2 visits",
       status == 200 and body["total_members"] == 3
       and body["total_tenants"] == 14 and body["total_visits"] == 2)
@@ -366,6 +369,9 @@ status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
 check("table list shrinks after delete", len(body["tables"]) == seeded_tables + 2)
 
 # ---- tenant bulk import (create-or-update keyed by booth code)
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+sponsors_before, booths_before = body["total_sponsors"], body["total_booths"]
+
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [
                           {"name": "Bulk Sponsor", "booth": "SP-99", "category": "Main Sponsor",
@@ -376,6 +382,11 @@ status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
 check("tenant import upserts: 1 created, 1 updated, 0 failed",
       status == 200 and body["created"] == 1 and body["updated"] == 1 and body["failed"] == 0)
 
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+tenants_by_booth = {t["booth"]: t for t in body["tenants"]}
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("imported sponsor bumps the sponsor counter, not the booth one",
+      body["total_sponsors"] == sponsors_before + 1 and body["total_booths"] == booths_before)
 status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
 tenants_by_booth = {t["booth"]: t for t in body["tenants"]}
 check("imported sponsor created with kind + auto initials",

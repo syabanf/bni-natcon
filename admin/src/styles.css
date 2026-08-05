@@ -1454,6 +1454,52 @@ button:disabled {
   flex-shrink: 0;
 }
 
+/* ===== Sponsor vs booth ===== */
+.kind-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-ink);
+  white-space: nowrap;
+}
+.kind-pill.sponsor {
+  background: var(--red);
+  color: #fff;
+  margin-left: 8px;
+}
+.md-table tr.sponsor-row td {
+  background: #fffafa;
+}
+.kind-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kind-tabs button {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gray);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.kind-tabs button:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+.kind-tabs button.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
 /* ===== Networking tables ===== */
 .table-gen {
   display: flex;

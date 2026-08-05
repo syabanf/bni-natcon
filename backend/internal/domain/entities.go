@@ -122,6 +122,8 @@ type ScanResult struct {
 type AdminOverview struct {
 	TotalMembers        int
 	TotalTenants        int
+	TotalSponsors       int
+	TotalBooths         int
 	TotalVisits         int
 	VisitsToday         int
 	SeminarRegistrations int

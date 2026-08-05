@@ -239,6 +239,8 @@ export const mockAdminApi = {
     return delay({
       total_members: s.members.length,
       total_tenants: s.tenants.length,
+      total_sponsors: s.tenants.filter((t) => t.kind === 'sponsor').length,
+      total_booths: s.tenants.filter((t) => t.kind !== 'sponsor').length,
       total_visits: s.visits.length,
       visits_today: s.visits.filter((v) => isToday(v.at)).length,
       members_with_visit: new Set(s.visits.map((v) => v.member_id)).size,

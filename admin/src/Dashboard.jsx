@@ -68,10 +68,10 @@ export default function Dashboard({ onUnauthorized }) {
 
       <section className="stats-grid">
         <StatCard value={overview?.total_members} label="Registered attendees" />
-        <StatCard value={overview?.total_tenants} label="Tenants / booths" />
+        <StatCard value={overview?.total_sponsors} label="Sponsors" accent />
+        <StatCard value={overview?.total_booths} label="Booths" />
         <StatCard value={overview?.total_visits} label="Total visit scans" accent />
         <StatCard value={overview?.visits_today} label="Scans today" accent />
-        <StatCard value={overview?.members_with_visit} label="Active attendees (≥1 scan)" />
         <StatCard value={overview?.seminar_registrations} label="Seminar registrations" />
       </section>
 
@@ -89,6 +89,7 @@ export default function Dashboard({ onUnauthorized }) {
                 <div className="rank-info">
                   <div className="rank-name">
                     {t.name} <small>· {t.booth}</small>
+                    {t.kind === 'sponsor' && <span className="kind-pill sponsor">Sponsor</span>}
                   </div>
                   <div className="bar-track">
                     <div className="bar-fill" style={{ width: `${(t.scan_count / maxScan) * 100}%` }} />

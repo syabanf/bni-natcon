@@ -2,43 +2,33 @@ import { useEffect, useState } from 'react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 
-// Unvisited booths stay on top so the user focuses on what's left;
+// Unvisited tenants stay on top so the user focuses on what's left;
 // visited ones sink to the bottom of their group.
 function sortByVisited(list) {
   return [...list].sort((a, b) => Number(a.visited) - Number(b.visited))
 }
 
-function TenantGroup({ title, subtitle, list }) {
-  if (list.length === 0) return null
+function TenantCard({ t, sponsor }) {
   return (
-    <>
-      <div className="section-title" style={{ marginLeft: 20 }}>
-        {title}{' '}
-        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>· {subtitle}</span>
+    <div className={`tenant-card${t.visited ? ' scanned' : ''}${sponsor ? ' sponsor' : ''}`}>
+      {sponsor && <span className="t-ribbon">Sponsor</span>}
+      <div className="t-check">
+        <Icon name="check" size={12} />
       </div>
-      <div className="tenant-grid">
-        {sortByVisited(list).map((t) => (
-          <div key={t.id} className={`tenant-card${t.visited ? ' scanned' : ''}`}>
-            <div className="t-check">
-              <Icon name="check" size={12} />
-            </div>
-            <div className="t-logo">{t.initials}</div>
-            <h5>{t.name}</h5>
-            <p>
-              {t.category} · {t.kind === 'sponsor' ? 'Sponsor' : 'Booth'} {t.booth}
-            </p>
-            {t.description && <p className="t-desc">{t.description}</p>}
-            <div className="t-status">
-              {t.visited ? (
-                <span className="pill green">Scanned</span>
-              ) : (
-                <span className="pill gray">Not visited yet</span>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="t-logo">{t.initials}</div>
+      <h5>{t.name}</h5>
+      <p>
+        {sponsor ? t.category : `${t.category} · Booth ${t.booth}`}
+      </p>
+      {t.description && <p className="t-desc">{t.description}</p>}
+      <div className="t-status">
+        {t.visited ? (
+          <span className="pill green">Scanned</span>
+        ) : (
+          <span className="pill gray">Not visited yet</span>
+        )}
       </div>
-    </>
+    </div>
   )
 }
 
@@ -59,6 +49,7 @@ export default function Passport() {
   const sponsors = tenants.filter((t) => t.kind === 'sponsor')
   const booths = tenants.filter((t) => t.kind !== 'sponsor')
   const visited = tenants.filter((t) => t.visited).length
+  const sponsorsVisited = sponsors.filter((t) => t.visited).length
   const total = tenants.length
   const pct = total ? Math.round((visited / total) * 100) : 0
 
@@ -96,8 +87,38 @@ export default function Passport() {
         </div>
       </div>
 
-      <TenantGroup title="Sponsors" subtitle={`${sponsors.length} sponsors`} list={sponsors} />
-      <TenantGroup title="Booths" subtitle={`${booths.length} booths`} list={booths} />
+      {sponsors.length > 0 && (
+        <>
+          <div className="sponsor-band">
+            <span className="sb-label">Official Sponsors</span>
+            <h4>They make Natcon 2026 happen</h4>
+            <p>
+              {sponsors.length} sponsor{sponsors.length > 1 ? 's' : ''} back this year's conference —
+              stop by their stands to say thanks and collect a pin.
+            </p>
+            <span className="sb-progress">
+              {sponsorsVisited}/{sponsors.length} sponsor stands visited
+            </span>
+          </div>
+          <div className="tenant-grid">
+            {sortByVisited(sponsors).map((t) => (
+              <TenantCard key={t.id} t={t} sponsor />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="section-title" style={{ marginLeft: 20 }}>
+        Booths{' '}
+        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>
+          · {booths.length} booths
+        </span>
+      </div>
+      <div className="tenant-grid">
+        {sortByVisited(booths).map((t) => (
+          <TenantCard key={t.id} t={t} />
+        ))}
+      </div>
       <div style={{ height: 24 }} />
     </>
   )

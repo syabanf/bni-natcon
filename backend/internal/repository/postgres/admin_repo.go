@@ -22,11 +22,14 @@ func (r *AdminRepo) Overview(ctx context.Context) (*domain.AdminOverview, error)
 		SELECT
 			(SELECT COUNT(*) FROM users WHERE role = 'member'),
 			(SELECT COUNT(*) FROM tenants),
+			(SELECT COUNT(*) FROM tenants WHERE kind = 'sponsor'),
+			(SELECT COUNT(*) FROM tenants WHERE kind <> 'sponsor'),
 			(SELECT COUNT(*) FROM visits),
 			(SELECT COUNT(*) FROM visits WHERE created_at::date = CURRENT_DATE),
 			(SELECT COUNT(*) FROM seminar_registrations),
 			(SELECT COUNT(DISTINCT member_id) FROM visits)`).
-		Scan(&o.TotalMembers, &o.TotalTenants, &o.TotalVisits, &o.VisitsToday,
+		Scan(&o.TotalMembers, &o.TotalTenants, &o.TotalSponsors, &o.TotalBooths,
+			&o.TotalVisits, &o.VisitsToday,
 			&o.SeminarRegistrations, &o.MembersWithVisit)
 	if err != nil {
 		return nil, err

@@ -850,6 +850,48 @@ input {
   line-height: 1.45;
   margin-top: 2px;
 }
+/* Sponsors are a distinct category: a branded band introduces them and
+   their cards carry a ribbon + red frame so they never read as ordinary
+   booths. */
+.sponsor-band {
+  margin: 26px 20px 12px;
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: 0 10px 24px rgba(163, 22, 33, 0.28);
+}
+.sponsor-band .sb-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.sponsor-band h4 {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin-top: 3px;
+}
+.sponsor-band p {
+  font-size: 11.5px;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+.sponsor-band .sb-progress {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 5px 11px;
+}
+
 .tenant-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -864,6 +906,31 @@ input {
   box-shadow: var(--shadow-sm);
   position: relative;
   text-align: left;
+}
+.tenant-card.sponsor {
+  border: 1.5px solid var(--red);
+  box-shadow: 0 6px 18px rgba(207, 32, 48, 0.16);
+  padding-top: 26px;
+}
+.tenant-card.sponsor .t-logo {
+  background: var(--red);
+  color: #fff;
+}
+.tenant-card.sponsor h5 {
+  font-size: 14px;
+}
+.t-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--red);
+  padding: 4px 10px;
+  border-radius: var(--radius) 0 10px 0;
 }
 .tenant-card .t-logo {
   width: 38px;
