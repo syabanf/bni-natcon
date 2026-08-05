@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
-import { api } from '../../api/client'
+import { api, assetUrl } from '../../api/client'
 import { toast } from '../../components/Toast'
 import { useAuthStore } from '../../store/auth'
 
@@ -11,7 +11,7 @@ function SeminarCover({ seminar, tall }) {
     return (
       <div
         className={`seminar-hero-cover${tall ? ' tall' : ''}`}
-        style={{ backgroundImage: `url(${seminar.cover_url})` }}
+        style={{ backgroundImage: `url(${assetUrl(seminar.cover_url)})` }}
       />
     )
   }

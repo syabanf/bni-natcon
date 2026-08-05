@@ -1,7 +1,20 @@
 import { useAuthStore } from '../store/auth'
 import { mockApi } from './mock'
 
-const BASE = '/api/v1'
+// Where the Go API lives. Empty (the default) means "same origin", which is
+// what the Vite dev proxy and the nginx image both provide. Static hosts that
+// only serve the built SPA (Vercel, Netlify, S3) have no /api to serve, so
+// point VITE_API_URL at the deployed API instead — e.g.
+// VITE_API_URL=https://api.natcon.example.com
+export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+const BASE = `${API_ORIGIN}/api/v1`
+
+// Uploads (seminar covers) are served by the API, not by the static host.
+export function assetUrl(path) {
+  if (!path) return ''
+  if (/^(https?:|data:|blob:)/.test(path)) return path
+  return API_ORIGIN + (path.startsWith('/') ? path : `/${path}`)
+}
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -13,6 +26,7 @@ export class ApiError extends Error {
 // Friendly fallbacks when the server sends no message (proxy errors,
 // rate limits, downtime).
 const FRIENDLY_STATUS = {
+  404: 'The API is not reachable at this address. If this is a hosted build, VITE_API_URL is missing or wrong.',
   429: 'Too many attempts — wait a moment and try again.',
   500: 'The server is having trouble. Try again shortly, or switch to Demo (Mock) mode.',
   502: 'The server cannot be reached. Try again shortly.',

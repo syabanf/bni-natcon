@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api } from './api'
+import { api, assetUrl } from './api'
 import Modal from './Modal'
 import {
   parseSheet,
@@ -64,7 +64,7 @@ function CoverUpload({ value, onChange, onError }) {
         style={{ display: 'none' }}
         onChange={onFile}
       />
-      {value && <img className="cover-preview" src={value} alt="Seminar cover preview" />}
+      {value && <img className="cover-preview" src={assetUrl(value)} alt="Seminar cover preview" />}
       <div className="cover-actions">
         <button type="button" className="md-secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
           {busy ? 'Uploading…' : value ? '⇪ Replace image' : '⇪ Upload image'}

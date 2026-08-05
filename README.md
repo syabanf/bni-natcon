@@ -93,6 +93,15 @@ Set `JWT_SECRET` and `APP_ENV=production` in the environment for real
 deployments. For local development, start only the database with
 `docker compose up -d db` and run the API/dev servers as described above.
 
+### Hosting the apps and the API separately
+
+Both apps call `/api/v1` on their own origin, which the Vite dev proxy and
+the nginx image supply. A static host (Vercel, Netlify, S3) has no API to
+serve, so those requests come back `404` — set **`VITE_API_URL`** to the
+deployed API's origin at build time, and add the app's domain to the API's
+`ALLOWED_ORIGINS`. Each app ships a `vercel.json` with the SPA fallback.
+Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
