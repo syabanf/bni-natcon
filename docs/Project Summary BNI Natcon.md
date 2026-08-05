@@ -68,9 +68,11 @@ ke tema mockup atas permintaan.)
 
 ### 3.1 App Peserta/Tenant (`frontend/`, :5173)
 
-Landing = **quick access**: pilih Aplikasi Peserta / Aplikasi Tenant /
-Admin Dashboard, dengan **quick login** satu-tap untuk akun demo dan
-**toggle Mode Demo (Mock)**.
+Aplikasi langsung membuka **halaman sign-in split** (form di kiri, panel
+merah ber-brand "Accelerate" di kanan; di layar kecil panel jadi banner
+atas). Tidak ada lagi landing/quick-access chooser — role akun yang
+menentukan tujuan: peserta ke member pass, akun booth/sponsor ke scanner.
+Toggle **Mode Demo (Mock)** tetap ada di bawah form.
 
 | Screen | Fitur |
 |---|---|

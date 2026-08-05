@@ -1,40 +1,8 @@
 import { useState } from 'react'
-import Icon from '../components/Icon'
 import { api } from '../api/client'
 import { useAuthStore } from '../store/auth'
 
-const DEMO_PASSWORD = 'natcon2026'
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
-
-const QUICK_ACCOUNTS = [
-  { email: 'reddie@natcon.id', label: 'Reddie', sub: 'Member', initials: 'RW', kind: 'member' },
-  { email: 'sinta@natcon.id', label: 'Sinta', sub: 'Member', initials: 'SD', kind: 'member' },
-  { email: 'agus@natcon.id', label: 'Agus', sub: 'Member', initials: 'AS', kind: 'member' },
-  { email: 'booth-sp01@natcon.id', label: 'BNI Xpora', sub: 'Sponsor · SP-01', initials: 'BX', kind: 'tenant' },
-  { email: 'booth-a03@natcon.id', label: 'Kopi Nusantara', sub: 'Booth · A-03', initials: 'KN', kind: 'tenant' },
-  { email: 'booth-b01@natcon.id', label: 'TechNesia', sub: 'Booth · B-01', initials: 'TS', kind: 'tenant' },
-]
-
-const APPS = [
-  {
-    kind: 'member',
-    icon: 'user',
-    title: 'Attendee App',
-    desc: 'QR pass, tenant passport, seminars',
-  },
-  {
-    kind: 'tenant',
-    icon: 'store',
-    title: 'Tenant App',
-    desc: 'Booth scanner & visitor dashboard',
-  },
-  {
-    kind: 'admin',
-    icon: 'chart',
-    title: 'Admin Dashboard',
-    desc: 'Committee monitoring & master data',
-  },
-]
 
 function MockToggle() {
   const mock = useAuthStore((s) => s.mock)
@@ -51,20 +19,25 @@ function MockToggle() {
   )
 }
 
+/*
+ * One sign-in for everyone: the account decides where you land — attendees
+ * go to their pass, booth/sponsor accounts straight to the scanner.
+ */
 export default function Login() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const mock = useAuthStore((s) => s.mock)
-  const [mode, setMode] = useState(null) // null | 'member' | 'tenant'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const doLogin = async (loginEmail, loginPassword) => {
+  const submit = async (e) => {
+    e.preventDefault()
     setError('')
     setBusy(true)
     try {
-      const { token, user } = await api.login(loginEmail, loginPassword)
+      const { token, user } = await api.login(email.trim(), password)
       setAuth(token, user)
     } catch (err) {
       setError(err.message)
@@ -73,136 +46,108 @@ export default function Login() {
     }
   }
 
-  const submit = (e) => {
-    e.preventDefault()
-    doLogin(email, password)
-  }
-
-  /* --- Step 1: quick access chooser --- */
-  if (!mode) {
-    return (
-      <div className="login-page">
-        <div className="login-card">
-          <img className="login-logo" src="/brand/logo-stacked.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
-          <p>Which app do you want to open?</p>
-          <MockToggle />
-          <div className="app-chooser">
-            {APPS.map((a) =>
-              a.kind === 'admin' ? (
-                <a key={a.kind} className="app-tile" href={ADMIN_URL} target="_blank" rel="noreferrer">
-                  <span className="at-ic">
-                    <Icon name={a.icon} size={18} />
-                  </span>
-                  <span className="at-info">
-                    <b>{a.title}</b>
-                    <small>{a.desc}</small>
-                  </span>
-                  <span className="at-go">↗</span>
-                </a>
-              ) : (
-                <button key={a.kind} className="app-tile" onClick={() => setMode(a.kind)}>
-                  <span className="at-ic">
-                    <Icon name={a.icon} size={18} />
-                  </span>
-                  <span className="at-info">
-                    <b>{a.title}</b>
-                    <small>{a.desc}</small>
-                  </span>
-                  <span className="at-go">→</span>
-                </button>
-              )
-            )}
-          </div>
-          {error && <div className="login-error" style={{ marginTop: 14 }}>{error}</div>}
-          <button
-            type="button"
-            className="ql-btn"
-            style={{ width: '100%', marginTop: 14 }}
-            onClick={() => doLogin('reddie@natcon.id', DEMO_PASSWORD)}
-            disabled={busy}
-          >
-            <span className="ql-av">RW</span>
-            <span className="ql-info">
-              <b>{busy ? 'Signing in…' : 'Quick demo — sign in as Reddie'}</b>
-              <small>Member · one tap, straight to the app</small>
-            </span>
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  /* --- Step 2: login for the chosen app --- */
-  const accounts = QUICK_ACCOUNTS.filter((a) => a.kind === mode)
-
   return (
-    <div className="login-page">
-      <form className="login-card" onSubmit={submit}>
-        <button type="button" className="back-link" onClick={() => setMode(null)}>
-          ← Choose another app
-        </button>
-        <img className="login-logo small" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
-        <h1>{mode === 'member' ? 'Attendee App' : 'Tenant App'}</h1>
-        <p>Jakarta Convention Center</p>
+    <div className="auth-page">
+      <span className="auth-blob one" aria-hidden="true" />
+      <span className="auth-blob two" aria-hidden="true" />
 
-        {error && <div className="login-error">{error}</div>}
+      <div className="auth-shell">
+        <section className="auth-pane form">
+          <div className="auth-form-inner">
+            <p className="auth-eyebrow">Welcome to</p>
+            <img
+              className="auth-logo"
+              src="/brand/logo-horizontal.png"
+              alt="BNI Indonesia National Conference 2026 — Accelerate"
+            />
+            <p className="auth-sub">
+              Sign in for your digital pass, seminars, and speed networking.
+            </p>
 
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={mode === 'member' ? 'name@natcon.id' : 'booth-a03@natcon.id'}
-            required
-            autoFocus
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-          />
-        </div>
-        <button className="btn" type="submit" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
+            {error && <div className="auth-error">{error}</div>}
 
-        <div className="quick-login">
-          <div className="ql-label">Quick login — demo accounts</div>
-          <div className="ql-grid">
-            {accounts.map((a) => (
-              <button
-                key={a.email}
-                type="button"
-                className={`ql-btn ${a.kind}`}
-                onClick={() => doLogin(a.email, DEMO_PASSWORD)}
-                disabled={busy}
-              >
-                <span className="ql-av">{a.initials}</span>
-                <span className="ql-info">
-                  <b>{a.label}</b>
-                  <small>{a.sub}</small>
+            <form onSubmit={submit}>
+              <div className="auth-input">
+                <span className="auth-input-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
                 </span>
-              </button>
-            ))}
-          </div>
-        </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  aria-label="Email"
+                  autoComplete="username"
+                  required
+                  autoFocus
+                />
+              </div>
 
-        <MockToggle />
-        {mock && (
-          <p className="mock-note">
-            Demo mode: data lives on this device only and any password works. Scan booths with a demo
-            member code (e.g. NATCON-2026-08154) or phone (+62811000154).
-          </p>
-        )}
-      </form>
+              <div className="auth-input">
+                <span className="auth-input-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="4" y="10" width="16" height="11" rx="2" />
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                  </svg>
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  aria-label="Password"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-reveal"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              <button className="auth-submit" type="submit" disabled={busy}>
+                {busy ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+
+            <p className="auth-hint">
+              Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
+              Abraham → <code>heritageabraham</code>
+            </p>
+
+            <div className="auth-foot">
+              <MockToggle />
+              {mock && (
+                <p className="auth-note">Demo mode stays on this device and accepts any password.</p>
+              )}
+              <a className="auth-admin-link" href={ADMIN_URL} target="_blank" rel="noreferrer">
+                Committee? Open the admin panel ↗
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <aside className="auth-pane hero" aria-hidden="true">
+          <span className="auth-streak s1" />
+          <span className="auth-streak s2" />
+          <span className="auth-streak s3" />
+          <div className="auth-hero-inner">
+            <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
+            <p>
+              One QR for everything — collect pins at every booth, claim your seminar totebag, and
+              get auto-connected with everyone at your networking table.
+            </p>
+            <span className="auth-hero-meta">3 September 2026 · Jakarta Convention Center</span>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }

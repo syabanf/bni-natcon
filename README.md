@@ -37,7 +37,7 @@ snippet in [`assets/brand/README.md`](assets/brand/README.md) after
 dropping in new artwork.
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
-- **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.
+- **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. It opens straight on a split sign-in screen (form on the left, "Accelerate" brand hero on the right); the account's role decides where you land — attendees on their pass, booth/sponsor logins on the scanner.
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three **Laporan** pages (Leads Tenant, Registrasi Seminar, Kupon Peserta) — each with flat SVG-style charts (scan per booth/jam, keterisian kursi, distribusi kupon) and its own Excel export.
 
 Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
@@ -62,7 +62,7 @@ ready-to-fill template (headers + example rows).
 Both upload in chunks of 200 so big files never hit the request timeout,
 and report `created / updated / failed` per import.
 
-**Demo mock mode**: toggle buttons on both login pages switch each app to a
+**Demo mock mode**: a toggle on both sign-in screens switches each app to a
 localStorage-backed mock layer — no backend needed. In the member/tenant app
 the state is shared across personas on the device (a booth scan shows up in
 that member's passport); the admin app ships with seeded demo data (8 members,
