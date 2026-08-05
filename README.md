@@ -17,9 +17,11 @@ number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
 gives the committee live monitoring, master-data CRUD (tenants have
 **booth/sponsor kind** + description; seminars have description + cover),
-**detail pages**, the **door check-in station**, and a **Lucky Draw** page
-with a card-shuffle animation where every pin is a ticket and top
-collectors lead the deck.
+**detail pages**, the **door check-in station**, a **Tables** page that
+generates the speed-networking tables, a **QR Prints** page with
+print-ready QR cards (tables, seminar rooms, booth signage), and a
+**Lucky Draw** page with a card-shuffle animation where every pin is a
+ticket and top collectors lead the deck.
 
 All UI follows the original mockup theme (Plus Jakarta Sans, rounded cards,
 soft shadows, tinted pills, single red `#CF2030` accent).
@@ -81,7 +83,7 @@ deployments. For local development, start only the database with
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 108-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 118-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -162,6 +164,12 @@ Open http://localhost:5174 (same `VITE_API_PROXY` override via
 here — override with `VITE_ADMIN_URL` in `frontend/.env.local` if deployed
 elsewhere).
 
+**Printed QR codes** (admin → QR Prints): `TABLE:<no>` is what attendees
+scan at Speed Networking to join a table; `SEMINAR:<id>` posted on a room
+door switches the session on the Door Check-in page when the crew scans
+it; `BOOTH:<code>` is booth/sponsor signage. Pick a size, tap cards to
+include or exclude them, and print — only the selected cards reach paper.
+
 > Camera scanning needs a secure context: `localhost` works out of the box; on
 > a phone over LAN you need HTTPS (e.g. `vite --host` + a tunnel such as
 > ngrok/tailscale). The scanner page also has a manual-code input fallback.
@@ -227,7 +235,7 @@ cd frontend && npm test
 cd admin && npm test
 ```
 
-End-to-end suite (108 checks: auth, role guards, scan by code & phone,
+End-to-end suite (118 checks: auth, role guards, scan by code & phone,
 visitor notes/detail, seminar + door check-in/attendance, networking incl.
 contact notes/email/phone, sponsor kinds, admin CRUD/import/reports,
 pagination, metrics, hardening). Needs a **fresh database**:

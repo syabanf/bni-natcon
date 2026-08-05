@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 
 const CameraScanner = lazy(() => import('./CameraScanner'))
@@ -21,6 +21,9 @@ export default function DoorCheckin({ onUnauthorized }) {
   const [manual, setManual] = useState('')
   const [cameraOn, setCameraOn] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  // Switching rooms clears the result panel, so a "switched room" message
+  // has to survive that reset — park it here until the effect runs.
+  const pendingResultRef = useRef(null)
 
   useEffect(() => {
     api
@@ -39,10 +42,35 @@ export default function DoorCheckin({ onUnauthorized }) {
   }
 
   useEffect(() => {
-    setResult(null)
+    setResult(pendingResultRef.current)
+    pendingResultRef.current = null
     setRecent([])
     loadDetail(seminarId)
   }, [seminarId])
+
+  // A scanned "SEMINAR:<id>" poster switches the room instead of being
+  // treated as an attendee code — the door crew can point the camera at
+  // the printed room sign to get on the right session.
+  const handleScan = (raw) => {
+    const room = String(raw).trim().toUpperCase().match(/^SEMINAR[:\s-]*(\d+)$/)
+    if (room) {
+      const id = Number(room[1])
+      const target = seminars.find((x) => x.id === id)
+      if (!target) {
+        setResult({ kind: 'err', title: 'Unknown room', sub: 'That seminar QR is not in this event' })
+        return
+      }
+      const notice = { kind: 'ok', title: `Switched to ${target.room}`, sub: target.title }
+      if (id === seminarId) {
+        setResult(notice) // already on this room — no effect will fire
+      } else {
+        pendingResultRef.current = notice
+        setSeminarId(id)
+      }
+      return
+    }
+    checkin(raw)
+  }
 
   const checkin = async (code) => {
     if (!seminarId || !code) return
@@ -68,7 +96,7 @@ export default function DoorCheckin({ onUnauthorized }) {
     e.preventDefault()
     const code = manual.trim()
     if (code) {
-      checkin(code)
+      handleScan(code)
       setManual('')
     }
   }
@@ -128,13 +156,14 @@ export default function DoorCheckin({ onUnauthorized }) {
           <span className="sec-no">02</span>Scan Attendees
         </h2>
         <p className="panel-sub">
-          {selected ? `${selected.room} door` : 'Loading…'} · camera or manual input
+          {selected ? `${selected.room} door` : 'Loading…'} · camera or manual input — scanning a
+          printed room QR switches the session
         </p>
 
         {cameraOn ? (
           <Suspense fallback={<div className="empty">Starting camera…</div>}>
             <CameraScanner
-              onScan={checkin}
+              onScan={handleScan}
               onError={(msg) => {
                 setCameraError(msg)
                 setCameraOn(false)

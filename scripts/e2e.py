@@ -320,6 +320,51 @@ check("upsert refreshed existing member (name/chapter/phone; code kept)",
       and body["user"]["phone"] == "+62810009002"
       and body["user"]["member_code"].startswith("NATCON-2026-"))
 
+# ---- networking tables master data
+status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
+seeded_tables = len(body["tables"])
+# Reddie and Sinta are still checked in from the networking section, so the
+# live occupancy has to show up here.
+check("tables listed with capacity + live occupancy", status == 200 and seeded_tables == 12
+      and all(t["capacity"] == 8 for t in body["tables"])
+      and sum(t["occupied"] for t in body["tables"]) == 2
+      and next(t for t in body["tables"] if t["table_no"] == 12)["occupied"] == 1)
+
+status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
+                      body={"count": 3, "hall": "Hall C", "capacity": 6})
+check("generate 3 tables -> 201, numbering continues",
+      status == 201 and body["created"] == 3
+      and [t["table_no"] for t in body["tables"]] == [13, 14, 15]
+      and body["tables"][0]["hall"] == "Hall C")
+gen_table_id = body["tables"][0]["id"]
+
+status, body, _ = req("GET", "/api/v1/networking", token=member_tok)
+check("generated tables reach the attendee app", len(body["tables"]) == seeded_tables + 3)
+
+status, _, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
+                   body={"count": 0, "hall": "X", "capacity": 8})
+check("generate 0 tables -> 400", status == 400)
+
+status, _, _ = req("PUT", f"/api/v1/admin/tables/{gen_table_id}", token=admin_tok,
+                   body={"hall": "Hall D", "capacity": 10})
+check("update table hall/capacity -> 200", status == 200)
+status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
+t13 = next(t for t in body["tables"] if t["table_no"] == 13)
+check("table update persisted", t13["hall"] == "Hall D" and t13["capacity"] == 10)
+
+# Table 12 currently seats Reddie (checked in earlier), so it is protected.
+busy_table = next(t for t in body["tables"] if t["occupied"] > 0)
+status, _, _ = req("DELETE", f"/api/v1/admin/tables/{busy_table['id']}", token=admin_tok)
+check("delete an occupied table -> 409", status == 409)
+status, _, _ = req("PUT", f"/api/v1/admin/tables/{busy_table['id']}", token=admin_tok,
+                   body={"hall": "Hall B", "capacity": 0})
+check("shrink capacity below seated -> 400", status == 400)
+
+status, _, _ = req("DELETE", f"/api/v1/admin/tables/{gen_table_id}", token=admin_tok)
+check("delete an empty table -> 200", status == 200)
+status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
+check("table list shrinks after delete", len(body["tables"]) == seeded_tables + 2)
+
 # ---- tenant bulk import (create-or-update keyed by booth code)
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [

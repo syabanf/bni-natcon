@@ -282,6 +282,45 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 	return created, updated, errs
 }
 
+/* ----- Networking tables ----- */
+
+const maxGeneratedTables = 500
+
+func (u *AdminUsecase) ListTables(ctx context.Context) ([]domain.NetworkingTable, error) {
+	return u.admin.ListTables(ctx)
+}
+
+// GenerateTables appends a block of tables to the hall; numbering continues
+// after the highest existing table so it is safe to run more than once.
+func (u *AdminUsecase) GenerateTables(ctx context.Context, count int, hall string, capacity int) ([]domain.NetworkingTable, error) {
+	if count <= 0 || count > maxGeneratedTables {
+		return nil, invalid("number of tables must be between 1 and 500")
+	}
+	if capacity <= 0 {
+		return nil, invalid("capacity must be greater than 0")
+	}
+	hall = strings.TrimSpace(hall)
+	if hall == "" {
+		hall = "Hall B"
+	}
+	return u.admin.GenerateTables(ctx, count, hall, capacity)
+}
+
+func (u *AdminUsecase) UpdateTable(ctx context.Context, id int64, hall string, capacity int) error {
+	if capacity <= 0 {
+		return invalid("capacity must be greater than 0")
+	}
+	hall = strings.TrimSpace(hall)
+	if hall == "" {
+		hall = "Hall B"
+	}
+	return u.admin.UpdateTable(ctx, id, hall, capacity)
+}
+
+func (u *AdminUsecase) DeleteTable(ctx context.Context, id int64) error {
+	return u.admin.DeleteTable(ctx, id)
+}
+
 /* ----- Chapters ----- */
 
 func (u *AdminUsecase) ListChapters(ctx context.Context) ([]domain.Chapter, error) {

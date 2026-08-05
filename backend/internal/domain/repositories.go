@@ -79,6 +79,15 @@ type AdminRepository interface {
 	RenameChapter(ctx context.Context, id int64, name string) error
 	DeleteChapter(ctx context.Context, id int64) error
 
+	// Networking tables master data. GenerateTables appends `count` tables,
+	// numbering continues after the highest existing table; UpdateTable
+	// refuses to shrink below the seats already taken; DeleteTable returns
+	// ErrTableInUse while somebody is checked in.
+	ListTables(ctx context.Context) ([]NetworkingTable, error)
+	GenerateTables(ctx context.Context, count int, hall string, capacity int) ([]NetworkingTable, error)
+	UpdateTable(ctx context.Context, id int64, hall string, capacity int) error
+	DeleteTable(ctx context.Context, id int64) error
+
 	VisitReport(ctx context.Context) ([]VisitReportRow, error)
 	RegistrationReport(ctx context.Context) ([]RegistrationReportRow, error)
 

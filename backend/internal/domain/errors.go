@@ -17,4 +17,5 @@ var (
 	ErrNotRegistered      = errors.New("this attendee is not registered for this seminar")
 	ErrNameTaken          = errors.New("that name is already in use")
 	ErrChapterInUse       = errors.New("this chapter still has members — move or rename them first")
+	ErrTableInUse         = errors.New("someone is still seated at this table — wait until it empties")
 )

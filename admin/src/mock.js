@@ -81,14 +81,21 @@ function seedState() {
     .sort()
     .map((name, i) => ({ id: 900 + i, name }))
 
-  return { nextId: 1000, nextCode: 9100, members, tenants, seminars, visits, registrations, attendance, chapters }
+  const tables = Array.from({ length: 12 }, (_, i) => ({
+    id: 800 + i, table_no: i + 1, hall: 'Hall B', capacity: 8, occupied: 0,
+  }))
+
+  return {
+    nextId: 1000, nextCode: 9100, members, tenants, seminars, visits,
+    registrations, attendance, chapters, tables,
+  }
 }
 
 function load() {
   try {
     const raw = localStorage.getItem(STATE_KEY)
     // attendance ditambahkan belakangan; state lama perlu default-nya.
-    if (raw) return { attendance: [], chapters: [], ...JSON.parse(raw) }
+    if (raw) return { attendance: [], chapters: [], tables: [], ...JSON.parse(raw) }
   } catch {
     /* fresh */
   }
@@ -540,6 +547,55 @@ export const mockAdminApi = {
       }
       reader.readAsDataURL(file)
     })
+  },
+
+  /* ----- Networking tables ----- */
+
+  tables() {
+    const s = load()
+    return delay({ tables: [...s.tables].sort((a, b) => a.table_no - b.table_no) })
+  },
+
+  generateTables({ count, hall = 'Hall B', capacity = 8 }) {
+    const s = load()
+    count = Number(count)
+    if (!count || count < 1 || count > 500) {
+      return fail(400, 'invalid input: number of tables must be between 1 and 500')
+    }
+    if (!(Number(capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
+    const start = s.tables.reduce((max, t) => Math.max(max, t.table_no), 0)
+    const created = Array.from({ length: count }, (_, i) => ({
+      id: s.nextId++, table_no: start + i + 1,
+      hall: (hall || 'Hall B').trim(), capacity: Number(capacity), occupied: 0,
+    }))
+    s.tables.push(...created)
+    save(s)
+    return delay({ created: created.length, tables: created })
+  },
+
+  updateTable(id, { hall, capacity }) {
+    const s = load()
+    const t = s.tables.find((x) => x.id === Number(id))
+    if (!t) return fail(404, 'data not found')
+    if (!(Number(capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
+    if (Number(capacity) < t.occupied) {
+      return fail(400, 'invalid input: capacity is below the seats already taken')
+    }
+    Object.assign(t, { hall: (hall || t.hall).trim(), capacity: Number(capacity) })
+    save(s)
+    return delay({ status: 'updated' })
+  },
+
+  deleteTable(id) {
+    const s = load()
+    const t = s.tables.find((x) => x.id === Number(id))
+    if (!t) return fail(404, 'data not found')
+    if (t.occupied > 0) {
+      return fail(409, 'someone is still seated at this table — wait until it empties')
+    }
+    s.tables = s.tables.filter((x) => x.id !== t.id)
+    save(s)
+    return delay({ status: 'deleted' })
   },
 
   /* ----- Chapters ----- */

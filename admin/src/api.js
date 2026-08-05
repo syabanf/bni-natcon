@@ -163,6 +163,13 @@ export const api = {
     }
     return data
   },
+  tables: (opts) => (isMockMode() ? mock.tables() : request('/admin/tables', opts)),
+  generateTables: (body) =>
+    isMockMode() ? mock.generateTables(body) : request('/admin/tables/generate', { method: 'POST', body }),
+  updateTable: (id, body) =>
+    isMockMode() ? mock.updateTable(id, body) : request(`/admin/tables/${id}`, { method: 'PUT', body }),
+  deleteTable: (id) =>
+    isMockMode() ? mock.deleteTable(id) : request(`/admin/tables/${id}`, { method: 'DELETE' }),
   chapters: (opts) => (isMockMode() ? mock.chapters() : request('/admin/chapters', opts)),
   createChapter: (name) =>
     isMockMode() ? mock.createChapter(name) : request('/admin/chapters', { method: 'POST', body: { name } }),

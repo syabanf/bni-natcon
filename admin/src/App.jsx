@@ -6,6 +6,8 @@ import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
 import DoorCheckin from './DoorCheckin'
 import LuckyDraw from './LuckyDraw'
 import Chapters from './Chapters'
+import Tables from './Tables'
+import QRPrints from './QRPrints'
 
 const MENU = [
   { key: 'dash', label: 'Dashboard', icon: '▦' },
@@ -13,7 +15,9 @@ const MENU = [
   { key: 'tenants', label: 'Tenants', icon: '▤' },
   { key: 'chapters', label: 'Chapters', icon: '⬡' },
   { key: 'seminars', label: 'Seminars', icon: '◈' },
+  { key: 'tables', label: 'Tables', icon: '◍' },
   { key: 'door', label: 'Door Check-in', icon: '▣' },
+  { key: 'qr', label: 'QR Prints', icon: '⧉' },
   { key: 'draw', label: 'Lucky Draw', icon: '✦' },
 ]
 
@@ -151,7 +155,9 @@ function Shell({ onLogout }) {
         {view === 'tenants' && <TenantsPage />}
         {view === 'chapters' && <Chapters onUnauthorized={onLogout} />}
         {view === 'seminars' && <SeminarsPage />}
+        {view === 'tables' && <Tables onUnauthorized={onLogout} />}
         {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
+        {view === 'qr' && <QRPrints onUnauthorized={onLogout} />}
         {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}
         {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
         {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}

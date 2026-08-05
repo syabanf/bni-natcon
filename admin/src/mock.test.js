@@ -167,3 +167,30 @@ describe('tenant import upsert', () => {
     })
   })
 })
+
+describe('networking tables', () => {
+  it('generates a block continuing the numbering, guards capacity and deletes', async () => {
+    const before = await mockAdminApi.tables()
+    expect(before.tables).toHaveLength(12)
+
+    const gen = await mockAdminApi.generateTables({ count: 3, hall: 'Hall C', capacity: 6 })
+    expect(gen.created).toBe(3)
+    expect(gen.tables.map((t) => t.table_no)).toEqual([13, 14, 15])
+    expect(gen.tables[0].hall).toBe('Hall C')
+
+    const after = await mockAdminApi.tables()
+    expect(after.tables).toHaveLength(15)
+    // Still ordered by table number.
+    expect(after.tables.at(-1).table_no).toBe(15)
+
+    await expect(mockAdminApi.generateTables({ count: 0 })).rejects.toMatchObject({ status: 400 })
+
+    const t13 = after.tables.find((t) => t.table_no === 13)
+    await mockAdminApi.updateTable(t13.id, { hall: 'Hall D', capacity: 10 })
+    const updated = (await mockAdminApi.tables()).tables.find((t) => t.table_no === 13)
+    expect(updated).toMatchObject({ hall: 'Hall D', capacity: 10 })
+
+    await mockAdminApi.deleteTable(t13.id)
+    expect((await mockAdminApi.tables()).tables).toHaveLength(14)
+  })
+})

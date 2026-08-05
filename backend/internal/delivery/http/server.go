@@ -153,6 +153,11 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 
+				r.Get("/admin/tables", s.handleAdminListTables)
+				r.Post("/admin/tables/generate", s.handleAdminGenerateTables)
+				r.Put("/admin/tables/{id}", s.handleAdminUpdateTable)
+				r.Delete("/admin/tables/{id}", s.handleAdminDeleteTable)
+
 				r.Get("/admin/chapters", s.handleAdminListChapters)
 				r.Post("/admin/chapters", s.handleAdminCreateChapter)
 				r.Put("/admin/chapters/{id}", s.handleAdminRenameChapter)

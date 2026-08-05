@@ -49,7 +49,7 @@ Tiga aplikasi terpisah, satu monorepo:
 │       └── delivery/http/           router chi, handler, middleware JWT/role
 ├── frontend/   React 18 + Vite (JS) — app Peserta & Tenant (:5173)
 ├── admin/      React 18 + Vite (JS) — Admin Panel (:5174)
-├── scripts/e2e.py                   suite end-to-end 108 check (stdlib only)
+├── scripts/e2e.py                   suite end-to-end 118 check (stdlib only)
 ├── scripts/stress.py                suite stress & concurrency (stdlib only)
 ├── docker-compose.yml               full stack: db + api + frontend + admin
 └── .github/workflows/ci.yml         CI: vet/test, e2e, build FE, build docker
@@ -99,6 +99,13 @@ Sidebar: Dashboard · Peserta · Tenant · Seminar · **Check-in Pintu** ·
   dihitung dua kali, peserta yang tidak terdaftar di sesi itu ditolak.
   Kehadiran mengalir ke halaman detail seminar (kolom Hadir) dan laporan
   Registrasi Seminar (termasuk export Excel).
+- **Tables**: generate blok meja speed networking (jumlah, hall,
+  kursi per meja — penomoran melanjutkan meja tertinggi), edit hall/
+  kapasitas, hapus (ditolak jika masih ada yang duduk).
+- **QR Prints**: kartu QR siap cetak untuk meja (`TABLE:<no>` — yang
+  di-scan peserta), ruang seminar (`SEMINAR:<id>` — di-scan panitia pintu
+  untuk pindah ruang), dan booth (`BOOTH:<kode>` untuk signage). Pilih
+  ukuran, centang kartu yang mau dicetak, lalu Print.
 - **Master data (CRUD via modal popup)** untuk Peserta / Tenant / Seminar:
   - List peserta ber-**pagination** (25/halaman) dengan **kotak cari**
     (nama/email/member code/chapter) — query dieksekusi di server
@@ -142,7 +149,7 @@ dari **localStorage tanpa backend** dengan bentuk respons yang identik:
 | `visits` | **stempel digital** — unik (tenant, member); kupon = jumlah visit |
 | `seminars`, `seminar_registrations` | unik (seminar, member); satu-per-slot + kapasitas dijaga transaksi `FOR UPDATE` |
 | `seminar_attendance` | check-in pintu — unik (seminar, member), duplikat aman via `ON CONFLICT DO NOTHING` |
-| `networking_tables`, `networking_checkins` | 12 meja × 8 kursi; satu check-in aktif per member (pindah = lepas kursi lama) |
+| `networking_tables`, `networking_checkins` | meja di-generate dari admin (default 12 × 8 kursi); satu check-in aktif per member (pindah = lepas kursi lama) |
 | `networking_contacts`, `networking_table_history` | kontak tersimpan + log riwayat check-in |
 
 Seeder otomatis saat DB kosong: 3 peserta, 12 tenant + akun booth,
@@ -171,12 +178,12 @@ Konvensi error: 401 kredensial/token, 403 salah role, 404 tidak ada,
 - **Unit test** (`go test ./...`): table-driven di layer usecase dengan
   fake repo — login, scan/duplikat, statistik, aturan slot/kapasitas
   seminar, batal-dan-pindah.
-- **E2E** (`scripts/e2e.py`, Python stdlib, **108 check**): dijalankan
+- **E2E** (`scripts/e2e.py`, Python stdlib, **118 check**): dijalankan
   terhadap API live + DB segar — auth & guard semua role, alur scan,
   seminar penuh, check-in pintu (tercatat/duplikat/ditolak), seluruh alur
   networking, admin CRUD/detail/bulk/laporan, pagination & search,
   `/metrics`, dan probe hardening (body 3 MB ditolak, rate limit 429).
-  Hasil terakhir: **108 passed, 0 failed** (lokal dan di CI).
+  Hasil terakhir: **118 passed, 0 failed** (lokal dan di CI).
 - **Stress & concurrency** (`scripts/stress.py`): beban baca 10k request
   (~10.000 req/s, p99 45 ms), 100 peserta rebutan 10 kursi seminar →
   tepat 10 sukses, 100 rebutan meja 8 kursi → tepat 8, 100 scan serentak
@@ -221,7 +228,7 @@ nginx di tiap image frontend menyajikan build statis dan mem-proxy `/api`
 ke container API (tanpa urusan CORS). Set `JWT_SECRET` +
 `APP_ENV=production` untuk produksi.
 
-**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 108
+**CI (GitHub Actions)** di tiap push/PR: `go vet` + unit test → E2E 118
 check + suite stress vs container Postgres → Vitest + build produksi kedua
 frontend → `docker compose build`.
 
