@@ -74,9 +74,6 @@ function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
-      <span className="auth-blob one" aria-hidden="true" />
-      <span className="auth-blob two" aria-hidden="true" />
-
       <div className="auth-shell">
         <section className="auth-pane form">
           <form className="auth-form-inner" onSubmit={submit}>
@@ -151,10 +148,6 @@ function Login({ onLogin }) {
           <span className="auth-streak s3" />
           <div className="auth-hero-inner">
             <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
-            <p>
-              Live monitoring, attendee &amp; tenant master data, door check-in, QR prints, reports
-              and the gala lucky draw — everything the committee runs on event day.
-            </p>
             <span className="auth-hero-meta">3 September 2026 · Jakarta Convention Center</span>
           </div>
         </aside>

@@ -182,8 +182,8 @@ input {
 }
 
 /* ===== Auth (split sign-in card) =====
-   Light stage with red brand blobs bleeding off the corners; one rounded
-   card holds the form on the left and the "Accelerate" hero on the right.
+   A quiet light stage holds one rounded card: form on the left, the
+   "Accelerate" brand hero on the right.
    Under 860px the hero moves above the form as a compact banner. */
 .auth-page {
   position: relative;
@@ -194,27 +194,7 @@ input {
   justify-content: center;
   padding: 32px 20px;
   background: #f2f2f3;
-  overflow: hidden;
 }
-.auth-blob {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(140deg, var(--red), var(--red-dark));
-  pointer-events: none;
-}
-.auth-blob.one {
-  width: 460px;
-  height: 460px;
-  top: -260px;
-  left: -190px;
-}
-.auth-blob.two {
-  width: 420px;
-  height: 420px;
-  right: -210px;
-  bottom: -250px;
-}
-
 .auth-shell {
   position: relative;
   z-index: 1;
@@ -399,7 +379,8 @@ input {
 .auth-pane.hero {
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   padding: 40px 36px;
   overflow: hidden;
   background: linear-gradient(150deg, #e5232f 0%, #a31621 55%, #6d0f18 100%);
@@ -447,12 +428,13 @@ input {
 .auth-hero-inner {
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 .auth-hero-logo {
   display: block;
-  height: 168px;
+  height: 210px;
   width: auto;
-  margin-bottom: 22px;
+  margin: 0 auto 18px;
 }
 .auth-pane.hero p {
   font-size: 13px;
@@ -534,26 +516,14 @@ input {
     text-align: center;
   }
   .auth-hero-logo {
-    height: 104px;
-    margin: 0 auto 12px;
+    height: 120px;
+    margin: 0 auto 10px;
   }
   .auth-pane.hero p {
     font-size: 12px;
   }
   .auth-pane.form {
     padding: 28px 24px 30px;
-  }
-  .auth-blob.one {
-    width: 300px;
-    height: 300px;
-    top: -190px;
-    left: -140px;
-  }
-  .auth-blob.two {
-    width: 280px;
-    height: 280px;
-    right: -160px;
-    bottom: -180px;
   }
 }
 

@@ -42,11 +42,11 @@ export function MemberLayout() {
         <Outlet />
       </div>
       <nav className="bottomnav">
-        <NavButton to="/" icon="home" label="Home" />
-        <NavButton to="/qr" icon="qr" label="My QR" />
-        <NavButton to="/passport" icon="pin" label="Passport" />
-        <NavButton to="/seminar" icon="mic" label="Seminar" />
-        <NavButton to="/network" icon="users" label="Network" />
+        <NavButton to="/attendee" icon="home" label="Home" />
+        <NavButton to="/attendee/qr" icon="qr" label="My QR" />
+        <NavButton to="/attendee/passport" icon="pin" label="Passport" />
+        <NavButton to="/attendee/seminar" icon="mic" label="Seminar" />
+        <NavButton to="/attendee/network" icon="users" label="Network" />
       </nav>
       <Toast />
     </div>
@@ -61,8 +61,8 @@ export function TenantLayout() {
         <Outlet />
       </div>
       <nav className="bottomnav">
-        <NavButton to="/scanner" icon="camera" label="Scanner" />
-        <NavButton to="/dashboard" icon="chart" label="Dashboard" />
+        <NavButton to="/tenant/scanner" icon="camera" label="Scanner" />
+        <NavButton to="/tenant/dashboard" icon="chart" label="Dashboard" />
       </nav>
       <Toast />
     </div>

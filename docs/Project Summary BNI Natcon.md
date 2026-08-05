@@ -74,6 +74,11 @@ atas). Tidak ada lagi landing/quick-access chooser — role akun yang
 menentukan tujuan: peserta ke member pass, akun booth/sponsor ke scanner.
 Toggle **Mode Demo (Mock)** tetap ada di bawah form.
 
+**Path per app dibedakan**: peserta di `/attendee/...` (qr, passport,
+seminar, network), tenant di `/tenant/...` (scanner, dashboard), sign-in
+bersama di `/login`. URL lama (mis. `/qr`, `/scanner`) otomatis
+di-redirect ke path barunya.
+
 | Screen | Fitur |
 |---|---|
 | Beranda | Member pass dengan **QR asli** (qrcode.react), statistik live, menu cepat, agenda |

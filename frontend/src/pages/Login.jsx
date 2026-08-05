@@ -48,9 +48,6 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <span className="auth-blob one" aria-hidden="true" />
-      <span className="auth-blob two" aria-hidden="true" />
-
       <div className="auth-shell">
         <section className="auth-pane form">
           <div className="auth-form-inner">
@@ -140,10 +137,6 @@ export default function Login() {
           <span className="auth-streak s3" />
           <div className="auth-hero-inner">
             <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
-            <p>
-              One QR for everything — collect pins at every booth, claim your seminar totebag, and
-              get auto-connected with everyone at your networking table.
-            </p>
             <span className="auth-hero-meta">3 September 2026 · Jakarta Convention Center</span>
           </div>
         </aside>

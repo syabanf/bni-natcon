@@ -100,28 +100,28 @@ export default function Home() {
         Quick menu
       </div>
       <div className="quick-grid">
-        <button className="quick" onClick={() => navigate('/qr')}>
+        <button className="quick" onClick={() => navigate('/attendee/qr')}>
           <span className="q-ic">
             <Icon name="qr" size={18} />
           </span>
           <h4>My QR Code</h4>
           <p>One QR for everything: booths &amp; seminars</p>
         </button>
-        <button className="quick" onClick={() => navigate('/passport')}>
+        <button className="quick" onClick={() => navigate('/attendee/passport')}>
           <span className="q-ic">
             <Icon name="pin" size={18} />
           </span>
           <h4>Tenant Passport</h4>
           <p>Collect scans, claim your pin</p>
         </button>
-        <button className="quick" onClick={() => navigate('/seminar')}>
+        <button className="quick" onClick={() => navigate('/attendee/seminar')}>
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
           <h4>Parallel Seminars</h4>
           <p>Pick a session, claim a totebag</p>
         </button>
-        <button className="quick" onClick={() => navigate('/network')}>
+        <button className="quick" onClick={() => navigate('/attendee/network')}>
           <span className="q-ic">
             <Icon name="users" size={18} />
           </span>
