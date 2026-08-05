@@ -199,18 +199,17 @@ input {
   box-shadow: var(--shadow);
   padding: 30px 26px;
 }
+/* Official Natcon 2026 lockup — stacked on the chooser, horizontal above
+   the sign-in form. */
 .login-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 15px;
-  margin-bottom: 16px;
+  display: block;
+  height: 132px;
+  width: auto;
+  margin: 0 auto 18px;
+}
+.login-logo.small {
+  height: 40px;
+  margin: 2px 0 14px;
 }
 .login-card h1 {
   font-size: 22px;
@@ -485,6 +484,12 @@ input {
   color: #fff;
   padding: 22px;
   box-shadow: 0 12px 28px rgba(163, 22, 33, 0.3);
+}
+.member-card .mc-logo {
+  height: 20px;
+  width: auto;
+  opacity: 0.95;
+  flex-shrink: 0;
 }
 .member-card .mc-top {
   display: flex;
@@ -1480,26 +1485,21 @@ input {
   align-items: center;
   gap: 10px;
 }
+.appbar .brand {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
 .appbar .brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 11px;
+  height: 26px;
+  width: auto;
+  display: block;
 }
-.appbar h1 {
-  font-size: 14px;
-  font-weight: 800;
-}
-.appbar .brand p {
+.appbar .brand-place {
   font-size: 10.5px;
   color: var(--gray);
-  margin-top: 1px;
+  font-weight: 600;
 }
 .appbar-right {
   display: flex;

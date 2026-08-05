@@ -24,7 +24,17 @@ print-ready QR cards (tables, seminar rooms, booth signage), and a
 ticket and top collectors lead the deck.
 
 All UI follows the original mockup theme (Plus Jakarta Sans, rounded cards,
-soft shadows, tinted pills, single red `#CF2030` accent).
+soft shadows, tinted pills, single red `#CF2030` accent) and carries the
+official **BNI Indonesia National Conference 2026 — Accelerate** lockup.
+
+**Brand assets** live in [`assets/brand/`](assets/brand) (the original
+4500×4500 PNGs: stacked/horizontal × colored/white). Web-optimized,
+transparent-margin-trimmed variants are served from each app's
+`public/brand/` (`logo-horizontal.png`, `logo-horizontal-white.png`,
+`logo-stacked.png`, `logo-stacked-white.png`), and the PWA icons /
+favicons are generated from the BNI mark. Regenerate them with the
+snippet in [`assets/brand/README.md`](assets/brand/README.md) after
+dropping in new artwork.
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. The landing page is a quick-access chooser (Aplikasi Peserta / Aplikasi Tenant / Admin Dashboard) with one-tap demo logins.

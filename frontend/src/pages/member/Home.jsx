@@ -62,7 +62,7 @@ export default function Home() {
               {user?.company ? ` · ${user.company}` : ''}
             </div>
           </div>
-          <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 1, opacity: 0.9 }}>BNI</div>
+          <img className="mc-logo" src="/brand/logo-horizontal-white.png" alt="BNI Natcon 2026" />
         </div>
         <div className="mc-bottom">
           <div>

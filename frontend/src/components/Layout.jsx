@@ -9,11 +9,8 @@ function AppBar() {
   return (
     <header className="appbar">
       <div className="brand">
-        <div className="brand-logo">BNI</div>
-        <div>
-          <h1>BNI Natcon 2026</h1>
-          <p>Jakarta Convention Center</p>
-        </div>
+        <img className="brand-logo" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
+        <p className="brand-place">Jakarta Convention Center</p>
       </div>
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}

@@ -44,18 +44,25 @@ button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-.logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--red);
-  color: #fff;
-  font-weight: 800;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+/* Official Natcon 2026 lockup: stacked on the login card, horizontal in
+   the sidebar. */
+.logo-mark {
+  display: block;
+  height: 128px;
+  width: auto;
+  margin: 0 auto 4px;
+}
+.logo-mark.sb {
+  height: 30px;
+  margin: 0;
+}
+.sb-role {
+  display: block;
+  font-size: 11px;
+  color: var(--gray);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
 }
 .micro {
   font-size: 12.5px;
@@ -204,9 +211,10 @@ button:disabled {
 }
 .sb-brand {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 24px 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 20px;
   border-bottom: 1px solid var(--line);
 }
 .sb-brand b {

@@ -83,8 +83,7 @@ export default function Login() {
     return (
       <div className="login-page">
         <div className="login-card">
-          <div className="login-logo">BNI</div>
-          <h1>BNI Natcon 2026</h1>
+          <img className="login-logo" src="/brand/logo-stacked.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
           <p>Which app do you want to open?</p>
           <MockToggle />
           <div className="app-chooser">
@@ -142,9 +141,9 @@ export default function Login() {
         <button type="button" className="back-link" onClick={() => setMode(null)}>
           ← Choose another app
         </button>
-        <div className="login-logo">BNI</div>
+        <img className="login-logo small" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
         <h1>{mode === 'member' ? 'Attendee App' : 'Tenant App'}</h1>
-        <p>BNI Natcon 2026 · Jakarta Convention Center</p>
+        <p>Jakarta Convention Center</p>
 
         {error && <div className="login-error">{error}</div>}
 

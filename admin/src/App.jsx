@@ -74,8 +74,8 @@ function Login({ onLogin }) {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <div className="logo">BNI</div>
-        <h1>Natcon 2026 · Admin</h1>
+        <img className="logo-mark" src="/brand/logo-stacked.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
+        <h1>Admin Panel</h1>
         <p>Committee dashboard — monitoring, master data &amp; reports</p>
         {error && <div className="error">{error}</div>}
         <label>
@@ -112,11 +112,8 @@ function Shell({ onLogout }) {
     <div className="shell">
       <aside className="sidebar">
         <div className="sb-brand">
-          <div className="logo">BNI</div>
-          <div>
-            <b>Natcon 2026</b>
-            <small>Admin Panel</small>
-          </div>
+          <img className="logo-mark sb" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
+          <small className="sb-role">Admin Panel</small>
           {isMockMode() && <span className="demo-chip">DEMO</span>}
         </div>
         <nav className="sb-menu">
