@@ -87,10 +87,17 @@ func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request
 			"checked_in": a.CheckedIn, "checked_in_at": a.CheckedInAt,
 		})
 	}
+	speakers := make([]map[string]any, 0, len(d.Speakers))
+	for _, sp := range d.Speakers {
+		speakers = append(speakers, map[string]any{
+			"name": sp.Name, "role": sp.Role, "title": sp.Title, "photo_url": sp.PhotoURL,
+		})
+	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"seminar": map[string]any{
 			"id": d.ID, "slot": d.Slot, "room": d.Room, "title": d.Title,
-			"speaker": d.Speaker, "moderator": d.Moderator, "capacity": d.Capacity,
+			"speakers": speakers,
+			"speaker":  d.Speaker, "moderator": d.Moderator, "capacity": d.Capacity,
 			"seats_taken":    d.SeatsTaken,
 			"attended_count": d.AttendedCount,
 			"description":    d.Description, "cover_url": d.CoverURL,

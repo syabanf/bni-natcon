@@ -1,5 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
+
+// Prefer the structured speaker rows; fall back to the plain-text columns
+// for classes that were typed in before speakers became first-class.
+function speakerNames(seminar, role) {
+  return (seminar.speakers || [])
+    .filter((p) => p.role === role)
+    .map((p) => p.name)
+    .join('; ')
+}
 
 function fmtTime(iso) {
   return new Date(iso).toLocaleString('en-GB', {
@@ -212,13 +221,72 @@ export function TenantDetail({ id, onBack }) {
 
 /* ===== Breakout class detail ===== */
 
+// The committee registers walk-ups and phone-ins straight into a class.
+// Accepts a member code, email, or phone number — whatever they have to hand.
+function RegisterAttendee({ seminarId, onDone }) {
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState(null)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!value.trim()) return
+    setBusy(true)
+    setMsg(null)
+    try {
+      const res = await api.registerSeminarMember(seminarId, value.trim())
+      setMsg({
+        ok: true,
+        text: res.duplicate
+          ? `${res.member_name} was already registered for this class.`
+          : `${res.member_name} registered.`,
+      })
+      setValue('')
+      onDone()
+    } catch (err) {
+      setMsg({ ok: false, text: err.message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="register-row" onSubmit={submit}>
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Member code, email, or phone"
+        aria-label="Attendee to register"
+      />
+      <button className="md-add" type="submit" disabled={busy}>
+        {busy ? 'Registering…' : '+ Register'}
+      </button>
+      {msg && <div className={msg.ok ? 'notice' : 'error'}>{msg.text}</div>}
+    </form>
+  )
+}
+
 export function SeminarDetail({ id, onBack }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api.seminarDetail(id).then(setData).catch((e) => setError(e.message))
   }, [id])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const unregister = async (a) => {
+    if (!window.confirm(`Remove ${a.name} from this class?`)) return
+    try {
+      await api.unregisterSeminarMember(id, a.member_code)
+      load()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   if (error) return <DetailShell title="Breakout Class" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
   if (!data) return <DetailShell title="Breakout Class" sub="Loading…" onBack={onBack} />
@@ -232,8 +300,8 @@ export function SeminarDetail({ id, onBack }) {
         <InfoGrid
           items={[
             ['Room', seminar.room],
-            ['Speaker(s)', seminar.speaker],
-            ['Moderator', seminar.moderator || '—'],
+            ['Speaker(s)', speakerNames(seminar, 'speaker') || seminar.speaker],
+            ['Moderator', speakerNames(seminar, 'moderator') || seminar.moderator || '—'],
             ['Parallel slot', `#${seminar.slot}`],
             ['Capacity', `${seminar.capacity} seats`],
           ]}
@@ -257,8 +325,9 @@ export function SeminarDetail({ id, onBack }) {
           <span className="sec-no">02</span>Registered Attendees
         </h2>
         <p className="panel-sub">Attendance sheet for the door crew</p>
+        <RegisterAttendee seminarId={id} onDone={load} />
         <SimpleTable
-          columns={['Attendee', 'Member Code', 'Chapter', 'Attended', 'Registered At']}
+          columns={['Attendee', 'Member Code', 'Chapter', 'Attended', 'Registered At', '']}
           rows={attendees.map((a) => [
             <b key="n">{a.name}</b>,
             a.member_code,
@@ -269,6 +338,9 @@ export function SeminarDetail({ id, onBack }) {
               <span key="h" className="pill-hadir">Not yet</span>
             ),
             fmtTime(a.registered_at),
+            <button key="x" className="row-remove" onClick={() => unregister(a)}>
+              Remove
+            </button>,
           ])}
           emptyText="No registered attendees yet."
         />

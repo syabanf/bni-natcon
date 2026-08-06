@@ -9,11 +9,13 @@ import { mockApi } from './mock'
 export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
 const BASE = `${API_ORIGIN}/api/v1`
 
-// Uploads (seminar covers) are served by the API, not by the static host.
+// Uploaded images (seminar covers) are served by the API; everything else —
+// speaker photos, brand art — ships with the static app itself.
 export function assetUrl(path) {
   if (!path) return ''
   if (/^(https?:|data:|blob:)/.test(path)) return path
-  return API_ORIGIN + (path.startsWith('/') ? path : `/${path}`)
+  if (!path.startsWith('/uploads/')) return path
+  return API_ORIGIN + path
 }
 
 export class ApiError extends Error {
@@ -79,6 +81,8 @@ export const api = {
   me: () => (isMock() ? mockApi.me() : request('/me')),
   tenants: () => (isMock() ? mockApi.tenants() : request('/tenants')),
   seminars: () => (isMock() ? mockApi.seminars() : request('/seminars')),
+  seminarAttendees: (id) =>
+    isMock() ? mockApi.seminarAttendees(id) : request(`/seminars/${id}/attendees`),
   registerSeminar: (id) =>
     isMock() ? mockApi.registerSeminar(id) : request(`/seminars/${id}/register`, { method: 'POST' }),
   unregisterSeminar: (id) =>

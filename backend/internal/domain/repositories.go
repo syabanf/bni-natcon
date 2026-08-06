@@ -67,6 +67,11 @@ type AdminRepository interface {
 	DeleteTenant(ctx context.Context, id int64) error
 
 	CreateSeminar(ctx context.Context, s SeminarInput) (*Seminar, error)
+	// RegisterSeminarMember books an attendee (by member code, email, or
+	// phone) into a class, enforcing capacity and one class per slot.
+	RegisterSeminarMember(ctx context.Context, seminarID int64, lookup string) (*RegistrationResult, error)
+	UnregisterSeminarMember(ctx context.Context, seminarID int64, memberCode string) error
+	SeminarIDByRoom(ctx context.Context, room string) (int64, error)
 	UpdateSeminar(ctx context.Context, id int64, s SeminarInput) error
 	DeleteSeminar(ctx context.Context, id int64) error
 
@@ -130,6 +135,8 @@ type SeminarRepository interface {
 	// Unregister removes the member's registration; ErrNotFound when the
 	// member is not registered for that seminar.
 	Unregister(ctx context.Context, seminarID, memberID int64) error
+	// Attendees lists who else is in a class, for the attendee-facing view.
+	Attendees(ctx context.Context, seminarID int64) ([]SeminarAttendee, error)
 	CountRegistrationsByMember(ctx context.Context, memberID int64) (int, error)
 	CountSlots(ctx context.Context) (int, error)
 }

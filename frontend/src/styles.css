@@ -1038,29 +1038,70 @@ input {
   font-weight: 800;
   line-height: 1.35;
 }
-.seminar-body .sp-speaker {
-  font-size: 12px;
-  color: var(--gray);
-  margin-top: 4px;
+/* Speakers and moderators, with their photos. */
+.sp-people {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sp-person {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 9px;
 }
-.seminar-body .sp-people {
-  margin-top: 6px;
+.sp-photo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f1f2f4;
 }
-.seminar-body .sp-speaker.moderator {
-  color: #8b8f96;
+.sp-photo.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--gray);
+}
+.sp-person.moderator .sp-photo {
+  width: 28px;
+  height: 28px;
+  opacity: 0.85;
+}
+.sp-who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sp-who b {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.sp-person.moderator .sp-who b {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+}
+.sp-title {
+  font-size: 11px;
+  color: var(--gray);
+  line-height: 1.3;
 }
 .sp-role {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--gray);
   background: #f2f3f5;
   border-radius: 5px;
-  padding: 1px 5px;
+  padding: 2px 6px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .seminar-actions {
   margin-top: 14px;
@@ -1238,7 +1279,25 @@ input {
   text-overflow: ellipsis;
   margin-top: 1px;
 }
-/* Business classification + WhatsApp under each person at a table. */
+/* Chapter, business classification and WhatsApp under each person. */
+.net-person p.np-chapter {
+  font-size: 10.5px;
+  color: #9a9aa0;
+}
+.np-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.np-save.note {
+  color: var(--gray);
+  background: var(--chip);
+}
+.np-save.note.saved {
+  color: var(--green);
+  background: var(--green-tint);
+}
 .np-meta {
   display: flex;
   flex-wrap: wrap;
@@ -1956,4 +2015,89 @@ input {
     margin-left: 16px;
     margin-right: 16px;
   }
+}
+
+/* ----- Who else is in this breakout room ----- */
+.room-attendees {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.ra-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ra-head h5 {
+  font-size: 13px;
+  font-weight: 800;
+}
+.ra-head span {
+  font-size: 11px;
+  color: var(--gray);
+}
+.ra-empty {
+  font-size: 12px;
+  color: var(--gray);
+}
+.ra-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ra-person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ra-av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font-size: 10.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ra-who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ra-who b {
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ra-who span {
+  font-size: 11px;
+  color: var(--gray);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ra-in {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--green);
+  background: var(--green-tint);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+.ra-more {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
 }

@@ -21,13 +21,14 @@ function waLink(phone) {
   return `https://wa.me/${intl}`
 }
 
-// Business classification + WhatsApp, the two things people actually ask for
-// across a networking table.
+// Company, chapter, business classification and WhatsApp — what people
+// actually ask each other for across a networking table.
 function MateMeta({ m }) {
   const wa = m.is_me ? '' : waLink(m.phone)
   return (
     <>
-      <p>{m.company || m.chapter}</p>
+      {m.company && <p>{m.company}</p>}
+      {m.chapter && <p className="np-chapter">{m.chapter}</p>}
       {(m.classification || wa) && (
         <div className="np-meta">
           {m.classification && <span className="np-class">{m.classification}</span>}
@@ -175,16 +176,21 @@ function MateRow({ m, onSaveContact, onSaveNote }) {
         <MateMeta m={m} />
         {m.saved && m.note && !editing && <p className="np-note">📝 {m.note}</p>}
       </div>
-      {!m.is_me &&
-        (m.saved ? (
-          <button className="np-save saved" onClick={() => setEditing((v) => !v)}>
+      {!m.is_me && (
+        <div className="np-actions">
+          {!m.saved && (
+            <button className="np-save" onClick={() => onSaveContact(m)}>
+              + Save
+            </button>
+          )}
+          <button
+            className={`np-save note${m.saved ? ' saved' : ''}`}
+            onClick={() => setEditing((v) => !v)}
+          >
             {editing ? 'Close' : m.note ? 'Edit note' : '+ Note'}
           </button>
-        ) : (
-          <button className="np-save" onClick={() => onSaveContact(m)}>
-            + Save
-          </button>
-        ))}
+        </div>
+      )}
       {editing && (
         <NoteEditor
           initial={m.note}
@@ -566,6 +572,9 @@ export default function Networking() {
 
   const saveNote = async (mate, note) => {
     try {
+      // A note is only stored against a saved contact, so writing one for
+      // someone you haven't saved yet saves them first.
+      if (!mate.saved) await api.saveContact(mate.member_id)
       await api.setContactNote(mate.member_id, note)
       toast('Note saved')
       await load()

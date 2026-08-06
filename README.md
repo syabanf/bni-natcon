@@ -10,20 +10,23 @@ an **Official Sponsors** band and red-framed, ribboned sponsor cards above
 a plain Booths section, visited tenants sink to the bottom; every tenant
 card carries a description), pick one of the four parallel **breakout
 classes** (**goodiebag on door check-in**, with a **separate class entry QR**,
-full class detail with speakers + moderator and cover, and a live attendance
-badge), and join **speed networking** — **scan the table QR first** (or type
-the table number) to drop straight into the table's network, where every
-person shows their **business classification** and a **WhatsApp link**, with
-per-person **notes** and contact details carrying **email & phone** that open
-the mail/phone app on tap. Tenants
+full class detail carrying **speaker & moderator photos**, a cover, a live
+attendance badge, and **who else is in the room**), and join **speed
+networking** — **scan the table QR first** (or type the table number) to drop
+straight into the table's network, where every person shows their **chapter**,
+**business classification** and a **WhatsApp link**, takes a **private note**
+straight from the seat, and whose contact details carry **email & phone** that
+open the mail/phone app on tap. Tenants
 scan member QRs with the camera or **manual input by member ID / phone
 number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
 gives the committee live monitoring (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
-sponsor rows; breakout classes have speakers, moderator, description +
-cover),
+sponsor rows; breakout classes carry a **speaker list with uploadable
+photos**, description + cover, and the committee can **register attendees
+into a class** by member code/email/phone or **import a whole registration
+sheet**),
 **detail pages**, the **door check-in station**, a **Tables** page that
 generates the speed-networking tables, a **QR Prints** page with
 print-ready QR cards (tables, class rooms, booth signage), and a
@@ -48,9 +51,15 @@ dropping in new artwork.
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)
-and pick another class in the same slot. The four real breakout classes ship
-in the seeder; an already-seeded database can load them with
-[`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql).
+and pick another class in the same slot. The four real breakout classes and
+their speakers ship in the seeder; an already-seeded database can load them
+with [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
+which is safe to re-run — classes are only inserted when missing, and speaker
+rows are always refreshed (that is how you push updated photos).
+
+Speaker photos live in [`assets/speakers/`](assets/speakers) and are served
+from each app's `public/speakers/`; photos uploaded through the admin speaker
+editor go to the API's `UPLOAD_DIR` like cover images.
 
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a
@@ -112,7 +121,7 @@ Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 124-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 137-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -225,6 +234,7 @@ All with password `natcon2026`:
 | GET `/me`                      | any    | profile + member stats                   |
 | GET `/tenants`                 | member | tenants with `visited` flag              |
 | GET `/seminars`                | member | seminars with seats left + `registered`  |
+| GET `/seminars/{id}/attendees` | member | who else is in the room (names, chapters) |
 | POST `/seminars/{id}/register` | member | register (409 when full/already picked)  |
 | POST `/scans`                  | tenant | record visit — `member_code` accepts a member code **or phone number** |
 | GET `/booth`                   | tenant | booth profile                            |
@@ -245,6 +255,9 @@ All with password `natcon2026`:
 | POST `/admin/tenants`, PUT/DELETE `/admin/tenants/{id}`       | admin | tenant CRUD (auto booth login)          |
 | POST `/admin/seminars`, PUT/DELETE `/admin/seminars/{id}`     | admin | seminar CRUD                            |
 | POST `/admin/seminars/{id}/checkin` | admin | door check-in by `member_code` (409 if not registered; duplicate flagged, not double-counted) |
+| POST `/admin/seminars/{id}/registrations` | admin | register an attendee by member code, email, or phone |
+| DELETE `/admin/seminars/{id}/registrations/{code}` | admin | drop a registration (and its attendance) |
+| POST `/admin/seminars/registrations/bulk` | admin | import a registration sheet (attendee + room per row) |
 | POST `/admin/uploads` | admin | multipart image upload (JPG/PNG/WEBP/GIF ≤5 MB) → stored locally in `UPLOAD_DIR`, served at GET `/uploads/{name}` — used for seminar covers |
 | GET `/metrics`                 | public | Prometheus metrics (request count + latency histograms) |
 

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -250,7 +251,34 @@ func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*
 	if err != nil {
 		return nil, err
 	}
+	if err := replaceSpeakers(ctx, r.pool, sem.ID, s.Speakers); err != nil {
+		return nil, err
+	}
+	sem.Speakers = s.Speakers
 	return &sem, nil
+}
+
+// replaceSpeakers swaps the whole speaker list for one class — the admin form
+// posts the list as a unit, so there is nothing to diff.
+func replaceSpeakers(ctx context.Context, q interface {
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+}, seminarID int64, speakers []domain.SeminarSpeaker) error {
+	if _, err := q.Exec(ctx, `DELETE FROM seminar_speakers WHERE seminar_id = $1`, seminarID); err != nil {
+		return err
+	}
+	for i, sp := range speakers {
+		role := sp.Role
+		if role != domain.SpeakerRoleModerator {
+			role = domain.SpeakerRoleSpeaker
+		}
+		if _, err := q.Exec(ctx, `
+			INSERT INTO seminar_speakers (seminar_id, name, role, title, photo_url, sort)
+			VALUES ($1, $2, $3, $4, $5, $6)`,
+			seminarID, sp.Name, role, sp.Title, sp.PhotoURL, i); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.SeminarInput) error {
@@ -265,7 +293,7 @@ func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.Semina
 	if tag.RowsAffected() == 0 {
 		return domain.ErrNotFound
 	}
-	return nil
+	return replaceSpeakers(ctx, r.pool, id, s.Speakers)
 }
 
 func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {
@@ -556,4 +584,154 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 		return nil, err
 	}
 	return &domain.TenantUpsertResult{Tenant: &tenant, Created: created}, nil
+}
+
+/* ----- Class registrations made by the committee ----- */
+
+// resolveMember finds an attendee by member code, email, or phone — whichever
+// the committee happened to type or the import sheet happened to carry.
+func (r *AdminRepo) resolveMember(ctx context.Context, lookup string) (int64, string, string, string, error) {
+	lookup = strings.TrimSpace(lookup)
+	if lookup == "" {
+		return 0, "", "", "", domain.ErrInvalidInput
+	}
+	var id int64
+	var name, code, chapter string
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, name, COALESCE(member_code, ''), chapter
+		FROM users
+		WHERE role = 'member'
+		  AND (member_code = $1 OR lower(email) = lower($1) OR (phone <> '' AND phone = $1))
+		LIMIT 1`, lookup).Scan(&id, &name, &code, &chapter)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, "", "", "", domain.ErrNotFound
+		}
+		return 0, "", "", "", err
+	}
+	return id, name, code, chapter, nil
+}
+
+// RegisterSeminarMember books an attendee into a class on the committee's
+// behalf. Capacity and the one-class-per-slot rule are enforced exactly as
+// they are for self-service registration.
+func (r *AdminRepo) RegisterSeminarMember(ctx context.Context, seminarID int64, lookup string) (*domain.RegistrationResult, error) {
+	memberID, name, code, chapter, err := r.resolveMember(ctx, lookup)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var slot, capacity int
+	err = tx.QueryRow(ctx,
+		`SELECT slot, capacity FROM seminars WHERE id = $1 FOR UPDATE`, seminarID).
+		Scan(&slot, &capacity)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+
+	// Already in this very class: report it rather than failing the import.
+	var alreadyHere bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM seminar_registrations
+			WHERE seminar_id = $1 AND member_id = $2
+		)`, seminarID, memberID).Scan(&alreadyHere); err != nil {
+		return nil, err
+	}
+	if alreadyHere {
+		if err := tx.Commit(ctx); err != nil {
+			return nil, err
+		}
+		return &domain.RegistrationResult{
+			MemberName: name, MemberCode: code, MemberChapter: chapter, Duplicate: true,
+		}, nil
+	}
+
+	var otherInSlot bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM seminar_registrations sr
+			JOIN seminars s ON s.id = sr.seminar_id
+			WHERE sr.member_id = $1 AND s.slot = $2
+		)`, memberID, slot).Scan(&otherInSlot); err != nil {
+		return nil, err
+	}
+	if otherInSlot {
+		return nil, domain.ErrAlreadyRegistered
+	}
+
+	var taken int
+	if err := tx.QueryRow(ctx,
+		`SELECT COUNT(*) FROM seminar_registrations WHERE seminar_id = $1`, seminarID).Scan(&taken); err != nil {
+		return nil, err
+	}
+	if taken >= capacity {
+		return nil, domain.ErrSeminarFull
+	}
+
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO seminar_registrations (seminar_id, member_id) VALUES ($1, $2)`,
+		seminarID, memberID); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return &domain.RegistrationResult{
+		MemberName: name, MemberCode: code, MemberChapter: chapter,
+	}, nil
+}
+
+// UnregisterSeminarMember drops a registration (and any attendance recorded
+// against it) by member code.
+func (r *AdminRepo) UnregisterSeminarMember(ctx context.Context, seminarID int64, memberCode string) error {
+	memberCode = strings.TrimSpace(memberCode)
+	if memberCode == "" {
+		return domain.ErrInvalidInput
+	}
+	tag, err := r.pool.Exec(ctx, `
+		DELETE FROM seminar_registrations
+		WHERE seminar_id = $1
+		  AND member_id = (SELECT id FROM users WHERE member_code = $2)`, seminarID, memberCode)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	_, err = r.pool.Exec(ctx, `
+		DELETE FROM seminar_attendance
+		WHERE seminar_id = $1
+		  AND member_id = (SELECT id FROM users WHERE member_code = $2)`, seminarID, memberCode)
+	return err
+}
+
+// SeminarIDByRoom resolves an import row's class by room name, falling back to
+// the class title — both case-insensitive.
+func (r *AdminRepo) SeminarIDByRoom(ctx context.Context, room string) (int64, error) {
+	room = strings.TrimSpace(room)
+	if room == "" {
+		return 0, domain.ErrInvalidInput
+	}
+	var id int64
+	err := r.pool.QueryRow(ctx, `
+		SELECT id FROM seminars
+		WHERE lower(room) = lower($1) OR lower(title) = lower($1)
+		ORDER BY id LIMIT 1`, room).Scan(&id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, domain.ErrNotFound
+		}
+		return 0, err
+	}
+	return id, nil
 }

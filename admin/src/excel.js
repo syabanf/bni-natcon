@@ -111,6 +111,44 @@ export const TENANT_IMPORT_ALIASES = {
 }
 
 // Column order + example rows for the downloadable import templates.
+// Turn parsed sheet rows into class-registration rows. The attendee can be
+// named by member code, email, or phone; the class by room or by title.
+export function transformRegistrationRows(parsed) {
+  const rows = []
+  let skippedDuplicates = 0
+  const seen = new Set()
+  for (const r of parsed) {
+    const member = (r.member || r.email || r.member_code || '').toString().trim()
+    const room = (r.room || '').toString().trim()
+    if (!member || !room) continue
+    const key = `${member.toLowerCase()}|${room.toLowerCase()}`
+    if (seen.has(key)) {
+      skippedDuplicates++
+      continue
+    }
+    seen.add(key)
+    rows.push({ member, room })
+  }
+  return { rows, skippedDuplicates }
+}
+
+export const REGISTRATION_IMPORT_ALIASES = {
+  member: ['member', 'attendee', 'peserta'],
+  email: ['email', 'e-mail'],
+  member_code: ['member code', 'member_code', 'kode peserta', 'id'],
+  room: ['room', 'ruangan', 'class', 'kelas', 'breakout room', 'breakout class'],
+}
+
+export const REGISTRATION_TEMPLATE = {
+  columns: ['Email', 'Member Code', 'Room'],
+  examples: [
+    { Email: 'reddie@natcon.id', 'Member Code': '', Room: 'Breakout Room 1' },
+    { Email: '', 'Member Code': 'NATCON-2026-08201', Room: 'Breakout Room 3' },
+  ],
+  fileName: 'natcon2026-template-import-class-registrations.xlsx',
+  sheetName: 'Registrations',
+}
+
 export const MEMBER_TEMPLATE = {
   columns: ['Name', 'Email', 'Chapter', 'Company', 'Phone', 'Business Classification'],
   examples: [

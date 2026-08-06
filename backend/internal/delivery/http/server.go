@@ -107,6 +107,7 @@ func (s *Server) Router() http.Handler {
 				r.Use(requireRole(domain.RoleMember))
 				r.Get("/tenants", s.handleListTenants)
 				r.Get("/seminars", s.handleListSeminars)
+				r.Get("/seminars/{id}/attendees", s.handleSeminarAttendees)
 				r.Post("/seminars/{id}/register", s.handleRegisterSeminar)
 				r.Delete("/seminars/{id}/register", s.handleUnregisterSeminar)
 				r.Get("/networking", s.handleNetworkingStatus)
@@ -149,6 +150,9 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/admin/tenants/{id}", s.handleAdminDeleteTenant)
 
 				r.Post("/admin/seminars/{id}/checkin", s.handleAdminSeminarCheckin)
+				r.Post("/admin/seminars/{id}/registrations", s.handleAdminRegisterSeminarMember)
+				r.Delete("/admin/seminars/{id}/registrations/{code}", s.handleAdminUnregisterSeminarMember)
+				r.Post("/admin/seminars/registrations/bulk", s.handleAdminBulkRegistrations)
 				r.Post("/admin/seminars", s.handleAdminCreateSeminar)
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)

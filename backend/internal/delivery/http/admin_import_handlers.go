@@ -131,3 +131,31 @@ func (s *Server) handleAdminRegistrationReport(w http.ResponseWriter, r *http.Re
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"registrations": out})
 }
+
+func (s *Server) handleAdminBulkRegistrations(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Registrations []struct {
+			Member string `json:"member"`
+			Room   string `json:"room"`
+		} `json:"registrations"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Registrations) == 0 {
+		respondError(w, http.StatusBadRequest, "registration list is empty — check the import file")
+		return
+	}
+	if len(req.Registrations) > maxImportRows {
+		respondError(w, http.StatusBadRequest, "too many rows — maximum 1000 per import")
+		return
+	}
+	rows := make([]usecase.RegistrationImportRow, 0, len(req.Registrations))
+	for _, x := range req.Registrations {
+		rows = append(rows, usecase.RegistrationImportRow{Lookup: x.Member, Room: x.Room})
+	}
+	created, updated, errs := s.admin.BulkRegisterSeminar(r.Context(), rows)
+	respondJSON(w, http.StatusOK, map[string]any{
+		"created": created,
+		"updated": updated,
+		"failed":  len(errs),
+		"errors":  bulkErrorsDTO(errs),
+	})
+}

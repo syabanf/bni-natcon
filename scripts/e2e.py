@@ -181,7 +181,23 @@ check("all classes share one parallel slot",
 check("classes carry speakers and at least one moderator",
       all(s["speaker"] for s in body["seminars"])
       and any(s.get("moderator") for s in body["seminars"]))
+# Speakers are rows now, each with a photo the app serves from its own
+# public/ folder — that is what the class card renders.
+people = body["seminars"][0].get("speakers") or []
+# The admin list has to round-trip everything the edit form shows, or saving
+# a class would blank its description, cover and speakers.
+status, adminlist, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
+check("admin class list round-trips description + speakers",
+      status == 200
+      and all(s["description"] for s in adminlist["seminars"])
+      and any(s.get("speakers") for s in adminlist["seminars"]))
+
+check("class carries speaker rows with photos",
+      len(people) >= 2
+      and all(p["name"] and p["photo_url"].startswith("/speakers/") for p in people)
+      and any(p["role"] == "moderator" for p in people))
 sem1, sem2 = body["seminars"][0]["id"], body["seminars"][1]["id"]
+sem3, sem4 = body["seminars"][2]["id"], body["seminars"][3]["id"]
 
 status, _, _ = req("POST", f"/api/v1/seminars/{sem1}/register", token=member_tok)
 check("register seminar 1 -> 201", status == 201)
@@ -522,6 +538,50 @@ check("seminar detail shows attendance",
 status, body, _ = req("GET", "/api/v1/admin/report/registrations", token=admin_tok)
 check("registration report carries attended flag",
       any(r.get("attended") for r in body["registrations"]))
+
+# ---- committee-side class registration + import
+section("Class registration by the committee")
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{sem3}/registrations", token=admin_tok,
+                      body={"member": "sinta@natcon.id"})
+check("register an attendee by email -> 201",
+      status == 201 and body["duplicate"] is False and body["member_name"] == "Sinta Dewi")
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{sem3}/registrations", token=admin_tok,
+                      body={"member": "sinta@natcon.id"})
+check("registering twice reports duplicate, not an error",
+      status == 201 and body["duplicate"] is True)
+status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem4}/registrations", token=admin_tok,
+                   body={"member": "sinta@natcon.id"})
+check("second class in the same slot -> 409", status == 409)
+status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem3}/registrations", token=admin_tok,
+                   body={"member": "nobody@example.com"})
+check("unknown attendee -> 404", status == 404)
+
+status, body, _ = req("POST", "/api/v1/admin/seminars/registrations/bulk", token=admin_tok,
+                      body={"registrations": [
+                          {"member": "agus@natcon.id", "room": "Breakout Room 3"},
+                          {"member": "sinta@natcon.id", "room": "Breakout Room 3"},
+                          {"member": "agus@natcon.id", "room": "No Such Room"},
+                      ]})
+check("bulk registration: 1 created, 1 already there, 1 unknown room",
+      status == 200 and body["created"] == 1 and body["updated"] == 1 and body["failed"] == 1)
+
+# Attendees can see who else is in the room — names and chapters only.
+status, body, _ = req("GET", f"/api/v1/seminars/{sem3}/attendees", token=member_tok)
+check("attendee sees who else is in the room",
+      status == 200 and len(body["attendees"]) == 2
+      and all(a["name"] and "phone" not in a and "email" not in a for a in body["attendees"]))
+status, _, _ = req("GET", "/api/v1/seminars/999999/attendees", token=member_tok)
+check("unknown class attendees -> 404", status == 404)
+
+status, body, _ = req("GET", f"/api/v1/admin/seminars/{sem3}", token=admin_tok)
+codes = [a["member_code"] for a in body["attendees"]]
+check("class detail lists both registered attendees", len(codes) == 2)
+status, _, _ = req("DELETE", f"/api/v1/admin/seminars/{sem3}/registrations/{codes[0]}", token=admin_tok)
+check("unregister an attendee -> 200", status == 200)
+status, body, _ = req("GET", f"/api/v1/admin/seminars/{sem3}", token=admin_tok)
+check("class detail drops the removed attendee", len(body["attendees"]) == 1)
+status, _, _ = req("DELETE", f"/api/v1/admin/seminars/{sem3}/registrations/{codes[0]}", token=admin_tok)
+check("unregistering again -> 404", status == 404)
 
 # ---- pagination & search
 status, body, _ = req("GET", "/api/v1/admin/members?limit=2&page=1", token=admin_tok)

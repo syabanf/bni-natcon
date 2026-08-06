@@ -27,27 +27,96 @@ function SeminarCover({ seminar, tall }) {
   )
 }
 
-// A class can have more than one speaker (stored comma- or semicolon-separated)
-// plus an optional moderator.
-function SpeakerLines({ seminar }) {
-  const speakers = (seminar.speaker || '')
+function initials(name = '') {
+  return name
+    .replace(/,.*$/, '')
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+// Classes carry a speaker list with photos. Older records (or a class typed in
+// by hand) only have the plain-text speaker/moderator fields, so fall back to
+// splitting those on semicolons.
+function peopleOf(seminar) {
+  if (seminar.speakers?.length) return seminar.speakers
+  const out = (seminar.speaker || '')
     .split(';')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (!speakers.length && !seminar.moderator) return null
+    .map((name) => ({ name: name.trim(), role: 'speaker' }))
+    .filter((p) => p.name)
+  if (seminar.moderator) out.push({ name: seminar.moderator, role: 'moderator' })
+  return out
+}
+
+function SpeakerLines({ seminar }) {
+  const people = peopleOf(seminar)
+  if (!people.length) return null
   return (
     <div className="sp-people">
-      {speakers.map((name) => (
-        <div className="sp-speaker" key={name}>
-          <Icon name="mic" size={13} />
-          {name}
+      {people.map((p) => (
+        <div className={`sp-person${p.role === 'moderator' ? ' moderator' : ''}`} key={p.name}>
+          {p.photo_url ? (
+            <img className="sp-photo" src={assetUrl(p.photo_url)} alt="" loading="lazy" />
+          ) : (
+            <span className="sp-photo fallback">{initials(p.name)}</span>
+          )}
+          <div className="sp-who">
+            <b>{p.name}</b>
+            {p.title && <span className="sp-title">{p.title}</span>}
+          </div>
+          {p.role === 'moderator' && <span className="sp-role">moderator</span>}
         </div>
       ))}
-      {seminar.moderator && (
-        <div className="sp-speaker moderator">
-          <Icon name="user" size={13} />
-          {seminar.moderator} <span className="sp-role">moderator</span>
-        </div>
+    </div>
+  )
+}
+
+// Who else is in the room — names and chapters only, so people can spot who
+// they want to find. Contact details stay behind speed networking.
+function RoomAttendees({ seminarId }) {
+  const [people, setPeople] = useState(null)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    api
+      .seminarAttendees(seminarId)
+      .then((d) => setPeople(d.attendees || []))
+      .catch(() => setPeople([]))
+  }, [seminarId])
+
+  if (people === null) return null
+  const shown = open ? people : people.slice(0, 6)
+
+  return (
+    <div className="room-attendees">
+      <div className="ra-head">
+        <h5>In this room</h5>
+        <span>{people.length} registered</span>
+      </div>
+      {people.length === 0 ? (
+        <p className="ra-empty">Nobody has registered yet — be the first.</p>
+      ) : (
+        <>
+          <div className="ra-list">
+            {shown.map((p) => (
+              <div className="ra-person" key={`${p.name}-${p.chapter}`}>
+                <span className="ra-av">{initials(p.name)}</span>
+                <div className="ra-who">
+                  <b>{p.name}</b>
+                  <span>{p.company ? `${p.company} · ${p.chapter}` : p.chapter}</span>
+                </div>
+                {p.checked_in && <span className="ra-in">In the room</span>}
+              </div>
+            ))}
+          </div>
+          {people.length > 6 && (
+            <button type="button" className="ra-more" onClick={() => setOpen((v) => !v)}>
+              {open ? 'Show less' : `Show all ${people.length}`}
+            </button>
+          )}
+        </>
       )}
     </div>
   )
@@ -118,6 +187,8 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
               </button>
             )}
           </div>
+
+          <RoomAttendees seminarId={seminar.id} />
         </div>
       </div>
       <div style={{ height: 24 }} />

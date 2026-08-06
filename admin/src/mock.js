@@ -458,7 +458,7 @@ export const mockAdminApi = {
     const row = {
       id: s.nextId++, slot: Number(body.slot) || 1, room: body.room.trim(),
       title: body.title.trim(), speaker: body.speaker || '', moderator: body.moderator || '',
-      capacity: Number(body.capacity),
+      capacity: Number(body.capacity), speakers: body.speakers || [],
       description: body.description || '', cover_url: body.cover_url || '',
     }
     s.seminars.push(row)
@@ -475,7 +475,7 @@ export const mockAdminApi = {
     Object.assign(sem, {
       slot: Number(body.slot) || 1, room: body.room.trim(), title: body.title.trim(),
       speaker: body.speaker || '', moderator: body.moderator ?? sem.moderator ?? '',
-      capacity: Number(body.capacity),
+      capacity: Number(body.capacity), speakers: body.speakers ?? sem.speakers ?? [],
       description: body.description ?? sem.description ?? '', cover_url: body.cover_url ?? sem.cover_url ?? '',
     })
     save(s)
@@ -517,6 +517,106 @@ export const mockAdminApi = {
       },
       attendees,
     })
+  },
+
+  /* ----- Class registrations made by the committee ----- */
+
+  registerSeminarMember(id, lookup) {
+    const s = load()
+    const sem = s.seminars.find((x) => x.id === Number(id))
+    if (!sem) return fail(404, 'data not found')
+    const needle = String(lookup || '').trim().toLowerCase()
+    const m = s.members.find(
+      (x) =>
+        x.member_code?.toLowerCase() === needle ||
+        x.email?.toLowerCase() === needle ||
+        (x.phone && x.phone === String(lookup).trim())
+    )
+    if (!m) return fail(404, 'data not found')
+
+    const already = s.registrations.some((r) => r.seminar_id === sem.id && r.member_id === m.id)
+    if (already) {
+      return delay({
+        member_name: m.name, member_code: m.member_code, member_chapter: m.chapter,
+        duplicate: true,
+      })
+    }
+    const otherInSlot = s.registrations.some((r) => {
+      const other = s.seminars.find((x) => x.id === r.seminar_id)
+      return other?.slot === sem.slot && r.member_id === m.id
+    })
+    if (otherInSlot) {
+      return fail(409, 'you are already registered for another seminar in this slot')
+    }
+    const taken = s.registrations.filter((r) => r.seminar_id === sem.id).length
+    if (taken >= sem.capacity) return fail(409, 'this seminar is fully booked — please pick another session')
+
+    s.registrations.push({ seminar_id: sem.id, member_id: m.id, at: new Date().toISOString() })
+    save(s)
+    return delay({
+      member_name: m.name, member_code: m.member_code, member_chapter: m.chapter,
+      duplicate: false,
+    })
+  },
+
+  unregisterSeminarMember(id, memberCode) {
+    const s = load()
+    const m = s.members.find((x) => x.member_code === memberCode)
+    if (!m) return fail(404, 'data not found')
+    const before = s.registrations.length
+    s.registrations = s.registrations.filter(
+      (r) => !(r.seminar_id === Number(id) && r.member_id === m.id)
+    )
+    if (s.registrations.length === before) return fail(404, 'data not found')
+    s.attendance = s.attendance.filter(
+      (a) => !(a.seminar_id === Number(id) && a.member_id === m.id)
+    )
+    save(s)
+    return delay({ status: 'unregistered' })
+  },
+
+  bulkRegistrations(rows) {
+    const s = load()
+    let created = 0
+    let updated = 0
+    const errors = []
+    rows.forEach((row, i) => {
+      const room = String(row.room || '').trim().toLowerCase()
+      const sem = s.seminars.find(
+        (x) => x.room.toLowerCase() === room || x.title.toLowerCase() === room
+      )
+      if (!sem) {
+        errors.push({ row: i + 1, label: row.member, error: `no breakout class matches ${row.room}` })
+        return
+      }
+      const needle = String(row.member || '').trim().toLowerCase()
+      const m = s.members.find(
+        (x) => x.member_code?.toLowerCase() === needle || x.email?.toLowerCase() === needle
+      )
+      if (!m) {
+        errors.push({ row: i + 1, label: row.member, error: 'data not found' })
+        return
+      }
+      if (s.registrations.some((r) => r.seminar_id === sem.id && r.member_id === m.id)) {
+        updated++
+        return
+      }
+      const otherInSlot = s.registrations.some((r) => {
+        const other = s.seminars.find((x) => x.id === r.seminar_id)
+        return other?.slot === sem.slot && r.member_id === m.id
+      })
+      if (otherInSlot) {
+        errors.push({
+          row: i + 1, label: row.member,
+          error: 'you are already registered for another seminar in this slot',
+        })
+        return
+      }
+      s.registrations.push({ seminar_id: sem.id, member_id: m.id, at: new Date().toISOString() })
+      created++
+    })
+    save(s)
+    return delay({ created, updated, failed: errors.length, errors })
   },
 
   /* ----- Bulk import ----- */

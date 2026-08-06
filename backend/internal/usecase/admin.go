@@ -459,3 +459,69 @@ func validateSeminar(s *domain.SeminarInput) error {
 	}
 	return nil
 }
+
+/* ----- Class registrations made by the committee ----- */
+
+func (u *AdminUsecase) RegisterSeminarMember(ctx context.Context, seminarID int64, lookup string) (*domain.RegistrationResult, error) {
+	lookup = strings.TrimSpace(lookup)
+	if lookup == "" {
+		return nil, invalid("member code, email, or phone is required")
+	}
+	return u.admin.RegisterSeminarMember(ctx, seminarID, lookup)
+}
+
+func (u *AdminUsecase) UnregisterSeminarMember(ctx context.Context, seminarID int64, memberCode string) error {
+	memberCode = strings.TrimSpace(memberCode)
+	if memberCode == "" {
+		return invalid("member code is required")
+	}
+	return u.admin.UnregisterSeminarMember(ctx, seminarID, memberCode)
+}
+
+// RegistrationImportRow is one line of the class-registration import: who,
+// and which class. Room accepts the room name or the class title.
+type RegistrationImportRow struct {
+	Lookup string
+	Room   string
+}
+
+// BulkRegisterSeminar books a whole sheet of attendees. Rows that name an
+// unknown class or attendee, or that would break the one-class-per-slot rule,
+// are reported individually so the rest of the file still lands. An attendee
+// already in the class they were listed for counts as updated, not failed.
+func (u *AdminUsecase) BulkRegisterSeminar(ctx context.Context, rows []RegistrationImportRow) (created, updated int, errs []domain.BulkRowError) {
+	rooms := map[string]int64{}
+	for i, row := range rows {
+		lookup := strings.TrimSpace(row.Lookup)
+		room := strings.TrimSpace(row.Room)
+		if lookup == "" || room == "" {
+			errs = append(errs, domain.BulkRowError{
+				Row: i + 1, Label: lookup, Err: "attendee and room are required",
+			})
+			continue
+		}
+		seminarID, ok := rooms[strings.ToLower(room)]
+		if !ok {
+			id, err := u.admin.SeminarIDByRoom(ctx, room)
+			if err != nil {
+				errs = append(errs, domain.BulkRowError{
+					Row: i + 1, Label: lookup, Err: "no breakout class matches " + room,
+				})
+				continue
+			}
+			rooms[strings.ToLower(room)] = id
+			seminarID = id
+		}
+		res, err := u.admin.RegisterSeminarMember(ctx, seminarID, lookup)
+		if err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: lookup, Err: err.Error()})
+			continue
+		}
+		if res.Duplicate {
+			updated++
+		} else {
+			created++
+		}
+	}
+	return created, updated, errs
+}

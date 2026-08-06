@@ -958,6 +958,11 @@ button:disabled {
   border-radius: 20px;
   box-shadow: var(--shadow);
   animation: rise 0.18s ease;
+  /* Long forms (a class with several speakers) scroll inside the card
+     instead of running off the bottom of the screen. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 8vh - 48px);
 }
 .modal.wide {
   max-width: 720px;
@@ -997,8 +1002,12 @@ button:disabled {
 .modal-x:hover {
   color: var(--ink);
 }
+.modal-head {
+  flex-shrink: 0;
+}
 .modal-body {
   padding: 18px 26px 26px;
+  overflow-y: auto;
 }
 .modal-form {
   display: flex;
@@ -1950,4 +1959,88 @@ button:disabled {
   .door-manual .md-add {
     flex: 1;
   }
+}
+
+/* ----- Speaker editor (breakout class modal) ----- */
+.speaker-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.speaker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sr-photo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px dashed #d6d6da;
+  background: #fafafb;
+  color: #a9a9b0;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: 0;
+}
+.sr-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sr-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sr-fields input,
+.speaker-row select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.speaker-row select {
+  flex-shrink: 0;
+}
+
+/* ----- Register an attendee into a class ----- */
+.register-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.register-row input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.register-row .notice,
+.register-row .error {
+  flex-basis: 100%;
+  margin: 0;
+}
+.row-remove {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-tint);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
 }

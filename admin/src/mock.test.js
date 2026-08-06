@@ -252,3 +252,65 @@ describe('breakout classes', () => {
     expect(row.moderator).toBe('Another Mod')
   })
 })
+
+describe('class registrations made by the committee', () => {
+  it('registers by email, blocks a second class in the same slot, and unregisters', async () => {
+    // Own slot, so the seeded demo registrations cannot interfere.
+    const a = (await mockAdminApi.createSeminar({ slot: 91, room: 'Reg Room A', title: 'Reg A', capacity: 10 })).seminar
+    const b = (await mockAdminApi.createSeminar({ slot: 91, room: 'Reg Room B', title: 'Reg B', capacity: 10 })).seminar
+
+    const res = await mockAdminApi.registerSeminarMember(a.id, 'reddie@natcon.id')
+    expect(res.duplicate).toBe(false)
+    expect(res.member_name).toBe('Reddie Wijaya')
+
+    // Same class twice is a duplicate, not a failure.
+    const again = await mockAdminApi.registerSeminarMember(a.id, 'reddie@natcon.id')
+    expect(again.duplicate).toBe(true)
+
+    // A different class in the same parallel slot is refused.
+    await expect(
+      mockAdminApi.registerSeminarMember(b.id, 'reddie@natcon.id')
+    ).rejects.toMatchObject({ status: 409 })
+
+    const detail = await mockAdminApi.seminarDetail(a.id)
+    const row = detail.attendees.find((x) => x.name === 'Reddie Wijaya')
+    expect(row).toBeTruthy()
+
+    await mockAdminApi.unregisterSeminarMember(a.id, row.member_code)
+    const after = await mockAdminApi.seminarDetail(a.id)
+    expect(after.attendees).toHaveLength(0)
+  })
+
+  it('imports a sheet, reporting unknown rooms per row', async () => {
+    const c = (await mockAdminApi.createSeminar({ slot: 92, room: 'Import Room', title: 'Imp', capacity: 10 })).seminar
+    const res = await mockAdminApi.bulkRegistrations([
+      { member: 'sinta@natcon.id', room: 'Import Room' },
+      { member: 'agus@natcon.id', room: 'Nonexistent Room' },
+    ])
+    expect(res.created).toBe(1)
+    expect(res.failed).toBe(1)
+    expect(res.errors[0].error).toContain('no breakout class matches')
+
+    // Re-importing the same person counts as updated, not created.
+    const twice = await mockAdminApi.bulkRegistrations([{ member: 'sinta@natcon.id', room: 'Import Room' }])
+    expect(twice.created).toBe(0)
+    expect(twice.updated).toBe(1)
+    expect((await mockAdminApi.seminarDetail(c.id)).attendees).toHaveLength(1)
+  })
+})
+
+describe('breakout class speakers', () => {
+  it('stores the speaker list with photos', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 93, room: 'Speaker Room', title: 'With People', capacity: 10,
+      speakers: [
+        { name: 'A Speaker', role: 'speaker', title: 'CEO', photo_url: '/speakers/a.jpg' },
+        { name: 'B Mod', role: 'moderator', title: '', photo_url: '' },
+      ],
+    })
+    const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
+    expect(row.speakers).toHaveLength(2)
+    expect(row.speakers[0]).toMatchObject({ name: 'A Speaker', photo_url: '/speakers/a.jpg' })
+    expect(row.speakers[1].role).toBe('moderator')
+  })
+})

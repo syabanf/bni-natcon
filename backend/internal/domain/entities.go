@@ -67,6 +67,21 @@ type Visitor struct {
 	VisitedAt  time.Time
 }
 
+// SeminarSpeaker is one person on stage for a breakout class.
+const (
+	SpeakerRoleSpeaker   = "speaker"
+	SpeakerRoleModerator = "moderator"
+)
+
+type SeminarSpeaker struct {
+	ID       int64
+	Name     string
+	Role     string // "speaker" | "moderator"
+	Title    string
+	PhotoURL string
+	Sort     int
+}
+
 type Seminar struct {
 	ID          int64
 	Slot        int
@@ -77,6 +92,7 @@ type Seminar struct {
 	Capacity    int
 	Description string
 	CoverURL    string
+	Speakers    []SeminarSpeaker
 }
 
 // SeminarWithStatus is a seminar plus registration info for a given member.
@@ -231,6 +247,7 @@ type SeminarInput struct {
 	Capacity    int
 	Description string
 	CoverURL    string
+	Speakers    []SeminarSpeaker
 }
 
 // BulkRowError reports why one row of a bulk import failed.
@@ -307,6 +324,16 @@ type SeminarDetail struct {
 	SeatsTaken    int
 	AttendedCount int
 	Attendees     []SeminarAttendee
+}
+
+// RegistrationResult is what the committee sees after booking an attendee
+// into a breakout class from the admin panel. Duplicate means they were
+// already in that same class, which is fine — not an error.
+type RegistrationResult struct {
+	MemberName    string
+	MemberCode    string
+	MemberChapter string
+	Duplicate     bool
 }
 
 // CheckinResult is what the door committee sees after scanning a member QR.

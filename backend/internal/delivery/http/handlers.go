@@ -117,6 +117,12 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 		respondDomainError(w, err)
 		return
 	}
+	type speakerDTO struct {
+		Name     string `json:"name"`
+		Role     string `json:"role"`
+		Title    string `json:"title"`
+		PhotoURL string `json:"photo_url"`
+	}
 	type seminarDTO struct {
 		ID          int64  `json:"id"`
 		Slot        int    `json:"slot"`
@@ -130,14 +136,23 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 		Attended    bool   `json:"attended"`
 		Description string `json:"description"`
 		CoverURL    string `json:"cover_url"`
+
+		Speakers []speakerDTO `json:"speakers"`
 	}
 	out := make([]seminarDTO, 0, len(seminars))
 	for _, sem := range seminars {
+		people := make([]speakerDTO, 0, len(sem.Speakers))
+		for _, sp := range sem.Speakers {
+			people = append(people, speakerDTO{
+				Name: sp.Name, Role: sp.Role, Title: sp.Title, PhotoURL: sp.PhotoURL,
+			})
+		}
 		out = append(out, seminarDTO{
 			ID: sem.ID, Slot: sem.Slot, Room: sem.Room, Title: sem.Title,
 			Speaker: sem.Speaker, Moderator: sem.Moderator, Capacity: sem.Capacity,
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
 			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
+			Speakers: people,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"seminars": out})
@@ -278,4 +293,29 @@ func (s *Server) handleVisitorNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"status": "saved"})
+}
+
+// handleSeminarAttendees answers "who else is in this room". Names, chapters
+// and companies only — no contact details.
+func (s *Server) handleSeminarAttendees(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "unknown class")
+		return
+	}
+	people, err := s.seminar.Attendees(r.Context(), id)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	out := make([]map[string]any, 0, len(people))
+	for _, a := range people {
+		out = append(out, map[string]any{
+			"name":       a.Name,
+			"chapter":    a.Chapter,
+			"company":    a.Company,
+			"checked_in": a.CheckedIn,
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"attendees": out})
 }

@@ -39,6 +39,46 @@ func (r *SeminarRepo) ListWithStatus(ctx context.Context, memberID int64) ([]dom
 		}
 		out = append(out, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// One extra query for every class rather than one per class.
+	byID, err := loadSpeakers(ctx, r.pool, nil)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].Speakers = byID[out[i].ID]
+	}
+	return out, nil
+}
+
+// loadSpeakers returns the speaker rows grouped by seminar. A nil id list
+// loads every class; otherwise only the ones asked for.
+func loadSpeakers(ctx context.Context, pool *pgxpool.Pool, ids []int64) (map[int64][]domain.SeminarSpeaker, error) {
+	query := `SELECT seminar_id, id, name, role, title, photo_url, sort
+	          FROM seminar_speakers`
+	args := []any{}
+	if ids != nil {
+		query += ` WHERE seminar_id = ANY($1)`
+		args = append(args, ids)
+	}
+	query += ` ORDER BY seminar_id, sort, id`
+	rows, err := pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[int64][]domain.SeminarSpeaker{}
+	for rows.Next() {
+		var semID int64
+		var sp domain.SeminarSpeaker
+		if err := rows.Scan(&semID, &sp.ID, &sp.Name, &sp.Role, &sp.Title, &sp.PhotoURL, &sp.Sort); err != nil {
+			return nil, err
+		}
+		out[semID] = append(out[semID], sp)
+	}
 	return out, rows.Err()
 }
 
@@ -115,4 +155,42 @@ func (r *SeminarRepo) CountSlots(ctx context.Context) (int, error) {
 	var n int
 	err := r.pool.QueryRow(ctx, `SELECT COUNT(DISTINCT slot) FROM seminars`).Scan(&n)
 	return n, err
+}
+
+// Attendees lists everyone registered for a class, so an attendee can see who
+// else is in the room. Only name, chapter, company and check-in status —
+// contact details stay behind speed networking.
+func (r *SeminarRepo) Attendees(ctx context.Context, seminarID int64) ([]domain.SeminarAttendee, error) {
+	var exists bool
+	if err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM seminars WHERE id = $1)`, seminarID).Scan(&exists); err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, domain.ErrNotFound
+	}
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company, sr.created_at,
+		       sa.created_at
+		FROM seminar_registrations sr
+		JOIN users u ON u.id = sr.member_id
+		LEFT JOIN seminar_attendance sa
+		       ON sa.seminar_id = sr.seminar_id AND sa.member_id = sr.member_id
+		WHERE sr.seminar_id = $1
+		ORDER BY u.name`, seminarID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []domain.SeminarAttendee
+	for rows.Next() {
+		var a domain.SeminarAttendee
+		if err := rows.Scan(&a.Name, &a.MemberCode, &a.Chapter, &a.Company,
+			&a.RegisteredAt, &a.CheckedInAt); err != nil {
+			return nil, err
+		}
+		a.CheckedIn = a.CheckedInAt != nil
+		out = append(out, a)
+	}
+	return out, rows.Err()
 }

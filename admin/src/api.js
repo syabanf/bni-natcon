@@ -9,11 +9,13 @@ export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '
 const BASE = `${API_ORIGIN}/api/v1`
 const TOKEN_KEY = 'natcon-admin-token'
 
-// Uploads (seminar covers) are served by the API, not by the static host.
+// Uploaded images (seminar covers) are served by the API; everything else —
+// speaker photos, brand art — ships with the static app itself.
 export function assetUrl(path) {
   if (!path) return ''
   if (/^(https?:|data:|blob:)/.test(path)) return path
-  return API_ORIGIN + (path.startsWith('/') ? path : `/${path}`)
+  if (!path.startsWith('/uploads/')) return path
+  return API_ORIGIN + path
 }
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY)
@@ -117,6 +119,31 @@ export const api = {
     isMockMode() ? mock.updateSeminar(id, body) : request(`/admin/seminars/${id}`, { method: 'PUT', body }),
   deleteSeminar: (id) =>
     isMockMode() ? mock.deleteSeminar(id) : request(`/admin/seminars/${id}`, { method: 'DELETE' }),
+
+  registerSeminarMember: (id, member) =>
+    isMockMode()
+      ? mock.registerSeminarMember(id, member)
+      : request(`/admin/seminars/${id}/registrations`, { method: 'POST', body: { member } }),
+  unregisterSeminarMember: (id, memberCode) =>
+    isMockMode()
+      ? mock.unregisterSeminarMember(id, memberCode)
+      : request(`/admin/seminars/${id}/registrations/${encodeURIComponent(memberCode)}`, { method: 'DELETE' }),
+  bulkRegistrations: async (registrations) => {
+    const CHUNK = 200
+    if (isMockMode()) return mock.bulkRegistrations(registrations)
+    const total = { created: 0, updated: 0, failed: 0, errors: [] }
+    for (let start = 0; start < registrations.length; start += CHUNK) {
+      const res = await request('/admin/seminars/registrations/bulk', {
+        method: 'POST',
+        body: { registrations: registrations.slice(start, start + CHUNK) },
+      })
+      total.created += res.created
+      total.updated += res.updated || 0
+      total.failed += res.failed
+      total.errors.push(...(res.errors || []).map((e) => ({ ...e, row: e.row + start })))
+    }
+    return total
+  },
 
   memberDetail: (id, opts) => (isMockMode() ? mock.memberDetail(id) : request(`/admin/members/${id}`, opts)),
   tenantDetail: (id, opts) => (isMockMode() ? mock.tenantDetail(id) : request(`/admin/tenants/${id}`, opts)),

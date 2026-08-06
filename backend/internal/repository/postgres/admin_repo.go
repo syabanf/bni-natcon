@@ -64,6 +64,7 @@ func (r *AdminRepo) TenantRanking(ctx context.Context) ([]domain.TenantScanCount
 func (r *AdminRepo) SeminarFill(ctx context.Context) ([]domain.SeminarFill, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity,
+		       s.description, s.cover_url,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id)
 		FROM seminars s
 		ORDER BY s.slot, s.room`)
@@ -75,12 +76,25 @@ func (r *AdminRepo) SeminarFill(ctx context.Context) ([]domain.SeminarFill, erro
 	var out []domain.SeminarFill
 	for rows.Next() {
 		var s domain.SeminarFill
-		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Moderator, &s.Capacity, &s.SeatsTaken); err != nil {
+		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Moderator, &s.Capacity,
+			&s.Description, &s.CoverURL, &s.SeatsTaken); err != nil {
 			return nil, err
 		}
 		out = append(out, s)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// The admin edit form posts the whole class back, so the list has to carry
+	// everything the form shows — otherwise saving would blank it.
+	byID, err := loadSpeakers(ctx, r.pool, nil)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].Speakers = byID[out[i].ID]
+	}
+	return out, nil
 }
 
 func (r *AdminRepo) RecentActivity(ctx context.Context, limit int) ([]domain.ActivityItem, error) {

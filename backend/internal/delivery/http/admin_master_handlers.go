@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -217,6 +218,13 @@ func (s *Server) handleAdminDeleteTenant(w http.ResponseWriter, r *http.Request)
 
 /* ----- Seminars ----- */
 
+type speakerPayload struct {
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+	Title    string `json:"title"`
+	PhotoURL string `json:"photo_url"`
+}
+
 type seminarPayload struct {
 	Slot        int    `json:"slot"`
 	Room        string `json:"room"`
@@ -226,13 +234,25 @@ type seminarPayload struct {
 	Capacity    int    `json:"capacity"`
 	Description string `json:"description"`
 	CoverURL    string `json:"cover_url"`
+
+	Speakers []speakerPayload `json:"speakers"`
 }
 
 func (p seminarPayload) toInput() domain.SeminarInput {
+	people := make([]domain.SeminarSpeaker, 0, len(p.Speakers))
+	for _, sp := range p.Speakers {
+		if strings.TrimSpace(sp.Name) == "" {
+			continue
+		}
+		people = append(people, domain.SeminarSpeaker{
+			Name: strings.TrimSpace(sp.Name), Role: sp.Role,
+			Title: strings.TrimSpace(sp.Title), PhotoURL: sp.PhotoURL,
+		})
+	}
 	return domain.SeminarInput{
 		Slot: p.Slot, Room: p.Room, Title: p.Title, Speaker: p.Speaker,
 		Moderator: p.Moderator, Capacity: p.Capacity,
-		Description: p.Description, CoverURL: p.CoverURL,
+		Description: p.Description, CoverURL: p.CoverURL, Speakers: people,
 	}
 }
 
@@ -285,4 +305,46 @@ func (s *Server) handleAdminDeleteSeminar(w http.ResponseWriter, r *http.Request
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+/* ----- Class registrations made by the committee ----- */
+
+func (s *Server) handleAdminRegisterSeminarMember(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "unknown record")
+		return
+	}
+	var req struct {
+		Member string `json:"member"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	res, err := s.admin.RegisterSeminarMember(r.Context(), id, req.Member)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusCreated, map[string]any{
+		"member_name":    res.MemberName,
+		"member_code":    res.MemberCode,
+		"member_chapter": res.MemberChapter,
+		"duplicate":      res.Duplicate,
+	})
+}
+
+func (s *Server) handleAdminUnregisterSeminarMember(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "unknown record")
+		return
+	}
+	code := chi.URLParam(r, "code")
+	if err := s.admin.UnregisterSeminarMember(r.Context(), id, code); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "unregistered"})
 }

@@ -112,6 +112,12 @@ func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.Semina
 		return nil, err
 	}
 
+	byID, err := loadSpeakers(ctx, r.pool, []int64{id})
+	if err != nil {
+		return nil, err
+	}
+	d.Speakers = byID[id]
+
 	rows, err := r.pool.Query(ctx, `
 		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company, sr.created_at,
 		       sa.created_at

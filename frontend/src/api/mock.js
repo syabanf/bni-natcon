@@ -47,6 +47,10 @@ const SEMINARS = [
     title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026',
     speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai',
     moderator: 'Roby Oktober',
+    speakers: [
+      { name: 'Flavia N. Sungkit, M.Psi., Psikolog', role: 'speaker', title: 'HR Consultant · Ikigai', photo_url: '/speakers/flavia-sungkit.jpg' },
+      { name: 'Roby Oktober', role: 'moderator', title: '', photo_url: '/speakers/roby-oktober.jpg' },
+    ],
     cover_url: '',
     description:
       'Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team.',
@@ -56,6 +60,11 @@ const SEMINARS = [
     title: 'Work-Life Balance & AI: The New Agency Equation',
     speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia',
     moderator: 'Ryan Kristomulyono',
+    speakers: [
+      { name: 'Viktor Iwan', role: 'speaker', title: '', photo_url: '/speakers/viktor-iwan.jpg' },
+      { name: 'Irfan Arsandi', role: 'speaker', title: 'IT & Digital Transformation Consultant · WIT Indonesia', photo_url: '/speakers/irfan-arsandi.jpg' },
+      { name: 'Ryan Kristomulyono', role: 'moderator', title: '', photo_url: '/speakers/ryan-kristomulyono.jpg' },
+    ],
     cover_url: '',
     description:
       'AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity.',
@@ -65,6 +74,11 @@ const SEMINARS = [
     title: 'How to Win in Retail: The 2026 Economic Reality',
     speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA',
     moderator: 'David Gan',
+    speakers: [
+      { name: 'Ben Wirawan', role: 'speaker', title: 'Co-Founder & CEO · Torch', photo_url: '/speakers/ben-wirawan.jpg' },
+      { name: 'Selina Nicole', role: 'speaker', title: 'Founder · LEKA', photo_url: '/speakers/selina-nicole.jpg' },
+      { name: 'David Gan', role: 'moderator', title: 'CEO & Founder · Arkova Training & Consulting', photo_url: '/speakers/david-gan.jpg' },
+    ],
     cover_url: '',
     description:
       'Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce.',
@@ -74,11 +88,28 @@ const SEMINARS = [
     title: 'Your Face Tells a Story',
     speaker: 'Suntoro Suciatmaja',
     moderator: '',
+    speakers: [
+      { name: 'Suntoro Suciatmaja', role: 'speaker', title: '', photo_url: '/speakers/suntoro-suciatmaja.jpg' },
+    ],
     cover_url: '',
     description:
       'Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast.',
   },
 ]
+
+// Demo company for the "in this room" list, so it isn't empty on a fresh device.
+const DEMO_ATTENDEES = {
+  1: [
+    { name: 'Melly Hartono', chapter: 'Chapter Surabaya One', company: 'Melly Tax', checked_in: true },
+    { name: 'Rina Kartika', chapter: 'Chapter Bali Paradise', company: 'Kartika Law', checked_in: false },
+  ],
+  2: [
+    { name: 'Joko Prabowo', chapter: 'Chapter Medan Utama', company: 'JP Otomotif', checked_in: false },
+  ],
+  3: [
+    { name: 'Dedi Firmansyah', chapter: 'Chapter Semarang Jaya', company: 'DF Logistics', checked_in: true },
+  ],
+}
 
 function boothEmail(tenant) {
   return `booth-${tenant.booth.toLowerCase().replace('-', '')}@natcon.id`
@@ -217,6 +248,26 @@ export const mockApi = {
         attended: Boolean((state.attendance || {})[`${currentUser?.member_code}:${s.id}`]),
       })),
     })
+  },
+
+  // Who else is in the room: whoever this device has registered, plus a
+  // couple of demo attendees so the list is never empty.
+  seminarAttendees(id) {
+    const state = loadState()
+    const semID = Number(id)
+    const out = []
+    for (const [code, slots] of Object.entries(state.registrations || {})) {
+      if (!Object.values(slots || {}).includes(semID)) continue
+      const m = MOCK_MEMBERS.find((x) => x.member_code === code)
+      out.push({
+        name: m?.name || code,
+        chapter: m?.chapter || '',
+        company: m?.company || '',
+        checked_in: Boolean((state.attendance || {})[`${code}:${semID}`]),
+      })
+    }
+    for (const p of DEMO_ATTENDEES[semID] || []) out.push(p)
+    return delay({ attendees: out })
   },
 
   registerSeminar(id) {

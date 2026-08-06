@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"natcon2026/backend/internal/domain"
@@ -208,6 +209,16 @@ func (f *fakeSeminarRepo) Unregister(_ context.Context, seminarID, memberID int6
 		}
 	}
 	return domain.ErrNotFound
+}
+
+func (f *fakeSeminarRepo) Attendees(_ context.Context, seminarID int64) ([]domain.SeminarAttendee, error) {
+	var out []domain.SeminarAttendee
+	for _, r := range f.registrations {
+		if r.SeminarID == seminarID {
+			out = append(out, domain.SeminarAttendee{MemberCode: fmt.Sprint(r.MemberID)})
+		}
+	}
+	return out, nil
 }
 
 func (f *fakeSeminarRepo) CountRegistrationsByMember(_ context.Context, memberID int64) (int, error) {

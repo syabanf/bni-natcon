@@ -10,6 +10,9 @@ import {
   TENANT_IMPORT_ALIASES,
   MEMBER_TEMPLATE,
   TENANT_TEMPLATE,
+  transformRegistrationRows,
+  REGISTRATION_IMPORT_ALIASES,
+  REGISTRATION_TEMPLATE,
 } from './excel'
 import { MemberDetail, TenantDetail, SeminarDetail } from './Detail'
 
@@ -75,6 +78,83 @@ function CoverUpload({ value, onChange, onError }) {
           </button>
         )}
       </div>
+    </div>
+  )
+}
+
+// Speakers and moderators as editable rows — name, optional title, and a
+// photo uploaded to the API like the cover image.
+function SpeakerEditor({ value, onChange, onError }) {
+  const people = value || []
+  const inputRef = useRef(null)
+  const [uploadingAt, setUploadingAt] = useState(null)
+
+  const patch = (i, next) => onChange(people.map((p, n) => (n === i ? { ...p, ...next } : p)))
+  const add = () => onChange([...people, { name: '', role: 'speaker', title: '', photo_url: '' }])
+  const remove = (i) => onChange(people.filter((_, n) => n !== i))
+
+  const pickPhoto = (i) => {
+    setUploadingAt(i)
+    inputRef.current?.click()
+  }
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    const i = uploadingAt
+    setUploadingAt(null)
+    if (!file || i === null) return
+    try {
+      const { url } = await api.uploadImage(file)
+      patch(i, { photo_url: url })
+    } catch (err) {
+      onError(err.message)
+    }
+  }
+
+  return (
+    <div className="md-field">
+      <span>
+        Speakers &amp; moderator<em> — shown with their photo on the attendee class card</em>
+      </span>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        style={{ display: 'none' }}
+        onChange={onFile}
+      />
+      <div className="speaker-rows">
+        {people.map((p, i) => (
+          <div className="speaker-row" key={i}>
+            <button type="button" className="sr-photo" onClick={() => pickPhoto(i)} title="Upload photo">
+              {p.photo_url ? <img src={assetUrl(p.photo_url)} alt="" /> : <span>+</span>}
+            </button>
+            <div className="sr-fields">
+              <input
+                value={p.name}
+                placeholder="Name"
+                onChange={(e) => patch(i, { name: e.target.value })}
+              />
+              <input
+                value={p.title || ''}
+                placeholder="Title / company (optional)"
+                onChange={(e) => patch(i, { title: e.target.value })}
+              />
+            </div>
+            <select value={p.role} onChange={(e) => patch(i, { role: e.target.value })}>
+              <option value="speaker">Speaker</option>
+              <option value="moderator">Moderator</option>
+            </select>
+            <button type="button" className="md-cancel" onClick={() => remove(i)}>
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+      <button type="button" className="md-secondary" onClick={add}>
+        + Add person
+      </button>
     </div>
   )
 }
@@ -582,6 +662,7 @@ export function TenantsPage() {
 /* ================= Seminar ================= */
 
 export function SeminarsPage() {
+  const [importResult, setImportResult] = useState(null)
   const crud = useCrud({
     list: () => api.seminars().then((d) => d.seminars || []),
     create: (f) => api.createSeminar({ ...f, slot: +f.slot, capacity: +f.capacity }),
@@ -606,15 +687,28 @@ export function SeminarsPage() {
   return (
     <>
       <PageHead title="Master Data — Breakout Classes" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
+        <ImportButton
+          label="Import Registrations"
+          aliases={REGISTRATION_IMPORT_ALIASES}
+          upload={async (parsed) => {
+            const { rows, skippedDuplicates } = transformRegistrationRows(parsed)
+            if (rows.length === 0) return { error: 'No rows with both an attendee and a room.' }
+            const res = await api.bulkRegistrations(rows)
+            crud.load()
+            return { ...res, skippedDuplicates }
+          }}
+          onDone={setImportResult}
+        />
+        <TemplateButton template={REGISTRATION_TEMPLATE} />
         <button
           className="md-add"
-          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', moderator: '', capacity: 60, description: '', cover_url: '' })}
+          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', moderator: '', capacity: 60, description: '', cover_url: '', speakers: [] })}
         >
           + Add Class
         </button>
       </PageHead>
 
-      <Notices crud={crud} importResult={null} clearImport={() => {}} />
+      <Notices crud={crud} importResult={importResult} clearImport={() => setImportResult(null)} />
 
       <div className="table-scroll">
       <table className="md-table">
@@ -650,6 +744,7 @@ export function SeminarsPage() {
                   crud.setForm({
                     id: sm.id, slot: sm.slot, room: sm.room, title: sm.title,
                     speaker: sm.speaker, moderator: sm.moderator || '', capacity: sm.capacity,
+                    speakers: sm.speakers || [],
                     description: sm.description || '', cover_url: sm.cover_url || '',
                   })
                 }
@@ -671,6 +766,11 @@ export function SeminarsPage() {
             <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
             <Field label="Capacity" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
             <Field label="Description" hint="shown on the attendee class detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
+            <SpeakerEditor
+              value={crud.form.speakers}
+              onChange={(speakers) => crud.setForm({ ...crud.form, speakers })}
+              onError={(msg) => crud.setError(msg)}
+            />
             <CoverUpload
               value={crud.form.cover_url || ''}
               onChange={(url) => crud.setForm({ ...crud.form, cover_url: url })}

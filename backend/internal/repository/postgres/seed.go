@@ -111,12 +111,45 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 			"Suntoro Suciatmaja", "", 60,
 			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
+	// Speakers and moderators per class, in stage order. Photos live in each
+	// app's public/speakers/ so they are served by the static host, not the API.
+	people := map[string][]struct {
+		name, role, title, photo string
+	}{
+		"Breakout Room 1": {
+			{"Flavia N. Sungkit, M.Psi., Psikolog", "speaker", "HR Consultant · Ikigai", "/speakers/flavia-sungkit.jpg"},
+			{"Roby Oktober", "moderator", "", "/speakers/roby-oktober.jpg"},
+		},
+		"Breakout Room 2": {
+			{"Viktor Iwan", "speaker", "", "/speakers/viktor-iwan.jpg"},
+			{"Irfan Arsandi", "speaker", "IT & Digital Transformation Consultant · WIT Indonesia", "/speakers/irfan-arsandi.jpg"},
+			{"Ryan Kristomulyono", "moderator", "", "/speakers/ryan-kristomulyono.jpg"},
+		},
+		"Breakout Room 3": {
+			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan.jpg"},
+			{"Selina Nicole", "speaker", "Founder · LEKA", "/speakers/selina-nicole.jpg"},
+			{"David Gan", "moderator", "CEO & Founder · Arkova Training & Consulting", "/speakers/david-gan.jpg"},
+		},
+		"Breakout Room 4": {
+			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
+		},
+	}
 	for _, s := range seminars {
-		if _, err := tx.Exec(ctx, `
+		var semID int64
+		if err := tx.QueryRow(ctx, `
 			INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, '')`,
-			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc); err != nil {
+			VALUES ($1, $2, $3, $4, $5, $6, $7, '')
+			RETURNING id`,
+			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc).Scan(&semID); err != nil {
 			return err
+		}
+		for i, p := range people[s.room] {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO seminar_speakers (seminar_id, name, role, title, photo_url, sort)
+				VALUES ($1, $2, $3, $4, $5, $6)`,
+				semID, p.name, p.role, p.title, p.photo, i); err != nil {
+				return err
+			}
 		}
 	}
 
