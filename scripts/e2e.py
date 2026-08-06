@@ -104,6 +104,63 @@ status, body = login("admin@natcon.id")
 check("admin login 200", status == 200 and body["user"]["role"] == "admin")
 admin_tok = body["token"]
 
+# ------------------------------------------------- passwords (setup + recovery)
+section("Password setup & recovery")
+# An imported attendee still carries the generated password, so the app must
+# push them to the "choose your own" screen.
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
+                      body={"name": "Pass Test", "email": "passtest@natcon.id",
+                            "chapter": "Chapter Sandi", "phone": "+628119876543"})
+check("create an attendee -> 201", status == 201)
+check("a fresh attendee must set a password",
+      body["user"].get("must_set_password") is True)
+pass_id = body["user"]["id"]
+
+status, body = login("passtest@natcon.id", xff="10.9.9.1")
+check("first sign-in works with the generated password", status == 200)
+check("login says the password still has to be set",
+      body["user"].get("must_set_password") is True)
+pass_tok = body["token"]
+
+status, _, _ = req("POST", "/api/v1/auth/password", token=pass_tok, body={"password": "short"})
+check("a short password -> 400", status == 400)
+status, _, _ = req("POST", "/api/v1/auth/password", token=pass_tok, body={"password": "chosenbythem"})
+check("setting a password -> 200", status == 200)
+
+status, body = login("passtest@natcon.id", "chosenbythem", xff="10.9.9.2")
+check("the chosen password works", status == 200)
+check("the flag is cleared once set", not body["user"].get("must_set_password"))
+status, _ = login("passtest@natcon.id", xff="10.9.9.3")
+check("the generated password stops working", status == 401)
+
+# Recovery: chapter + the phone on the ticket, in any of its shapes.
+status, body, _ = req("POST", "/api/v1/auth/forgot",
+                      body={"chapter": "chaptersandi", "phone": "08119876543"})
+check("forgot password resolves on chapter + phone",
+      status == 200 and body["email"] == "passtest@natcon.id" and body["reset_token"])
+reset_token = body["reset_token"]
+status, _, _ = req("POST", "/api/v1/auth/forgot",
+                   body={"chapter": "Chapter Salah", "phone": "+628119876543"})
+check("right phone, wrong chapter -> 401", status == 401)
+status, _, _ = req("POST", "/api/v1/auth/forgot",
+                   body={"chapter": "Chapter Sandi", "phone": "+628110000000"})
+check("right chapter, unknown phone -> 401", status == 401)
+
+status, _, _ = req("POST", "/api/v1/auth/reset",
+                   body={"reset_token": "not-a-token", "password": "afterreset1"})
+check("a bogus reset token -> 400", status == 400)
+status, _, _ = req("POST", "/api/v1/auth/reset",
+                   body={"reset_token": reset_token, "password": "afterreset1"})
+check("reset with a valid token -> 200", status == 200)
+status, body = login("passtest@natcon.id", "afterreset1", xff="10.9.9.4")
+check("the reset password works", status == 200)
+# A reset token must never open the API itself.
+status, _, _ = req("GET", "/api/v1/me", token=reset_token)
+check("a reset token is not a session token -> 401", status == 401)
+
+status, _, _ = req("DELETE", f"/api/v1/admin/members/{pass_id}", token=admin_tok)
+check("clean up the password test attendee", status == 200)
+
 # ---------------------------------------------------------------- role guards
 section("Role guards")
 status, _, _ = req("GET", "/api/v1/me")

@@ -55,7 +55,7 @@ func main() {
 
 	server := httpdelivery.NewServer(
 		jwtIssuer,
-		usecase.NewAuthUsecase(userRepo, jwtIssuer, httpdelivery.BcryptVerifier{}),
+		usecase.NewAuthUsecase(userRepo, jwtIssuer, httpdelivery.BcryptVerifier{}, httpdelivery.BcryptVerifier{}),
 		usecase.NewMemberUsecase(userRepo, tenantRepo, visitRepo, seminarRepo),
 		usecase.NewScanUsecase(userRepo, tenantRepo, visitRepo),
 		usecase.NewSeminarUsecase(seminarRepo),

@@ -79,6 +79,16 @@ export const api = {
   login: (email, password) =>
     isMock() ? mockApi.login(email, password) : request('/auth/login', { method: 'POST', body: { email, password } }),
   me: () => (isMock() ? mockApi.me() : request('/me')),
+  setPassword: (password) =>
+    isMock() ? mockApi.setPassword(password) : request('/auth/password', { method: 'POST', body: { password } }),
+  forgotPassword: (chapter, phone) =>
+    isMock()
+      ? mockApi.forgotPassword(chapter, phone)
+      : request('/auth/forgot', { method: 'POST', body: { chapter, phone } }),
+  resetPassword: (resetToken, password) =>
+    isMock()
+      ? mockApi.resetPassword(resetToken, password)
+      : request('/auth/reset', { method: 'POST', body: { reset_token: resetToken, password } }),
   tenants: () => (isMock() ? mockApi.tenants() : request('/tenants')),
   seminars: () => (isMock() ? mockApi.seminars() : request('/seminars')),
   seminarAttendees: (id) =>

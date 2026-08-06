@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"natcon2026/backend/internal/domain"
@@ -35,6 +36,42 @@ func (f *fakeUserRepo) GetByID(_ context.Context, id int64) (*domain.User, error
 func (f *fakeUserRepo) GetByMemberCode(_ context.Context, code string) (*domain.User, error) {
 	for _, u := range f.users {
 		if u.MemberCode == code && u.Role == domain.RoleMember {
+			return u, nil
+		}
+	}
+	return nil, domain.ErrNotFound
+}
+
+func (f *fakeUserRepo) SetPassword(_ context.Context, userID int64, hash string) error {
+	for _, u := range f.users {
+		if u.ID == userID {
+			u.PasswordHash = hash
+			u.MustSetPassword = false
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
+func (f *fakeUserRepo) FindMemberByChapterPhone(_ context.Context, chapter, phone string) (*domain.User, error) {
+	norm := func(s string) string {
+		return strings.ToLower(strings.ReplaceAll(s, " ", ""))
+	}
+	digits := func(s string) string {
+		out := ""
+		for _, r := range s {
+			if r >= '0' && r <= '9' {
+				out += string(r)
+			}
+		}
+		if len(out) > 9 {
+			out = out[len(out)-9:]
+		}
+		return out
+	}
+	for _, u := range f.users {
+		if u.Role == domain.RoleMember && norm(u.Chapter) == norm(chapter) &&
+			u.Phone != "" && digits(u.Phone) == digits(phone) {
 			return u, nil
 		}
 	}
@@ -247,9 +284,26 @@ func (fakeTokens) Issue(userID int64, role domain.Role) (string, error) {
 	return "token-for-test", nil
 }
 
+func (fakeTokens) IssueReset(userID int64) (string, error) {
+	return fmt.Sprintf("reset:%d", userID), nil
+}
+
+func (fakeTokens) ParseReset(token string) (int64, error) {
+	var id int64
+	if _, err := fmt.Sscanf(token, "reset:%d", &id); err != nil {
+		return 0, fmt.Errorf("invalid reset token")
+	}
+	return id, nil
+}
+
 type fakeVerifier struct{}
 
 // Verify treats the stored hash as "hash:<password>".
 func (fakeVerifier) Verify(hash, password string) bool {
 	return hash == "hash:"+password
+}
+
+// Hash mirrors fakeVerifier so a set password verifies afterwards.
+func (fakeVerifier) Hash(password string) (string, error) {
+	return "hash:" + password, nil
 }

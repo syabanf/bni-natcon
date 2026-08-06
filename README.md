@@ -57,9 +57,10 @@ with [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
 which is safe to re-run — classes are only inserted when missing, and speaker
 rows are always refreshed (that is how you push updated photos).
 
-Speaker photos live in [`assets/speakers/`](assets/speakers) and are served
-from each app's `public/speakers/`; photos uploaded through the admin speaker
-editor go to the API's `UPLOAD_DIR` like cover images.
+Speaker photos live in [`assets/speakers/`](assets/speakers) and room posters
+in [`assets/covers/`](assets/covers); both are served from each app's
+`public/` folder. Photos uploaded through the admin speaker editor or the
+cover picker go to the API's `UPLOAD_DIR` instead.
 
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a
@@ -71,7 +72,12 @@ ready-to-fill template (headers + example rows).
   *Company Name* / *Business Classification*, and skips duplicate emails
   inside the file. Rows
   **create-or-update by email**; new accounts sign in with username =
-  email and password = chapter + first name (lowercase, no spaces).
+  email and password = chapter + first name (lowercase, no spaces), then
+  **choose their own password on that first sign-in** — nothing else in the
+  app opens until they do. Forgot it? Recovery matches **chapter + the phone
+  number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
+  space-insensitive on the chapter) and hands back a 15-minute reset token;
+  both endpoints carry the same 10/minute/IP ceiling as sign-in.
 - *Tenants* — headers Name/Booth/Category/Kind/Initials/Email/Description
   (only Name and Booth required). Rows **create-or-update by booth code**:
   a new booth gets auto initials and an auto scanner login
@@ -121,7 +127,7 @@ Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 137-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 154-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -236,6 +242,9 @@ All with password `natcon2026`:
 | GET `/seminars`                | member | seminars with seats left + `registered`  |
 | GET `/seminars/{id}/attendees` | member | who else is in the room (names, chapters) |
 | POST `/seminars/{id}/register` | member | register (409 when full/already picked)  |
+| POST `/auth/password`          | member | choose a password on first sign-in       |
+| POST `/auth/forgot`            | public | chapter + ticket phone → reset token (rate-limited) |
+| POST `/auth/reset`             | public | consume the reset token, set a password  |
 | POST `/scans`                  | tenant | record visit — `member_code` accepts a member code **or phone number** |
 | GET `/booth`                   | tenant | booth profile                            |
 | GET `/booth/stats`             | tenant | total + today scan counts                |

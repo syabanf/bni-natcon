@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api/client'
 import { useAuthStore } from '../store/auth'
+import ForgotPassword from './ForgotPassword'
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
 
@@ -31,6 +32,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [recovering, setRecovering] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -44,6 +46,12 @@ export default function Login() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (recovering) {
+    return (
+      <ForgotPassword onDone={() => setRecovering(false)} onCancel={() => setRecovering(false)} />
+    )
   }
 
   return (
@@ -113,6 +121,10 @@ export default function Login() {
                 {busy ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
+
+            <button type="button" className="auth-forgot" onClick={() => setRecovering(true)}>
+              Forgot your password?
+            </button>
 
             <p className="auth-hint">
               Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +

@@ -20,7 +20,8 @@ WHERE title IN (
 -- All four share slot 1: they run in parallel, so an attendee picks exactly
 -- one and that pick is what the goodiebag is claimed against.
 INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
-SELECT v.slot, v.room, v.title, v.speaker, v.moderator, v.capacity, v.description, ''
+SELECT v.slot, v.room, v.title, v.speaker, v.moderator, v.capacity, v.description,
+       '/covers/' || lower(replace(v.room, ' ', '-')) || '.jpg'
 FROM (VALUES
     (1, 'Breakout Room 1',
      'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026',
@@ -44,6 +45,11 @@ FROM (VALUES
      'Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast.')
 ) AS v (slot, room, title, speaker, moderator, capacity, description)
 WHERE NOT EXISTS (SELECT 1 FROM seminars s WHERE s.room = v.room);
+
+-- Room posters, for classes that were inserted before covers existed.
+UPDATE seminars
+SET cover_url = '/covers/' || lower(replace(room, ' ', '-')) || '.jpg'
+WHERE room LIKE 'Breakout Room %' AND cover_url = '';
 
 -- Speakers and moderators, with the photos each app serves from public/speakers/.
 DELETE FROM seminar_speakers

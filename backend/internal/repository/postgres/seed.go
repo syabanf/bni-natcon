@@ -138,9 +138,10 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		var semID int64
 		if err := tx.QueryRow(ctx, `
 			INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, '')
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			RETURNING id`,
-			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc).Scan(&semID); err != nil {
+			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc,
+			coverFor(s.room)).Scan(&semID); err != nil {
 			return err
 		}
 		for i, p := range people[s.room] {
@@ -154,6 +155,22 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	}
 
 	return tx.Commit(ctx)
+}
+
+// coverFor maps a breakout room to the poster shipped in each app's
+// public/covers/. Rooms added later simply fall back to the gradient cover.
+func coverFor(room string) string {
+	switch room {
+	case "Breakout Room 1":
+		return "/covers/breakout-room-1.jpg"
+	case "Breakout Room 2":
+		return "/covers/breakout-room-2.jpg"
+	case "Breakout Room 3":
+		return "/covers/breakout-room-3.jpg"
+	case "Breakout Room 4":
+		return "/covers/breakout-room-4.jpg"
+	}
+	return ""
 }
 
 func ensureAdmin(ctx context.Context, pool *pgxpool.Pool, password string) error {

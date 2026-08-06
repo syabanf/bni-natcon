@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
 import { MemberLayout, TenantLayout } from './components/Layout'
 import Login from './pages/Login'
+import SetPassword from './pages/SetPassword'
 import Home from './pages/member/Home'
 import MyQR from './pages/member/MyQR'
 import Passport from './pages/member/Passport'
@@ -24,6 +25,9 @@ export const homeFor = (user) => (user?.role === 'tenant' ? TENANT_HOME : ATTEND
 function RequireRole({ role, children }) {
   const user = useAuthStore((s) => s.user)
   if (!user) return <Navigate to="/login" replace />
+  // Still on the password generated at import time: nothing else opens until
+  // they pick their own.
+  if (user.must_set_password) return <SetPassword />
   if (user.role !== role) return <Navigate to={homeFor(user)} replace />
   return children
 }

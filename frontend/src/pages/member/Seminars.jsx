@@ -299,7 +299,14 @@ export default function Seminars() {
               const full = s.seats_left <= 0
               return (
                 <div className="card seminar-card" key={s.id}>
-                  <div className="seminar-cover">
+                  <div
+                    className={`seminar-cover${s.cover_url ? ' poster' : ''}`}
+                    style={
+                      s.cover_url
+                        ? { backgroundImage: `url(${assetUrl(s.cover_url)})` }
+                        : undefined
+                    }
+                  >
                     <div className="sc-tag">{s.room}</div>
                     <span className="pill" style={{ color: few ? 'var(--red)' : 'var(--ink)' }}>
                       {s.seats_left} seats left{few && !full ? ' · almost full' : ''}

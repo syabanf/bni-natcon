@@ -98,10 +98,15 @@ func (s *Server) Router() http.Handler {
 	r.Route("/api/v1", func(r chi.Router) {
 		// Brute-force protection: 10 login attempts per IP per minute.
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login", s.handleLogin)
+		// Recovery is guessable by design (chapter + phone), so it gets the
+		// same brute-force ceiling as login.
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/forgot", s.handleForgotPassword)
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/reset", s.handleResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)
 			r.Get("/me", s.handleMe)
+			r.Post("/auth/password", s.handleSetPassword)
 
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(domain.RoleMember))

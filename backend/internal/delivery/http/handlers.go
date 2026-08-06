@@ -23,6 +23,8 @@ type userDTO struct {
 	Phone      string `json:"phone,omitempty"`
 
 	Classification string `json:"classification,omitempty"`
+	// The app routes straight to "choose your password" when this is true.
+	MustSetPassword bool `json:"must_set_password,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
@@ -30,6 +32,7 @@ func toUserDTO(u *domain.User) userDTO {
 		ID: u.ID, Name: u.Name, Email: u.Email, Role: string(u.Role),
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
 		Phone: u.Phone, Classification: u.Classification,
+		MustSetPassword: u.MustSetPassword,
 	}
 }
 
@@ -61,6 +64,62 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		"token": token,
 		"user":  toUserDTO(user),
 	})
+}
+
+// handleSetPassword is the first-login screen: swap the password generated at
+// import time for one the attendee chose.
+func (s *Server) handleSetPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	if err := s.auth.SetPassword(r.Context(), userIDFrom(r.Context()), req.Password); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "password set"})
+}
+
+// handleForgotPassword checks chapter + the phone number on the ticket and,
+// when they match, hands back a short-lived token for handleResetPassword.
+func (s *Server) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Chapter string `json:"chapter"`
+		Phone   string `json:"phone"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	token, user, err := s.auth.ForgotPassword(r.Context(), req.Chapter, req.Phone)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{
+		"reset_token": token,
+		"name":        user.Name,
+		"email":       user.Email,
+	})
+}
+
+func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ResetToken string `json:"reset_token"`
+		Password   string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	if err := s.auth.ResetPassword(r.Context(), req.ResetToken, req.Password); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "password reset"})
 }
 
 /* ---------- Member ---------- */

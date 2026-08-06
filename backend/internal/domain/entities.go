@@ -21,7 +21,10 @@ type User struct {
 	Company        string
 	Phone          string
 	Classification string // BNI business classification, from the ticketing export
-	CreatedAt      time.Time
+	// MustSetPassword is true while the account still carries the password
+	// generated at import time — the app forces a real one on first sign-in.
+	MustSetPassword bool
+	CreatedAt       time.Time
 }
 
 // Tenant kinds: sponsors are listed above booths on the passport.

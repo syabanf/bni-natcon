@@ -1015,6 +1015,25 @@ input {
   background: linear-gradient(135deg, var(--red-tint), #fff);
   border-bottom: 1px solid var(--line);
 }
+/* With a room poster the strip becomes the thumbnail; the tag and the seat
+   pill sit on a dark scrim so they stay readable over any photo. */
+.seminar-cover.poster {
+  align-items: flex-end;
+  height: 116px;
+  padding: 12px 14px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.seminar-cover.poster::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(20, 6, 8, 0.62), rgba(20, 6, 8, 0.05) 60%);
+}
+.seminar-cover.poster > * {
+  position: relative;
+}
 .seminar-cover .sc-tag {
   font-size: 10px;
   font-weight: 800;
@@ -2097,6 +2116,25 @@ input {
 }
 .ra-more {
   margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+/* Recovery / first-password screens reuse the sign-in card, minus the hero. */
+.auth-shell.single {
+  grid-template-columns: 1fr;
+  max-width: 470px;
+}
+.auth-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin: 6px 0 10px;
+}
+.auth-forgot {
+  display: block;
+  margin: 12px auto 0;
   font-size: 12px;
   font-weight: 700;
   color: var(--red);

@@ -18,7 +18,7 @@ func newMember(id int64, code string) *domain.User {
 
 func TestAuthLogin(t *testing.T) {
 	users := &fakeUserRepo{users: []*domain.User{newMember(1, "NATCON-2026-00001")}}
-	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{})
+	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
 
 	tests := []struct {
 		name     string
@@ -217,5 +217,69 @@ func TestImportPassword(t *testing.T) {
 		if got := importPassword(c.chapter, c.name); got != c.want {
 			t.Errorf("importPassword(%q, %q) = %q, want %q", c.chapter, c.name, got, c.want)
 		}
+	}
+}
+
+func TestSetPassword(t *testing.T) {
+	member := newMember(1, "NATCON-2026-00001")
+	member.MustSetPassword = true
+	users := &fakeUserRepo{users: []*domain.User{member}}
+	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
+	ctx := context.Background()
+
+	if err := uc.SetPassword(ctx, 1, "short"); err == nil {
+		t.Fatal("a 5-character password should be rejected")
+	}
+	if err := uc.SetPassword(ctx, 1, "brandnewpass"); err != nil {
+		t.Fatalf("set password: %v", err)
+	}
+	if member.MustSetPassword {
+		t.Fatal("the first-login flag should be cleared once a password is set")
+	}
+	if _, _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
+		t.Fatalf("login with the new password: %v", err)
+	}
+	if _, _, err := uc.Login(ctx, "member@test.id", "secret"); !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Fatal("the old generated password should no longer work")
+	}
+}
+
+func TestForgotAndResetPassword(t *testing.T) {
+	member := newMember(1, "NATCON-2026-00001")
+	member.Chapter = "Chapter Test"
+	member.Phone = "+628111000154"
+	users := &fakeUserRepo{users: []*domain.User{member}}
+	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
+	ctx := context.Background()
+
+	// The phone can arrive in any of the shapes the ticketing sheet carries,
+	// and the chapter match ignores case and spacing.
+	for _, phone := range []string{"+628111000154", "08111000154", "8111000154"} {
+		if _, _, err := uc.ForgotPassword(ctx, "chaptertest", phone); err != nil {
+			t.Fatalf("forgot with phone %q: %v", phone, err)
+		}
+	}
+	if _, _, err := uc.ForgotPassword(ctx, "Chapter Test", "+628990000000"); !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Fatal("a phone that belongs to nobody must not resolve")
+	}
+	if _, _, err := uc.ForgotPassword(ctx, "Wrong Chapter", "+628111000154"); !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Fatal("the right phone under the wrong chapter must not resolve")
+	}
+
+	token, found, err := uc.ForgotPassword(ctx, "Chapter Test", "+628111000154")
+	if err != nil {
+		t.Fatalf("forgot: %v", err)
+	}
+	if found.ID != 1 {
+		t.Fatalf("resolved the wrong member: %d", found.ID)
+	}
+	if err := uc.ResetPassword(ctx, "not-a-token", "brandnewpass"); err == nil {
+		t.Fatal("a bogus reset token should be refused")
+	}
+	if err := uc.ResetPassword(ctx, token, "brandnewpass"); err != nil {
+		t.Fatalf("reset: %v", err)
+	}
+	if _, _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
+		t.Fatalf("login after reset: %v", err)
 	}
 }

@@ -112,13 +112,15 @@ func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberC
 func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*domain.User, error) {
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
+		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification,
+		                   must_set_password)
 		VALUES ($1, $2, $3, 'member',
 		        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-		        $4, $5, $6, $7)
-		RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+		        $4, $5, $6, $7, true)
+		RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
+		          must_set_password, created_at`,
 		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
-		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
+		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_key") {
 			return nil, domain.ErrEmailTaken
@@ -383,9 +385,10 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 			UPDATE users SET name = $1, chapter = $2, company = $3, phone = $4,
 			       classification = COALESCE(NULLIF($5, ''), classification)
 			WHERE id = $6
-			RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+			RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
+		          must_set_password, created_at`,
 			m.Name, m.Chapter, m.Company, m.Phone, m.Classification, existingID).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -396,13 +399,15 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 	case errors.Is(err, pgx.ErrNoRows):
 		var u domain.User
 		err = tx.QueryRow(ctx, `
-			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
+			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification,
+			                   must_set_password)
 			VALUES ($1, $2, $3, 'member',
 			        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-			        $4, $5, $6, $7)
-			RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+			        $4, $5, $6, $7, true)
+			RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
+		          must_set_password, created_at`,
 			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
 		if err != nil {
 			if isUniqueViolation(err, "users_email_key") {
 				return nil, domain.ErrEmailTaken

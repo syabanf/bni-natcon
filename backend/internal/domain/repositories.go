@@ -9,6 +9,10 @@ type UserRepository interface {
 	// GetByCodeOrPhone resolves a member by member code OR phone number —
 	// the booth scanner's manual input accepts either.
 	GetByCodeOrPhone(ctx context.Context, key string) (*User, error)
+	SetPassword(ctx context.Context, userID int64, hash string) error
+	// FindMemberByChapterPhone backs password recovery — chapter plus the
+	// phone number on the ticket is what an attendee has to prove.
+	FindMemberByChapterPhone(ctx context.Context, chapter, phone string) (*User, error)
 }
 
 type TenantRepository interface {
