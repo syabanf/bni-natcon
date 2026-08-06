@@ -33,13 +33,13 @@ func TestAuthLogin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, user, err := uc.Login(context.Background(), tt.email, tt.password)
+			res, err := uc.Login(context.Background(), tt.email, tt.password)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("err = %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == nil {
-				if token == "" || user == nil {
-					t.Fatalf("expected token and user, got %q, %v", token, user)
+				if res.Token == "" || res.User == nil {
+					t.Fatalf("expected token and user, got %q, %v", res.Token, res.User)
 				}
 			}
 		})
@@ -236,10 +236,10 @@ func TestSetPassword(t *testing.T) {
 	if member.MustSetPassword {
 		t.Fatal("the first-login flag should be cleared once a password is set")
 	}
-	if _, _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
+	if _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
 		t.Fatalf("login with the new password: %v", err)
 	}
-	if _, _, err := uc.Login(ctx, "member@test.id", "secret"); !errors.Is(err, domain.ErrInvalidCredentials) {
+	if _, err := uc.Login(ctx, "member@test.id", "secret"); !errors.Is(err, domain.ErrInvalidCredentials) {
 		t.Fatal("the old generated password should no longer work")
 	}
 }
@@ -255,31 +255,100 @@ func TestForgotAndResetPassword(t *testing.T) {
 	// The phone can arrive in any of the shapes the ticketing sheet carries,
 	// and the chapter match ignores case and spacing.
 	for _, phone := range []string{"+628111000154", "08111000154", "8111000154"} {
-		if _, _, err := uc.ForgotPassword(ctx, "chaptertest", phone); err != nil {
+		if _, err := uc.ForgotPassword(ctx, "chaptertest", phone); err != nil {
 			t.Fatalf("forgot with phone %q: %v", phone, err)
 		}
 	}
-	if _, _, err := uc.ForgotPassword(ctx, "Chapter Test", "+628990000000"); !errors.Is(err, domain.ErrInvalidCredentials) {
+	if _, err := uc.ForgotPassword(ctx, "Chapter Test", "+628990000000"); !errors.Is(err, domain.ErrInvalidCredentials) {
 		t.Fatal("a phone that belongs to nobody must not resolve")
 	}
-	if _, _, err := uc.ForgotPassword(ctx, "Wrong Chapter", "+628111000154"); !errors.Is(err, domain.ErrInvalidCredentials) {
+	if _, err := uc.ForgotPassword(ctx, "Wrong Chapter", "+628111000154"); !errors.Is(err, domain.ErrInvalidCredentials) {
 		t.Fatal("the right phone under the wrong chapter must not resolve")
 	}
 
-	token, found, err := uc.ForgotPassword(ctx, "Chapter Test", "+628111000154")
+	found, err := uc.ForgotPassword(ctx, "Chapter Test", "+628111000154")
 	if err != nil {
 		t.Fatalf("forgot: %v", err)
 	}
-	if found.ID != 1 {
-		t.Fatalf("resolved the wrong member: %d", found.ID)
+	if len(found) != 1 || found[0].User.ID != 1 {
+		t.Fatalf("resolved the wrong member: %+v", found)
 	}
+	token := found[0].ResetToken
 	if err := uc.ResetPassword(ctx, "not-a-token", "brandnewpass"); err == nil {
 		t.Fatal("a bogus reset token should be refused")
 	}
 	if err := uc.ResetPassword(ctx, token, "brandnewpass"); err != nil {
 		t.Fatalf("reset: %v", err)
 	}
-	if _, _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
+	if _, err := uc.Login(ctx, "member@test.id", "brandnewpass"); err != nil {
 		t.Fatalf("login after reset: %v", err)
+	}
+}
+
+func TestLoginPicksBetweenTicketsOnOneEmail(t *testing.T) {
+	// A buyer holding two tickets: two attendee accounts, one address.
+	first := newMember(1, "NATCON-2026-00001")
+	second := newMember(2, "NATCON-2026-00002")
+	second.Name = "Second Ticket"
+	second.PasswordHash = "hash:othersecret"
+	users := &fakeUserRepo{users: []*domain.User{first, second}}
+	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
+	ctx := context.Background()
+
+	// Different passwords: only the account that password opens is signed in.
+	res, err := uc.Login(ctx, "member@test.id", "othersecret")
+	if err != nil {
+		t.Fatalf("login: %v", err)
+	}
+	if res.Choice != "" || res.User.ID != 2 {
+		t.Fatalf("expected a straight sign-in as account 2, got %+v", res)
+	}
+
+	// Same password on both (they were imported together and neither has
+	// chosen one yet): the attendee is asked which ticket they are.
+	second.PasswordHash = first.PasswordHash
+	res, err = uc.Login(ctx, "member@test.id", "secret")
+	if err != nil {
+		t.Fatalf("login: %v", err)
+	}
+	if res.Choice == "" || len(res.Accounts) != 2 || res.Token != "" {
+		t.Fatalf("expected a choice between two accounts, got %+v", res)
+	}
+
+	session, err := uc.SelectAccount(ctx, res.Choice, 2)
+	if err != nil {
+		t.Fatalf("select: %v", err)
+	}
+	if session.Token == "" || session.User.ID != 2 {
+		t.Fatalf("expected a session for account 2, got %+v", session)
+	}
+
+	// The choice token only opens the accounts it was issued for.
+	if _, err := uc.SelectAccount(ctx, res.Choice, 99); !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Fatal("a choice token must not sign in an account it never listed")
+	}
+	if _, err := uc.SelectAccount(ctx, "not-a-token", 2); err == nil {
+		t.Fatal("a bogus choice token should be refused")
+	}
+}
+
+func TestForgotPasswordListsEveryTicket(t *testing.T) {
+	first := newMember(1, "NATCON-2026-00001")
+	first.Chapter, first.Phone = "Chapter Test", "+628111000154"
+	second := newMember(2, "NATCON-2026-00002")
+	second.Name, second.Chapter, second.Phone = "Second Ticket", "Chapter Test", "+628111000154"
+	users := &fakeUserRepo{users: []*domain.User{first, second}}
+	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
+
+	found, err := uc.ForgotPassword(context.Background(), "Chapter Test", "08111000154")
+	if err != nil {
+		t.Fatalf("forgot: %v", err)
+	}
+	if len(found) != 2 {
+		t.Fatalf("both tickets should be offered, got %d", len(found))
+	}
+	// Each account gets its own token, so resetting one leaves the other alone.
+	if found[0].ResetToken == found[1].ResetToken {
+		t.Fatal("each account needs its own reset token")
 	}
 }

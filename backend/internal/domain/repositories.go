@@ -4,15 +4,19 @@ import "context"
 
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	// ListByEmail returns every account on an address — members may share one
+	// when a buyer holds several tickets.
+	ListByEmail(ctx context.Context, email string) ([]*User, error)
 	GetByID(ctx context.Context, id int64) (*User, error)
 	GetByMemberCode(ctx context.Context, code string) (*User, error)
 	// GetByCodeOrPhone resolves a member by member code OR phone number —
 	// the booth scanner's manual input accepts either.
 	GetByCodeOrPhone(ctx context.Context, key string) (*User, error)
 	SetPassword(ctx context.Context, userID int64, hash string) error
-	// FindMemberByChapterPhone backs password recovery — chapter plus the
-	// phone number on the ticket is what an attendee has to prove.
-	FindMemberByChapterPhone(ctx context.Context, chapter, phone string) (*User, error)
+	// FindMembersByChapterPhone backs password recovery — chapter plus the
+	// phone number on the ticket is what an attendee has to prove. Two tickets
+	// bought together share both, so this can return more than one account.
+	FindMembersByChapterPhone(ctx context.Context, chapter, phone string) ([]*User, error)
 }
 
 type TenantRepository interface {

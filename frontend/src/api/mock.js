@@ -22,6 +22,18 @@ export const MOCK_MEMBERS = [
     member_code: 'NATCON-2026-08322', chapter: 'BNI Chapter Bandung Raya', company: 'Santoso Baja',
     phone: '+62811000322', classification: 'Manufacturing',
   },
+  // Two tickets bought on one address — signing in with duo@natcon.id asks
+  // which pass you are.
+  {
+    id: 4, name: 'Rara Wijaya', email: 'duo@natcon.id', role: 'member',
+    member_code: 'NATCON-2026-08501', chapter: 'BNI Chapter Bandung Raya', company: 'Wijaya Bersama',
+    phone: '+62811000501', classification: 'Trade & Distribution', ticket_number: 'TKT-08501',
+  },
+  {
+    id: 5, name: 'Rangga Wijaya', email: 'duo@natcon.id', role: 'member',
+    member_code: 'NATCON-2026-08502', chapter: 'BNI Chapter Bandung Raya', company: 'Wijaya Bersama',
+    phone: '+62811000501', classification: 'Trade & Distribution', ticket_number: 'TKT-08502',
+  },
 ]
 
 const TENANTS = [
@@ -191,7 +203,19 @@ function seatsTaken(state, seminarId) {
 export const mockApi = {
   login(email) {
     const normalized = email.trim().toLowerCase()
-    const member = MOCK_MEMBERS.find((m) => m.email === normalized)
+    const members = MOCK_MEMBERS.filter((m) => m.email === normalized)
+    // One buyer, two tickets: ask which pass they want before signing in.
+    if (members.length > 1) {
+      return delay({
+        choose: true,
+        choice_token: `mock-choice:${members.map((m) => m.id).join(',')}`,
+        accounts: members.map((m) => ({
+          id: m.id, name: m.name, member_code: m.member_code,
+          chapter: m.chapter, company: m.company, ticket_number: m.ticket_number || '',
+        })),
+      })
+    }
+    const member = members[0]
     if (member) {
       currentUser = member
       return delay({ token: 'mock-token', user: member })
@@ -205,6 +229,17 @@ export const mockApi = {
       return delay({ token: 'mock-token', user: currentUser })
     }
     return fail(401, 'Demo mode: use a demo account (reddie@, sinta@, agus@, booth-a03@, booth-sp01@ …)')
+  },
+
+  selectAccount(choiceToken, userId) {
+    const allowed = String(choiceToken).replace('mock-choice:', '').split(',').map(Number)
+    if (!allowed.includes(Number(userId))) {
+      return fail(401, 'incorrect email or password — please double-check')
+    }
+    const member = MOCK_MEMBERS.find((m) => m.id === Number(userId))
+    if (!member) return fail(401, 'incorrect email or password — please double-check')
+    currentUser = member
+    return delay({ token: 'mock-token', user: member })
   },
 
   restore(user) {
@@ -226,11 +261,17 @@ export const mockApi = {
   forgotPassword(chapter, phone) {
     const norm = (v) => String(v || '').toLowerCase().replace(/\s/g, '')
     const tail = (v) => String(v || '').replace(/\D/g, '').slice(-9)
-    const member = MOCK_MEMBERS.find(
+    const matches = MOCK_MEMBERS.filter(
       (m) => norm(m.chapter) === norm(chapter) && m.phone && tail(m.phone) === tail(phone)
     )
-    if (!member) return fail(401, 'incorrect email or password — please double-check')
-    return delay({ reset_token: `mock-reset:${member.member_code}`, name: member.name, email: member.email })
+    if (!matches.length) return fail(401, 'incorrect email or password — please double-check')
+    return delay({
+      accounts: matches.map((m) => ({
+        name: m.name, email: m.email, member_code: m.member_code,
+        ticket_number: m.ticket_number || '',
+        reset_token: `mock-reset:${m.member_code}`,
+      })),
+    })
   },
 
   resetPassword(resetToken, password) {

@@ -122,3 +122,26 @@ describe('speed networking', () => {
     expect(contact.current_table_no).toBe(5)
   })
 })
+
+describe('two tickets on one email', () => {
+  it('asks which pass to use, then signs in as the chosen one', async () => {
+    const res = await mockApi.login('duo@natcon.id')
+    expect(res.choose).toBe(true)
+    expect(res.accounts).toHaveLength(2)
+    expect(res.token).toBeUndefined()
+
+    const picked = res.accounts[1]
+    const session = await mockApi.selectAccount(res.choice_token, picked.id)
+    expect(session.user.member_code).toBe(picked.member_code)
+    expect(session.token).toBeTruthy()
+
+    // The choice token only opens the accounts it listed.
+    await expect(mockApi.selectAccount(res.choice_token, 999)).rejects.toMatchObject({ status: 401 })
+  })
+
+  it('offers both passes when recovering a shared phone number', async () => {
+    const { accounts } = await mockApi.forgotPassword('BNI Chapter Bandung Raya', '0811000501')
+    expect(accounts).toHaveLength(2)
+    expect(accounts[0].reset_token).not.toBe(accounts[1].reset_token)
+  })
+})

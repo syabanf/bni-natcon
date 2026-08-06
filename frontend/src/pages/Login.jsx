@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api } from '../api/client'
 import { useAuthStore } from '../store/auth'
 import ForgotPassword from './ForgotPassword'
+import { WitCredit } from '../components/Layout'
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
 
@@ -33,19 +34,83 @@ export default function Login() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [recovering, setRecovering] = useState(false)
+  // Set when one email opens more than one attendee account.
+  const [choice, setChoice] = useState(null)
 
   const submit = async (e) => {
     e.preventDefault()
     setError('')
     setBusy(true)
     try {
-      const { token, user } = await api.login(email.trim(), password)
-      setAuth(token, user)
+      const res = await api.login(email.trim(), password)
+      if (res.choose) {
+        setChoice(res)
+      } else {
+        setAuth(res.token, res.user)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
       setBusy(false)
     }
+  }
+
+  const pick = async (account) => {
+    setError('')
+    setBusy(true)
+    try {
+      const { token, user } = await api.selectAccount(choice.choice_token, account.id)
+      setAuth(token, user)
+    } catch (err) {
+      setError(err.message)
+      setChoice(null)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (choice) {
+    return (
+      <div className="auth-page">
+        <div className="auth-shell single">
+          <section className="auth-pane form">
+            <div className="auth-form-inner">
+              <p className="auth-eyebrow">Two tickets, one email</p>
+              <h2 className="auth-title">Which one are you?</h2>
+              <p className="auth-sub">
+                This address holds more than one Natcon ticket. Pick the pass you want to use —
+                each has its own QR, pins and breakout class.
+              </p>
+              {error && <div className="auth-error">{error}</div>}
+              <div className="account-picks">
+                {choice.accounts.map((a) => (
+                  <button
+                    type="button"
+                    className="account-pick"
+                    key={a.id}
+                    onClick={() => pick(a)}
+                    disabled={busy}
+                  >
+                    <span className="ap-name">{a.name}</span>
+                    <span className="ap-meta">
+                      {a.member_code}
+                      {a.chapter ? ` · ${a.chapter}` : ''}
+                    </span>
+                    {a.company && <span className="ap-meta">{a.company}</span>}
+                  </button>
+                ))}
+              </div>
+              <div className="auth-foot">
+                <button type="button" className="auth-admin-link" onClick={() => setChoice(null)}>
+                  ← Back to sign in
+                </button>
+              </div>
+              <WitCredit />
+            </div>
+          </section>
+        </div>
+      </div>
+    )
   }
 
   if (recovering) {
@@ -140,6 +205,7 @@ export default function Login() {
                 Committee? Open the admin panel ↗
               </a>
             </div>
+            <WitCredit />
           </div>
         </section>
 

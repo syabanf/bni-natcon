@@ -137,8 +137,9 @@ check("the generated password stops working", status == 401)
 status, body, _ = req("POST", "/api/v1/auth/forgot",
                       body={"chapter": "chaptersandi", "phone": "08119876543"})
 check("forgot password resolves on chapter + phone",
-      status == 200 and body["email"] == "passtest@natcon.id" and body["reset_token"])
-reset_token = body["reset_token"]
+      status == 200 and len(body["accounts"]) == 1
+      and body["accounts"][0]["email"] == "passtest@natcon.id")
+reset_token = body["accounts"][0]["reset_token"]
 status, _, _ = req("POST", "/api/v1/auth/forgot",
                    body={"chapter": "Chapter Salah", "phone": "+628119876543"})
 check("right phone, wrong chapter -> 401", status == 401)
@@ -160,6 +161,67 @@ check("a reset token is not a session token -> 401", status == 401)
 
 status, _, _ = req("DELETE", f"/api/v1/admin/members/{pass_id}", token=admin_tok)
 check("clean up the password test attendee", status == 200)
+
+# ------------------------------------------- two tickets bought on one email
+section("One email, two tickets")
+status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
+                      body={"members": [
+                          {"name": "Kembar Satu", "email": "kembar@natcon.id",
+                           "chapter": "Chapter Kembar", "phone": "+628117000001",
+                           "ticket_number": "TKT-K1"},
+                          {"name": "Kembar Dua", "email": "kembar@natcon.id",
+                           "chapter": "Chapter Kembar", "phone": "+628117000001",
+                           "ticket_number": "TKT-K2"},
+                      ]})
+check("both tickets on one email import as two attendees",
+      status == 200 and body["created"] == 2 and body["failed"] == 0)
+
+# Re-importing the same tickets updates them instead of making more.
+status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
+                      body={"members": [
+                          {"name": "Kembar Satu Revisi", "email": "kembar@natcon.id",
+                           "chapter": "Chapter Kembar", "phone": "+628117000001",
+                           "ticket_number": "TKT-K1"},
+                      ]})
+check("re-importing a ticket updates it", status == 200 and body["updated"] == 1 and body["created"] == 0)
+
+status, body, _ = req("GET", "/api/v1/admin/members?q=kembar@natcon.id", token=admin_tok)
+check("the shared address holds exactly two attendees", status == 200 and body["total"] == 2)
+
+# Imported accounts get the generated password: chapter + first name. Both
+# tickets carry the same first name here, so one password opens both — which
+# is exactly when the chooser has to appear.
+status, body = login("kembar@natcon.id", "chapterkembarkembar", xff="10.9.9.5")
+check("signing in on a shared address offers a choice",
+      status == 200 and body.get("choose") is True and len(body["accounts"]) == 2
+      and "token" not in body)
+choice_token = body["choice_token"]
+chosen = body["accounts"][1]
+check("each pass carries its own member code and ticket",
+      body["accounts"][0]["member_code"] != chosen["member_code"]
+      and chosen["ticket_number"] in ("TKT-K1", "TKT-K2"))
+
+status, body, _ = req("POST", "/api/v1/auth/login/select",
+                      body={"choice_token": choice_token, "user_id": chosen["id"]})
+check("picking a pass returns a session for it",
+      status == 200 and body["token"] and body["user"]["member_code"] == chosen["member_code"])
+status, _, _ = req("POST", "/api/v1/auth/login/select",
+                   body={"choice_token": choice_token, "user_id": 999999})
+check("a choice token cannot sign in an account it never listed -> 401", status == 401)
+status, _, _ = req("POST", "/api/v1/auth/login/select",
+                   body={"choice_token": "not-a-token", "user_id": chosen["id"]})
+check("a bogus choice token -> 400", status == 400)
+
+# Recovery on a shared chapter + phone offers both passes, each with its own token.
+status, body, _ = req("POST", "/api/v1/auth/forgot",
+                      body={"chapter": "Chapter Kembar", "phone": "08117000001"})
+check("recovery offers both passes",
+      status == 200 and len(body["accounts"]) == 2
+      and body["accounts"][0]["reset_token"] != body["accounts"][1]["reset_token"])
+
+status, body, _ = req("GET", "/api/v1/admin/members?q=kembar@natcon.id", token=admin_tok)
+for acc in body["members"]:
+    req("DELETE", f"/api/v1/admin/members/{acc['id']}", token=admin_tok)
 
 # ---------------------------------------------------------------- role guards
 section("Role guards")
@@ -355,9 +417,16 @@ check("member searchable by phone", status == 200 and body["total"] == 1
 status, _ = login("e2e-budi@natcon.id")
 check("new member can log in", status == 200)
 
+# Two tickets on one address is now a supported shape, so a second attendee
+# on the same email is allowed — a tenant's login is not.
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
+                      body={"name": "Second Ticket", "email": "e2e-budi@natcon.id"})
+check("a second attendee may share an email -> 201", status == 201)
+status, _, _ = req("DELETE", f"/api/v1/admin/members/{body['user']['id']}", token=admin_tok)
+check("clean up the shared-email attendee", status == 200)
 status, _, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
-                   body={"name": "Dup", "email": "e2e-budi@natcon.id"})
-check("duplicate email -> 409", status == 409)
+                   body={"name": "Staff Clash", "email": "booth-a03@natcon.id"})
+check("a tenant's email is still taken -> 409", status == 409)
 status, _, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                    body={"name": "Bad", "email": "bukan-email"})
 check("invalid email -> 400 (hardening)", status == 400)

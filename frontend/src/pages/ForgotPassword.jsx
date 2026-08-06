@@ -8,9 +8,10 @@ import { api } from '../api/client'
  * password; the API rate-limits attempts the same way it does sign-in.
  */
 export default function ForgotPassword({ onDone, onCancel }) {
-  const [step, setStep] = useState('verify') // verify | choose | done
+  const [step, setStep] = useState('verify') // verify | pick | choose | done
   const [chapter, setChapter] = useState('')
   const [phone, setPhone] = useState('')
+  const [accounts, setAccounts] = useState([])
   const [found, setFound] = useState(null)
   const [resetToken, setResetToken] = useState('')
   const [password, setPassword] = useState('')
@@ -24,10 +25,17 @@ export default function ForgotPassword({ onDone, onCancel }) {
     setError('')
     setBusy(true)
     try {
-      const res = await api.forgotPassword(chapter.trim(), phone.trim())
-      setResetToken(res.reset_token)
-      setFound(res)
-      setStep('choose')
+      const { accounts: matches } = await api.forgotPassword(chapter.trim(), phone.trim())
+      setAccounts(matches)
+      // Two tickets bought together share a chapter and a phone, so the
+      // attendee says which pass they are recovering.
+      if (matches.length > 1) {
+        setStep('pick')
+      } else {
+        setFound(matches[0])
+        setResetToken(matches[0].reset_token)
+        setStep('choose')
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -104,11 +112,39 @@ export default function ForgotPassword({ onDone, onCancel }) {
               </>
             )}
 
+            {step === 'pick' && (
+              <>
+                <h2 className="auth-title">Which pass?</h2>
+                <p className="auth-sub">
+                  This chapter and phone number hold more than one ticket. Pick the one whose
+                  password you want to reset.
+                </p>
+                <div className="account-picks">
+                  {accounts.map((a) => (
+                    <button
+                      type="button"
+                      className="account-pick"
+                      key={a.member_code}
+                      onClick={() => {
+                        setFound(a)
+                        setResetToken(a.reset_token)
+                        setStep('choose')
+                      }}
+                    >
+                      <span className="ap-name">{a.name}</span>
+                      <span className="ap-meta">{a.member_code}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             {step === 'choose' && (
               <>
                 <h2 className="auth-title">Hi {found?.name?.split(' ')[0]}</h2>
                 <p className="auth-sub">
-                  Found your account: <b>{found?.email}</b>. Choose a new password.
+                  Found your account: <b>{found?.member_code}</b> ({found?.email}). Choose a new
+                  password.
                 </p>
                 {error && <div className="auth-error">{error}</div>}
                 <form onSubmit={reset}>

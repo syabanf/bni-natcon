@@ -78,6 +78,10 @@ const isMock = () => useAuthStore.getState().mock
 export const api = {
   login: (email, password) =>
     isMock() ? mockApi.login(email, password) : request('/auth/login', { method: 'POST', body: { email, password } }),
+  selectAccount: (choiceToken, userId) =>
+    isMock()
+      ? mockApi.selectAccount(choiceToken, userId)
+      : request('/auth/login/select', { method: 'POST', body: { choice_token: choiceToken, user_id: userId } }),
   me: () => (isMock() ? mockApi.me() : request('/me')),
   setPassword: (password) =>
     isMock() ? mockApi.setPassword(password) : request('/auth/password', { method: 'POST', body: { password } }),

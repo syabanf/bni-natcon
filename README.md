@@ -71,8 +71,12 @@ ready-to-fill template (headers + example rows).
   normalizes phones (`'+62`, `08…` → `+62…`), maps *Bni Chapter* /
   *Company Name* / *Business Classification*, and skips duplicate emails
   inside the file. Rows
-  **create-or-update by email**; new accounts sign in with username =
-  email and password = chapter + first name (lowercase, no spaces), then
+  **create-or-update by ticket number** when the sheet carries one (falling
+  back to email), so **one buyer holding two tickets becomes two attendees**
+  on the same address — signing in then asks **which pass you are**, and each
+  pass keeps its own QR, pins and breakout class. New accounts sign in with
+  username = email and password = chapter + first name (lowercase, no
+  spaces), then
   **choose their own password on that first sign-in** — nothing else in the
   app opens until they do. Forgot it? Recovery matches **chapter + the phone
   number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
@@ -127,7 +131,7 @@ Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 154-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 165-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 
@@ -243,7 +247,8 @@ All with password `natcon2026`:
 | GET `/seminars/{id}/attendees` | member | who else is in the room (names, chapters) |
 | POST `/seminars/{id}/register` | member | register (409 when full/already picked)  |
 | POST `/auth/password`          | member | choose a password on first sign-in       |
-| POST `/auth/forgot`            | public | chapter + ticket phone → reset token (rate-limited) |
+| POST `/auth/login/select`      | public | pick which pass to sign in as, when one email holds several |
+| POST `/auth/forgot`            | public | chapter + ticket phone → one reset token per matching pass (rate-limited) |
 | POST `/auth/reset`             | public | consume the reset token, set a password  |
 | POST `/scans`                  | tenant | record visit — `member_code` accepts a member code **or phone number** |
 | GET `/booth`                   | tenant | booth profile                            |

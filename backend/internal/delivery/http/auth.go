@@ -105,3 +105,40 @@ func (j *JWTIssuer) ParseReset(token string) (int64, error) {
 	}
 	return userID, nil
 }
+
+// Choice tokens are handed out when one email opens more than one attendee
+// account. They name the accounts the password unlocked and nothing else, and
+// expire quickly — the attendee is standing at the sign-in screen.
+const choiceTokenTTL = 10 * time.Minute
+
+type choiceClaims struct {
+	Purpose string  `json:"purpose"`
+	UserIDs []int64 `json:"user_ids"`
+	jwt.RegisteredClaims
+}
+
+func (j *JWTIssuer) IssueChoice(userIDs []int64) (string, error) {
+	c := choiceClaims{
+		Purpose: "login-choice",
+		UserIDs: userIDs,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(choiceTokenTTL)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, c).SignedString(j.secret)
+}
+
+func (j *JWTIssuer) ParseChoice(token string) ([]int64, error) {
+	var c choiceClaims
+	parsed, err := jwt.ParseWithClaims(token, &c, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method %v", t.Header["alg"])
+		}
+		return j.secret, nil
+	})
+	if err != nil || !parsed.Valid || c.Purpose != "login-choice" || len(c.UserIDs) == 0 {
+		return nil, fmt.Errorf("invalid choice token")
+	}
+	return c.UserIDs, nil
+}

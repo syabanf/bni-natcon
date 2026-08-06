@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"natcon2026/backend/internal/domain"
+	"natcon2026/backend/internal/usecase"
 )
 
 /* ---------- DTOs ---------- */
@@ -24,7 +25,8 @@ type userDTO struct {
 
 	Classification string `json:"classification,omitempty"`
 	// The app routes straight to "choose your password" when this is true.
-	MustSetPassword bool `json:"must_set_password,omitempty"`
+	MustSetPassword bool   `json:"must_set_password,omitempty"`
+	TicketNumber    string `json:"ticket_number,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
@@ -32,7 +34,7 @@ func toUserDTO(u *domain.User) userDTO {
 		ID: u.ID, Name: u.Name, Email: u.Email, Role: string(u.Role),
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
 		Phone: u.Phone, Classification: u.Classification,
-		MustSetPassword: u.MustSetPassword,
+		MustSetPassword: u.MustSetPassword, TicketNumber: u.TicketNumber,
 	}
 }
 
@@ -55,15 +57,51 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "email and password are required")
 		return
 	}
-	token, user, err := s.auth.Login(r.Context(), req.Email, req.Password)
+	res, err := s.auth.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		respondDomainError(w, err)
 		return
 	}
-	respondJSON(w, http.StatusOK, map[string]any{
-		"token": token,
-		"user":  toUserDTO(user),
-	})
+	respondJSON(w, http.StatusOK, loginResponse(res))
+}
+
+// loginResponse is either a session or a list of accounts to choose from.
+func loginResponse(res *usecase.LoginResult) map[string]any {
+	if res.Choice == "" {
+		return map[string]any{"token": res.Token, "user": toUserDTO(res.User)}
+	}
+	accounts := make([]map[string]any, 0, len(res.Accounts))
+	for _, a := range res.Accounts {
+		accounts = append(accounts, map[string]any{
+			"id": a.ID, "name": a.Name, "member_code": a.MemberCode,
+			"chapter": a.Chapter, "company": a.Company,
+			"ticket_number": a.TicketNumber,
+		})
+	}
+	return map[string]any{
+		"choose":       true,
+		"choice_token": res.Choice,
+		"accounts":     accounts,
+	}
+}
+
+// handleSelectAccount finishes a sign-in that offered a choice between the
+// accounts sharing one email.
+func (s *Server) handleSelectAccount(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ChoiceToken string `json:"choice_token"`
+		UserID      int64  `json:"user_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	res, err := s.auth.SelectAccount(r.Context(), req.ChoiceToken, req.UserID)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, loginResponse(res))
 }
 
 // handleSetPassword is the first-login screen: swap the password generated at
@@ -94,16 +132,22 @@ func (s *Server) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid data format")
 		return
 	}
-	token, user, err := s.auth.ForgotPassword(r.Context(), req.Chapter, req.Phone)
+	found, err := s.auth.ForgotPassword(r.Context(), req.Chapter, req.Phone)
 	if err != nil {
 		respondDomainError(w, err)
 		return
 	}
-	respondJSON(w, http.StatusOK, map[string]any{
-		"reset_token": token,
-		"name":        user.Name,
-		"email":       user.Email,
-	})
+	// One phone can carry two tickets, so the answer is always a list — the
+	// app picks for the attendee when there is only one.
+	accounts := make([]map[string]any, 0, len(found))
+	for _, a := range found {
+		accounts = append(accounts, map[string]any{
+			"name": a.User.Name, "email": a.User.Email,
+			"member_code": a.User.MemberCode, "ticket_number": a.User.TicketNumber,
+			"reset_token": a.ResetToken,
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"accounts": accounts})
 }
 
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {

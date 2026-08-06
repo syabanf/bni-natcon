@@ -100,6 +100,7 @@ func (s *Server) Router() http.Handler {
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login", s.handleLogin)
 		// Recovery is guessable by design (chapter + phone), so it gets the
 		// same brute-force ceiling as login.
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login/select", s.handleSelectAccount)
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/forgot", s.handleForgotPassword)
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/reset", s.handleResetPassword)
 

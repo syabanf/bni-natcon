@@ -221,6 +221,9 @@ type MemberImportRow struct {
 	Company        string
 	Phone          string
 	Classification string
+	// TicketNumber, when the sheet carries one, is what identifies the
+	// attendee — two tickets bought on one email are two people.
+	TicketNumber string
 }
 
 // importPassword derives the initial account password for an imported
@@ -282,6 +285,7 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 			Chapter: chapter, Company: strings.TrimSpace(row.Company),
 			Phone:          strings.TrimSpace(row.Phone),
 			Classification: strings.TrimSpace(row.Classification),
+			TicketNumber:   strings.TrimSpace(row.TicketNumber),
 		})
 		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})

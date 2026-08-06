@@ -27,6 +27,7 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 			Company        string `json:"company"`
 			Phone          string `json:"phone"`
 			Classification string `json:"classification"`
+			TicketNumber   string `json:"ticket_number"`
 		} `json:"members"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Members) == 0 {
@@ -41,7 +42,7 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 	for _, m := range req.Members {
 		rows = append(rows, usecase.MemberImportRow{
 			Name: m.Name, Email: m.Email, Chapter: m.Chapter, Company: m.Company,
-			Phone: m.Phone, Classification: m.Classification,
+			Phone: m.Phone, Classification: m.Classification, TicketNumber: m.TicketNumber,
 		})
 	}
 	created, updated, errs := s.admin.BulkUpsertMembers(r.Context(), rows)

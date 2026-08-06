@@ -110,6 +110,18 @@ func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberC
 }
 
 func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*domain.User, error) {
+	// Attendees may share an address (two tickets, one buyer), but a tenant or
+	// admin login is not something a member may collide with.
+	var staffTaken bool
+	if err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM users WHERE email = $1 AND role <> 'member')`,
+		m.Email).Scan(&staffTaken); err != nil {
+		return nil, err
+	}
+	if staffTaken {
+		return nil, domain.ErrEmailTaken
+	}
+
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
 		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification,
@@ -118,11 +130,12 @@ func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*doma
 		        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
 		        $4, $5, $6, $7, true)
 		RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
-		          must_set_password, created_at`,
+		          must_set_password, ticket_number, created_at`,
 		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
-		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
+		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
+			&u.TicketNumber, &u.CreatedAt)
 	if err != nil {
-		if isUniqueViolation(err, "users_email_key") {
+		if isUniqueViolation(err, "users_email_staff_key") {
 			return nil, domain.ErrEmailTaken
 		}
 		return nil, err
@@ -137,7 +150,7 @@ func (r *AdminRepo) UpdateMember(ctx context.Context, id int64, m domain.MemberU
 		WHERE id = $7 AND role = 'member'`,
 		m.Name, m.Email, m.Chapter, m.Company, m.Phone, m.Classification, id)
 	if err != nil {
-		if isUniqueViolation(err, "users_email_key") {
+		if isUniqueViolation(err, "users_email_staff_key") {
 			return domain.ErrEmailTaken
 		}
 		return err
@@ -176,7 +189,7 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 		RETURNING id`,
 		t.Name, t.Email, t.PasswordHash).Scan(&ownerID)
 	if err != nil {
-		if isUniqueViolation(err, "users_email_key") {
+		if isUniqueViolation(err, "users_email_staff_key") {
 			return nil, domain.ErrEmailTaken
 		}
 		return nil, err
@@ -371,11 +384,19 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
+	// A ticket number identifies one attendee; an email may be shared by two
+	// tickets bought together, so it is only the key when no ticket is given.
 	var existingID int64
 	var role string
-	err = tx.QueryRow(ctx,
-		`SELECT id, role FROM users WHERE email = $1 FOR UPDATE`, m.Email).
-		Scan(&existingID, &role)
+	if m.TicketNumber != "" {
+		err = tx.QueryRow(ctx,
+			`SELECT id, role FROM users WHERE ticket_number = $1 FOR UPDATE`, m.TicketNumber).
+			Scan(&existingID, &role)
+	} else {
+		err = tx.QueryRow(ctx,
+			`SELECT id, role FROM users WHERE email = $1 AND role = 'member' FOR UPDATE`, m.Email).
+			Scan(&existingID, &role)
+	}
 	switch {
 	case err == nil && role != string(domain.RoleMember):
 		return nil, domain.ErrEmailTaken
@@ -383,12 +404,14 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 		var u domain.User
 		err = tx.QueryRow(ctx, `
 			UPDATE users SET name = $1, chapter = $2, company = $3, phone = $4,
-			       classification = COALESCE(NULLIF($5, ''), classification)
+			       classification = COALESCE(NULLIF($5, ''), classification),
+			       email = $7
 			WHERE id = $6
 			RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
-		          must_set_password, created_at`,
-			m.Name, m.Chapter, m.Company, m.Phone, m.Classification, existingID).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
+		          must_set_password, ticket_number, created_at`,
+			m.Name, m.Chapter, m.Company, m.Phone, m.Classification, existingID, m.Email).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone,
+				&u.Classification, &u.MustSetPassword, &u.TicketNumber, &u.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -400,16 +423,17 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 		var u domain.User
 		err = tx.QueryRow(ctx, `
 			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification,
-			                   must_set_password)
+			                   must_set_password, ticket_number)
 			VALUES ($1, $2, $3, 'member',
 			        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-			        $4, $5, $6, $7, true)
+			        $4, $5, $6, $7, true, $8)
 			RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
-		          must_set_password, created_at`,
-			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword, &u.CreatedAt)
+		          must_set_password, ticket_number, created_at`,
+			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification, m.TicketNumber).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone,
+				&u.Classification, &u.MustSetPassword, &u.TicketNumber, &u.CreatedAt)
 		if err != nil {
-			if isUniqueViolation(err, "users_email_key") {
+			if isUniqueViolation(err, "users_email_staff_key") {
 				return nil, domain.ErrEmailTaken
 			}
 			return nil, err
@@ -566,7 +590,7 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 			RETURNING id`,
 			t.Name, t.Email, t.PasswordHash).Scan(&ownerID)
 		if err != nil {
-			if isUniqueViolation(err, "users_email_key") {
+			if isUniqueViolation(err, "users_email_staff_key") {
 				return nil, domain.ErrEmailTaken
 			}
 			return nil, err

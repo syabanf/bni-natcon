@@ -53,7 +53,7 @@ func (f *fakeUserRepo) SetPassword(_ context.Context, userID int64, hash string)
 	return domain.ErrNotFound
 }
 
-func (f *fakeUserRepo) FindMemberByChapterPhone(_ context.Context, chapter, phone string) (*domain.User, error) {
+func (f *fakeUserRepo) FindMembersByChapterPhone(_ context.Context, chapter, phone string) ([]*domain.User, error) {
 	norm := func(s string) string {
 		return strings.ToLower(strings.ReplaceAll(s, " ", ""))
 	}
@@ -69,13 +69,30 @@ func (f *fakeUserRepo) FindMemberByChapterPhone(_ context.Context, chapter, phon
 		}
 		return out
 	}
+	var out []*domain.User
 	for _, u := range f.users {
 		if u.Role == domain.RoleMember && norm(u.Chapter) == norm(chapter) &&
 			u.Phone != "" && digits(u.Phone) == digits(phone) {
-			return u, nil
+			out = append(out, u)
 		}
 	}
-	return nil, domain.ErrNotFound
+	if len(out) == 0 {
+		return nil, domain.ErrNotFound
+	}
+	return out, nil
+}
+
+func (f *fakeUserRepo) ListByEmail(_ context.Context, email string) ([]*domain.User, error) {
+	var out []*domain.User
+	for _, u := range f.users {
+		if u.Email == email {
+			out = append(out, u)
+		}
+	}
+	if len(out) == 0 {
+		return nil, domain.ErrNotFound
+	}
+	return out, nil
 }
 
 func (f *fakeUserRepo) GetByCodeOrPhone(_ context.Context, key string) (*domain.User, error) {
@@ -286,6 +303,30 @@ func (fakeTokens) Issue(userID int64, role domain.Role) (string, error) {
 
 func (fakeTokens) IssueReset(userID int64) (string, error) {
 	return fmt.Sprintf("reset:%d", userID), nil
+}
+
+func (fakeTokens) IssueChoice(userIDs []int64) (string, error) {
+	parts := make([]string, 0, len(userIDs))
+	for _, id := range userIDs {
+		parts = append(parts, fmt.Sprint(id))
+	}
+	return "choice:" + strings.Join(parts, ","), nil
+}
+
+func (fakeTokens) ParseChoice(token string) ([]int64, error) {
+	rest, ok := strings.CutPrefix(token, "choice:")
+	if !ok || rest == "" {
+		return nil, fmt.Errorf("invalid choice token")
+	}
+	var out []int64
+	for _, p := range strings.Split(rest, ",") {
+		var id int64
+		if _, err := fmt.Sscanf(p, "%d", &id); err != nil {
+			return nil, fmt.Errorf("invalid choice token")
+		}
+		out = append(out, id)
+	}
+	return out, nil
 }
 
 func (fakeTokens) ParseReset(token string) (int64, error) {

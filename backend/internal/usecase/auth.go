@@ -15,6 +15,10 @@ type TokenIssuer interface {
 	Issue(userID int64, role domain.Role) (string, error)
 	IssueReset(userID int64) (string, error)
 	ParseReset(token string) (int64, error)
+	// A choice token names the accounts a verified password unlocked; it is
+	// exchanged for a session once the attendee picks one.
+	IssueChoice(userIDs []int64) (string, error)
+	ParseChoice(token string) ([]int64, error)
 }
 
 // PasswordVerifier abstracts bcrypt comparison.
@@ -60,23 +64,37 @@ func (u *AuthUsecase) SetPassword(ctx context.Context, userID int64, newPassword
 // ForgotPassword checks an attendee's chapter against the phone number on
 // their ticket and hands back a short-lived reset token plus enough of their
 // identity for the UI to confirm it found the right person.
-func (u *AuthUsecase) ForgotPassword(ctx context.Context, chapter, phone string) (string, *domain.User, error) {
+// RecoverableAccount is one account password recovery turned up, with the
+// token that resets it.
+type RecoverableAccount struct {
+	User       *domain.User
+	ResetToken string
+}
+
+// ForgotPassword checks an attendee's chapter against the phone number on
+// their ticket. Two tickets bought together share both, so this can hand back
+// more than one account for the attendee to choose from.
+func (u *AuthUsecase) ForgotPassword(ctx context.Context, chapter, phone string) ([]RecoverableAccount, error) {
 	chapter, phone = strings.TrimSpace(chapter), strings.TrimSpace(phone)
 	if chapter == "" || phone == "" {
-		return "", nil, invalid("chapter and phone number are required")
+		return nil, invalid("chapter and phone number are required")
 	}
-	user, err := u.users.FindMemberByChapterPhone(ctx, chapter, phone)
+	users, err := u.users.FindMembersByChapterPhone(ctx, chapter, phone)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			return "", nil, domain.ErrInvalidCredentials
+			return nil, domain.ErrInvalidCredentials
 		}
-		return "", nil, err
+		return nil, err
 	}
-	token, err := u.tokens.IssueReset(user.ID)
-	if err != nil {
-		return "", nil, err
+	out := make([]RecoverableAccount, 0, len(users))
+	for _, user := range users {
+		token, err := u.tokens.IssueReset(user.ID)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, RecoverableAccount{User: user, ResetToken: token})
 	}
-	return token, user, nil
+	return out, nil
 }
 
 // ResetPassword consumes the token from ForgotPassword.
@@ -95,21 +113,79 @@ func (u *AuthUsecase) ResetPassword(ctx context.Context, token, newPassword stri
 	return u.users.SetPassword(ctx, userID, hash)
 }
 
-func (u *AuthUsecase) Login(ctx context.Context, email, password string) (string, *domain.User, error) {
+// LoginResult is either a session (one account answered) or a choice (a buyer
+// holding two tickets has two attendee accounts on the same address).
+type LoginResult struct {
+	Token    string
+	User     *domain.User
+	Choice   string // choice token, set only when Candidates has more than one
+	Accounts []*domain.User
+}
+
+func (u *AuthUsecase) Login(ctx context.Context, email, password string) (*LoginResult, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
-	user, err := u.users.GetByEmail(ctx, email)
+	users, err := u.users.ListByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			return "", nil, domain.ErrInvalidCredentials
+			return nil, domain.ErrInvalidCredentials
 		}
-		return "", nil, err
+		return nil, err
 	}
-	if !u.verifier.Verify(user.PasswordHash, password) {
-		return "", nil, domain.ErrInvalidCredentials
+	// Each account carries its own password, so only the ones the typed
+	// password actually opens are offered.
+	var matched []*domain.User
+	for _, candidate := range users {
+		if u.verifier.Verify(candidate.PasswordHash, password) {
+			matched = append(matched, candidate)
+		}
 	}
+	if len(matched) == 0 {
+		return nil, domain.ErrInvalidCredentials
+	}
+	if len(matched) == 1 {
+		return u.session(matched[0])
+	}
+	ids := make([]int64, 0, len(matched))
+	for _, m := range matched {
+		ids = append(ids, m.ID)
+	}
+	choice, err := u.tokens.IssueChoice(ids)
+	if err != nil {
+		return nil, err
+	}
+	return &LoginResult{Choice: choice, Accounts: matched}, nil
+}
+
+// SelectAccount finishes a sign-in that offered a choice.
+func (u *AuthUsecase) SelectAccount(ctx context.Context, choiceToken string, userID int64) (*LoginResult, error) {
+	ids, err := u.tokens.ParseChoice(choiceToken)
+	if err != nil {
+		return nil, invalid("this sign-in has expired — please sign in again")
+	}
+	allowed := false
+	for _, id := range ids {
+		if id == userID {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
+		return nil, domain.ErrInvalidCredentials
+	}
+	user, err := u.users.GetByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, domain.ErrInvalidCredentials
+		}
+		return nil, err
+	}
+	return u.session(user)
+}
+
+func (u *AuthUsecase) session(user *domain.User) (*LoginResult, error) {
 	token, err := u.tokens.Issue(user.ID, user.Role)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	return token, user, nil
+	return &LoginResult{Token: token, User: user}, nil
 }

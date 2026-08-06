@@ -10,7 +10,6 @@ function AppBar() {
     <header className="appbar">
       <div className="brand">
         <img className="brand-logo" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
-        <p className="brand-place">Pullman Central Park Jakarta</p>
       </div>
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}
@@ -19,6 +18,18 @@ function AppBar() {
         </button>
       </div>
     </header>
+  )
+}
+
+// Build credit, at the foot of every screen.
+export function WitCredit() {
+  return (
+    <p className="wit-credit">
+      System by{' '}
+      <a href="https://wit.id" target="_blank" rel="noreferrer">
+        WIT
+      </a>
+    </p>
   )
 }
 
@@ -40,6 +51,7 @@ export function MemberLayout() {
       <AppBar />
       <div className="screen-body">
         <Outlet />
+        <WitCredit />
       </div>
       <nav className="bottomnav">
         <NavButton to="/attendee" icon="home" label="Home" />
@@ -59,6 +71,7 @@ export function TenantLayout() {
       <AppBar />
       <div className="screen-body">
         <Outlet />
+        <WitCredit />
       </div>
       <nav className="bottomnav">
         <NavButton to="/tenant/scanner" icon="camera" label="Scanner" />

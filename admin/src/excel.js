@@ -54,14 +54,20 @@ export function transformMemberRows(parsed) {
       r.name || [r.first_name, r.last_name].filter(Boolean).join(' ').trim() || r.ktp_name || ''
     const email = (r.email || '').trim().toLowerCase()
     if (!name && !email) continue
-    if (email && seen.has(email)) {
+    // One buyer can hold two tickets on one address, so the ticket number is
+    // the identity when the sheet has one. Only fall back to the email for
+    // the simple template, which has no ticket column.
+    const ticket = (r.ticket_number || '').toString().trim()
+    const key = ticket || email
+    if (key && seen.has(key)) {
       skippedDuplicates++
       continue
     }
-    if (email) seen.add(email)
+    if (key) seen.add(key)
     rows.push({
       name: name.trim(),
       email,
+      ticket_number: ticket,
       chapter: (r.chapter || '').trim(),
       company: (r.company || '').trim(),
       phone: normalizePhone(r.phone),
@@ -150,7 +156,7 @@ export const REGISTRATION_TEMPLATE = {
 }
 
 export const MEMBER_TEMPLATE = {
-  columns: ['Name', 'Email', 'Chapter', 'Company', 'Phone', 'Business Classification'],
+  columns: ['Name', 'Email', 'Chapter', 'Company', 'Phone', 'Business Classification', 'Ticket Number'],
   examples: [
     {
       Name: 'Reddie Wijaya',
@@ -159,6 +165,7 @@ export const MEMBER_TEMPLATE = {
       Company: 'Witid Intelligence',
       Phone: '+628111000154',
       'Business Classification': 'IT & Software',
+      'Ticket Number': '',
     },
     {
       Name: 'Sinta Dewi',
@@ -167,6 +174,7 @@ export const MEMBER_TEMPLATE = {
       Company: 'Sinta Florist',
       Phone: '08111000201',
       'Business Classification': 'Trade & Distribution',
+      'Ticket Number': '',
     },
   ],
   fileName: 'natcon2026-template-import-attendees.xlsx',
@@ -219,6 +227,7 @@ export const MEMBER_IMPORT_ALIASES = {
   chapter: ['chapter', 'bni chapter'],
   company: ['perusahaan', 'company', 'company name', 'bisnis'],
   classification: ['business classification', 'klasifikasi', 'klasifikasi bisnis', 'classification'],
+  ticket_number: ['ticket number', 'ticket no', 'nomor tiket', 'no tiket'],
 }
 
 export function exportSheet(rows, sheetName, fileName) {
