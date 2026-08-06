@@ -28,8 +28,8 @@ func (s *Server) handleNetworkingStatus(w http.ResponseWriter, r *http.Request) 
 		for _, m := range status.Mates {
 			mates = append(mates, map[string]any{
 				"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
-				"company": m.Company, "seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved,
-				"note": m.Note,
+				"company": m.Company, "classification": m.Classification, "phone": m.Phone,
+				"seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved, "note": m.Note,
 			})
 		}
 		resp["table"] = tableDTO(map[string]any{
@@ -88,7 +88,8 @@ func (s *Server) handleNetworkingHistory(w http.ResponseWriter, r *http.Request)
 	for _, c := range h.Contacts {
 		contacts = append(contacts, map[string]any{
 			"member_id": c.MemberID, "name": c.Name, "chapter": c.Chapter,
-			"company": c.Company, "member_code": c.MemberCode, "note": c.Note,
+			"company": c.Company, "classification": c.Classification,
+			"member_code": c.MemberCode, "note": c.Note,
 			"saved_at": c.SavedAt,
 		})
 	}
@@ -110,8 +111,8 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 	for _, m := range d.Members {
 		members = append(members, map[string]any{
 			"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
-			"company": m.Company, "seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved,
-			"note": m.Note,
+			"company": m.Company, "classification": m.Classification, "phone": m.Phone,
+			"seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved, "note": m.Note,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
@@ -136,7 +137,8 @@ func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Re
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"member_id": d.MemberID, "name": d.Name, "chapter": d.Chapter,
-		"company": d.Company, "member_code": d.MemberCode, "email": d.Email,
+		"company": d.Company, "classification": d.Classification,
+		"member_code": d.MemberCode, "email": d.Email,
 		"phone": d.Phone, "note": d.Note, "saved_at": d.SavedAt,
 		"current_table_no": d.CurrentTableNo,
 	})

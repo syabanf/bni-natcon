@@ -10,7 +10,7 @@ function AppBar() {
     <header className="appbar">
       <div className="brand">
         <img className="brand-logo" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
-        <p className="brand-place">Jakarta Convention Center</p>
+        <p className="brand-place">Pullman Central Park Jakarta</p>
       </div>
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}
@@ -45,7 +45,7 @@ export function MemberLayout() {
         <NavButton to="/attendee" icon="home" label="Home" />
         <NavButton to="/attendee/qr" icon="qr" label="My QR" />
         <NavButton to="/attendee/passport" icon="pin" label="Passport" />
-        <NavButton to="/attendee/seminar" icon="mic" label="Seminar" />
+        <NavButton to="/attendee/seminar" icon="mic" label="Class" />
         <NavButton to="/attendee/network" icon="users" label="Network" />
       </nav>
       <Toast />

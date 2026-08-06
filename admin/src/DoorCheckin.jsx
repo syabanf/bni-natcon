@@ -8,9 +8,9 @@ function fmtClock(d) {
 }
 
 /*
- * Mode panitia pintu: pilih seminar, scan QR peserta (kamera atau input
+ * Door-crew mode: pick a breakout class, scan attendee QRs (camera or manual
  * manual) — hadir tercatat sekali per peserta, dan yang belum terdaftar
- * di seminar tsb ditolak dengan jelas.
+ * input); anyone not registered for that class is rejected clearly.
  */
 export default function DoorCheckin({ onUnauthorized }) {
   const [seminars, setSeminars] = useState([])
@@ -57,7 +57,7 @@ export default function DoorCheckin({ onUnauthorized }) {
       const id = Number(room[1])
       const target = seminars.find((x) => x.id === id)
       if (!target) {
-        setResult({ kind: 'err', title: 'Unknown room', sub: 'That seminar QR is not in this event' })
+        setResult({ kind: 'err', title: 'Unknown room', sub: 'That class QR is not in this event' })
         return
       }
       const notice = { kind: 'ok', title: `Switched to ${target.room}`, sub: target.title }
@@ -108,13 +108,13 @@ export default function DoorCheckin({ onUnauthorized }) {
       <div className="content-head">
         <div>
           <h1>Door Check-in</h1>
-          <p className="micro">Scan attendee QRs at the seminar room door — attended vs registered updates live. Attendance = totebag claimed.</p>
+          <p className="micro">Scan attendee QRs at the class room door — attended vs registered updates live. Attendance = goodiebag claimed.</p>
         </div>
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Choose Seminar
+          <span className="sec-no">01</span>Choose Breakout Class
         </h2>
         <p className="panel-sub">Each door crew covers one room</p>
         <select

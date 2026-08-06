@@ -14,7 +14,7 @@ const MENU = [
   { key: 'members', label: 'Attendees', icon: '◉' },
   { key: 'tenants', label: 'Tenants', icon: '▤' },
   { key: 'chapters', label: 'Chapters', icon: '⬡' },
-  { key: 'seminars', label: 'Seminars', icon: '◈' },
+  { key: 'seminars', label: 'Breakout Class', icon: '◈' },
   { key: 'tables', label: 'Tables', icon: '◍' },
   { key: 'door', label: 'Door Check-in', icon: '▣' },
   { key: 'qr', label: 'QR Prints', icon: '⧉' },
@@ -23,7 +23,7 @@ const MENU = [
 
 const REPORT_MENU = [
   { key: 'report-leads', label: 'Tenant Leads', icon: '≣' },
-  { key: 'report-seminars', label: 'Seminar Reg.', icon: '≣' },
+  { key: 'report-seminars', label: 'Class Reg.', icon: '≣' },
   { key: 'report-coupons', label: 'Attendee Pins', icon: '≣' },
 ]
 
@@ -148,7 +148,7 @@ function Login({ onLogin }) {
           <span className="auth-streak s3" />
           <div className="auth-hero-inner">
             <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
-            <span className="auth-hero-meta">3 September 2026 · Jakarta Convention Center</span>
+            <span className="auth-hero-meta">3 September 2026 · Pullman Central Park Jakarta</span>
           </div>
         </aside>
       </div>

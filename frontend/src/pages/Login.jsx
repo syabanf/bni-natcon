@@ -58,7 +58,7 @@ export default function Login() {
               alt="BNI Indonesia National Conference 2026 — Accelerate"
             />
             <p className="auth-sub">
-              Sign in for your digital pass, seminars, and speed networking.
+              Sign in for your digital pass, breakout classes, and speed networking.
             </p>
 
             {error && <div className="auth-error">{error}</div>}
@@ -137,7 +137,7 @@ export default function Login() {
           <span className="auth-streak s3" />
           <div className="auth-hero-inner">
             <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
-            <span className="auth-hero-meta">3 September 2026 · Jakarta Convention Center</span>
+            <span className="auth-hero-meta">3 September 2026 · Pullman Central Park Jakarta</span>
           </div>
         </aside>
       </div>

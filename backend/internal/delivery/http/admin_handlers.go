@@ -61,6 +61,7 @@ func (s *Server) handleAdminSeminars(w http.ResponseWriter, r *http.Request) {
 		Room       string `json:"room"`
 		Title      string `json:"title"`
 		Speaker    string `json:"speaker"`
+		Moderator  string `json:"moderator"`
 		Capacity   int    `json:"capacity"`
 		SeatsTaken int    `json:"seats_taken"`
 	}
@@ -68,7 +69,8 @@ func (s *Server) handleAdminSeminars(w http.ResponseWriter, r *http.Request) {
 	for _, sem := range fill {
 		out = append(out, row{
 			ID: sem.ID, Slot: sem.Slot, Room: sem.Room, Title: sem.Title,
-			Speaker: sem.Speaker, Capacity: sem.Capacity, SeatsTaken: sem.SeatsTaken,
+			Speaker: sem.Speaker, Moderator: sem.Moderator, Capacity: sem.Capacity,
+			SeatsTaken: sem.SeatsTaken,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"seminars": out})

@@ -12,9 +12,9 @@ import (
 func (r *AdminRepo) MemberDetail(ctx context.Context, id int64) (*domain.MemberDetail, error) {
 	var d domain.MemberDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT id, name, email, role, COALESCE(member_code, ''), chapter, company, phone, created_at
+		SELECT id, name, email, role, COALESCE(member_code, ''), chapter, company, phone, classification, created_at
 		FROM users WHERE id = $1 AND role = 'member'`, id).
-		Scan(&d.ID, &d.Name, &d.Email, &d.Role, &d.MemberCode, &d.Chapter, &d.Company, &d.Phone, &d.CreatedAt)
+		Scan(&d.ID, &d.Name, &d.Email, &d.Role, &d.MemberCode, &d.Chapter, &d.Company, &d.Phone, &d.Classification, &d.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -100,11 +100,11 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.SeminarDetail, error) {
 	var d domain.SeminarDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.capacity, s.description, s.cover_url,
+		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity, s.description, s.cover_url,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id),
 		       (SELECT COUNT(*) FROM seminar_attendance sa WHERE sa.seminar_id = s.id)
 		FROM seminars s WHERE s.id = $1`, id).
-		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Capacity, &d.Description, &d.CoverURL, &d.SeatsTaken, &d.AttendedCount)
+		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Moderator, &d.Capacity, &d.Description, &d.CoverURL, &d.SeatsTaken, &d.AttendedCount)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

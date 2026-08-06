@@ -10,17 +10,17 @@ export const MOCK_MEMBERS = [
   {
     id: 1, name: 'Reddie Wijaya', email: 'reddie@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08154', chapter: 'BNI Chapter Jakarta Elite', company: 'Witid Intelligence',
-    phone: '+62811000154',
+    phone: '+62811000154', classification: 'IT & Software',
   },
   {
     id: 2, name: 'Sinta Dewi', email: 'sinta@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08201', chapter: 'BNI Chapter Jakarta Elite', company: 'Sinta Florist',
-    phone: '+62811000201',
+    phone: '+62811000201', classification: 'Trade & Distribution',
   },
   {
     id: 3, name: 'Agus Santoso', email: 'agus@natcon.id', role: 'member',
     member_code: 'NATCON-2026-08322', chapter: 'BNI Chapter Bandung Raya', company: 'Santoso Baja',
-    phone: '+62811000322',
+    phone: '+62811000322', classification: 'Manufacturing',
   },
 ]
 
@@ -43,18 +43,40 @@ const TENANTS = [
 
 const SEMINARS = [
   {
-    id: 1, slot: 1, room: 'R. Merapi', capacity: 60,
-    title: 'Scaling Referral: From Chapter to Nationwide',
-    speaker: 'Ir. Bambang Wicaksono — National Director',
+    id: 1, slot: 1, room: 'Breakout Room 1', capacity: 60,
+    title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026',
+    speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai',
+    moderator: 'Roby Oktober',
     cover_url: '',
-    description: 'How top chapters turn one-to-one referrals into a national pipeline: contact-sphere mapping, power teams, and a measurable ask culture — with live case studies from three chapters that tripled closed business in a year.',
+    description:
+      'Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team.',
   },
   {
-    id: 2, slot: 1, room: 'R. Rinjani', capacity: 40,
-    title: 'AI for SMEs: Practical, Not Hype',
-    speaker: 'Dr. Sarah Kusuma — Witid Intelligence',
+    id: 2, slot: 1, room: 'Breakout Room 2', capacity: 60,
+    title: 'Work-Life Balance & AI: The New Agency Equation',
+    speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia',
+    moderator: 'Ryan Kristomulyono',
     cover_url: '',
-    description: 'A no-jargon tour of AI tools an SME can deploy this quarter: lead scoring, follow-up automation, and customer insight dashboards — with real budgets and ROI numbers from Indonesian businesses.',
+    description:
+      'AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity.',
+  },
+  {
+    id: 3, slot: 1, room: 'Breakout Room 3', capacity: 60,
+    title: 'How to Win in Retail: The 2026 Economic Reality',
+    speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA',
+    moderator: 'David Gan',
+    cover_url: '',
+    description:
+      'Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce.',
+  },
+  {
+    id: 4, slot: 1, room: 'Breakout Room 4', capacity: 60,
+    title: 'Your Face Tells a Story',
+    speaker: 'Suntoro Suciatmaja',
+    moderator: '',
+    cover_url: '',
+    description:
+      'Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast.',
   },
 ]
 
@@ -66,15 +88,15 @@ function boothEmail(tenant) {
 // Fake personas carry email + phone so tel:/mailto: links work in demo.
 const FAKE_MATES = {
   12: [
-    { id: 'f-sinta12', name: 'Melly Hartono', company: 'Melly Tax · Konsultan Pajak', chapter: 'Chapter Surabaya One', email: 'sinta12@natcon.id', phone: '+62855029300' },
-    { id: 'f-joko12', name: 'Joko Prabowo', company: 'JP Otomotif · Bengkel Premium', chapter: 'Chapter Medan Utama', email: 'joko12@natcon.id', phone: '+62827973000' },
-    { id: 'f-rina12', name: 'Rina Kartika', company: 'Kartika Law · Notaris', chapter: 'Chapter Bali Paradise', email: 'rina12@natcon.id', phone: '+62885093000' },
-    { id: 'f-dedi12', name: 'Dedi Firmansyah', company: 'DF Logistics · Ekspedisi', chapter: 'Chapter Semarang Jaya', email: 'dedi12@natcon.id', phone: '+62807053000' },
-    { id: 'f-lusi12', name: 'Lusi Anggraini', company: 'Lusi Catering · F&B', chapter: 'Chapter Jakarta Elite', email: 'lusi12@natcon.id', phone: '+62869553000' },
+    { id: 'f-sinta12', name: 'Melly Hartono', company: 'Melly Tax · Konsultan Pajak', chapter: 'Chapter Surabaya One', email: 'sinta12@natcon.id', phone: '+62855029300', classification: 'Professional Services' },
+    { id: 'f-joko12', name: 'Joko Prabowo', company: 'JP Otomotif · Bengkel Premium', chapter: 'Chapter Medan Utama', email: 'joko12@natcon.id', phone: '+62827973000', classification: 'Automotive' },
+    { id: 'f-rina12', name: 'Rina Kartika', company: 'Kartika Law · Notaris', chapter: 'Chapter Bali Paradise', email: 'rina12@natcon.id', phone: '+62885093000', classification: 'Legal' },
+    { id: 'f-dedi12', name: 'Dedi Firmansyah', company: 'DF Logistics · Ekspedisi', chapter: 'Chapter Semarang Jaya', email: 'dedi12@natcon.id', phone: '+62807053000', classification: 'Logistics' },
+    { id: 'f-lusi12', name: 'Lusi Anggraini', company: 'Lusi Catering · F&B', chapter: 'Chapter Jakarta Elite', email: 'lusi12@natcon.id', phone: '+62869553000', classification: 'Food & Beverage' },
   ],
   5: [
-    { id: 'f-budi5', name: 'Budi Hartanto', company: 'Budi Craft Studio', chapter: 'Chapter Yogya Istimewa', email: 'budi5@natcon.id', phone: '+62869051000' },
-    { id: 'f-citra5', name: 'Citra Lestari', company: 'Citra Media', chapter: 'Chapter Tangerang Hebat', email: 'citra5@natcon.id', phone: '+62835289100' },
+    { id: 'f-budi5', name: 'Budi Hartanto', company: 'Budi Craft Studio', chapter: 'Chapter Yogya Istimewa', email: 'budi5@natcon.id', phone: '+62869051000', classification: 'Creative & Craft' },
+    { id: 'f-citra5', name: 'Citra Lestari', company: 'Citra Media', chapter: 'Chapter Tangerang Hebat', email: 'citra5@natcon.id', phone: '+62835289100', classification: 'Media & Marketing' },
   ],
 }
 
@@ -277,11 +299,13 @@ export const mockApi = {
     const mates = [
       ...real.map((m) => ({
         member_id: m.member_code, name: m.name, chapter: m.chapter, company: m.company,
+        classification: m.classification || '', phone: m.phone || '',
         seat_no: ++seat, is_me: m.member_code === myCode, saved: savedSet.has(m.member_code),
         note: notes[m.member_code] || '',
       })),
       ...fake.map((f) => ({
         member_id: f.id, name: f.name, chapter: f.chapter, company: f.company,
+        classification: f.classification || '', phone: f.phone || '',
         seat_no: ++seat, is_me: false, saved: savedSet.has(f.id),
         note: notes[f.id] || '',
       })),
@@ -392,10 +416,12 @@ export const mockApi = {
     const members = [
       ...MOCK_MEMBERS.filter((m) => state.seats[m.member_code] === n).map((m) => ({
         member_id: m.member_code, name: m.name, chapter: m.chapter, company: m.company,
+        classification: m.classification || '', phone: m.phone || '',
         seat_no: ++seat, is_me: m.member_code === myCode, saved: savedSet.has(m.member_code),
       })),
       ...(FAKE_MATES[n] || []).map((f) => ({
         member_id: f.id, name: f.name, chapter: f.chapter, company: f.company,
+        classification: f.classification || '', phone: f.phone || '',
         seat_no: ++seat, is_me: false, saved: savedSet.has(f.id),
       })),
     ]
@@ -425,6 +451,7 @@ export const mockApi = {
       name: person.name,
       chapter: person.chapter || '',
       company: person.company || '',
+      classification: person.classification || '',
       member_code: person.member_code || '',
       email: person.email || '',
       phone: person.phone || '',

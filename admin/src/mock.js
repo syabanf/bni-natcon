@@ -22,16 +22,16 @@ function todayAt(h, m = 0) {
 
 function seedState() {
   const members = [
-    ['Reddie Wijaya', 'reddie@natcon.id', 'NATCON-2026-08154', 'BNI Chapter Jakarta Elite', 'Witid Intelligence'],
-    ['Sinta Dewi', 'sinta@natcon.id', 'NATCON-2026-08201', 'BNI Chapter Jakarta Elite', 'Sinta Florist'],
-    ['Agus Santoso', 'agus@natcon.id', 'NATCON-2026-08322', 'BNI Chapter Bandung Raya', 'Santoso Baja'],
-    ['Budi Hartanto', 'budi@natcon.id', 'NATCON-2026-09001', 'Chapter Yogya Istimewa', 'Budi Craft Studio'],
-    ['Citra Lestari', 'citra@natcon.id', 'NATCON-2026-09002', 'Chapter Tangerang Hebat', 'Citra Media'],
-    ['Dewi Anggraini', 'dewi@natcon.id', 'NATCON-2026-09003', 'Chapter Bali Paradise', 'Dewi Spa'],
-    ['Fajar Nugroho', 'fajar@natcon.id', 'NATCON-2026-09004', 'Chapter Bekasi Sinergi', 'Fajar Motor'],
-    ['Lusi Anggraini', 'lusi@natcon.id', 'NATCON-2026-09005', 'Chapter Jakarta Elite', 'Lusi Catering'],
-  ].map(([name, email, code, chapter, company], i) => ({
-    id: i + 1, name, email, member_code: code, chapter, company,
+    ['Reddie Wijaya', 'reddie@natcon.id', 'NATCON-2026-08154', 'BNI Chapter Jakarta Elite', 'Witid Intelligence', 'IT & Software'],
+    ['Sinta Dewi', 'sinta@natcon.id', 'NATCON-2026-08201', 'BNI Chapter Jakarta Elite', 'Sinta Florist', 'Trade & Distribution'],
+    ['Agus Santoso', 'agus@natcon.id', 'NATCON-2026-08322', 'BNI Chapter Bandung Raya', 'Santoso Baja', 'Manufacturing'],
+    ['Budi Hartanto', 'budi@natcon.id', 'NATCON-2026-09001', 'Chapter Yogya Istimewa', 'Budi Craft Studio', 'Creative & Craft'],
+    ['Citra Lestari', 'citra@natcon.id', 'NATCON-2026-09002', 'Chapter Tangerang Hebat', 'Citra Media', 'Media & Marketing'],
+    ['Dewi Anggraini', 'dewi@natcon.id', 'NATCON-2026-09003', 'Chapter Bali Paradise', 'Dewi Spa', 'Health & Wellness'],
+    ['Fajar Nugroho', 'fajar@natcon.id', 'NATCON-2026-09004', 'Chapter Bekasi Sinergi', 'Fajar Motor', 'Automotive'],
+    ['Lusi Anggraini', 'lusi@natcon.id', 'NATCON-2026-09005', 'Chapter Jakarta Elite', 'Lusi Catering', 'Food & Beverage'],
+  ].map(([name, email, code, chapter, company, classification], i) => ({
+    id: i + 1, name, email, member_code: code, chapter, company, classification,
     phone: `+62811${String(1000 + i)}`,
   }))
 
@@ -56,8 +56,10 @@ function seedState() {
   }))
 
   const seminars = [
-    { id: 1, slot: 1, room: 'R. Merapi', title: 'Scaling Referral: From Chapter to Nationwide', speaker: 'Ir. Bambang Wicaksono — National Director', capacity: 60, description: 'Turning one-to-one referrals into a national pipeline.', cover_url: '' },
-    { id: 2, slot: 1, room: 'R. Rinjani', title: 'AI for SMEs: Practical, Not Hype', speaker: 'Dr. Sarah Kusuma — Witid Intelligence', capacity: 40, description: 'AI tools an SME can deploy this quarter.', cover_url: '' },
+    { id: 1, slot: 1, room: 'Breakout Room 1', title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026', speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai', moderator: 'Roby Oktober', capacity: 60, description: 'A strategic HR roadmap for mid-sized companies in 2026.', cover_url: '' },
+    { id: 2, slot: 1, room: 'Breakout Room 2', title: 'Work-Life Balance & AI: The New Agency Equation', speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia', moderator: 'Ryan Kristomulyono', capacity: 60, description: 'Outcome-based performance and AI as a shield for work-life balance.', cover_url: '' },
+    { id: 3, slot: 1, room: 'Breakout Room 3', title: 'How to Win in Retail: The 2026 Economic Reality', speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA', moderator: 'David Gan', capacity: 60, description: 'Trade-down, the physical store, and the rise of agentic commerce.', cover_url: '' },
+    { id: 4, slot: 1, room: 'Breakout Room 4', title: 'Your Face Tells a Story', speaker: 'Suntoro Suciatmaja', moderator: '', capacity: 60, description: 'Reading faces as a practical business skill.', cover_url: '' },
   ]
 
   // (member_id, tenant_id, jam, menit) — tersebar supaya grafik hidup.
@@ -146,7 +148,7 @@ function ensureChapter(s, name) {
   }
 }
 
-function createMemberRow(s, { name, email, chapter = '', company = '', phone = '' }) {
+function createMemberRow(s, { name, email, chapter = '', company = '', phone = '', classification = '' }) {
   name = (name || '').trim()
   email = (email || '').trim().toLowerCase()
   if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
@@ -155,6 +157,7 @@ function createMemberRow(s, { name, email, chapter = '', company = '', phone = '
   ensureChapter(s, chapter)
   const row = {
     id: s.nextId++, name, email, chapter, company, phone: String(phone || '').trim(),
+    classification: (classification || '').trim(),
     member_code: `NATCON-2026-0${s.nextCode++}`,
   }
   s.members.push(row)
@@ -162,7 +165,7 @@ function createMemberRow(s, { name, email, chapter = '', company = '', phone = '
 }
 
 // Create-or-update keyed by email (import semantics).
-function upsertMemberRow(s, { name, email, chapter = '', company = '', phone = '' }) {
+function upsertMemberRow(s, { name, email, chapter = '', company = '', phone = '', classification = '' }) {
   name = (name || '').trim()
   email = (email || '').trim().toLowerCase()
   if (!name || !email) throw { status: 400, message: 'invalid input: name and email are required' }
@@ -173,12 +176,14 @@ function upsertMemberRow(s, { name, email, chapter = '', company = '', phone = '
     Object.assign(existing, {
       name, chapter: (chapter || '').trim(), company: (company || '').trim(),
       phone: String(phone || '').trim(),
+      // a blank column in the sheet must not wipe a value already on file
+      ...((classification || '').trim() ? { classification: classification.trim() } : {}),
     })
     return { created: false }
   }
   const row = {
     id: s.nextId++, name, email, chapter: (chapter || '').trim(), company: (company || '').trim(),
-    phone: String(phone || '').trim(),
+    phone: String(phone || '').trim(), classification: (classification || '').trim(),
     member_code: `NATCON-2026-0${s.nextCode++}`,
   }
   s.members.push(row)
@@ -452,7 +457,8 @@ export const mockAdminApi = {
     if (!(Number(body.capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
     const row = {
       id: s.nextId++, slot: Number(body.slot) || 1, room: body.room.trim(),
-      title: body.title.trim(), speaker: body.speaker || '', capacity: Number(body.capacity),
+      title: body.title.trim(), speaker: body.speaker || '', moderator: body.moderator || '',
+      capacity: Number(body.capacity),
       description: body.description || '', cover_url: body.cover_url || '',
     }
     s.seminars.push(row)
@@ -468,7 +474,8 @@ export const mockAdminApi = {
     if (!(Number(body.capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
     Object.assign(sem, {
       slot: Number(body.slot) || 1, room: body.room.trim(), title: body.title.trim(),
-      speaker: body.speaker || '', capacity: Number(body.capacity),
+      speaker: body.speaker || '', moderator: body.moderator ?? sem.moderator ?? '',
+      capacity: Number(body.capacity),
       description: body.description ?? sem.description ?? '', cover_url: body.cover_url ?? sem.cover_url ?? '',
     })
     save(s)

@@ -90,9 +90,10 @@ func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request
 	respondJSON(w, http.StatusOK, map[string]any{
 		"seminar": map[string]any{
 			"id": d.ID, "slot": d.Slot, "room": d.Room, "title": d.Title,
-			"speaker": d.Speaker, "capacity": d.Capacity, "seats_taken": d.SeatsTaken,
+			"speaker": d.Speaker, "moderator": d.Moderator, "capacity": d.Capacity,
+			"seats_taken":    d.SeatsTaken,
 			"attended_count": d.AttendedCount,
-			"description": d.Description, "cover_url": d.CoverURL,
+			"description":    d.Description, "cover_url": d.CoverURL,
 		},
 		"attendees": attendees,
 	})

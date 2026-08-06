@@ -2,27 +2,31 @@
 
 [![CI](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml/badge.svg)](https://github.com/syabanf/bni-natcon/actions/workflows/ci.yml)
 
-Event app for BNI Natcon 2026, built from the `natcon2026-mockup_3.html`
-mockup. The entire UI is in **English** (MoM revision). Members collect
+Event app for BNI Natcon 2026 — 3 September 2026 at **Pullman Central Park
+Jakarta** — built from the `natcon2026-mockup_3.html` mockup. The entire UI is
+in **English** (MoM revision). Members collect
 **pins** by having sponsors & booths scan their QR (the passport opens with
 an **Official Sponsors** band and red-framed, ribboned sponsor cards above
 a plain Booths section, visited tenants sink to the bottom; every tenant
-card carries a description), register for parallel seminars (**totebag on
-door check-in**, with a **separate seminar entry QR**, full seminar detail
-+ cover, and a live attendance badge), and join **speed networking** —
-**scan the table QR first** (or type the table number) to drop straight
-into the table's network, with per-person **notes** and contact details
-carrying **email & phone** that open the mail/phone app on tap. Tenants
+card carries a description), pick one of the four parallel **breakout
+classes** (**goodiebag on door check-in**, with a **separate class entry QR**,
+full class detail with speakers + moderator and cover, and a live attendance
+badge), and join **speed networking** — **scan the table QR first** (or type
+the table number) to drop straight into the table's network, where every
+person shows their **business classification** and a **WhatsApp link**, with
+per-person **notes** and contact details carrying **email & phone** that open
+the mail/phone app on tap. Tenants
 scan member QRs with the camera or **manual input by member ID / phone
 number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
 gives the committee live monitoring (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
-sponsor rows; seminars have description + cover),
+sponsor rows; breakout classes have speakers, moderator, description +
+cover),
 **detail pages**, the **door check-in station**, a **Tables** page that
 generates the speed-networking tables, a **QR Prints** page with
-print-ready QR cards (tables, seminar rooms, booth signage), and a
+print-ready QR cards (tables, class rooms, booth signage), and a
 **Lucky Draw** page with a card-shuffle animation where every pin is a
 ticket and top collectors lead the deck.
 
@@ -41,10 +45,12 @@ dropping in new artwork.
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. It opens straight on a split sign-in screen (form on the left, "Accelerate" brand hero on the right); the account's role decides where you land. **Each app has its own path prefix** — attendees live under `/attendee` (`/attendee/qr`, `/passport`, `/seminar`, `/network`), booth & sponsor scanners under `/tenant` (`/tenant/scanner`, `/tenant/dashboard`), and sign-in is shared at `/login`. Pre-split URLs still redirect to their new home.
-- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, seminar fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three **Laporan** pages (Leads Tenant, Registrasi Seminar, Kupon Peserta) — each with flat SVG-style charts (scan per booth/jam, keterisian kursi, distribusi kupon) and its own Excel export.
+- **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
-Members can cancel a seminar registration (`DELETE /seminars/{id}/register`)
-and pick another session in the same slot.
+Members can cancel a class registration (`DELETE /seminars/{id}/register`)
+and pick another class in the same slot. The four real breakout classes ship
+in the seeder; an already-seeded database can load them with
+[`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql).
 
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a
@@ -53,7 +59,8 @@ ready-to-fill template (headers + example rows).
 - *Attendees* — accepts the official ticketing export (*Data Peserta*
   sheet) as-is: combines First/Last Name (falling back to Ktp Name),
   normalizes phones (`'+62`, `08…` → `+62…`), maps *Bni Chapter* /
-  *Company Name*, and skips duplicate emails inside the file. Rows
+  *Company Name* / *Business Classification*, and skips duplicate emails
+  inside the file. Rows
   **create-or-update by email**; new accounts sign in with username =
   email and password = chapter + first name (lowercase, no spaces).
 - *Tenants* — headers Name/Booth/Category/Kind/Initials/Email/Description
@@ -105,7 +112,7 @@ Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 118-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 124-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 

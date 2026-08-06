@@ -117,7 +117,7 @@ export function MemberDetail({ id, onBack }) {
         </div>
         <div className="stat-card">
           <div className="num">{registrations.length}</div>
-          <div className="label">Seminars joined</div>
+          <div className="label">Classes joined</div>
         </div>
       </div>
 
@@ -135,13 +135,13 @@ export function MemberDetail({ id, onBack }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Registered Seminars
+          <span className="sec-no">02</span>Registered Breakout Classes
         </h2>
-        <p className="panel-sub">Satu seminar per slot paralel</p>
+        <p className="panel-sub">One class per parallel slot</p>
         <SimpleTable
           columns={['Slot', 'Room', 'Title', 'Registered At']}
           rows={registrations.map((r) => [`#${r.slot}`, <b key="r">{r.room}</b>, r.title, fmtTime(r.registered_at)])}
-          emptyText="No seminar registrations yet."
+          emptyText="No class registrations yet."
         />
       </div>
     </DetailShell>
@@ -210,7 +210,7 @@ export function TenantDetail({ id, onBack }) {
   )
 }
 
-/* ===== Detail Seminar ===== */
+/* ===== Breakout class detail ===== */
 
 export function SeminarDetail({ id, onBack }) {
   const [data, setData] = useState(null)
@@ -220,28 +220,29 @@ export function SeminarDetail({ id, onBack }) {
     api.seminarDetail(id).then(setData).catch((e) => setError(e.message))
   }, [id])
 
-  if (error) return <DetailShell title="Detail Seminar" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
-  if (!data) return <DetailShell title="Seminar Detail" sub="Loading…" onBack={onBack} />
+  if (error) return <DetailShell title="Breakout Class" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
+  if (!data) return <DetailShell title="Breakout Class" sub="Loading…" onBack={onBack} />
 
   const { seminar, attendees } = data
   const pct = Math.round((seminar.seats_taken / seminar.capacity) * 100)
   return (
-    <DetailShell title={seminar.title} sub={`Detail seminar · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
+    <DetailShell title={seminar.title} sub={`Breakout class · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
       <div className="detail-hero">
         <div className="dh-avatar tenant">{seminar.room.replace('R. ', '').slice(0, 2).toUpperCase()}</div>
         <InfoGrid
           items={[
             ['Room', seminar.room],
-            ['Pembicara', seminar.speaker],
-            ['Slot Paralel', `#${seminar.slot}`],
-            ['Kapasitas', `${seminar.capacity} kursi`],
+            ['Speaker(s)', seminar.speaker],
+            ['Moderator', seminar.moderator || '—'],
+            ['Parallel slot', `#${seminar.slot}`],
+            ['Capacity', `${seminar.capacity} seats`],
           ]}
         />
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Keterisian Kursi
+          <span className="sec-no">01</span>Seat Fill
         </h2>
         <p className="panel-sub">
           {seminar.seats_taken}/{seminar.capacity} seats · {pct}% · attended {seminar.attended_count ?? 0}

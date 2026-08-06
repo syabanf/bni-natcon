@@ -12,6 +12,36 @@ function initials(name = '') {
     .toUpperCase()
 }
 
+// wa.me wants digits only with the country code — Indonesian numbers arrive as
+// "+628…" or "08…" depending on how the ticketing sheet was filled in.
+function waLink(phone) {
+  const digits = String(phone || '').replace(/\D/g, '')
+  if (!digits) return ''
+  const intl = digits.startsWith('0') ? `62${digits.slice(1)}` : digits
+  return `https://wa.me/${intl}`
+}
+
+// Business classification + WhatsApp, the two things people actually ask for
+// across a networking table.
+function MateMeta({ m }) {
+  const wa = m.is_me ? '' : waLink(m.phone)
+  return (
+    <>
+      <p>{m.company || m.chapter}</p>
+      {(m.classification || wa) && (
+        <div className="np-meta">
+          {m.classification && <span className="np-class">{m.classification}</span>}
+          {wa && (
+            <a className="np-wa" href={wa} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+              WhatsApp {m.phone}
+            </a>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
 // Accepts "TABLE:5", "MEJA:5", "T5", or a plain number as the table QR payload.
 function parseTableCode(raw) {
   const m = String(raw).trim().toUpperCase().match(/(?:TABLE|MEJA|T)?[:\s-]*(\d{1,3})$/)
@@ -142,7 +172,7 @@ function MateRow({ m, onSaveContact, onSaveNote }) {
             </span>
           )}
         </h5>
-        <p>{m.company || m.chapter}</p>
+        <MateMeta m={m} />
         {m.saved && m.note && !editing && <p className="np-note">📝 {m.note}</p>}
       </div>
       {!m.is_me &&
@@ -211,6 +241,7 @@ function ContactHistoryDetail({ contactId, onBack }) {
             <div className="cc-avatar">{initials(data.name)}</div>
             <h3>{data.name}</h3>
             <p className="cc-biz">{data.company || '—'}</p>
+            {data.classification && <p className="cc-class">{data.classification}</p>}
             {data.chapter && <span className="pill red">{data.chapter}</span>}
             <div className="contact-actions">
               {data.phone && (
@@ -349,7 +380,7 @@ function TableHistoryDetail({ tableNo, onBack }) {
                       </span>
                     )}
                   </h5>
-                  <p>{m.company || m.chapter}</p>
+                  <MateMeta m={m} />
                 </div>
                 {!m.is_me &&
                   (m.saved ? (
@@ -444,6 +475,11 @@ function HistoryView({ onBack }) {
             <div className="np-info">
               <h5>{c.name}</h5>
               <p>{c.note ? `📝 ${c.note}` : c.company || c.chapter}</p>
+              {c.classification && (
+                <div className="np-meta">
+                  <span className="np-class">{c.classification}</span>
+                </div>
+              )}
             </div>
             <span className="np-time">{fmtTime(c.saved_at)}</span>
             <span className="np-arrow">→</span>

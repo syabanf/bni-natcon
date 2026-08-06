@@ -169,11 +169,18 @@ status, _, _ = req("PUT", "/api/v1/booth/visitors/999999/note", token=tenant_tok
 check("note for non-visitor -> 404", status == 404)
 
 # ---------------------------------------------------------------- seminars
-section("Seminars (register / slot lock / cancel / switch)")
+section("Breakout classes (register / slot lock / cancel / switch)")
 status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
-check("2 seminars listed", status == 200 and len(body["seminars"]) == 2)
-check("seminar carries description + attended flag",
+check("4 breakout classes listed", status == 200 and len(body["seminars"]) == 4)
+check("class carries description + attended flag",
       body["seminars"][0]["description"] != "" and body["seminars"][0]["attended"] is False)
+# All four share slot 1, so picking one locks the rest — that single pick is
+# what the goodiebag is claimed against.
+check("all classes share one parallel slot",
+      len({s["slot"] for s in body["seminars"]}) == 1)
+check("classes carry speakers and at least one moderator",
+      all(s["speaker"] for s in body["seminars"])
+      and any(s.get("moderator") for s in body["seminars"]))
 sem1, sem2 = body["seminars"][0]["id"], body["seminars"][1]["id"]
 
 status, _, _ = req("POST", f"/api/v1/seminars/{sem1}/register", token=member_tok)
@@ -206,6 +213,12 @@ check("unknown table -> 404", status == 404)
 status, body, _ = req("GET", "/api/v1/networking", token=member_tok)
 check("status shows table 12 with 2 mates", body["checked_in"] is True
       and body["table"]["table_no"] == 12 and len(body["mates"]) == 2)
+# Business classification + WhatsApp number are what people ask each other for
+# across a table, so every mate row carries both.
+sinta_mate = next(m for m in body["mates"] if not m["is_me"])
+check("table mates carry classification + phone for the WhatsApp link",
+      sinta_mate["classification"] == "Trade & Distribution"
+      and sinta_mate["phone"] == "+62811000201")
 
 status, _, _ = req("POST", "/api/v1/networking/contacts", token=member_tok, body={"member_id": sinta_id})
 check("save contact", status == 200)
@@ -229,6 +242,8 @@ check("contact detail shows current table 12",
       status == 200 and body["current_table_no"] == 12)
 check("contact detail carries email + phone",
       body["email"] == "sinta@natcon.id" and body["phone"] == "+62811000201")
+check("contact detail carries classification",
+      body["classification"] == "Trade & Distribution")
 
 status, _, _ = req("PUT", f"/api/v1/networking/contacts/{sinta_id}/note", token=member_tok,
                    body={"note": "great referral fit"})

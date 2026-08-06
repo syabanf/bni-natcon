@@ -21,13 +21,15 @@ type userDTO struct {
 	Chapter    string `json:"chapter,omitempty"`
 	Company    string `json:"company,omitempty"`
 	Phone      string `json:"phone,omitempty"`
+
+	Classification string `json:"classification,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
 	return userDTO{
 		ID: u.ID, Name: u.Name, Email: u.Email, Role: string(u.Role),
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
-		Phone: u.Phone,
+		Phone: u.Phone, Classification: u.Classification,
 	}
 }
 
@@ -121,6 +123,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 		Room        string `json:"room"`
 		Title       string `json:"title"`
 		Speaker     string `json:"speaker"`
+		Moderator   string `json:"moderator"`
 		Capacity    int    `json:"capacity"`
 		SeatsLeft   int    `json:"seats_left"`
 		Registered  bool   `json:"registered"`
@@ -132,7 +135,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 	for _, sem := range seminars {
 		out = append(out, seminarDTO{
 			ID: sem.ID, Slot: sem.Slot, Room: sem.Room, Title: sem.Title,
-			Speaker: sem.Speaker, Capacity: sem.Capacity,
+			Speaker: sem.Speaker, Moderator: sem.Moderator, Capacity: sem.Capacity,
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
 			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
 		})

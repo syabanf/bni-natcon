@@ -5,7 +5,7 @@ import { api } from './api'
 /*
  * QR print centre: print-ready cards for the physical event.
  *   Tables   — TABLE:<no>, scanned by attendees to join a table's network
- *   Seminars — SEMINAR:<id>, scanned on the Door Check-in page to switch room
+ *   Classes  — SEMINAR:<id>, scanned on the Door Check-in page to switch room
  *   Tenants  — BOOTH:<code>, booth/sponsor signage
  * Only the selected cards are printed (see the @media print rules).
  */
@@ -16,7 +16,7 @@ export const tenantQRValue = (t) => `BOOTH:${t.booth}`
 
 const KINDS = [
   { key: 'tables', label: 'Networking Tables' },
-  { key: 'seminars', label: 'Seminars' },
+  { key: 'seminars', label: 'Breakout Classes' },
   { key: 'tenants', label: 'Tenants' },
 ]
 
@@ -82,7 +82,7 @@ export default function QRPrints({ onUnauthorized }) {
         <div>
           <h1>QR Prints</h1>
           <p className="micro">
-            Print-ready QR cards — tables (scanned by attendees), seminar rooms (scanned on Door
+            Print-ready QR cards — tables (scanned by attendees), class rooms (scanned on Door
             Check-in), and booth signage
           </p>
         </div>

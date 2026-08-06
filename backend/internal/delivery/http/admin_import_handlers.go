@@ -21,11 +21,12 @@ func bulkErrorsDTO(errs []domain.BulkRowError) []map[string]any {
 func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Members []struct {
-			Name    string `json:"name"`
-			Email   string `json:"email"`
-			Chapter string `json:"chapter"`
-			Company string `json:"company"`
-			Phone   string `json:"phone"`
+			Name           string `json:"name"`
+			Email          string `json:"email"`
+			Chapter        string `json:"chapter"`
+			Company        string `json:"company"`
+			Phone          string `json:"phone"`
+			Classification string `json:"classification"`
 		} `json:"members"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Members) == 0 {
@@ -40,7 +41,7 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 	for _, m := range req.Members {
 		rows = append(rows, usecase.MemberImportRow{
 			Name: m.Name, Email: m.Email, Chapter: m.Chapter, Company: m.Company,
-			Phone: m.Phone,
+			Phone: m.Phone, Classification: m.Classification,
 		})
 	}
 	created, updated, errs := s.admin.BulkUpsertMembers(r.Context(), rows)

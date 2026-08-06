@@ -313,7 +313,7 @@ export function MembersPage() {
           }}
         />
         <TemplateButton template={MEMBER_TEMPLATE} />
-        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '' })}>
+        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '', classification: '' })}>
           + Add Attendee
         </button>
       </PageHead>
@@ -357,12 +357,18 @@ export function MembersPage() {
                 {m.email}
                 {m.phone && <small>{m.phone}</small>}
               </td>
-              <td>{m.chapter}</td>
+              <td>
+                {m.chapter}
+                {m.classification && <small>{m.classification}</small>}
+              </td>
               <td className="num">{m.visits}</td>
               <RowActions
                 onDetail={() => setDetailId(m.id)}
                 onEdit={() =>
-                  crud.setForm({ id: m.id, name: m.name, email: m.email, chapter: m.chapter, company: m.company, phone: m.phone || '' })
+                  crud.setForm({
+                    id: m.id, name: m.name, email: m.email, chapter: m.chapter,
+                    company: m.company, phone: m.phone || '', classification: m.classification || '',
+                  })
                 }
                 onDelete={() => crud.del(m.id, m.name)}
               />
@@ -391,7 +397,8 @@ export function MembersPage() {
             <Field label="Email" type="email" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} required />
             <Field label="Chapter" value={crud.form.chapter} onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })} />
             <Field label="Company" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
-            <Field label="Phone" hint="used by the booth scanner's manual input" value={crud.form.phone || ''} onChange={(e) => crud.setForm({ ...crud.form, phone: e.target.value })} />
+            <Field label="Phone" hint="used by the booth scanner's manual input and the WhatsApp link at networking tables" value={crud.form.phone || ''} onChange={(e) => crud.setForm({ ...crud.form, phone: e.target.value })} />
+            <Field label="Business classification" hint="shown next to this person at the networking table" value={crud.form.classification || ''} onChange={(e) => crud.setForm({ ...crud.form, classification: e.target.value })} />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">
@@ -598,12 +605,12 @@ export function SeminarsPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Seminars" sub="Attendees can only pick one seminar per slot">
+      <PageHead title="Master Data — Breakout Classes" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
         <button
           className="md-add"
-          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', capacity: 40, description: '', cover_url: '' })}
+          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', moderator: '', capacity: 60, description: '', cover_url: '' })}
         >
-          + Add Seminar
+          + Add Class
         </button>
       </PageHead>
 
@@ -629,7 +636,10 @@ export function SeminarsPage() {
               </td>
               <td>
                 <b>{sm.title}</b>
-                <small>{sm.speaker}</small>
+                <small>
+                  {sm.speaker}
+                  {sm.moderator ? ` · mod. ${sm.moderator}` : ''}
+                </small>
               </td>
               <td className="num">
                 {sm.seats_taken}/{sm.capacity}
@@ -639,7 +649,7 @@ export function SeminarsPage() {
                 onEdit={() =>
                   crud.setForm({
                     id: sm.id, slot: sm.slot, room: sm.room, title: sm.title,
-                    speaker: sm.speaker, capacity: sm.capacity,
+                    speaker: sm.speaker, moderator: sm.moderator || '', capacity: sm.capacity,
                     description: sm.description || '', cover_url: sm.cover_url || '',
                   })
                 }
@@ -652,14 +662,15 @@ export function SeminarsPage() {
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Edit Seminar' : 'Add Seminar'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Breakout Class' : 'Add Breakout Class'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
             <Field label="Slot" type="number" min="1" value={crud.form.slot} onChange={(e) => crud.setForm({ ...crud.form, slot: e.target.value })} required />
             <Field label="Room" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />
             <Field label="Title" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
-            <Field label="Speaker" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
+            <Field label="Speaker(s)" hint="separate multiple speakers with a semicolon" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
+            <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
             <Field label="Capacity" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
-            <Field label="Description" hint="shown on the attendee seminar detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
+            <Field label="Description" hint="shown on the attendee class detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             <CoverUpload
               value={crud.form.cover_url || ''}
               onChange={(url) => crud.setForm({ ...crud.form, cover_url: url })}

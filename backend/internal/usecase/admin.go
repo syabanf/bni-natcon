@@ -72,8 +72,20 @@ func (u *AdminUsecase) SeminarCheckin(ctx context.Context, seminarID int64, memb
 	return u.admin.SeminarCheckin(ctx, seminarID, memberCode)
 }
 
-func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, chapter, company, phone string) (*domain.User, error) {
-	name, email = strings.TrimSpace(name), strings.ToLower(strings.TrimSpace(email))
+// MemberInput is admin form input for creating one member.
+type MemberInput struct {
+	Name           string
+	Email          string
+	Password       string
+	Chapter        string
+	Company        string
+	Phone          string
+	Classification string
+}
+
+func (u *AdminUsecase) CreateMember(ctx context.Context, in MemberInput) (*domain.User, error) {
+	name, email := strings.TrimSpace(in.Name), strings.ToLower(strings.TrimSpace(in.Email))
+	password, chapter := in.Password, in.Chapter
 	if name == "" || email == "" {
 		return nil, invalid("name and email are required")
 	}
@@ -92,8 +104,8 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, name, email, password, 
 	}
 	return u.admin.CreateMember(ctx, domain.NewMember{
 		Name: name, Email: email, PasswordHash: hash,
-		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(company),
-		Phone: strings.TrimSpace(phone),
+		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(in.Company),
+		Phone: strings.TrimSpace(in.Phone), Classification: strings.TrimSpace(in.Classification),
 	})
 }
 
@@ -203,11 +215,12 @@ func (u *AdminUsecase) DeleteSeminar(ctx context.Context, id int64) error {
 /* ----- Bulk import ----- */
 
 type MemberImportRow struct {
-	Name    string
-	Email   string
-	Chapter string
-	Company string
-	Phone   string
+	Name           string
+	Email          string
+	Chapter        string
+	Company        string
+	Phone          string
+	Classification string
 }
 
 // importPassword derives the initial account password for an imported
@@ -267,7 +280,8 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 		res, err := u.admin.UpsertMember(ctx, domain.NewMember{
 			Name: name, Email: email, PasswordHash: hash,
 			Chapter: chapter, Company: strings.TrimSpace(row.Company),
-			Phone: strings.TrimSpace(row.Phone),
+			Phone:          strings.TrimSpace(row.Phone),
+			Classification: strings.TrimSpace(row.Classification),
 		})
 		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})

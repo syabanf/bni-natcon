@@ -11,16 +11,17 @@ const (
 )
 
 type User struct {
-	ID           int64
-	Name         string
-	Email        string
-	PasswordHash string
-	Role         Role
-	MemberCode   string // empty for tenant-role users
-	Chapter      string
-	Company      string
-	Phone        string
-	CreatedAt    time.Time
+	ID             int64
+	Name           string
+	Email          string
+	PasswordHash   string
+	Role           Role
+	MemberCode     string // empty for tenant-role users
+	Chapter        string
+	Company        string
+	Phone          string
+	Classification string // BNI business classification, from the ticketing export
+	CreatedAt      time.Time
 }
 
 // Tenant kinds: sponsors are listed above booths on the passport.
@@ -71,7 +72,8 @@ type Seminar struct {
 	Slot        int
 	Room        string
 	Title       string
-	Speaker     string
+	Speaker     string // one or more speakers, comma-separated
+	Moderator   string
 	Capacity    int
 	Description string
 	CoverURL    string
@@ -120,14 +122,14 @@ type ScanResult struct {
 
 // AdminOverview aggregates event-wide numbers for the admin dashboard.
 type AdminOverview struct {
-	TotalMembers        int
-	TotalTenants        int
-	TotalSponsors       int
-	TotalBooths         int
-	TotalVisits         int
-	VisitsToday         int
+	TotalMembers         int
+	TotalTenants         int
+	TotalSponsors        int
+	TotalBooths          int
+	TotalVisits          int
+	VisitsToday          int
 	SeminarRegistrations int
-	MembersWithVisit    int
+	MembersWithVisit     int
 }
 
 // TenantScanCount ranks a booth by collected scans.
@@ -181,20 +183,22 @@ type MemberSummary struct {
 // NewMember carries admin input for creating a member. PasswordHash is set by
 // the usecase before it reaches the repository.
 type NewMember struct {
-	Name         string
-	Email        string
-	PasswordHash string
-	Chapter      string
-	Company      string
-	Phone        string
+	Name           string
+	Email          string
+	PasswordHash   string
+	Chapter        string
+	Company        string
+	Phone          string
+	Classification string
 }
 
 type MemberUpdate struct {
-	Name    string
-	Email   string
-	Chapter string
-	Company string
-	Phone   string
+	Name           string
+	Email          string
+	Chapter        string
+	Company        string
+	Phone          string
+	Classification string
 }
 
 // NewTenant creates a booth/sponsor plus its scanner login user.
@@ -223,6 +227,7 @@ type SeminarInput struct {
 	Room        string
 	Title       string
 	Speaker     string
+	Moderator   string
 	Capacity    int
 	Description string
 	CoverURL    string
@@ -326,14 +331,16 @@ type NetworkingTable struct {
 // TableMate is one person seated at the member's table. Note is the
 // owner's private note on that person (set after saving the contact).
 type TableMate struct {
-	MemberID int64
-	Name     string
-	Chapter  string
-	Company  string
-	SeatNo   int
-	IsMe     bool
-	Saved    bool
-	Note     string
+	MemberID       int64
+	Name           string
+	Chapter        string
+	Company        string
+	Classification string
+	Phone          string // shown as a WhatsApp link at the table
+	SeatNo         int
+	IsMe           bool
+	Saved          bool
+	Note           string
 }
 
 // NetworkingStatus is everything the member's networking screen needs.
@@ -352,13 +359,14 @@ type TableHistoryRow struct {
 }
 
 type SavedContact struct {
-	MemberID   int64
-	Name       string
-	Chapter    string
-	Company    string
-	MemberCode string
-	Note       string
-	SavedAt    time.Time
+	MemberID       int64
+	Name           string
+	Chapter        string
+	Company        string
+	Classification string
+	MemberCode     string
+	Note           string
+	SavedAt        time.Time
 }
 
 // TableDetail is one networking table plus everyone currently seated there.
@@ -374,6 +382,7 @@ type ContactDetail struct {
 	Chapter        string
 	Company        string
 	MemberCode     string
+	Classification string
 	Email          string
 	Phone          string
 	Note           string

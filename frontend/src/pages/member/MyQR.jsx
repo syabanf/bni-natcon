@@ -41,8 +41,8 @@ export default function MyQR() {
             <Icon name="mic" size={17} />
           </div>
           <div>
-            <h5>Seminar Entry</h5>
-            <p>Your seminar entry QR lives on the Seminar page — separate from this one</p>
+            <h5>Class Entry</h5>
+            <p>Your class entry QR lives on the Breakout Class page — separate from this one</p>
           </div>
         </div>
       </div>

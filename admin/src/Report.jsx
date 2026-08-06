@@ -147,7 +147,7 @@ export function ReportLeads({ onUnauthorized }) {
   )
 }
 
-/* ===== 02 — Registrasi Seminar ===== */
+/* ===== 02 — Breakout class registrations ===== */
 
 export function ReportSeminars({ onUnauthorized }) {
   const [registrations, setRegistrations] = useState([])
@@ -161,16 +161,16 @@ export function ReportSeminars({ onUnauthorized }) {
 
   return (
     <ReportShell
-      title="Report — Seminar Registrations"
+      title="Report — Breakout Class Registrations"
       sub="Attendance sheet per room for the door crew"
       exportDisabled={registrations.length === 0}
       onExport={() =>
         exportSheet(
           registrations.map((r) => ({
             Attendee: r.member_name, 'Member Code': r.member_code, Chapter: r.chapter,
-            Slot: r.slot, Room: r.room, Seminar: r.seminar_title, Attended: r.attended ? 'Yes' : 'Not yet', 'Registered At': r.registered_at,
+            Slot: r.slot, Room: r.room, Class: r.seminar_title, Attended: r.attended ? 'Yes' : 'Not yet', 'Registered At': r.registered_at,
           })),
-          'Registrations', 'natcon2026-seminar-registrations.xlsx'
+          'Registrations', 'natcon2026-class-registrations.xlsx'
         )
       }
     >
@@ -178,7 +178,7 @@ export function ReportSeminars({ onUnauthorized }) {
         <h2>
           <span className="sec-no">01</span>Seat Fill
         </h2>
-        <p className="panel-sub">Seats taken vs capacity per seminar</p>
+        <p className="panel-sub">Seats taken vs capacity per class</p>
         <HBarChart
           data={seminars.map((s) => ({
             label: s.room,
@@ -196,7 +196,7 @@ export function ReportSeminars({ onUnauthorized }) {
         </h2>
         <p className="panel-sub">{registrations.length} rows · ordered by room</p>
         <ReportTable
-          columns={['Attendee', 'Member Code', 'Chapter', 'Slot', 'Room', 'Seminar', 'Attended', 'Registered At']}
+          columns={['Attendee', 'Member Code', 'Chapter', 'Slot', 'Room', 'Class', 'Attended', 'Registered At']}
           rows={registrations.map((r) => [
             r.member_name, r.member_code, r.chapter, `#${r.slot}`, r.room, r.seminar_title,
             r.attended ? <span key="h" className="pill-hadir yes">Yes</span> : <span key="h" className="pill-hadir">Not yet</span>,

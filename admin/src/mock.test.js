@@ -217,3 +217,38 @@ describe('sponsor category', () => {
     expect(tenants.find((t) => t.booth === 'E-09').kind).toBe('booth')
   })
 })
+
+describe('business classification', () => {
+  it('imports from the sheet and a blank column never wipes a stored value', async () => {
+    await mockAdminApi.bulkMembers([
+      { name: 'Klas Satu', email: 'klas1@x.id', chapter: 'Heritage', classification: 'Logistics' },
+    ])
+    const first = (await mockAdminApi.members({ q: 'klas1@x.id' })).members[0]
+    expect(first.classification).toBe('Logistics')
+
+    // Re-import the same person from a sheet that has no classification column.
+    await mockAdminApi.bulkMembers([
+      { name: 'Klas Satu Updated', email: 'klas1@x.id', chapter: 'Heritage' },
+    ])
+    const again = (await mockAdminApi.members({ q: 'klas1@x.id' })).members[0]
+    expect(again.name).toBe('Klas Satu Updated')
+    expect(again.classification).toBe('Logistics')
+  })
+})
+
+describe('breakout classes', () => {
+  it('carry a moderator through create and update', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 1, room: 'Breakout Room 9', title: 'Test Class',
+      speaker: 'A; B', moderator: 'Mod Person', capacity: 30,
+    })
+    expect(seminar.moderator).toBe('Mod Person')
+
+    await mockAdminApi.updateSeminar(seminar.id, {
+      slot: 1, room: 'Breakout Room 9', title: 'Test Class',
+      speaker: 'A; B', moderator: 'Another Mod', capacity: 30,
+    })
+    const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
+    expect(row.moderator).toBe('Another Mod')
+  })
+})

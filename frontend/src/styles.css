@@ -1046,6 +1046,22 @@ input {
   align-items: center;
   gap: 6px;
 }
+.seminar-body .sp-people {
+  margin-top: 6px;
+}
+.seminar-body .sp-speaker.moderator {
+  color: #8b8f96;
+}
+.sp-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray);
+  background: #f2f3f5;
+  border-radius: 5px;
+  padding: 1px 5px;
+}
 .seminar-actions {
   margin-top: 14px;
 }
@@ -1222,6 +1238,33 @@ input {
   text-overflow: ellipsis;
   margin-top: 1px;
 }
+/* Business classification + WhatsApp under each person at a table. */
+.np-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.np-class {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #f1f2f4;
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.np-wa {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f8a4a;
+  background: #e8f7ef;
+  border-radius: 5px;
+  padding: 2px 7px;
+  text-decoration: none;
+  white-space: nowrap;
+}
 .np-save {
   font-size: 11px;
   font-weight: 700;
@@ -1370,7 +1413,17 @@ input {
 .contact-card .cc-biz {
   font-size: 12.5px;
   color: var(--gray);
-  margin: 4px 0 12px;
+  margin: 4px 0 8px;
+}
+.contact-card .cc-class {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #f1f2f4;
+  border-radius: 6px;
+  padding: 3px 9px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 /* ===== Tenant ===== */

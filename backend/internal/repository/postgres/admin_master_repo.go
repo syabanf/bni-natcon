@@ -34,7 +34,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.created_at,
+		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.classification, u.created_at,
 		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id)
 		FROM users u
 		WHERE `+filter+`
@@ -49,7 +49,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	for rows.Next() {
 		var m domain.MemberSummary
 		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Role, &m.MemberCode,
-			&m.Chapter, &m.Company, &m.Phone, &m.CreatedAt, &m.Visits); err != nil {
+			&m.Chapter, &m.Company, &m.Phone, &m.Classification, &m.CreatedAt, &m.Visits); err != nil {
 			return nil, 0, err
 		}
 		out = append(out, m)
@@ -111,13 +111,13 @@ func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberC
 func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*domain.User, error) {
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone)
+		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
 		VALUES ($1, $2, $3, 'member',
 		        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-		        $4, $5, $6)
-		RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
-		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone).
-		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
+		        $4, $5, $6, $7)
+		RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
+		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_key") {
 			return nil, domain.ErrEmailTaken
@@ -129,9 +129,10 @@ func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*doma
 
 func (r *AdminRepo) UpdateMember(ctx context.Context, id int64, m domain.MemberUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
-		UPDATE users SET name = $1, email = $2, chapter = $3, company = $4, phone = $5
-		WHERE id = $6 AND role = 'member'`,
-		m.Name, m.Email, m.Chapter, m.Company, m.Phone, id)
+		UPDATE users SET name = $1, email = $2, chapter = $3, company = $4, phone = $5,
+		       classification = $6
+		WHERE id = $7 AND role = 'member'`,
+		m.Name, m.Email, m.Chapter, m.Company, m.Phone, m.Classification, id)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_key") {
 			return domain.ErrEmailTaken
@@ -241,11 +242,11 @@ func (r *AdminRepo) DeleteTenant(ctx context.Context, id int64) error {
 func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*domain.Seminar, error) {
 	var sem domain.Seminar
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO seminars (slot, room, title, speaker, capacity, description, cover_url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, slot, room, title, speaker, capacity, description, cover_url`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity, s.Description, s.CoverURL).
-		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Capacity, &sem.Description, &sem.CoverURL)
+		INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, slot, room, title, speaker, moderator, capacity, description, cover_url`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL).
+		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Moderator, &sem.Capacity, &sem.Description, &sem.CoverURL)
 	if err != nil {
 		return nil, err
 	}
@@ -254,10 +255,10 @@ func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*
 
 func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.SeminarInput) error {
 	tag, err := r.pool.Exec(ctx, `
-		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, capacity = $5,
-		       description = $6, cover_url = $7
-		WHERE id = $8`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Capacity, s.Description, s.CoverURL, id)
+		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, moderator = $5,
+		       capacity = $6, description = $7, cover_url = $8
+		WHERE id = $9`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL, id)
 	if err != nil {
 		return err
 	}
@@ -351,11 +352,12 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 	case err == nil:
 		var u domain.User
 		err = tx.QueryRow(ctx, `
-			UPDATE users SET name = $1, chapter = $2, company = $3, phone = $4
-			WHERE id = $5
-			RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
-			m.Name, m.Chapter, m.Company, m.Phone, existingID).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
+			UPDATE users SET name = $1, chapter = $2, company = $3, phone = $4,
+			       classification = COALESCE(NULLIF($5, ''), classification)
+			WHERE id = $6
+			RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+			m.Name, m.Chapter, m.Company, m.Phone, m.Classification, existingID).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -366,13 +368,13 @@ func (r *AdminRepo) UpsertMember(ctx context.Context, m domain.NewMember) (*doma
 	case errors.Is(err, pgx.ErrNoRows):
 		var u domain.User
 		err = tx.QueryRow(ctx, `
-			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone)
+			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
 			VALUES ($1, $2, $3, 'member',
 			        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-			        $4, $5, $6)
-			RETURNING id, name, email, role, member_code, chapter, company, phone, created_at`,
-			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone).
-			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.CreatedAt)
+			        $4, $5, $6, $7)
+			RETURNING id, name, email, role, member_code, chapter, company, phone, classification, created_at`,
+			m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
+			Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.CreatedAt)
 		if err != nil {
 			if isUniqueViolation(err, "users_email_key") {
 				return nil, domain.ErrEmailTaken

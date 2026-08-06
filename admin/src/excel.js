@@ -65,6 +65,7 @@ export function transformMemberRows(parsed) {
       chapter: (r.chapter || '').trim(),
       company: (r.company || '').trim(),
       phone: normalizePhone(r.phone),
+      classification: (r.classification || '').trim(),
     })
   }
   return { rows, skippedDuplicates }
@@ -111,7 +112,7 @@ export const TENANT_IMPORT_ALIASES = {
 
 // Column order + example rows for the downloadable import templates.
 export const MEMBER_TEMPLATE = {
-  columns: ['Name', 'Email', 'Chapter', 'Company', 'Phone'],
+  columns: ['Name', 'Email', 'Chapter', 'Company', 'Phone', 'Business Classification'],
   examples: [
     {
       Name: 'Reddie Wijaya',
@@ -119,6 +120,7 @@ export const MEMBER_TEMPLATE = {
       Chapter: 'Heritage',
       Company: 'Witid Intelligence',
       Phone: '+628111000154',
+      'Business Classification': 'IT & Software',
     },
     {
       Name: 'Sinta Dewi',
@@ -126,6 +128,7 @@ export const MEMBER_TEMPLATE = {
       Chapter: 'Achievers',
       Company: 'Sinta Florist',
       Phone: '08111000201',
+      'Business Classification': 'Trade & Distribution',
     },
   ],
   fileName: 'natcon2026-template-import-attendees.xlsx',
@@ -177,6 +180,7 @@ export const MEMBER_IMPORT_ALIASES = {
   phone: ['phone', 'no hp', 'no. hp', 'telepon', 'whatsapp', 'mobile'],
   chapter: ['chapter', 'bni chapter'],
   company: ['perusahaan', 'company', 'company name', 'bisnis'],
+  classification: ['business classification', 'klasifikasi', 'klasifikasi bisnis', 'classification'],
 }
 
 export function exportSheet(rows, sheetName, fileName) {

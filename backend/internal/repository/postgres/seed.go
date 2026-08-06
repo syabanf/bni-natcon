@@ -38,17 +38,17 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	members := []struct {
-		name, email, code, chapter, company, phone string
+		name, email, code, chapter, company, phone, classification string
 	}{
-		{"Reddie Wijaya", "reddie@natcon.id", "NATCON-2026-08154", "BNI Chapter Jakarta Elite", "Witid Intelligence", "+62811000154"},
-		{"Sinta Dewi", "sinta@natcon.id", "NATCON-2026-08201", "BNI Chapter Jakarta Elite", "Sinta Florist", "+62811000201"},
-		{"Agus Santoso", "agus@natcon.id", "NATCON-2026-08322", "BNI Chapter Bandung Raya", "Santoso Baja", "+62811000322"},
+		{"Reddie Wijaya", "reddie@natcon.id", "NATCON-2026-08154", "BNI Chapter Jakarta Elite", "Witid Intelligence", "+62811000154", "IT & Software"},
+		{"Sinta Dewi", "sinta@natcon.id", "NATCON-2026-08201", "BNI Chapter Jakarta Elite", "Sinta Florist", "+62811000201", "Trade & Distribution"},
+		{"Agus Santoso", "agus@natcon.id", "NATCON-2026-08322", "BNI Chapter Bandung Raya", "Santoso Baja", "+62811000322", "Manufacturing"},
 	}
 	for _, m := range members {
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone)
-			VALUES ($1, $2, $3, 'member', $4, $5, $6, $7)`,
-			m.name, m.email, string(hash), m.code, m.chapter, m.company, m.phone); err != nil {
+			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
+			VALUES ($1, $2, $3, 'member', $4, $5, $6, $7, $8)`,
+			m.name, m.email, string(hash), m.code, m.chapter, m.company, m.phone, m.classification); err != nil {
 			return err
 		}
 	}
@@ -89,22 +89,33 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		}
 	}
 
+	// The four real breakout classes, from the Term of Reference documents.
+	// All share slot 1: they run in parallel, so an attendee picks exactly one
+	// and that pick is what the goodiebag is claimed against.
 	seminars := []struct {
-		slot            int
-		room, title, sp string
-		capacity        int
-		desc            string
+		slot                       int
+		room, title, sp, moderator string
+		capacity                   int
+		desc                       string
 	}{
-		{1, "R. Merapi", "Scaling Referral: From Chapter to Nationwide", "Ir. Bambang Wicaksono — National Director", 60,
-			"How top chapters turn one-to-one referrals into a national pipeline: a playbook of contact-sphere mapping, power teams, and measurable ask culture. Includes live case studies from three chapters that tripled closed business in a year."},
-		{1, "R. Rinjani", "AI for SMEs: Practical, Not Hype", "Dr. Sarah Kusuma — Witid Intelligence", 40,
-			"A no-jargon tour of AI tools an SME can deploy this quarter: lead scoring, follow-up automation, and customer insight dashboards — with real budgets and real ROI numbers from Indonesian businesses."},
+		{1, "Breakout Room 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
+			"Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai", "Roby Oktober", 60,
+			"Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team."},
+		{1, "Breakout Room 2", "Work-Life Balance & AI: The New Agency Equation",
+			"Viktor Iwan; Irfan Arsandi — WIT Indonesia", "Ryan Kristomulyono", 60,
+			"AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity."},
+		{1, "Breakout Room 3", "How to Win in Retail: The 2026 Economic Reality",
+			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
+			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
+		{1, "Breakout Room 4", "Your Face Tells a Story",
+			"Suntoro Suciatmaja", "", 60,
+			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
 	for _, s := range seminars {
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO seminars (slot, room, title, speaker, capacity, description, cover_url)
-			VALUES ($1, $2, $3, $4, $5, $6, '')`,
-			s.slot, s.room, s.title, s.sp, s.capacity, s.desc); err != nil {
+			INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, '')`,
+			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc); err != nil {
 			return err
 		}
 	}

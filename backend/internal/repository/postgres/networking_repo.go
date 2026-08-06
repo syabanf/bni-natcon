@@ -62,7 +62,7 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 	}
 
 	mateRows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, c.seat_no,
+		SELECT u.id, u.name, u.chapter, u.company, u.classification, u.phone, c.seat_no,
 		       (u.id = $1) AS is_me,
 		       EXISTS (
 		           SELECT 1 FROM networking_contacts nc
@@ -82,7 +82,7 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 	defer mateRows.Close()
 	for mateRows.Next() {
 		var m domain.TableMate
-		if err := mateRows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
+		if err := mateRows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.Classification, &m.Phone, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
 			return nil, err
 		}
 		status.Mates = append(status.Mates, m)
@@ -164,7 +164,7 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	}
 
 	contactRows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), nc.note, nc.created_at
+		SELECT u.id, u.name, u.chapter, u.company, u.classification, COALESCE(u.member_code, ''), nc.note, nc.created_at
 		FROM networking_contacts nc
 		JOIN users u ON u.id = nc.contact_id
 		WHERE nc.owner_id = $1
@@ -175,7 +175,7 @@ func (r *NetworkingRepo) History(ctx context.Context, memberID int64) (*domain.N
 	defer contactRows.Close()
 	for contactRows.Next() {
 		var c domain.SavedContact
-		if err := contactRows.Scan(&c.MemberID, &c.Name, &c.Chapter, &c.Company, &c.MemberCode, &c.Note, &c.SavedAt); err != nil {
+		if err := contactRows.Scan(&c.MemberID, &c.Name, &c.Chapter, &c.Company, &c.Classification, &c.MemberCode, &c.Note, &c.SavedAt); err != nil {
 			return nil, err
 		}
 		h.Contacts = append(h.Contacts, c)
@@ -200,7 +200,7 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 	d.Table.ID = tableID
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, c.seat_no,
+		SELECT u.id, u.name, u.chapter, u.company, u.classification, u.phone, c.seat_no,
 		       (u.id = $1) AS is_me,
 		       EXISTS (
 		           SELECT 1 FROM networking_contacts nc
@@ -220,7 +220,7 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 	defer rows.Close()
 	for rows.Next() {
 		var m domain.TableMate
-		if err := rows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
+		if err := rows.Scan(&m.MemberID, &m.Name, &m.Chapter, &m.Company, &m.Classification, &m.Phone, &m.SeatNo, &m.IsMe, &m.Saved, &m.Note); err != nil {
 			return nil, err
 		}
 		d.Members = append(d.Members, m)
@@ -231,7 +231,7 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 func (r *NetworkingRepo) ContactDetail(ctx context.Context, ownerID, contactID int64) (*domain.ContactDetail, error) {
 	var d domain.ContactDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT u.id, u.name, u.chapter, u.company, COALESCE(u.member_code, ''), u.email, u.phone, nc.note, nc.created_at,
+		SELECT u.id, u.name, u.chapter, u.company, u.classification, COALESCE(u.member_code, ''), u.email, u.phone, nc.note, nc.created_at,
 		       COALESCE((
 		           SELECT t.table_no FROM networking_checkins c
 		           JOIN networking_tables t ON t.id = c.table_id
@@ -240,7 +240,7 @@ func (r *NetworkingRepo) ContactDetail(ctx context.Context, ownerID, contactID i
 		FROM networking_contacts nc
 		JOIN users u ON u.id = nc.contact_id
 		WHERE nc.owner_id = $1 AND nc.contact_id = $2`, ownerID, contactID).
-		Scan(&d.MemberID, &d.Name, &d.Chapter, &d.Company, &d.MemberCode, &d.Email, &d.Phone, &d.Note, &d.SavedAt, &d.CurrentTableNo)
+		Scan(&d.MemberID, &d.Name, &d.Chapter, &d.Company, &d.Classification, &d.MemberCode, &d.Email, &d.Phone, &d.Note, &d.SavedAt, &d.CurrentTableNo)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

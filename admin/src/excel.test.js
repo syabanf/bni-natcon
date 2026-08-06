@@ -18,7 +18,7 @@ describe('transformMemberRows (ticketing export "Data Peserta")', () => {
       {
         name: '', first_name: 'Abraham', last_name: 'Sebastian', ktp_name: 'Abraham Sebastian W',
         email: 'Abraham@Example.com', phone: "'+628112789988",
-        chapter: 'Heritage', company: 'PT Makmur',
+        chapter: 'Heritage', company: 'PT Makmur', classification: 'Trade & Distribution',
       },
       // Duplicate email (repeat buyer) — must be skipped
       {
@@ -36,8 +36,11 @@ describe('transformMemberRows (ticketing export "Data Peserta")', () => {
     expect(rows[0]).toEqual({
       name: 'Abraham Sebastian', email: 'abraham@example.com',
       chapter: 'Heritage', company: 'PT Makmur', phone: '+628112789988',
+      classification: 'Trade & Distribution',
     })
     expect(rows[1].phone).toBe('+628159124500')
+    // Sheets without the column still import; classification just stays empty.
+    expect(rows[1].classification).toBe('')
     expect(rows[2].name).toBe('Budi KTP')
   })
 })

@@ -58,7 +58,7 @@ export default function Dashboard({ onUnauthorized }) {
       <div className="content-head">
         <div>
           <h1>Dashboard</h1>
-          <p className="micro">Live monitoring · Jakarta Convention Center</p>
+          <p className="micro">Live monitoring · Pullman Central Park Jakarta</p>
         </div>
         <div className="head-right">
           <span className="pill live">LIVE</span>
@@ -72,7 +72,7 @@ export default function Dashboard({ onUnauthorized }) {
         <StatCard value={overview?.total_booths} label="Booths" />
         <StatCard value={overview?.total_visits} label="Total visit scans" accent />
         <StatCard value={overview?.visits_today} label="Scans today" accent />
-        <StatCard value={overview?.seminar_registrations} label="Seminar registrations" />
+        <StatCard value={overview?.seminar_registrations} label="Class registrations" />
       </section>
 
       <section className="columns">
@@ -104,9 +104,9 @@ export default function Dashboard({ onUnauthorized }) {
         <div className="col-right">
           <div className="panel">
             <h2>
-              <span className="sec-no">02</span>Seminar Capacity
+              <span className="sec-no">02</span>Breakout Class Capacity
             </h2>
-            <p className="panel-sub">Parallel sessions</p>
+            <p className="panel-sub">Parallel breakout classes</p>
             {seminars.map((s) => {
               const pct = Math.round((s.seats_taken / s.capacity) * 100)
               return (

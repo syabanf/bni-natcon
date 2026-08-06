@@ -5,12 +5,15 @@ import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../store/auth'
 
+// Programme for 3 September 2026 at Pullman Central Park Jakarta. Doors open
+// 07:30 and the ticket is valid until 18:30 (from the ticketing export).
 const AGENDA = [
-  { time: '08:00', title: 'Registration & Tenant Expo opens', place: 'Main Lobby · Hall A' },
-  { time: '10:00', title: 'Opening Ceremony', place: 'Plenary Hall' },
-  { time: '13:00', title: 'Parallel Seminars', place: 'Merapi & Rinjani Rooms' },
-  { time: '16:00', title: 'Speed Networking', place: 'Hall B · 40 tables × 8 people' },
-  { time: '19:00', title: 'Gala Dinner & Lucky Draw', place: 'Plenary Hall' },
+  { time: '07:30', title: 'Registration & door check-in', place: 'Main Lobby · claim your totebag' },
+  { time: '09:00', title: 'Opening Ceremony', place: 'Grand Ballroom' },
+  { time: '10:30', title: 'Sponsor & Booth Expo opens', place: 'Exhibition Foyer' },
+  { time: '13:00', title: 'Breakout Classes', place: 'Breakout Rooms 1–4 · pick one' },
+  { time: '15:30', title: 'Speed Networking', place: 'Grand Ballroom · 8 people per table' },
+  { time: '17:00', title: 'Lucky Draw & Closing', place: 'Grand Ballroom' },
 ]
 
 function initials(name = '') {
@@ -46,7 +49,7 @@ export default function Home() {
         <div className="hg-row">
           <div>
             <h2>Hello, {firstName}</h2>
-            <p>BNI Natcon 2026 · Jakarta Convention Center</p>
+            <p>BNI Natcon 2026 · Pullman Central Park Jakarta</p>
           </div>
           <div className="avatar">{initials(user?.name)}</div>
         </div>
@@ -92,7 +95,7 @@ export default function Home() {
           <div className="st-num">
             <span className="accent">{stats?.seminars_picked ?? '–'}</span>/{stats?.seminars_total ?? '–'}
           </div>
-          <div className="st-label">Seminar picked</div>
+          <div className="st-label">Goodiebag</div>
         </div>
       </div>
 
@@ -105,7 +108,7 @@ export default function Home() {
             <Icon name="qr" size={18} />
           </span>
           <h4>My QR Code</h4>
-          <p>One QR for everything: booths &amp; seminars</p>
+          <p>One QR for everything: booths &amp; classes</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/passport')}>
           <span className="q-ic">
@@ -118,8 +121,8 @@ export default function Home() {
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
-          <h4>Parallel Seminars</h4>
-          <p>Pick a session, claim a totebag</p>
+          <h4>Breakout Class</h4>
+          <p>Pick a class, claim your goodiebag</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/network')}>
           <span className="q-ic">
