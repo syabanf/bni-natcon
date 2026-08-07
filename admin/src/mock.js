@@ -190,7 +190,7 @@ function upsertMemberRow(s, { name, email, chapter = '', company = '', phone = '
   return { created: true }
 }
 
-function createTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '' }) {
+function createTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '', contact_name = '', chapter = '' }) {
   name = (name || '').trim()
   booth = (booth || '').trim()
   if (!name || !booth) throw { status: 400, message: 'invalid input: name and booth are required' }
@@ -200,13 +200,13 @@ function createTenantRow(s, { name, category = '', booth, initials = '', email =
   if (s.tenants.some((t) => t.owner_email === email)) throw { status: 409, message: 'that email is already used by another account' }
   initials = (initials || name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2)).toUpperCase()
   kind = String(kind).toLowerCase() === 'sponsor' ? 'sponsor' : 'booth'
-  const row = { id: s.nextId++, name, category, booth, initials, kind, description, owner_email: email }
+  const row = { id: s.nextId++, name, category, booth, initials, kind, description, contact_name, chapter, owner_email: email }
   s.tenants.push(row)
   return row
 }
 
 // Create-or-update keyed by booth code (import semantics).
-function upsertTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '' }) {
+function upsertTenantRow(s, { name, category = '', booth, initials = '', email = '', kind = 'booth', description = '', contact_name = '', chapter = '' }) {
   name = (name || '').trim()
   booth = (booth || '').trim()
   if (!name || !booth) throw { status: 400, message: 'invalid input: name and booth are required' }
@@ -218,13 +218,13 @@ function upsertTenantRow(s, { name, category = '', booth, initials = '', email =
 
   const existing = s.tenants.find((t) => t.booth === booth)
   if (existing) {
-    Object.assign(existing, { name, category, initials, kind, description })
+    Object.assign(existing, { name, category, initials, kind, description, contact_name, chapter })
     return { created: false }
   }
   if (s.tenants.some((t) => t.owner_email === email)) {
     throw { status: 409, message: 'that email is already used by another account' }
   }
-  s.tenants.push({ id: s.nextId++, name, category, booth, initials, kind, description, owner_email: email })
+  s.tenants.push({ id: s.nextId++, name, category, booth, initials, kind, description, contact_name, chapter, owner_email: email })
   return { created: true }
 }
 
@@ -417,6 +417,8 @@ export const mockAdminApi = {
       booth: body.booth.trim(), initials: (body.initials || t.initials).toUpperCase(),
       kind: String(body.kind || t.kind || 'booth').toLowerCase() === 'sponsor' ? 'sponsor' : 'booth',
       description: body.description ?? t.description ?? '',
+      contact_name: body.contact_name ?? t.contact_name ?? '',
+      chapter: body.chapter ?? t.chapter ?? '',
     })
     save(s)
     return delay({ status: 'updated' })

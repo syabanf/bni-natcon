@@ -197,11 +197,15 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 
 	var tenant domain.Tenant
 	err = tx.QueryRow(ctx, `
-		INSERT INTO tenants (name, category, booth, initials, kind, description, owner_user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
-		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, ownerID).
-		Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials, &tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
+		INSERT INTO tenants (name, category, booth, initials, kind, description,
+		                     contact_name, chapter, owner_user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, name, category, booth, initials, kind, description,
+		          contact_name, chapter, owner_user_id`,
+		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description,
+		t.ContactName, t.Chapter, ownerID).
+		Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
+			&tenant.Kind, &tenant.Description, &tenant.ContactName, &tenant.Chapter, &tenant.OwnerUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -214,9 +218,10 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 func (r *AdminRepo) UpdateTenant(ctx context.Context, id int64, t domain.TenantUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE tenants SET name = $1, category = $2, booth = $3, initials = $4,
-		       kind = $5, description = $6
-		WHERE id = $7`,
-		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, id)
+		       kind = $5, description = $6, contact_name = $7, chapter = $8
+		WHERE id = $9`,
+		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description,
+		t.ContactName, t.Chapter, id)
 	if err != nil {
 		return err
 	}
@@ -568,12 +573,15 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 	switch {
 	case err == nil:
 		err = tx.QueryRow(ctx, `
-			UPDATE tenants SET name = $1, category = $2, initials = $3, kind = $4, description = $5
-			WHERE id = $6
-			RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
-			t.Name, t.Category, t.Initials, t.Kind, t.Description, existingID).
+			UPDATE tenants SET name = $1, category = $2, initials = $3, kind = $4, description = $5,
+			       contact_name = $6, chapter = $7
+			WHERE id = $8
+			RETURNING id, name, category, booth, initials, kind, description,
+			          contact_name, chapter, owner_user_id`,
+			t.Name, t.Category, t.Initials, t.Kind, t.Description,
+			t.ContactName, t.Chapter, existingID).
 			Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
-				&tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
+				&tenant.Kind, &tenant.Description, &tenant.ContactName, &tenant.Chapter, &tenant.OwnerUserID)
 		if err != nil {
 			return nil, err
 		}
@@ -596,12 +604,15 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 			return nil, err
 		}
 		err = tx.QueryRow(ctx, `
-			INSERT INTO tenants (name, category, booth, initials, kind, description, owner_user_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			RETURNING id, name, category, booth, initials, kind, description, owner_user_id`,
-			t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description, ownerID).
+			INSERT INTO tenants (name, category, booth, initials, kind, description,
+			                     contact_name, chapter, owner_user_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			RETURNING id, name, category, booth, initials, kind, description,
+			          contact_name, chapter, owner_user_id`,
+			t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description,
+			t.ContactName, t.Chapter, ownerID).
 			Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
-				&tenant.Kind, &tenant.Description, &tenant.OwnerUserID)
+				&tenant.Kind, &tenant.Description, &tenant.ContactName, &tenant.Chapter, &tenant.OwnerUserID)
 		if err != nil {
 			return nil, err
 		}

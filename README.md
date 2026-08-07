@@ -82,11 +82,18 @@ ready-to-fill template (headers + example rows).
   number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
   space-insensitive on the chapter) and hands back a 15-minute reset token;
   both endpoints carry the same 10/minute/IP ceiling as sign-in.
-- *Tenants* — headers Name/Booth/Category/Kind/Initials/Email/Description
-  (only Name and Booth required). Rows **create-or-update by booth code**:
-  a new booth gets auto initials and an auto scanner login
-  (`booth-<code>@natcon.id`, default password), an existing booth keeps
-  its login and collected scans while its details are refreshed.
+- *Booths & sponsors* — accepts the official *Data Booth* sheet as-is
+  (`Booth Number`, `Company Name`, `Business Classification`, `Name`,
+  `BNI Chapter`): the company becomes the booth, the classification its
+  category, and the person plus their chapter become the **booth contact**,
+  shown in admin and under the booth's name on the attendee passport. The
+  older headers still work — a sheet with only `Name` treats it as the
+  booth's own name. Add `Kind` (`booth`/`sponsor`), `Initials`, `Email` and
+  `Description` to control the rest; only a name and a booth code are
+  required. Rows **create-or-update by booth code**: a new booth gets auto
+  initials and an auto scanner login (`booth-<code>@natcon.id`, default
+  password), an existing booth keeps its login and collected scans while its
+  details are refreshed.
 
 Both upload in chunks of 200 so big files never hit the request timeout,
 and report `created / updated / failed` per import.
@@ -131,7 +138,7 @@ Full walkthrough incl. the 404/CORS checklist: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## CI
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on
-every push/PR: Go vet + unit tests, the 165-check E2E suite and the stress
+every push/PR: Go vet + unit tests, the 169-check E2E suite and the stress
 suite against PostgreSQL service containers, Vitest + production builds of
 both frontends, and `docker compose build` for all images.
 

@@ -57,12 +57,33 @@ describe('transformMemberRows (ticketing export "Data Peserta")', () => {
 })
 
 describe('transformTenantRows', () => {
+  it('reads the official booth sheet: company is the booth, name is the person', () => {
+    const { rows } = transformTenantRows([
+      {
+        booth: 'A1', company_name: 'SSCX International',
+        category: 'Management Consultant', contact_name: 'Nicolaas Andrew', chapter: 'Star',
+      },
+      // Trailing whitespace and a stray tab are normal in this sheet.
+      {
+        booth: 'a19', company_name: '\tSinar Printing ', category: 'Printer ',
+        contact_name: 'Mulyadi', chapter: 'Balionaire',
+      },
+    ])
+    expect(rows[0]).toMatchObject({
+      name: 'SSCX International', booth: 'A1', category: 'Management Consultant',
+      contact_name: 'Nicolaas Andrew', chapter: 'Star', kind: 'booth',
+    })
+    expect(rows[1]).toMatchObject({ name: 'Sinar Printing', booth: 'A19', category: 'Printer' })
+  })
+
   it('normalizes booth codes and kind, and skips in-file duplicate booths', () => {
     const { rows, skippedDuplicates } = transformTenantRows([
-      { name: 'BNI Xpora', booth: 'sp-01', category: 'Main Sponsor', kind: 'Sponsor', initials: 'bx', email: 'X@Natcon.ID', description: 'Export hub' },
-      { name: 'Kopi Nusantara', booth: 'A-03', category: 'F&B', kind: '', initials: '', email: '', description: '' },
-      { name: 'Kopi Duplikat', booth: 'a-03', category: 'F&B', kind: '', initials: '', email: '', description: '' },
-      { name: '', booth: '', category: '', kind: '', initials: '', email: '', description: '' },
+      // The older template has a single "Name" column, which the alias layer
+      // reads as contact_name — with no company it becomes the booth's name.
+      { contact_name: 'BNI Xpora', booth: 'sp-01', category: 'Main Sponsor', kind: 'Sponsor', initials: 'bx', email: 'X@Natcon.ID', description: 'Export hub' },
+      { contact_name: 'Kopi Nusantara', booth: 'A-03', category: 'F&B', kind: '', initials: '', email: '', description: '' },
+      { contact_name: 'Kopi Duplikat', booth: 'a-03', category: 'F&B', kind: '', initials: '', email: '', description: '' },
+      { contact_name: '', booth: '', category: '', kind: '', initials: '', email: '', description: '' },
     ])
 
     expect(rows).toHaveLength(2)
@@ -72,5 +93,8 @@ describe('transformTenantRows', () => {
     })
     // Unknown/blank kind falls back to booth.
     expect(rows[1]).toMatchObject({ booth: 'A-03', kind: 'booth', initials: '' })
+    // The simple template has no company column, so "Name" is the booth's own
+    // name and there is no contact person.
+    expect(rows[0].contact_name).toBe('')
   })
 })

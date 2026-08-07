@@ -549,10 +549,33 @@ tenants_by_booth = {t["booth"]: t for t in body["tenants"]}
 check("imported sponsor created with kind + auto initials",
       tenants_by_booth["SP-99"]["kind"] == "sponsor"
       and tenants_by_booth["SP-99"]["initials"] == "BS")
+check("admin tenant list round-trips description, contact and chapter",
+      all("description" in t and "contact_name" in t and "chapter" in t
+          for t in tenants_by_booth.values()))
 check("existing booth refreshed in place (single row, new details)",
       sum(1 for t in body["tenants"] if t["booth"] == "Z-01") == 1
       and tenants_by_booth["Z-01"]["name"] == "E2E Booth Refreshed"
       and tenants_by_booth["Z-01"]["category"] == "Updated")
+
+# The official booth sheet carries the person manning the booth and their
+# chapter alongside the company; both ride through the import onto the tenant.
+status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
+                      body={"tenants": [
+                          {"name": "SSCX International", "booth": "A1",
+                           "category": "Management Consultant",
+                           "contact_name": "Nicolaas Andrew", "chapter": "Star"},
+                      ]})
+check("booth sheet row imports", status == 200 and body["created"] == 1)
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+sheet_booth = next(t for t in body["tenants"] if t["booth"] == "A1")
+check("the booth carries its contact and chapter",
+      sheet_booth["name"] == "SSCX International"
+      and sheet_booth["contact_name"] == "Nicolaas Andrew"
+      and sheet_booth["chapter"] == "Star")
+status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
+passport_booth = next(t for t in body["tenants"] if t["booth"] == "A1")
+check("the attendee passport shows who is at the booth",
+      passport_booth["contact_name"] == "Nicolaas Andrew" and passport_booth["chapter"] == "Star")
 
 status, _ = login("booth-z01@natcon.id", xff="10.99.0.2")
 check("refreshed booth keeps its scanner login", status == 200)

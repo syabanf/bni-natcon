@@ -549,6 +549,7 @@ export function TenantsPage() {
             crud.setForm({
               name: '', category: '', booth: '', initials: '', email: '',
               kind: kindFilter === 'sponsor' ? 'sponsor' : 'booth', description: '',
+              contact_name: '', chapter: '',
             })
           }
         >
@@ -604,14 +605,18 @@ export function TenantsPage() {
               <td className="mono">{t.booth}</td>
               <td>
                 <b>{t.name}</b>
-                <small>{t.initials}</small>
+                <small>{t.contact_name ? `${t.contact_name}${t.chapter ? ` · ${t.chapter}` : ''}` : t.initials}</small>
               </td>
               <td>{t.category}</td>
               <td className="num">{t.scan_count}</td>
               <RowActions
                 onDetail={() => setDetailId(t.id)}
                 onEdit={() =>
-                  crud.setForm({ id: t.id, name: t.name, category: t.category, booth: t.booth, initials: t.initials, kind: t.kind || 'booth', description: t.description || '' })
+                  crud.setForm({
+                    id: t.id, name: t.name, category: t.category, booth: t.booth,
+                    initials: t.initials, kind: t.kind || 'booth', description: t.description || '',
+                    contact_name: t.contact_name || '', chapter: t.chapter || '',
+                  })
                 }
                 onDelete={() => crud.del(t.id, t.name)}
               />
@@ -639,6 +644,18 @@ export function TenantsPage() {
                 <option value="sponsor">Sponsor</option>
               </select>
             </label>
+            <Field
+              label="Booth contact"
+              hint="the BNI member manning the booth"
+              value={crud.form.contact_name || ''}
+              onChange={(e) => crud.setForm({ ...crud.form, contact_name: e.target.value })}
+            />
+            <Field
+              label="BNI Chapter"
+              hint="the contact's chapter"
+              value={crud.form.chapter || ''}
+              onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })}
+            />
             <Field label="Description" hint="shown on the attendee passport" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             {!crud.form.id && (
               <Field label="Login email" hint="leave blank to auto-fill" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} />

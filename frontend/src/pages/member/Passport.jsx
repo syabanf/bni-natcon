@@ -20,6 +20,12 @@ function TenantCard({ t, sponsor }) {
       <p>
         {sponsor ? t.category : `${t.category} · Booth ${t.booth}`}
       </p>
+      {t.contact_name && (
+        <p className="t-contact">
+          {t.contact_name}
+          {t.chapter ? ` · ${t.chapter}` : ''}
+        </p>
+      )}
       {t.description && <p className="t-desc">{t.description}</p>}
       <div className="t-status">
         {t.visited ? (

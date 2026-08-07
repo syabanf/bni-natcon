@@ -39,8 +39,8 @@ export const MOCK_MEMBERS = [
 const TENANTS = [
   { id: 13, name: 'BNI Xpora', category: 'Main Sponsor', booth: 'SP-01', initials: 'BX', kind: 'sponsor', description: "BNI's one-stop export hub — banking solutions for members going global." },
   { id: 14, name: 'Wondr by BNI', category: 'Digital Sponsor', booth: 'SP-02', initials: 'WB', kind: 'sponsor', description: 'Personal finance super-app: payments, savings goals, and lifestyle deals.' },
-  { id: 1, name: 'Kopi Nusantara', category: 'F&B', booth: 'A-03', initials: 'KN', kind: 'booth', description: 'Single-origin Indonesian coffee, roasted in-house. Free cupping session at the booth.' },
-  { id: 2, name: 'Bank Mitra Sejahtera', category: 'Finance', booth: 'A-05', initials: 'BM', kind: 'booth', description: 'SME lending and cash-management partner for BNI chapter businesses.' },
+  { id: 1, name: 'Kopi Nusantara', category: 'F&B', booth: 'A-03', initials: 'KN', kind: 'booth', contact_name: 'Ronald Liong', chapter: 'Magnify', description: 'Single-origin Indonesian coffee, roasted in-house. Free cupping session at the booth.' },
+  { id: 2, name: 'Bank Mitra Sejahtera', category: 'Finance', booth: 'A-05', initials: 'BM', kind: 'booth', contact_name: 'Jessica Dewi', chapter: 'Magnify', description: 'SME lending and cash-management partner for BNI chapter businesses.' },
   { id: 3, name: 'Garuda Print Media', category: 'Printing', booth: 'A-08', initials: 'GP', kind: 'booth', description: 'Large-format printing and event branding with same-day turnaround.' },
   { id: 4, name: 'TechNesia Solutions', category: 'IT & Software', booth: 'B-01', initials: 'TS', kind: 'booth', description: 'Custom software, ERP integrations, and managed cloud for growing teams.' },
   { id: 5, name: 'Sehat Selalu Clinic', category: 'Healthcare', booth: 'B-04', initials: 'SS', kind: 'booth', description: 'Corporate health checks and on-site wellness programs.' },

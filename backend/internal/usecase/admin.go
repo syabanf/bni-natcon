@@ -129,8 +129,24 @@ func (u *AdminUsecase) DeleteMember(ctx context.Context, id int64) error {
 	return u.admin.DeleteMember(ctx, id)
 }
 
-func (u *AdminUsecase) CreateTenant(ctx context.Context, name, category, booth, initials, email, password, kind, description string) (*domain.Tenant, error) {
-	name, booth = strings.TrimSpace(name), strings.TrimSpace(booth)
+// TenantInput is admin form input for creating one booth or sponsor.
+type TenantInput struct {
+	Name        string
+	Category    string
+	Booth       string
+	Initials    string
+	Kind        string
+	Description string
+	ContactName string
+	Chapter     string
+	Email       string
+	Password    string
+}
+
+func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domain.Tenant, error) {
+	name, booth := strings.TrimSpace(in.Name), strings.TrimSpace(in.Booth)
+	category, initials, kind := in.Category, in.Initials, in.Kind
+	description, email, password := in.Description, in.Email, in.Password
 	if name == "" || booth == "" {
 		return nil, invalid("name and booth are required")
 	}
@@ -153,7 +169,9 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, name, category, booth, 
 	return u.admin.CreateTenant(ctx, domain.NewTenant{
 		Name: name, Category: strings.TrimSpace(category), Booth: booth,
 		Initials: strings.ToUpper(strings.TrimSpace(initials)), Kind: kind,
-		Description: strings.TrimSpace(description), Email: email, PasswordHash: hash,
+		Description: strings.TrimSpace(description),
+		ContactName: strings.TrimSpace(in.ContactName), Chapter: strings.TrimSpace(in.Chapter),
+		Email: email, PasswordHash: hash,
 	})
 }
 
@@ -373,6 +391,10 @@ type TenantImportRow struct {
 	Email       string
 	Kind        string
 	Description string
+	// From the official booth sheet: who is manning the booth, and the BNI
+	// chapter they belong to.
+	ContactName string
+	Chapter     string
 }
 
 // BulkUpsertTenants imports rows create-or-update keyed by the booth code:
@@ -410,7 +432,9 @@ func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImpor
 		res, err := u.admin.UpsertTenant(ctx, domain.NewTenant{
 			Name: name, Category: strings.TrimSpace(row.Category), Booth: booth,
 			Initials: tenantInitials(row.Initials, name), Kind: normalizeTenantKind(row.Kind),
-			Description: strings.TrimSpace(row.Description), Email: email, PasswordHash: hash,
+			Description: strings.TrimSpace(row.Description),
+			ContactName: strings.TrimSpace(row.ContactName), Chapter: strings.TrimSpace(row.Chapter),
+			Email: email, PasswordHash: hash,
 		})
 		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})

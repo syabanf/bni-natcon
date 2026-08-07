@@ -30,20 +30,27 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 		respondDomainError(w, err)
 		return
 	}
+	// The admin edit form posts the whole tenant back, so the list has to
+	// carry everything the form shows — otherwise saving would blank it.
 	type row struct {
-		ID        int64  `json:"id"`
-		Name      string `json:"name"`
-		Category  string `json:"category"`
-		Booth     string `json:"booth"`
-		Initials  string `json:"initials"`
-		Kind      string `json:"kind"`
-		ScanCount int    `json:"scan_count"`
+		ID          int64  `json:"id"`
+		Name        string `json:"name"`
+		Category    string `json:"category"`
+		Booth       string `json:"booth"`
+		Initials    string `json:"initials"`
+		Kind        string `json:"kind"`
+		Description string `json:"description"`
+		ContactName string `json:"contact_name"`
+		Chapter     string `json:"chapter"`
+		ScanCount   int    `json:"scan_count"`
 	}
 	out := make([]row, 0, len(ranking))
 	for _, t := range ranking {
 		out = append(out, row{
 			ID: t.ID, Name: t.Name, Category: t.Category,
-			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind, ScanCount: t.ScanCount,
+			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
+			Description: t.Description, ContactName: t.ContactName, Chapter: t.Chapter,
+			ScanCount: t.ScanCount,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})

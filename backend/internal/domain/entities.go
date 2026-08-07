@@ -44,6 +44,9 @@ type Tenant struct {
 	Initials    string
 	Kind        string // "booth" | "sponsor"
 	Description string
+	// The BNI member manning the booth, and the chapter they belong to.
+	ContactName string
+	Chapter     string
 	OwnerUserID int64
 }
 
@@ -232,6 +235,8 @@ type NewTenant struct {
 	Initials     string
 	Kind         string
 	Description  string
+	ContactName  string
+	Chapter      string
 	Email        string
 	PasswordHash string
 }
@@ -243,6 +248,8 @@ type TenantUpdate struct {
 	Initials    string
 	Kind        string
 	Description string
+	ContactName string
+	Chapter     string
 }
 
 type SeminarInput struct {

@@ -184,6 +184,8 @@ export function TenantDetail({ id, onBack }) {
             ['Kind', tenant.kind === 'sponsor' ? 'Official sponsor' : 'Booth tenant'],
             ['Booth', tenant.booth],
             ['Category', tenant.category],
+            ['Booth contact', tenant.contact_name || '—'],
+            ['BNI Chapter', tenant.chapter || '—'],
             ['Scanner login', tenant.owner_email],
           ]}
         />

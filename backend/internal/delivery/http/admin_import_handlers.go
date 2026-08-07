@@ -64,6 +64,9 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 			Email    string `json:"email"`
 			Kind     string `json:"kind"`
 			Desc     string `json:"description"`
+
+			ContactName string `json:"contact_name"`
+			Chapter     string `json:"chapter"`
 		} `json:"tenants"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Tenants) == 0 {
@@ -79,6 +82,7 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 		rows = append(rows, usecase.TenantImportRow{
 			Name: t.Name, Category: t.Category, Booth: t.Booth, Initials: t.Initials, Email: t.Email,
 			Kind: t.Kind, Description: t.Desc,
+			ContactName: t.ContactName, Chapter: t.Chapter,
 		})
 	}
 	created, updated, errs := s.admin.BulkUpsertTenants(r.Context(), rows)

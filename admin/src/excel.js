@@ -84,7 +84,13 @@ export function transformTenantRows(parsed) {
   const rows = []
   let skippedDuplicates = 0
   for (const r of parsed) {
-    const name = (r.name || '').trim()
+    // The official booth sheet has "Company Name" for the booth and "Name"
+    // for the BNI member manning it. The simple template has only "Name",
+    // and there it is the booth's own name.
+    const company = (r.company_name || '').trim()
+    const person = (r.contact_name || '').trim()
+    const name = company || person
+    const contactName = company ? person : ''
     const booth = (r.booth || '').trim().toUpperCase()
     if (!name && !booth) continue
     if (booth && seen.has(booth)) {
@@ -101,15 +107,21 @@ export function transformTenantRows(parsed) {
       email: (r.email || '').trim().toLowerCase(),
       kind,
       description: (r.description || '').trim(),
+      contact_name: contactName,
+      chapter: (r.chapter || '').trim(),
     })
   }
   return { rows, skippedDuplicates }
 }
 
 export const TENANT_IMPORT_ALIASES = {
-  name: ['nama', 'name', 'tenant', 'tenant name', 'nama tenant'],
-  category: ['kategori', 'category', 'industry'],
-  booth: ['booth', 'booth code', 'kode booth', 'no booth'],
+  // "Name" in the official booth sheet is the person, so it maps to the
+  // contact; the booth itself is named by "Company Name".
+  contact_name: ['nama', 'name', 'contact', 'contact name', 'pic', 'penjaga booth'],
+  company_name: ['company name', 'company', 'perusahaan', 'nama perusahaan', 'tenant', 'tenant name', 'nama tenant'],
+  category: ['business classification', 'kategori', 'category', 'industry', 'klasifikasi'],
+  booth: ['booth number', 'booth', 'booth code', 'kode booth', 'no booth', 'nomor booth'],
+  chapter: ['bni chapter', 'chapter'],
   initials: ['inisial', 'initials'],
   email: ['email', 'e-mail', 'login email', 'email login'],
   kind: ['kind', 'jenis', 'tipe', 'type'],
@@ -181,30 +193,38 @@ export const MEMBER_TEMPLATE = {
   sheetName: 'Attendees',
 }
 
+// Mirrors the official "Data Booth" sheet, plus the columns the app adds.
 export const TENANT_TEMPLATE = {
-  columns: ['Name', 'Booth', 'Category', 'Kind', 'Initials', 'Email', 'Description'],
+  columns: [
+    'Booth Number', 'Company Name', 'Business Classification', 'Name', 'BNI Chapter',
+    'Kind', 'Initials', 'Email', 'Description',
+  ],
   examples: [
     {
-      Name: 'BNI Xpora',
-      Booth: 'SP-01',
-      Category: 'Main Sponsor',
+      'Booth Number': 'A1',
+      'Company Name': 'SSCX International',
+      'Business Classification': 'Management Consultant',
+      Name: 'Nicolaas Andrew',
+      'BNI Chapter': 'Star',
+      Kind: 'booth',
+      Initials: '',
+      Email: '',
+      Description: '',
+    },
+    {
+      'Booth Number': 'SP-01',
+      'Company Name': 'BNI Xpora',
+      'Business Classification': 'Main Sponsor',
+      Name: '',
+      'BNI Chapter': '',
       Kind: 'sponsor',
       Initials: 'BX',
       Email: '',
       Description: "BNI's one-stop export hub for members going global.",
     },
-    {
-      Name: 'Kopi Nusantara',
-      Booth: 'A-03',
-      Category: 'F&B',
-      Kind: 'booth',
-      Initials: '',
-      Email: '',
-      Description: 'Single-origin Indonesian coffee, free cupping at the booth.',
-    },
   ],
-  fileName: 'natcon2026-template-import-tenants.xlsx',
-  sheetName: 'Tenants',
+  fileName: 'natcon2026-template-import-booths.xlsx',
+  sheetName: 'Booths',
 }
 
 // Build an .xlsx with the header row plus example rows, so the committee
