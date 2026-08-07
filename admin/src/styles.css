@@ -493,6 +493,7 @@ button:disabled {
 .head-right {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
 }
 .pill {
@@ -567,6 +568,12 @@ button:disabled {
   grid-template-columns: 1.25fr 1fr;
   gap: 20px;
   margin-top: 22px;
+}
+/* Grid items default to min-width:auto, so one long unbreakable string (a
+   company name, a chapter) would stretch the whole track past the viewport. */
+.columns > *,
+.col-right > * {
+  min-width: 0;
 }
 @media (max-width: 900px) {
   .columns {
@@ -1858,6 +1865,13 @@ button:disabled {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* Fades the right edge so it is obvious the strip scrolls. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+  .sb-menu::after {
+    content: '';
+    flex: 0 0 12px;
   }
   .sb-menu::-webkit-scrollbar {
     display: none;
@@ -1957,6 +1971,40 @@ button:disabled {
     flex: 1 1 100%;
   }
   .door-manual .md-add {
+    flex: 1;
+  }
+
+  /* Action buttons share the row evenly rather than trailing off the edge. */
+  .head-right {
+    width: 100%;
+    gap: 8px;
+  }
+  .head-right > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .head-right .md-add {
+    flex-basis: 100%;
+  }
+
+  /* Tighter cells fit one more column before the table needs scrolling. */
+  .md-table {
+    min-width: 560px;
+    font-size: 12.5px;
+  }
+  .md-table th,
+  .md-table td {
+    padding: 11px 10px;
+  }
+  .kind-tabs {
+    gap: 6px;
+  }
+
+  /* The speaker editor stacks: photo + fields on one line, role below. */
+  .speaker-row {
+    flex-wrap: wrap;
+  }
+  .speaker-row select {
     flex: 1;
   }
 }

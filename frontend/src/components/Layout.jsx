@@ -40,7 +40,7 @@ function NavButton({ to, icon, label }) {
   return (
     <button className={active ? 'active' : ''} onClick={() => navigate(to)}>
       <Icon name={icon} />
-      {label}
+      <span className="nav-label">{label}</span>
     </button>
   )
 }
