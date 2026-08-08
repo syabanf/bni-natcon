@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 import { toast } from '../../components/Toast'
@@ -125,23 +125,33 @@ export default function Dashboard() {
   const [visitors, setVisitors] = useState([])
   const [detailId, setDetailId] = useState(null)
 
+  const load = useCallback(() => {
+    api.boothStats().then(setStats).catch(() => {})
+    api
+      .boothVisitors(10)
+      .then((data) => setVisitors(data.visitors || []))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     api.booth().then(setBooth).catch(() => {})
-
-    const load = () => {
-      api.boothStats().then(setStats).catch(() => {})
-      api
-        .boothVisitors(10)
-        .then((data) => setVisitors(data.visitors || []))
-        .catch(() => {})
-    }
     load()
     const timer = setInterval(load, POLL_MS)
     return () => clearInterval(timer)
-  }, [])
+  }, [load])
 
   if (detailId) {
-    return <VisitorDetail memberId={detailId} onBack={() => setDetailId(null)} />
+    // Reload on the way back so a note written in the detail view shows up in
+    // the list straight away instead of waiting for the next poll.
+    return (
+      <VisitorDetail
+        memberId={detailId}
+        onBack={() => {
+          setDetailId(null)
+          load()
+        }}
+      />
+    )
   }
 
   return (

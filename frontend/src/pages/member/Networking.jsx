@@ -44,8 +44,13 @@ function MateMeta({ m }) {
 }
 
 // Accepts "TABLE:5", "MEJA:5", "T5", or a plain number as the table QR payload.
-function parseTableCode(raw) {
-  const m = String(raw).trim().toUpperCase().match(/(?:TABLE|MEJA|T)?[:\s-]*(\d{1,3})$/)
+// Exported so a test can pin it to the payload the admin QR Prints page
+// actually prints, instead of a copy of this regex drifting out of sync.
+export function parseTableCode(raw) {
+  // Anchored at both ends on purpose: unanchored, the tail of a member code
+  // ("NATCON-2026-09001") matched as table 1 and quietly seated the scanner
+  // at the wrong table instead of reporting a wrong QR.
+  const m = String(raw).trim().toUpperCase().match(/^(?:TABLE|MEJA|T)?[:\s-]*(\d{1,3})$/)
   return m ? parseInt(m[1], 10) : 0
 }
 
