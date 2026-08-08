@@ -34,8 +34,8 @@ export default function LuckyDraw({ onUnauthorized }) {
 
   useEffect(() => {
     api
-      .members({ onUnauthorized, limit: 1000 })
-      .then((d) => setMembers((d.members || []).filter((m) => m.visits > 0)))
+      .allMembers({ onUnauthorized })
+      .then((all) => setMembers(all.filter((m) => m.visits > 0)))
       .catch(() => setMembers([]))
     return () => clearTimeout(timerRef.current)
   }, [onUnauthorized])

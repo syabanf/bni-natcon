@@ -352,3 +352,28 @@ func TestForgotPasswordListsEveryTicket(t *testing.T) {
 		t.Fatal("each account needs its own reset token")
 	}
 }
+
+func TestMemberPageSizeClamping(t *testing.T) {
+	cases := []struct {
+		name  string
+		asked int
+		want  int
+	}{
+		{"a sane page size passes through", 200, 200},
+		{"no limit falls back to the default", 0, 50},
+		{"a negative limit falls back too", -5, 50},
+		{"the maximum is allowed", MaxMemberPageSize, MaxMemberPageSize},
+		// Over the maximum used to hand back 50 — the fewest rows for the
+		// largest request, which silently truncated the pin report and left
+		// attendees out of the lucky draw.
+		{"over the maximum clamps down to it", MaxMemberPageSize + 1, MaxMemberPageSize},
+		{"wildly over the maximum clamps too", 50000, MaxMemberPageSize},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := clampMemberPageSize(tt.asked); got != tt.want {
+				t.Fatalf("clamp(%d) = %d, want %d", tt.asked, got, tt.want)
+			}
+		})
+	}
+}

@@ -54,10 +54,25 @@ func invalid(msg string) error {
 	return fmt.Errorf("%w: %s", domain.ErrInvalidInput, msg)
 }
 
-func (u *AdminUsecase) ListMembers(ctx context.Context, q string, page, limit int) ([]domain.MemberSummary, int, error) {
-	if limit <= 0 || limit > 1000 {
-		limit = 50
+// MaxMemberPageSize caps one page of the member list. Asking for more than
+// this used to fall back to the default 50 — asking for more should never
+// hand back the fewest, so it clamps to the maximum instead.
+const MaxMemberPageSize = 1000
+
+// clampMemberPageSize turns a requested page size into a served one: missing
+// or nonsense asks get the default, an over-large ask gets the maximum.
+func clampMemberPageSize(limit int) int {
+	if limit <= 0 {
+		return 50
 	}
+	if limit > MaxMemberPageSize {
+		return MaxMemberPageSize
+	}
+	return limit
+}
+
+func (u *AdminUsecase) ListMembers(ctx context.Context, q string, page, limit int) ([]domain.MemberSummary, int, error) {
+	limit = clampMemberPageSize(limit)
 	if page <= 0 {
 		page = 1
 	}

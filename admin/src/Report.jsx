@@ -214,7 +214,7 @@ export function ReportCoupons({ onUnauthorized }) {
   const [members, setMembers] = useState([])
 
   useEffect(() => {
-    api.members({ onUnauthorized, limit: 1000 }).then((d) => setMembers(d.members || [])).catch(() => {})
+    api.allMembers({ onUnauthorized }).then(setMembers).catch(() => {})
   }, [onUnauthorized])
 
   // Distribution: how many members hold 0, 1, 2, … coupons.

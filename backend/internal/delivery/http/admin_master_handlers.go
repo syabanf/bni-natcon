@@ -41,8 +41,12 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 	if page <= 0 {
 		page = 1
 	}
-	if limit <= 0 || limit > 1000 {
+	// Mirror the usecase clamp so the echoed limit matches what was served.
+	if limit <= 0 {
 		limit = 50
+	}
+	if limit > usecase.MaxMemberPageSize {
+		limit = usecase.MaxMemberPageSize
 	}
 	type row struct {
 		ID         int64  `json:"id"`

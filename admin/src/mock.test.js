@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { api, setMockMode } from './api'
 
 class MemStorage {
   constructor() {
@@ -312,5 +313,23 @@ describe('breakout class speakers', () => {
     expect(row.speakers).toHaveLength(2)
     expect(row.speakers[0]).toMatchObject({ name: 'A Speaker', photo_url: '/speakers/a.jpg' })
     expect(row.speakers[1].role).toBe('moderator')
+  })
+})
+
+describe('every attendee reaches the lucky draw', () => {
+  it('pages through the whole list instead of one capped page', async () => {
+    // api.allMembers routes through the mock layer, same as the real app does
+    // in demo mode — this is the paging loop under test, not the transport.
+    setMockMode(true)
+    const { total } = await mockAdminApi.members({ page: 1, limit: 1 })
+    // One page of 1 obviously cannot hold the field.
+    const onePage = await mockAdminApi.members({ page: 1, limit: 1 })
+    expect(onePage.members).toHaveLength(1)
+    expect(total).toBeGreaterThan(1)
+
+    const all = await api.allMembers()
+    expect(all).toHaveLength(total)
+    // No duplicates across page boundaries.
+    expect(new Set(all.map((m) => m.id)).size).toBe(total)
   })
 })

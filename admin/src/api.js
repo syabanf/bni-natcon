@@ -95,6 +95,21 @@ export const api = {
     const qs = new URLSearchParams({ q, page, limit }).toString()
     return request(`/admin/members?${qs}`, opts)
   },
+  // Every attendee, page by page. The Lucky Draw and the pin report need the
+  // whole field: a single capped page would silently leave people out of the
+  // draw once the event outgrows one page.
+  allMembers: async (opts = {}) => {
+    const PAGE = 500
+    const first = await api.members({ ...opts, page: 1, limit: PAGE })
+    const out = [...(first.members || [])]
+    const total = first.total ?? out.length
+    for (let page = 2; out.length < total; page++) {
+      const next = await api.members({ ...opts, page, limit: PAGE })
+      if (!next.members?.length) break
+      out.push(...next.members)
+    }
+    return out
+  },
   seminarCheckin: (id, memberCode) =>
     isMockMode()
       ? mock.seminarCheckin(id, memberCode)
