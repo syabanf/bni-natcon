@@ -18,6 +18,12 @@ import urllib.error
 import urllib.request
 
 BASE = os.environ.get("BASE", "http://localhost:8082")
+
+# What a freshly migrated + seeded database holds: the 31 real booths from
+# migration 0014 plus the two BNI sponsors from the seeder.
+SEEDED_BOOTHS = 31
+SEEDED_SPONSORS = 2
+SEEDED_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
 passed = 0
@@ -96,7 +102,7 @@ check("second member login 200", status == 200)
 sinta_tok = body["token"]
 sinta_id = body["user"]["id"]
 
-status, body = login("booth-a03@natcon.id")
+status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 
@@ -239,12 +245,12 @@ check("member cannot admin -> 403", status == 403)
 # ---------------------------------------------------------------- member basics
 section("Member basics")
 status, body, _ = req("GET", "/api/v1/me", token=member_tok)
-check("me: 14 tenants, 0 visited", status == 200
-      and body["stats"]["tenants_total"] == 14 and body["stats"]["tenants_visited"] == 0)
+check("me: 33 tenants, 0 visited", status == 200
+      and body["stats"]["tenants_total"] == SEEDED_TENANTS and body["stats"]["tenants_visited"] == 0)
 
 status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
-check("tenants list 14, none visited",
-      status == 200 and len(body["tenants"]) == 14
+check("tenants list 33, none visited",
+      status == 200 and len(body["tenants"]) == SEEDED_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
 check("sponsors listed first with kind + description",
       body["tenants"][0]["kind"] == "sponsor" and body["tenants"][0]["description"] != ""
@@ -398,11 +404,11 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 check("overview splits sponsors from booths",
-      body["total_sponsors"] == 2 and body["total_booths"] == 12
+      body["total_sponsors"] == SEEDED_SPONSORS and body["total_booths"] == SEEDED_BOOTHS
       and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
-check("overview: 3 members, 14 tenants, 2 visits",
+check("overview: 3 members, 33 tenants, 2 visits",
       status == 200 and body["total_members"] == 3
-      and body["total_tenants"] == 14 and body["total_visits"] == 2)
+      and body["total_tenants"] == SEEDED_TENANTS and body["total_visits"] == 2)
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E",
@@ -425,7 +431,7 @@ check("a second attendee may share an email -> 201", status == 201)
 status, _, _ = req("DELETE", f"/api/v1/admin/members/{body['user']['id']}", token=admin_tok)
 check("clean up the shared-email attendee", status == 200)
 status, _, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
-                   body={"name": "Staff Clash", "email": "booth-a03@natcon.id"})
+                   body={"name": "Staff Clash", "email": "booth-a1@natcon.id"})
 check("a tenant's email is still taken -> 409", status == 409)
 status, _, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                    body={"name": "Bad", "email": "bukan-email"})
@@ -559,13 +565,16 @@ check("existing booth refreshed in place (single row, new details)",
 
 # The official booth sheet carries the person manning the booth and their
 # chapter alongside the company; both ride through the import onto the tenant.
+# Booth A1 already exists from migration 0014, so re-importing the sheet the
+# committee already has must refresh it rather than create a second booth.
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [
                           {"name": "SSCX International", "booth": "A1",
                            "category": "Management Consultant",
                            "contact_name": "Nicolaas Andrew", "chapter": "Star"},
                       ]})
-check("booth sheet row imports", status == 200 and body["created"] == 1)
+check("re-importing the seeded booth sheet updates, never duplicates",
+      status == 200 and body["updated"] == 1 and body["created"] == 0)
 status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
 sheet_booth = next(t for t in body["tenants"] if t["booth"] == "A1")
 check("the booth carries its contact and chapter",

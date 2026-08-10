@@ -2,33 +2,57 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SeedIfEmpty inserts demo data (members, booth/sponsor logins, tenants,
-// seminars) when the users table is empty, and always ensures the admin
-// account exists (so existing databases pick it up too). All accounts get
-// the given password.
+// SeedIfEmpty fills in whatever is missing: the admin account always, then
+// the demo attendee logins, the two BNI sponsors, the four breakout classes
+// and the networking tables — each only when that group is empty. The 31 real
+// booths arrive through migration 0014 instead, so an already-running
+// deployment picks them up too. All accounts get the given password.
 func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error {
 	if err := ensureAdmin(ctx, pool, password); err != nil {
 		return err
 	}
 
-	var count int
-	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role <> 'admin'`).Scan(&count); err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
+	}
+
+	// Booths inserted by migration 0014 carry a placeholder hash nobody can
+	// sign in with — give them the configured password. Only untouched
+	// placeholders are rewritten, so a booth whose password was changed in
+	// the admin panel keeps it.
+	if _, err := pool.Exec(ctx, `
+		UPDATE users SET password_hash = $1
+		WHERE role = 'tenant' AND password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`,
+		string(hash)); err != nil {
+		return err
+	}
+
+	// Each group is seeded on its own. A migration that fills one of them in
+	// (the real booths) must not stop the others from being seeded.
+	var demoMembers int
+	if err := pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM users WHERE role = 'member'`).Scan(&demoMembers); err != nil {
+		return err
+	}
+	var tenantCount, seminarCount int
+	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM tenants`).Scan(&tenantCount); err != nil {
+		return err
+	}
+	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM seminars`).Scan(&seminarCount); err != nil {
+		return err
+	}
+	if demoMembers > 0 && tenantCount > 0 && seminarCount > 0 {
+		return nil
 	}
 
 	tx, err := pool.Begin(ctx)
@@ -53,23 +77,14 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		}
 	}
 
+	// Only the two BNI sponsors are seeded here — the 31 real booths come
+	// from migration 0014, so every environment gets the same list whether it
+	// is a fresh laptop or an already-running deployment.
 	tenants := []struct {
 		name, category, booth, initials, kind, desc, contact, chapter string
 	}{
 		{"BNI Xpora", "Main Sponsor", "SP-01", "BX", "sponsor", "BNI's one-stop export hub — banking solutions for members going global.", "", ""},
 		{"Wondr by BNI", "Digital Sponsor", "SP-02", "WB", "sponsor", "Personal finance super-app: payments, savings goals, and lifestyle deals.", "", ""},
-		{"Kopi Nusantara", "F&B", "A-03", "KN", "booth", "Single-origin Indonesian coffee, roasted in-house. Free cupping session at the booth.", "Ronald Liong", "Magnify"},
-		{"Bank Mitra Sejahtera", "Finance", "A-05", "BM", "booth", "SME lending and cash-management partner for BNI chapter businesses.", "Jessica Dewi", "Magnify"},
-		{"Garuda Print Media", "Printing", "A-08", "GP", "booth", "Large-format printing and event branding with same-day turnaround.", "", ""},
-		{"TechNesia Solutions", "IT & Software", "B-01", "TS", "booth", "Custom software, ERP integrations, and managed cloud for growing teams.", "", ""},
-		{"Sehat Selalu Clinic", "Healthcare", "B-04", "SS", "booth", "Corporate health checks and on-site wellness programs.", "", ""},
-		{"Properti Prima", "Property", "B-07", "PP", "booth", "Commercial property advisory — office, warehouse, and retail spaces.", "", ""},
-		{"Logistik Cepat", "Logistics", "C-02", "LC", "booth", "Nationwide same-day and next-day delivery with live tracking.", "", ""},
-		{"Asuransi Aman", "Insurance", "C-05", "AA", "booth", "Business insurance tailored for SMEs: assets, liability, and health.", "", ""},
-		{"Kreasi Digital", "Marketing", "C-08", "KD", "booth", "Performance marketing and brand studios for ambitious businesses.", "", ""},
-		{"Hukum & Rekan", "Legal", "D-01", "HR", "booth", "Corporate legal counsel: contracts, compliance, and dispute resolution.", "", ""},
-		{"EduPro Training", "Training", "D-04", "EP", "booth", "Certified professional training for sales, leadership, and finance.", "", ""},
-		{"Katering Rasa", "F&B", "D-06", "KR", "booth", "Premium event catering with authentic archipelago menus.", "", ""},
 	}
 	for _, t := range tenants {
 		email := fmt.Sprintf("booth-%s@natcon.id", strings.ToLower(strings.ReplaceAll(t.booth, "-", "")))
@@ -77,14 +92,19 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		if err := tx.QueryRow(ctx, `
 			INSERT INTO users (name, email, password_hash, role, company)
 			VALUES ($1, $2, $3, 'tenant', $1)
+			ON CONFLICT DO NOTHING
 			RETURNING id`,
 			t.name, email, string(hash)).Scan(&ownerID); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				continue // already present
+			}
 			return err
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO tenants (name, category, booth, initials, kind, description,
 			                     contact_name, chapter, owner_user_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9
+			WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE booth = $3)`,
 			t.name, t.category, t.booth, t.initials, t.kind, t.desc,
 			t.contact, t.chapter, ownerID); err != nil {
 			return err

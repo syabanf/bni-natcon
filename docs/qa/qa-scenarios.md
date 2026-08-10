@@ -21,7 +21,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 ## Accounts (seeded, password: natcon2026)
 Admin — admin@natcon.id
 Attendee — reddie@natcon.id (NATCON-2026-08154) · sinta@natcon.id (…-08201) · agus@natcon.id (…-08322)
-Booth scanner — booth-a03@natcon.id (Kopi Nusantara) · booth-sp01@natcon.id (BNI Xpora, sponsor)
+Booth scanner — booth-a1@natcon.id (SSCX International) · booth-sp01@natcon.id (BNI Xpora, sponsor)
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
 ## Sheets
@@ -35,7 +35,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|---|---|
 | AUTH-01 | P1 | Admin account exists | Open the admin panel. Enter admin@natcon.id / natcon2026. Press Sign in. | Lands on the Dashboard with the sidebar visible. Stat tiles show numbers, not dashes. |
 | AUTH-02 | P1 | Seeded attendee | On the attendee app sign in as reddie@natcon.id / natcon2026. | Lands on Home: 'Hello, Reddie', member pass card with a QR and the member ID NATCON-2026-08154. |
-| AUTH-03 | P1 | Booth account | Sign in as booth-a03@natcon.id / natcon2026. | Lands on Booth Scanner titled 'Kopi Nusantara · Booth A-03'. Bottom nav shows Scanner and Dashboard only. |
+| AUTH-03 | P1 | Booth account | Sign in as booth-a1@natcon.id / natcon2026. | Lands on Booth Scanner titled 'SSCX International · Booth A1'. Bottom nav shows Scanner and Dashboard only. |
 | AUTH-04 | P1 | Any account | Sign in with the right email and a wrong password. | Stays on sign-in and shows an error. The wording must not reveal whether the email exists. |
 | AUTH-05 | P1 | An attendee imported from the ticketing sheet, who has never signed in | Sign in with their email and the generated password (chapter + first name). | 'Choose your password' appears immediately. No other page is reachable until a password is saved. |
 | AUTH-06 | P1 | On the 'Choose your password' screen | Type a 5-character password in both fields and save. | Refused with a message about needing at least 8 characters. |
@@ -95,7 +95,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-05 | P1 | Scanner | Type the attendee's PHONE number instead of the member code. | Resolves to the same person. |
 | BTH-06 | P1 | The same attendee was already scanned at this booth | Scan or type them again. | 'Already scanned' — says the pin count is unchanged. It must not add a second pin. |
 | BTH-07 | P1 | Scanner | Type a code that belongs to nobody, e.g. NATCON-2026-99999. | A clear not-found message. Nothing is recorded. |
-| BTH-08 | P2 | Scanner | Type a booth QR payload (BOOTH:A-03) into manual input. | Refused — it is not an attendee code. |
+| BTH-08 | P2 | Scanner | Type a booth QR payload (BOOTH:A1) into manual input. | Refused — it is not an attendee code. |
 | BTH-09 | P1 | At least one scan today | Open Dashboard. | Total scans and Scans today match what you scanned; the visitor appears in Recent visitors. |
 | BTH-10 | P1 | Dashboard | Tap a visitor row. | Visitor detail: name, company, chapter, member code, visit time, a Call button, and a Lead note box. |
 | BTH-11 | P1 | Visitor detail | Write a lead note, save, then go back to the dashboard. | The note is shown on that visitor's row in the list straight away — without reloading the page. |
@@ -202,14 +202,14 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Attendee 1 | reddie@natcon.id / natcon2026 | NATCON-2026-08154 · BNI Chapter Jakarta Elite · +62811000154 |
 | Attendee 2 | sinta@natcon.id / natcon2026 | NATCON-2026-08201 · BNI Chapter Jakarta Elite · +62811000201 |
 | Attendee 3 | agus@natcon.id / natcon2026 | NATCON-2026-08322 · BNI Chapter Bandung Raya · +62811000322 |
-| Booth scanner | booth-a03@natcon.id / natcon2026 | Kopi Nusantara · booth A-03 |
+| Booth scanner | booth-a1@natcon.id / natcon2026 | SSCX International · booth A1 (from the official Data Booth sheet) |
 | Sponsor scanner | booth-sp01@natcon.id / natcon2026 | BNI Xpora · booth SP-01 |
-| Booth login pattern | booth-<code without dashes>@natcon.id | A-03 → booth-a03, SP-01 → booth-sp01 |
+| Booth login pattern | booth-<code without dashes>@natcon.id | A1 → booth-a1, SP-01 → booth-sp01 |
 | Imported attendee password | chapter + first name, lowercase, no spaces | Heritage + Fahmi → heritagefahmi |
 | Unknown member code | NATCON-2026-99999 | For the not-found cases |
 | Table QR payload | TABLE:5 | What the QR Prints page prints |
 | Class QR payload | SEMINAR:<id> | Scanned on Door Check-in to switch room |
-| Booth QR payload | BOOTH:A-03 | Booth signage |
+| Booth QR payload | BOOTH:A1 | Booth signage |
 | Breakout classes | Rooms 1–4, all slot 1, 60 seats each | All parallel — an attendee picks exactly one |
 | Attendee app | http://localhost:5173 |  |
 | Admin panel | http://localhost:5174 |  |

@@ -49,8 +49,12 @@ Environment yang wajib diisi:
 | `UPLOAD_DIR`      | path di **persistent volume**, mis. `/data/uploads`          |
 | `SEED_PASSWORD`   | password akun demo hasil seeding                             |
 
-Migrasi 0001–0008 dan seeder jalan otomatis saat start; tidak ada
-langkah migrasi manual.
+Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
+Master data acara ikut di dalamnya — 31 booth asli (migrasi `0014`, lengkap
+dengan login scanner, kontak booth, dan chapter), 2 sponsor BNI, serta 4
+breakout class beserta narasumbernya. Jadi database baru maupun yang sudah
+jalan sama-sama berakhir dengan data yang sama; peserta tetap lewat import
+Excel.
 
 > **Cover seminar**: file upload disimpan di disk. Tanpa persistent
 > volume, gambar hilang setiap redeploy. Arahkan `UPLOAD_DIR` ke volume,

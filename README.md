@@ -51,11 +51,28 @@ dropping in new artwork.
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)
-and pick another class in the same slot. The four real breakout classes and
-their speakers ship in the seeder; an already-seeded database can load them
-with [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
-which is safe to re-run — classes are only inserted when missing, and speaker
-rows are always refreshed (that is how you push updated photos).
+and pick another class in the same slot.
+
+**The real event data is in the migrations**, so a laptop, a staging box and
+production all converge on the same master data without anyone remembering to
+import a spreadsheet:
+
+- **31 booths** from the committee's *Data Booth* sheet — migration `0014`,
+  each with its scanner login, booth contact and BNI chapter. Idempotent: a
+  booth already present under its code keeps its login and its collected
+  scans. The 12 placeholder booths from the original mockup are removed, but
+  only when nothing has been scanned at them.
+- **2 BNI sponsors** and the **4 breakout classes with their speakers** — the
+  seeder, which fills in each group only when that group is empty. An
+  already-seeded database can also load the classes with
+  [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
+  safe to re-run; speaker rows are always refreshed (that is how you push
+  updated photos).
+- **Attendees stay an import.** They change until the last minute, and 668
+  people's names, emails and phone numbers do not belong in git.
+
+Booth scanner accounts land on `SEED_PASSWORD`, so set that before the event
+or reset the logins from the admin panel.
 
 Speaker photos live in [`assets/speakers/`](assets/speakers) and room posters
 in [`assets/covers/`](assets/covers); both are served from each app's
@@ -102,7 +119,7 @@ and report `created / updated / failed` per import.
 localStorage-backed mock layer — no backend needed. In the member/tenant app
 the state is shared across personas on the device (a booth scan shows up in
 that member's passport); the admin app ships with seeded demo data (8 members,
-12 booths, scattered scans for the charts) and full CRUD/import/report support.
+12 demo booths, scattered scans for the charts) and full CRUD/import/report support.
 A red DEMO chip marks the mode; in mock mode any password is accepted.
 
 **PWA / offline**: the member/tenant app installs as a PWA (manifest + service
@@ -268,7 +285,7 @@ All with password `natcon2026`:
 | Member  | `reddie@natcon.id`    | Member code `NATCON-2026-08154`   |
 | Member  | `sinta@natcon.id`     | Member code `NATCON-2026-08201`   |
 | Member  | `agus@natcon.id`      | Member code `NATCON-2026-08322`   |
-| Tenant  | `booth-a03@natcon.id` | Kopi Nusantara · Booth A-03       |
+| Tenant  | `booth-a1@natcon.id`  | SSCX International · Booth A1     |
 | Tenant  | `booth-b01@natcon.id` | TechNesia Solutions · Booth B-01  |
 | Tenant  | …one per booth        | `booth-<code>@natcon.id`          |
 | Admin   | `admin@natcon.id`     | Committee dashboard + master data |

@@ -84,7 +84,7 @@ function login(email, password, xff) {
 
 export function setup() {
   const adminTok = login('admin@natcon.id', PASSWORD, '10.66.0.1')
-  const tenantTok = login('booth-a03@natcon.id', PASSWORD, '10.66.0.2')
+  const tenantTok = login('booth-a1@natcon.id', PASSWORD, '10.66.0.2')
 
   // Seed load-test members via the upsert import (idempotent on re-runs).
   // Generated password = chapter+firstname slug -> "chapterk6k6" for all.

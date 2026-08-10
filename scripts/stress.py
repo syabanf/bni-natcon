@@ -125,7 +125,7 @@ assert status == 200, f"admin login failed: {status} {body}"
 admin_tok = body["token"]
 
 status, body = c.req("POST", "/api/v1/auth/login",
-                     body={"email": "booth-a03@natcon.id", "password": PASSWORD})
+                     body={"email": "booth-a1@natcon.id", "password": PASSWORD})
 assert status == 200, "tenant login failed"
 tenant_tok = body["token"]
 
