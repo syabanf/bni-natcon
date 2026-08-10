@@ -144,6 +144,20 @@ both frontends, and `docker compose build` for all images.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
+## Test reports
+
+Measured runs, not estimates — each one says how to reproduce it:
+
+| Report | What it covers |
+| --- | --- |
+| [Spreadsheet export — feature & performance](docs/reports/2026-08-10-export-test-report.md) ([xlsx](docs/reports/natcon2026-export-test-report.xlsx)) | All six exports: contents, awkward values, empty data, timings and file sizes at event scale, plus every endpoint's p50 |
+| [k6 load test](docs/reports/2026-08-03-k6-load-test.md) ([xlsx](docs/reports/natcon2026-k6-report.xlsx)) | Attendee browsing, booth scanning and admin polling under concurrent load |
+| [Load & concurrency](docs/reports/2026-08-03-load-test-report.md) ([xlsx](docs/reports/natcon2026-load-test-report.xlsx)) | Transactional correctness under contention up to 1,000 contenders |
+
+[`scripts/seed_event_scale.sql`](scripts/seed_event_scale.sql) fills a fresh
+database with the shape of a full Natcon day (≈700 attendees, 46 booths, 6.5k
+scans, every networking seat taken) so any of these can be re-run.
+
 ## Environment configuration
 
 Predefined variable templates ship with the repo — copy, adjust, done
