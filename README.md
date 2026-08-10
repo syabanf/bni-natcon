@@ -144,6 +144,22 @@ both frontends, and `docker compose build` for all images.
 
 Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/2026-07-24-natcon-digital-stamp-design.md)
 
+## QA
+
+[`docs/qa/`](docs/qa) holds the scenario pack QA runs by hand before the event:
+**118 cases** across sign-in, the attendee app, the booth scanner, admin master
+data, event-day operations, reports and exports, and cross-cutting concerns
+(devices, offline, demo mode, error states) — **77 of them P1**, meaning they
+must pass before the doors open. Each case carries its precondition, the exact
+steps, real test data and the expected result, with columns for the tester's
+result and notes.
+
+- [`natcon2026-qa-scenarios.xlsx`](docs/qa/natcon2026-qa-scenarios.xlsx) — the
+  working copy, one sheet per area, with a Pass/Fail/Blocked/N/A dropdown
+- [`qa-scenarios.md`](docs/qa/qa-scenarios.md) — the readable copy, regenerated
+  from the workbook with `python3 scripts/qa_md_from_xlsx.py` so the two never
+  drift apart
+
 ## Test reports
 
 Measured runs, not estimates — each one says how to reproduce it:
