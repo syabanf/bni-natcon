@@ -228,13 +228,18 @@ export const TENANT_TEMPLATE = {
 }
 
 // Build an .xlsx with the header row plus example rows, so the committee
-// can fill it in and import it back without guessing column names.
-export function downloadTemplate({ columns, examples, sheetName, fileName }) {
+// can fill it in and import it back without guessing column names. Split from
+// the download so tests can read the workbook back instead of a side effect.
+export function buildTemplateWorkbook({ columns, examples, sheetName }) {
   const ws = XLSX.utils.json_to_sheet(examples, { header: columns })
   ws['!cols'] = columns.map((c) => ({ wch: Math.max(14, c.length + 4) }))
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, sheetName)
-  XLSX.writeFile(wb, fileName)
+  return wb
+}
+
+export function downloadTemplate(template) {
+  XLSX.writeFile(buildTemplateWorkbook(template), template.fileName)
 }
 
 export const MEMBER_IMPORT_ALIASES = {
@@ -250,9 +255,17 @@ export const MEMBER_IMPORT_ALIASES = {
   ticket_number: ['ticket number', 'ticket no', 'nomor tiket', 'no tiket'],
 }
 
-export function exportSheet(rows, sheetName, fileName) {
+// Split from the download so tests can read the workbook back rather than
+// assert on a side effect. Values go in as typed cells — text stays text, so
+// a company name that happens to start with "=" or "+" is written as a string
+// cell and shown literally rather than evaluated.
+export function buildWorkbook(rows, sheetName) {
   const ws = XLSX.utils.json_to_sheet(rows)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, sheetName)
-  XLSX.writeFile(wb, fileName)
+  return wb
+}
+
+export function exportSheet(rows, sheetName, fileName) {
+  XLSX.writeFile(buildWorkbook(rows, sheetName), fileName)
 }
