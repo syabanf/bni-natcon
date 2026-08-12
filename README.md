@@ -103,6 +103,12 @@ in [`assets/covers/`](assets/covers); both are served from each app's
 `public/` folder. Photos uploaded through the admin speaker editor or the
 cover picker go to the API's `UPLOAD_DIR` instead.
 
+**Sign-in QR codes** for print and slides live in [`assets/qr/`](assets/qr) —
+one for the attendee door (`/login`), one for the booth door
+(`/tenant/login`), as SVG + PNG plus a ready-to-print A4 card sheet.
+Regenerate them (and point them at another host) with
+`python3 scripts/make_login_qr.py https://your-domain`.
+
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a
 ready-to-fill template (headers + example rows).
