@@ -474,6 +474,10 @@ export const mockAdminApi = {
     if (!sem) return fail(404, 'data not found')
     if (!body.room?.trim() || !body.title?.trim()) return fail(400, 'invalid input: room and title are required')
     if (!(Number(body.capacity) > 0)) return fail(400, 'invalid input: capacity must be greater than 0')
+    const booked = s.registrations.filter((r) => r.seminar_id === Number(id)).length
+    if (Number(body.capacity) < booked) {
+      return fail(400, `invalid input: quota ${Number(body.capacity)} is below the ${booked} attendees already registered — cancel registrations first`)
+    }
     Object.assign(sem, {
       slot: Number(body.slot) || 1, room: body.room.trim(), title: body.title.trim(),
       speaker: body.speaker || '', moderator: body.moderator ?? sem.moderator ?? '',
@@ -482,6 +486,21 @@ export const mockAdminApi = {
     })
     save(s)
     return delay({ status: 'updated' })
+  },
+
+  setSeminarQuota(id, quota) {
+    const s = load()
+    const sem = s.seminars.find((x) => x.id === Number(id))
+    if (!sem) return fail(404, 'data not found')
+    const n = Number(quota)
+    if (!(n > 0)) return fail(400, 'invalid input: quota must be greater than 0')
+    const taken = s.registrations.filter((r) => r.seminar_id === Number(id)).length
+    if (n < taken) {
+      return fail(400, `invalid input: quota ${n} is below the ${taken} attendees already registered — cancel registrations first`)
+    }
+    sem.capacity = n
+    save(s)
+    return delay({ seminar: { id: sem.id, capacity: n, seats_taken: taken, seats_left: n - taken } })
   },
 
   deleteSeminar(id) {

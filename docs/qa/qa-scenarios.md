@@ -136,6 +136,14 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-22 | P1 | Breakout Classes page | Press Download format, fill a couple of rows (attendee + room), then Import Registrations. | Reports created / updated / failed; the attendees show on the class detail. |
 | MD-23 | P2 | Chapters page | Look at the list; add a chapter, rename one used by attendees. | Chapters list with member counts. A rename cascades to the attendees in that chapter. |
 | MD-24 | P2 | Any master-data page | Import a file with a bad row (no email, or a malformed email). | The good rows still import; the bad row is reported with its row number and reason. |
+| MD-25 | P1 | Admin · Breakout Classes | Read the Quota column for a class nobody has registered for. | Shows taken/quota (e.g. 0/60), an empty fill bar and 'N seats left'. |
+| MD-26 | P1 | Admin · Breakout Classes | Click the quota number, type 45, press Enter. | Saves without opening the edit form; the row shows 0/45 and '45 seats left'. Re-open the class in Edit: description, cover and speaker photos are untouched. |
+| MD-27 | P1 | Admin · Breakout Classes | Click the quota number, change it, press Esc. | The editor closes and the old quota stays — nothing was saved. |
+| MD-28 | P1 | A class with 3 attendees registered | Set its quota to 2. | Refused, with '3 already registered — cancel registrations first'. The old quota is still in place after a page reload. |
+| MD-29 | P1 | Same class, 3 registered | Set its quota to exactly 3. | Accepted. The row reads 3/3 with a full bar and FULL in red. |
+| MD-30 | P1 | A class showing FULL | Register one more attendee into it (Detail → register by code/email/phone). | Refused: 'this seminar is fully booked'. An attendee picking it in the app is turned away too. |
+| MD-31 | P2 | Admin · Breakout Classes | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
+| MD-32 | P2 | Admin · Breakout Classes | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
 
 ## Admin operations
 
@@ -226,8 +234,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Auth | 22 | 13 |
 | Attendee | 22 | 14 |
 | Booth scanner | 14 | 10 |
-| Admin master data | 24 | 19 |
+| Admin master data | 32 | 25 |
 | Admin operations | 16 | 10 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 11 | 3 |
-| **Total** | **121** | **78** |
+| **Total** | **129** | **84** |

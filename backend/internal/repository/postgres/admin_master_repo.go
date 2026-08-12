@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -302,18 +303,74 @@ func replaceSpeakers(ctx context.Context, q interface {
 }
 
 func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.SeminarInput) error {
-	tag, err := r.pool.Exec(ctx, `
-		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, moderator = $5,
-		       capacity = $6, description = $7, cover_url = $8
-		WHERE id = $9`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL, id)
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	if tag.RowsAffected() == 0 {
-		return domain.ErrNotFound
+	defer tx.Rollback(ctx)
+
+	// Locking the row first means a quota edit and a concurrent registration
+	// cannot both decide the room has space.
+	if _, err := lockSeminarQuota(ctx, tx, id, s.Capacity); err != nil {
+		return err
 	}
-	return replaceSpeakers(ctx, r.pool, id, s.Speakers)
+	if _, err := tx.Exec(ctx, `
+		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, moderator = $5,
+		       capacity = $6, description = $7, cover_url = $8
+		WHERE id = $9`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL, id); err != nil {
+		return err
+	}
+	// Speakers are swapped wholesale inside the same transaction, so a
+	// failure halfway can no longer leave a class with none.
+	if err := replaceSpeakers(ctx, tx, id, s.Speakers); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// SetSeminarQuota re-sizes one class and nothing else.
+func (r *AdminRepo) SetSeminarQuota(ctx context.Context, id int64, quota int) (*domain.SeminarQuota, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	taken, err := lockSeminarQuota(ctx, tx, id, quota)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE seminars SET capacity = $1 WHERE id = $2`, quota, id); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return &domain.SeminarQuota{ID: id, Capacity: quota, SeatsTaken: taken}, nil
+}
+
+// lockSeminarQuota locks the class row and refuses a quota that would land
+// below the seats already booked. It returns the seats currently taken.
+func lockSeminarQuota(ctx context.Context, tx pgx.Tx, id int64, quota int) (int, error) {
+	var current int
+	if err := tx.QueryRow(ctx,
+		`SELECT capacity FROM seminars WHERE id = $1 FOR UPDATE`, id).Scan(&current); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, domain.ErrNotFound
+		}
+		return 0, err
+	}
+	var taken int
+	if err := tx.QueryRow(ctx,
+		`SELECT COUNT(*) FROM seminar_registrations WHERE seminar_id = $1`, id).Scan(&taken); err != nil {
+		return 0, err
+	}
+	if quota < taken {
+		return taken, fmt.Errorf("%w: quota %d is below the %d attendees already registered — cancel registrations first",
+			domain.ErrInvalidInput, quota, taken)
+	}
+	return taken, nil
 }
 
 func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {

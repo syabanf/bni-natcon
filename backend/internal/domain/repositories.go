@@ -81,6 +81,12 @@ type AdminRepository interface {
 	UnregisterSeminarMember(ctx context.Context, seminarID int64, memberCode string) error
 	SeminarIDByRoom(ctx context.Context, room string) (int64, error)
 	UpdateSeminar(ctx context.Context, id int64, s SeminarInput) error
+	// SetSeminarQuota changes only the seat quota, so the committee can
+	// re-size a room without the class copy, cover or speaker list riding
+	// along. Both this and UpdateSeminar refuse a quota below the seats
+	// already booked (ErrInvalidInput) — shrinking a room does not throw
+	// anyone out of it.
+	SetSeminarQuota(ctx context.Context, id int64, quota int) (*SeminarQuota, error)
 	DeleteSeminar(ctx context.Context, id int64) error
 
 	// Chapters master data. EnsureChapter registers a chapter name

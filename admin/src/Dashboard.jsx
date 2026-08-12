@@ -104,7 +104,7 @@ export default function Dashboard({ onUnauthorized }) {
         <div className="col-right">
           <div className="panel">
             <h2>
-              <span className="sec-no">02</span>Breakout Class Capacity
+              <span className="sec-no">02</span>Breakout Class Quota
             </h2>
             <p className="panel-sub">Parallel breakout classes</p>
             {seminars.map((s) => {

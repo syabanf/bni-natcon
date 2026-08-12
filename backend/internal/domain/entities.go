@@ -264,6 +264,15 @@ type SeminarInput struct {
 	Speakers    []SeminarSpeaker
 }
 
+// SeminarQuota is the seat quota of one breakout class next to what is
+// already booked against it — what the committee needs to see the moment
+// they change the number.
+type SeminarQuota struct {
+	ID         int64
+	Capacity   int
+	SeatsTaken int
+}
+
 // BulkRowError reports why one row of a bulk import failed.
 type BulkRowError struct {
 	Row   int

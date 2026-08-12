@@ -2092,3 +2092,77 @@ button:disabled {
   padding: 5px 10px;
   cursor: pointer;
 }
+
+/* ===== Breakout class quota, set straight from the list ===== */
+.md-table th.quota-head {
+  width: 168px;
+}
+.quota-cell {
+  width: 168px;
+}
+.quota-cell .bar-track {
+  margin-top: 5px;
+}
+.quota-cell small {
+  display: block;
+  margin-top: 5px;
+  color: var(--gray);
+  font-size: 11px;
+}
+.quota-value {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink);
+  border-bottom: 1px dashed var(--line-strong, var(--line));
+  padding: 0 0 1px;
+}
+.quota-value:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+.quota-full {
+  color: var(--red) !important;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+.quota-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.quota-edit input {
+  width: 66px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+}
+.quota-edit input:focus {
+  outline: none;
+  border-color: var(--red);
+}
+.quota-save,
+.quota-cancel {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+.quota-save {
+  background: var(--red);
+  color: #fff;
+}
+.quota-cancel {
+  background: var(--chip);
+  color: var(--chip-ink);
+}
+.quota-hint {
+  color: var(--gray);
+}
+.quota-error {
+  color: var(--red) !important;
+  font-weight: 700;
+  white-space: normal;
+}

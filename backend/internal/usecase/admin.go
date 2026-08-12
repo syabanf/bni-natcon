@@ -241,6 +241,17 @@ func (u *AdminUsecase) UpdateSeminar(ctx context.Context, id int64, s domain.Sem
 	return u.admin.UpdateSeminar(ctx, id, s)
 }
 
+// SetSeminarQuota re-sizes one breakout class. Kept apart from
+// UpdateSeminar so the committee can change a number from the class list
+// without the rest of the class — cover, description, speaker photos —
+// having to be sent along and risk being blanked.
+func (u *AdminUsecase) SetSeminarQuota(ctx context.Context, id int64, quota int) (*domain.SeminarQuota, error) {
+	if quota <= 0 {
+		return nil, invalid("quota must be greater than 0")
+	}
+	return u.admin.SetSeminarQuota(ctx, id, quota)
+}
+
 func (u *AdminUsecase) DeleteSeminar(ctx context.Context, id int64) error {
 	return u.admin.DeleteSeminar(ctx, id)
 }

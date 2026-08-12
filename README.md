@@ -24,9 +24,10 @@ gives the committee live monitoring (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
 sponsor rows; breakout classes carry a **speaker list with uploadable
-photos**, description + cover, and the committee can **register attendees
-into a class** by member code/email/phone or **import a whole registration
-sheet**),
+photos**, description + cover, a **seat quota you set straight from the
+class list** — click the number, type, Enter — and the committee can
+**register attendees into a class** by member code/email/phone or **import
+a whole registration sheet**),
 **detail pages**, the **door check-in station**, a **Tables** page that
 generates the speed-networking tables, a **QR Prints** page with
 print-ready QR cards (tables, class rooms, booth signage), and a
@@ -52,6 +53,20 @@ dropping in new artwork.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)
 and pick another class in the same slot.
+
+**Every breakout class has a quota**, and rooms get re-sized right up to the
+morning of the event. The Breakout Classes page therefore shows each class as
+`taken/quota` with a fill bar and either *N seats left* or **FULL**, and the
+number itself is the control: click it, type the new quota, press Enter.
+It posts `PATCH /admin/seminars/{id}/quota` — deliberately narrow, so
+re-sizing a room can never blank the description, cover or speaker photos the
+way a full update built from a list row would. A quota below the attendees
+already registered is refused, by the quota cell, by the full edit form and by
+the API itself (which names both numbers): shrinking a room must not silently
+strand the people already in it. Setting the quota to exactly what is booked
+is allowed — that is how you close registration early. Once a class is at
+quota, both self-service and committee registration turn the next person
+away.
 
 **The real event data is in the migrations**, so a laptop, a staging box and
 production all converge on the same master data without anyone remembering to

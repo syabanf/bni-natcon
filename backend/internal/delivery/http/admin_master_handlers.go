@@ -306,6 +306,46 @@ func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request
 	respondJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
+// handleAdminSetSeminarQuota takes either {"quota": n} or {"capacity": n} —
+// the API has always called the field capacity, the committee calls it the
+// quota, and neither should have to remember which.
+func (s *Server) handleAdminSetSeminarQuota(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r)
+	if !ok {
+		respondError(w, http.StatusBadRequest, "unknown record")
+		return
+	}
+	var req struct {
+		Quota    *int `json:"quota"`
+		Capacity *int `json:"capacity"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid data format")
+		return
+	}
+	quota := req.Quota
+	if quota == nil {
+		quota = req.Capacity
+	}
+	if quota == nil {
+		respondError(w, http.StatusBadRequest, "quota is required")
+		return
+	}
+	res, err := s.admin.SetSeminarQuota(r.Context(), id, *quota)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{
+		"seminar": map[string]any{
+			"id":          res.ID,
+			"capacity":    res.Capacity,
+			"seats_taken": res.SeatsTaken,
+			"seats_left":  res.Capacity - res.SeatsTaken,
+		},
+	})
+}
+
 func (s *Server) handleAdminDeleteSeminar(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r)
 	if !ok {

@@ -132,6 +132,13 @@ export const api = {
     isMockMode() ? mock.createSeminar(body) : request('/admin/seminars', { method: 'POST', body }),
   updateSeminar: (id, body) =>
     isMockMode() ? mock.updateSeminar(id, body) : request(`/admin/seminars/${id}`, { method: 'PUT', body }),
+  // Quota only — a narrow call so re-sizing a room from the class list
+  // cannot blank the description, cover or speaker list the way a full
+  // update built from a list row would.
+  setSeminarQuota: (id, quota) =>
+    isMockMode()
+      ? mock.setSeminarQuota(id, quota)
+      : request(`/admin/seminars/${id}/quota`, { method: 'PATCH', body: { quota } }),
   deleteSeminar: (id) =>
     isMockMode() ? mock.deleteSeminar(id) : request(`/admin/seminars/${id}`, { method: 'DELETE' }),
 

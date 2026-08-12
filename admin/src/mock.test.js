@@ -252,6 +252,69 @@ describe('breakout classes', () => {
     const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
     expect(row.moderator).toBe('Another Mod')
   })
+
+  it('sets the quota on its own, without touching the rest of the class', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 93, room: 'Quota Room', title: 'Quota Class',
+      speaker: 'Speaker One', moderator: 'Mod One', capacity: 30,
+      description: 'Keep me', cover_url: '/covers/keep.jpg',
+      speakers: [{ name: 'Speaker One', role: 'speaker', title: '', photo_url: '/p.jpg' }],
+    })
+
+    const res = await mockAdminApi.setSeminarQuota(seminar.id, 45)
+    expect(res.seminar.capacity).toBe(45)
+    expect(res.seminar.seats_left).toBe(45)
+
+    // The whole point of the narrow call: nothing else moved.
+    const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
+    expect(row.capacity).toBe(45)
+    expect(row.description).toBe('Keep me')
+    expect(row.cover_url).toBe('/covers/keep.jpg')
+    expect(row.speakers).toHaveLength(1)
+    expect(row.moderator).toBe('Mod One')
+  })
+
+  it('refuses a quota of zero or below', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 94, room: 'Zero Room', title: 'Zero', capacity: 10,
+    })
+    await expect(mockAdminApi.setSeminarQuota(seminar.id, 0)).rejects.toMatchObject({ status: 400 })
+    await expect(mockAdminApi.setSeminarQuota(seminar.id, -3)).rejects.toMatchObject({ status: 400 })
+  })
+
+  it('refuses a quota below the attendees already registered — nobody is thrown out', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 95, room: 'Shrink Room', title: 'Shrink', capacity: 10,
+    })
+    await mockAdminApi.registerSeminarMember(seminar.id, 'reddie@natcon.id')
+    await mockAdminApi.registerSeminarMember(seminar.id, 'sinta@natcon.id')
+
+    await expect(mockAdminApi.setSeminarQuota(seminar.id, 1)).rejects.toMatchObject({ status: 400 })
+    // The full edit form must refuse the same shrink, not just the quota cell.
+    await expect(
+      mockAdminApi.updateSeminar(seminar.id, { room: 'Shrink Room', title: 'Shrink', capacity: 1 })
+    ).rejects.toMatchObject({ status: 400 })
+
+    // Down to exactly what is booked is fine — that closes registration.
+    const res = await mockAdminApi.setSeminarQuota(seminar.id, 2)
+    expect(res.seminar.capacity).toBe(2)
+    expect(res.seminar.seats_left).toBe(0)
+
+    // And a full room turns further registrations away.
+    await expect(
+      mockAdminApi.registerSeminarMember(seminar.id, 'agus@natcon.id')
+    ).rejects.toMatchObject({ status: 409 })
+  })
+
+  it('leaves a class untouched when the quota call fails', async () => {
+    const { seminar } = await mockAdminApi.createSeminar({
+      slot: 96, room: 'Intact Room', title: 'Intact', capacity: 8,
+    })
+    await mockAdminApi.registerSeminarMember(seminar.id, 'reddie@natcon.id')
+    await expect(mockAdminApi.setSeminarQuota(seminar.id, 0)).rejects.toMatchObject({ status: 400 })
+    const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
+    expect(row.capacity).toBe(8)
+  })
 })
 
 describe('class registrations made by the committee', () => {

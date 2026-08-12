@@ -85,7 +85,7 @@ func (s *Server) Router() http.Handler {
 	r.Use(limitBody)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: s.allowedOrigins,
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	}))
 
@@ -161,6 +161,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/seminars/registrations/bulk", s.handleAdminBulkRegistrations)
 				r.Post("/admin/seminars", s.handleAdminCreateSeminar)
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
+				r.Patch("/admin/seminars/{id}/quota", s.handleAdminSetSeminarQuota)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 
 				r.Get("/admin/tables", s.handleAdminListTables)

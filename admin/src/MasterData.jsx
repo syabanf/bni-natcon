@@ -678,6 +678,100 @@ export function TenantsPage() {
 
 /* ================= Seminar ================= */
 
+// Every breakout class has a seat quota, and the committee re-sizes rooms
+// right up to the morning of the event. The quota therefore lives in the
+// class list as a number you can set in place — not only inside the full
+// edit form behind the speaker photos and the cover picker.
+function QuotaCell({ seminar, onSaved }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(String(seminar.capacity))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const taken = seminar.seats_taken ?? 0
+  const quota = seminar.capacity
+  const left = Math.max(quota - taken, 0)
+  const pct = quota > 0 ? Math.min(Math.round((taken / quota) * 100), 100) : 0
+
+  const open = () => {
+    setValue(String(seminar.capacity))
+    setError('')
+    setEditing(true)
+  }
+
+  const save = async () => {
+    const next = Number(value)
+    if (!Number.isInteger(next) || next < 1) {
+      setError('Quota must be a whole number, at least 1.')
+      return
+    }
+    // The server checks this too — it is the one that can see a
+    // registration landing at the same moment. This is only to save a
+    // round-trip on the obvious mistake.
+    if (next < taken) {
+      setError(`${taken} already registered — cancel registrations first.`)
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      await api.setSeminarQuota(seminar.id, next)
+      setEditing(false)
+      await onSaved()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (editing) {
+    return (
+      <td className="quota-cell">
+        <div className="quota-edit">
+          <input
+            type="number"
+            min={Math.max(taken, 1)}
+            value={value}
+            autoFocus
+            aria-label={`Quota for ${seminar.room}`}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                save()
+              }
+              if (e.key === 'Escape') setEditing(false)
+            }}
+          />
+          <button className="quota-save" disabled={busy} onClick={save}>
+            {busy ? '…' : 'Save'}
+          </button>
+          <button className="quota-cancel" disabled={busy} onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+        </div>
+        <small className="quota-hint">{taken} registered</small>
+        {error && <small className="quota-error">{error}</small>}
+      </td>
+    )
+  }
+
+  return (
+    <td className="quota-cell">
+      <button className="quota-value" onClick={open} title="Set quota">
+        {taken}/{quota}
+      </button>
+      <div className="bar-track">
+        <div className={`bar-fill${pct >= 100 ? ' warn' : ''}`} style={{ width: `${pct}%` }} />
+      </div>
+      <small className={left === 0 ? 'quota-full' : ''}>
+        {left === 0 ? 'FULL' : `${left} seats left`}
+      </small>
+    </td>
+  )
+}
+
 export function SeminarsPage() {
   const [importResult, setImportResult] = useState(null)
   const crud = useCrud({
@@ -734,7 +828,7 @@ export function SeminarsPage() {
             <th>Slot</th>
             <th>Room</th>
             <th>Title</th>
-            <th className="num">Filled</th>
+            <th className="quota-head">Quota</th>
             <th />
           </tr>
         </thead>
@@ -752,9 +846,7 @@ export function SeminarsPage() {
                   {sm.moderator ? ` · mod. ${sm.moderator}` : ''}
                 </small>
               </td>
-              <td className="num">
-                {sm.seats_taken}/{sm.capacity}
-              </td>
+              <QuotaCell seminar={sm} onSaved={crud.load} />
               <RowActions
                 onDetail={() => setDetailId(sm.id)}
                 onEdit={() =>
@@ -781,7 +873,7 @@ export function SeminarsPage() {
             <Field label="Title" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
             <Field label="Speaker(s)" hint="separate multiple speakers with a semicolon" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
             <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
-            <Field label="Capacity" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <Field label="Quota" hint="seats this breakout room can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
             <Field label="Description" hint="shown on the attendee class detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             <SpeakerEditor
               value={crud.form.speakers}

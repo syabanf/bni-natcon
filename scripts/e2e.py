@@ -462,6 +462,81 @@ check("capacity 0 -> 400", status == 400)
 status, body, _ = req("GET", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok)
 check("seminar detail 200", status == 200 and body["seminar"]["room"] == "R. E2E")
 
+# ---- quota, set on its own from the admin class list
+status, _, _ = req("PUT", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok,
+                   body={"slot": 2, "room": "R. E2E", "title": "Uji E2E", "speaker": "Bot",
+                         "capacity": 5, "description": "Kelas uji", "cover_url": "/covers/e2e.jpg",
+                         "speakers": [{"name": "Bot Speaker", "role": "speaker"}]})
+check("class carries description, cover and a speaker", status == 200)
+
+status, body, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                      body={"quota": 40})
+check("set quota -> 200 with seats left",
+      status == 200 and body["seminar"]["capacity"] == 40
+      and body["seminar"]["seats_taken"] == 0 and body["seminar"]["seats_left"] == 40)
+
+# The narrow call exists so re-sizing a room cannot blank the class copy —
+# the same bug that once wiped descriptions and covers on a plain edit.
+status, body, _ = req("GET", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok)
+check("setting the quota leaves description, cover and speakers alone",
+      status == 200 and body["seminar"]["capacity"] == 40
+      and body["seminar"]["description"] == "Kelas uji"
+      and body["seminar"]["cover_url"] == "/covers/e2e.jpg"
+      and len(body["seminar"].get("speakers") or []) == 1)
+
+status, _, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                   body={"capacity": 12})
+check("quota also accepts the API's own field name", status == 200)
+status, _, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                   body={"quota": 0})
+check("quota 0 -> 400", status == 400)
+status, _, _ = req("PATCH", "/api/v1/admin/seminars/999999/quota", token=admin_tok,
+                   body={"quota": 10})
+check("quota on an unknown class -> 404", status == 404)
+status, _, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=member_tok,
+                   body={"quota": 10})
+check("quota is admin-only", status == 403)
+
+# Shrinking below the people already booked would strand them silently.
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{new_sem_id}/registrations",
+                      token=admin_tok, body={"member": "sinta@natcon.id"})
+check("register the first attendee into the quota class", status == 201)
+code_a = body["member_code"]
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{new_sem_id}/registrations",
+                      token=admin_tok, body={"member": "agus@natcon.id"})
+check("register the second attendee into the quota class", status == 201)
+code_b = body["member_code"]
+
+status, body, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                      body={"quota": 1})
+check("quota below the registered count -> 400 naming both numbers",
+      status == 400 and "2 attendees already registered" in body.get("error", ""))
+status, body, _ = req("GET", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok)
+check("a refused quota change leaves the old quota in place",
+      status == 200 and body["seminar"]["capacity"] == 12)
+status, _, _ = req("PUT", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok,
+                   body={"slot": 2, "room": "R. E2E", "title": "Uji E2E", "speaker": "Bot",
+                         "capacity": 1})
+check("the full edit form refuses the same shrink", status == 400)
+
+status, body, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                      body={"quota": 2})
+check("quota down to exactly what is booked is allowed — that just closes the room",
+      status == 200 and body["seminar"]["seats_left"] == 0)
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{new_sem_id}/registrations",
+                      token=admin_tok, body={"member": "reddie@natcon.id"})
+check("a class at quota turns the next registration away",
+      status == 409 and "fully booked" in body.get("error", ""))
+
+# Put the class back the way the rest of the suite expects it.
+for code in (code_a, code_b):
+    status, _, _ = req("DELETE", f"/api/v1/admin/seminars/{new_sem_id}/registrations/{code}",
+                       token=admin_tok)
+    check(f"unregister quota-test attendee {code}", status == 200)
+status, _, _ = req("PATCH", f"/api/v1/admin/seminars/{new_sem_id}/quota", token=admin_tok,
+                   body={"quota": 5})
+check("quota restored to 5 for the rest of the run", status == 200)
+
 status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
                       body={"members": [
                           {"name": "Bulk Satu", "email": "bulk1@natcon.id",

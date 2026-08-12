@@ -305,7 +305,7 @@ export function SeminarDetail({ id, onBack }) {
             ['Speaker(s)', speakerNames(seminar, 'speaker') || seminar.speaker],
             ['Moderator', speakerNames(seminar, 'moderator') || seminar.moderator || '—'],
             ['Parallel slot', `#${seminar.slot}`],
-            ['Capacity', `${seminar.capacity} seats`],
+            ['Quota', `${seminar.capacity} seats`],
           ]}
         />
       </div>
