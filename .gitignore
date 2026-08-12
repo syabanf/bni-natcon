@@ -21,3 +21,8 @@ uploads/
 
 # Excel lock files, created while a workbook is open
 ~$*
+
+# Duplicate files a sync/backup tool leaves behind ("config 2.xml"). One of
+# these once reached CI and broke the Android resource merger, which rejects
+# a space in a resource file name.
+* [0-9].*
