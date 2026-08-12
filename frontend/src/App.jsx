@@ -20,11 +20,18 @@ const Scanner = lazy(() => import('./pages/tenant/Scanner'))
 export const ATTENDEE_HOME = '/attendee'
 export const TENANT_HOME = '/tenant/scanner'
 
+// Each role also has its own sign-in door, so a booth crew that logs out
+// lands back on the booth entrance rather than the attendee one.
+export const ATTENDEE_LOGIN = '/login'
+export const TENANT_LOGIN = '/tenant/login'
+
 export const homeFor = (user) => (user?.role === 'tenant' ? TENANT_HOME : ATTENDEE_HOME)
+export const loginFor = (role) => (role === 'tenant' ? TENANT_LOGIN : ATTENDEE_LOGIN)
 
 function RequireRole({ role, children }) {
   const user = useAuthStore((s) => s.user)
-  if (!user) return <Navigate to="/login" replace />
+  // Send them to the door they came from, not always the attendee one.
+  if (!user) return <Navigate to={loginFor(role)} replace />
   // Still on the password generated at import time: nothing else opens until
   // they pick their own.
   if (user.must_set_password) return <SetPassword />
@@ -39,8 +46,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route
-          path="/login"
-          element={user ? <Navigate to={homeFor(user)} replace /> : <Login />}
+          path={ATTENDEE_LOGIN}
+          element={user ? <Navigate to={homeFor(user)} replace /> : <Login audience="attendee" />}
+        />
+        <Route
+          path={TENANT_LOGIN}
+          element={user ? <Navigate to={homeFor(user)} replace /> : <Login audience="tenant" />}
         />
 
         <Route

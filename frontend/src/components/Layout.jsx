@@ -3,9 +3,16 @@ import Icon from './Icon'
 import Toast from './Toast'
 import { useAuthStore } from '../store/auth'
 
-function AppBar() {
+function AppBar({ backTo }) {
+  const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const mock = useAuthStore((s) => s.mock)
+  // Signing out drops you at the door you came in by, so a booth crew is not
+  // handed the attendee sign-in mid-event.
+  const signOut = () => {
+    logout()
+    navigate(backTo, { replace: true })
+  }
   return (
     <header className="appbar">
       <div className="brand">
@@ -13,7 +20,7 @@ function AppBar() {
       </div>
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}
-        <button className="logout-btn" onClick={logout}>
+        <button className="logout-btn" onClick={signOut}>
           Log out
         </button>
       </div>
@@ -48,7 +55,7 @@ function NavButton({ to, icon, label }) {
 export function MemberLayout() {
   return (
     <div className="app-shell">
-      <AppBar />
+      <AppBar backTo="/login" />
       <div className="screen-body">
         <Outlet />
         <WitCredit />
@@ -68,7 +75,7 @@ export function MemberLayout() {
 export function TenantLayout() {
   return (
     <div className="app-shell">
-      <AppBar />
+      <AppBar backTo="/tenant/login" />
       <div className="screen-body">
         <Outlet />
         <WitCredit />

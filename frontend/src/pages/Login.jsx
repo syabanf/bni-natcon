@@ -22,10 +22,47 @@ function MockToggle() {
 }
 
 /*
- * One sign-in for everyone: the account decides where you land — attendees
- * go to their pass, booth/sponsor accounts straight to the scanner.
+ * Two doors into the same app. Attendees are handed /login on their ticket;
+ * booth and sponsor crews are handed /tenant/login, which says "Booth
+ * Scanner" and skips the attendee-only bits (password recovery is chapter +
+ * ticket phone, which a booth account has neither of).
+ *
+ * Signing in at the wrong door still works — the account's role decides where
+ * you land — so nobody is stranded at a desk with the wrong link.
  */
-export default function Login() {
+const AUDIENCE = {
+  attendee: {
+    eyebrow: 'Welcome to',
+    sub: 'Sign in for your digital pass, breakout classes, and speed networking.',
+    hint: (
+      <>
+        Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
+        Abraham → <code>heritageabraham</code>
+      </>
+    ),
+    showRecovery: true,
+    showAdminLink: true,
+    otherHref: '/tenant/login',
+    otherLabel: 'Manning a booth? Open the booth scanner sign-in →',
+  },
+  tenant: {
+    eyebrow: 'Booth Scanner',
+    sub: 'Sign in with the booth account to scan attendee QRs and see your visitors.',
+    hint: (
+      <>
+        Your login is <code>booth-&lt;booth code&gt;@natcon.id</code> — e.g. booth A1 →{' '}
+        <code>booth-a1@natcon.id</code>. The committee has the password.
+      </>
+    ),
+    showRecovery: false,
+    showAdminLink: false,
+    otherHref: '/login',
+    otherLabel: '← Attendee? Sign in here',
+  },
+}
+
+export default function Login({ audience = 'attendee' }) {
+  const copy = AUDIENCE[audience] ?? AUDIENCE.attendee
   const setAuth = useAuthStore((s) => s.setAuth)
   const mock = useAuthStore((s) => s.mock)
   const [email, setEmail] = useState('')
@@ -124,15 +161,13 @@ export default function Login() {
       <div className="auth-shell">
         <section className="auth-pane form">
           <div className="auth-form-inner">
-            <p className="auth-eyebrow">Welcome to</p>
+            <p className="auth-eyebrow">{copy.eyebrow}</p>
             <img
               className="auth-logo"
               src="/brand/logo-horizontal.png"
               alt="BNI Indonesia National Conference 2026 — Accelerate"
             />
-            <p className="auth-sub">
-              Sign in for your digital pass, breakout classes, and speed networking.
-            </p>
+            <p className="auth-sub">{copy.sub}</p>
 
             {error && <div className="auth-error">{error}</div>}
 
@@ -187,23 +222,27 @@ export default function Login() {
               </button>
             </form>
 
-            <button type="button" className="auth-forgot" onClick={() => setRecovering(true)}>
-              Forgot your password?
-            </button>
+            {copy.showRecovery && (
+              <button type="button" className="auth-forgot" onClick={() => setRecovering(true)}>
+                Forgot your password?
+              </button>
+            )}
 
-            <p className="auth-hint">
-              Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
-              Abraham → <code>heritageabraham</code>
-            </p>
+            <p className="auth-hint">{copy.hint}</p>
 
             <div className="auth-foot">
               <MockToggle />
               {mock && (
                 <p className="auth-note">Demo mode stays on this device and accepts any password.</p>
               )}
-              <a className="auth-admin-link" href={ADMIN_URL} target="_blank" rel="noreferrer">
-                Committee? Open the admin panel ↗
+              <a className="auth-admin-link" href={copy.otherHref}>
+                {copy.otherLabel}
               </a>
+              {copy.showAdminLink && (
+                <a className="auth-admin-link" href={ADMIN_URL} target="_blank" rel="noreferrer">
+                  Committee? Open the admin panel ↗
+                </a>
+              )}
             </div>
             <WitCredit />
           </div>

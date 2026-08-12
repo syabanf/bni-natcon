@@ -47,7 +47,7 @@ snippet in [`assets/brand/README.md`](assets/brand/README.md) after
 dropping in new artwork.
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
-- **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. It opens straight on a split sign-in screen (form on the left, "Accelerate" brand hero on the right); the account's role decides where you land. **Each app has its own path prefix** — attendees live under `/attendee` (`/attendee/qr`, `/passport`, `/seminar`, `/network`), booth & sponsor scanners under `/tenant` (`/tenant/scanner`, `/tenant/dashboard`), and sign-in is shared at `/login`. Pre-split URLs still redirect to their new home.
+- **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. It opens straight on a split sign-in screen (form on the left, "Accelerate" brand hero on the right); the account's role decides where you land. **Each app has its own path prefix** — attendees live under `/attendee` (`/attendee/qr`, `/passport`, `/seminar`, `/network`), booth & sponsor scanners under `/tenant` (`/tenant/scanner`, `/tenant/dashboard`). **Each audience also has its own sign-in door**: attendees get `/login`, booth crews get `/tenant/login`, which says *Booth Scanner*, explains the `booth-<code>@natcon.id` login pattern and drops the attendee-only password recovery. Signing in at the wrong door still works — the account's role decides where you land, so nobody is stranded at a desk with the wrong link — and logging out returns you to the door you came in by. Pre-split URLs still redirect to their new home.
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)
@@ -285,7 +285,7 @@ All with password `natcon2026`:
 | Member  | `reddie@natcon.id`    | Member code `NATCON-2026-08154`   |
 | Member  | `sinta@natcon.id`     | Member code `NATCON-2026-08201`   |
 | Member  | `agus@natcon.id`      | Member code `NATCON-2026-08322`   |
-| Tenant  | `booth-a1@natcon.id`  | SSCX International · Booth A1     |
+| Tenant  | `booth-a1@natcon.id`  | SSCX International · Booth A1 (sign in at `/tenant/login`) |
 | Tenant  | `booth-b01@natcon.id` | TechNesia Solutions · Booth B-01  |
 | Tenant  | …one per booth        | `booth-<code>@natcon.id`          |
 | Admin   | `admin@natcon.id`     | Committee dashboard + master data |

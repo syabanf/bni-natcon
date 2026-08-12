@@ -35,7 +35,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|---|---|
 | AUTH-01 | P1 | Admin account exists | Open the admin panel. Enter admin@natcon.id / natcon2026. Press Sign in. | Lands on the Dashboard with the sidebar visible. Stat tiles show numbers, not dashes. |
 | AUTH-02 | P1 | Seeded attendee | On the attendee app sign in as reddie@natcon.id / natcon2026. | Lands on Home: 'Hello, Reddie', member pass card with a QR and the member ID NATCON-2026-08154. |
-| AUTH-03 | P1 | Booth account | Sign in as booth-a1@natcon.id / natcon2026. | Lands on Booth Scanner titled 'SSCX International · Booth A1'. Bottom nav shows Scanner and Dashboard only. |
+| AUTH-03 | P1 | Booth account | Open the booth door at /tenant/login. Sign in as booth-a1@natcon.id / natcon2026. | The page is headed 'Booth Scanner' and shows no 'Forgot your password?'. After sign-in: Booth Scanner titled 'SSCX International · Booth A1', bottom nav Scanner and Dashboard only. |
 | AUTH-04 | P1 | Any account | Sign in with the right email and a wrong password. | Stays on sign-in and shows an error. The wording must not reveal whether the email exists. |
 | AUTH-05 | P1 | An attendee imported from the ticketing sheet, who has never signed in | Sign in with their email and the generated password (chapter + first name). | 'Choose your password' appears immediately. No other page is reachable until a password is saved. |
 | AUTH-06 | P1 | On the 'Choose your password' screen | Type a 5-character password in both fields and save. | Refused with a message about needing at least 8 characters. |
@@ -52,6 +52,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | AUTH-17 | P2 | Signed in as a booth | Open an attendee URL directly (/attendee/passport). | Redirected to the scanner. |
 | AUTH-18 | P3 | Sign-in screen | Try to sign in 11 times in a minute with a wrong password. | Around the 11th attempt it starts refusing with a 'too many attempts' message, then works again after a minute. |
 | AUTH-19 | P3 | Signed in anywhere | Press Log out. | Returns to sign-in. Pressing the browser Back button does not restore the session. |
+| AUTH-20 | P1 | Signed out | Open /login and read the page. | Headed 'Welcome to' with attendee wording, a 'Forgot your password?' link, and a link across to the booth sign-in. |
+| AUTH-21 | P2 | Signed out | Open /tenant/login and sign in with an ATTENDEE account. | Still works — you land on the attendee home. The wrong door must never lock someone out. |
+| AUTH-22 | P2 | Signed in as a booth | Press Log out. | Returns to the BOOTH sign-in (/tenant/login), not the attendee one. |
 
 ## Attendee
 
@@ -213,16 +216,18 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Breakout classes | Rooms 1–4, all slot 1, 60 seats each | All parallel — an attendee picks exactly one |
 | Attendee app | http://localhost:5173 |  |
 | Admin panel | http://localhost:5174 |  |
+| Attendee sign-in | http://localhost:5173/login | The door printed on the attendee ticket |
+| Booth sign-in | http://localhost:5173/tenant/login | The door given to booth and sponsor crews |
 
 ## Coverage
 
 | Section | Cases | P1 |
 |---|---|---|
-| Auth | 19 | 12 |
+| Auth | 22 | 13 |
 | Attendee | 22 | 14 |
 | Booth scanner | 14 | 10 |
 | Admin master data | 24 | 19 |
 | Admin operations | 16 | 10 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 11 | 3 |
-| **Total** | **118** | **77** |
+| **Total** | **121** | **78** |
