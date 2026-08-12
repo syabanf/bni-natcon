@@ -97,8 +97,12 @@ Browser akan mengirim request cross-origin, jadi API harus
 mengizinkannya. Isi dengan **origin** (skema + host, tanpa path):
 
 ```
-ALLOWED_ORIGINS=https://bni-natcon.vercel.app,https://bni-natcon-admin.vercel.app
+ALLOWED_ORIGINS=https://bni-natcon.vercel.app,https://bni-natcon-admin.vercel.app,https://localhost
 ```
+
+`https://localhost` itu **APK Android**-nya: isi APK berjalan sebagai halaman
+di origin tersebut. Kalau tidak didaftarkan, app web jalan normal tapi semua
+request dari APK kena CORS. Lihat [`ANDROID.md`](ANDROID.md).
 
 Restart API setelah mengubahnya. Kalau kelewat, login gagal dengan error
 CORS di console browser — bukan 404.

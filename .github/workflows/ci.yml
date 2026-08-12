@@ -123,6 +123,36 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  apk:
+    name: Android APK (attendee + booth)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - name: Install web dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build the APK
+        env:
+          # No secret: the workflow only proves the APK still builds. The one
+          # people install is built against the real API — see docs/ANDROID.md.
+          VITE_API_URL: https://api.natcon.example.com
+        run: scripts/build-apk.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natcon2026-apk-debug
+          path: dist/natcon2026-debug.apk
+          if-no-files-found: error
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest

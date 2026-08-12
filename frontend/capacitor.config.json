@@ -1,0 +1,11 @@
+{
+  "appId": "id.natcon.stamp",
+  "appName": "Natcon 2026",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

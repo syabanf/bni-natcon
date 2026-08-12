@@ -49,6 +49,15 @@ dropping in new artwork.
 
 - **Backend**: Go (clean architecture: `domain` → `usecase` → `repository` / `delivery`), chi, pgx, JWT, PostgreSQL
 - **Frontend** (`frontend/`, port 5173): member + tenant app — React 18 + Vite (JS), react-router, Zustand, `qrcode.react`, `html5-qrcode`. It opens straight on a split sign-in screen (form on the left, "Accelerate" brand hero on the right); the account's role decides where you land. **Each app has its own path prefix** — attendees live under `/attendee` (`/attendee/qr`, `/passport`, `/seminar`, `/network`), booth & sponsor scanners under `/tenant` (`/tenant/scanner`, `/tenant/dashboard`). **Each audience also has its own sign-in door**: attendees get `/login`, booth crews get `/tenant/login`, which says *Booth Scanner*, explains the `booth-<code>@natcon.id` login pattern and drops the attendee-only password recovery. Signing in at the wrong door still works — the account's role decides where you land, so nobody is stranded at a desk with the wrong link — and logging out returns you to the door you came in by. Pre-split URLs still redirect to their new home.
+- **Android APK** (`frontend/android/`): the same attendee + booth app,
+  wrapped with Capacitor into **one APK people download and install
+  directly** — no Play Store. `VITE_API_URL=https://… scripts/build-apk.sh`
+  produces `dist/natcon2026-debug.apk`; the API address is baked in at build
+  time because the APK carries its own assets and has no dev proxy to fall
+  back on. Camera permission for the QR scanners, portrait-locked, BNI icon
+  and an *Accelerate* splash, and the service worker is skipped on native so
+  a stale cache can never outlive an install. Signing keys stay out of the
+  repo. Full guide: [`docs/ANDROID.md`](docs/ANDROID.md).
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)

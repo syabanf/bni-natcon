@@ -6,21 +6,6 @@ import { WitCredit } from '../components/Layout'
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
 
-function MockToggle() {
-  const mock = useAuthStore((s) => s.mock)
-  const setMock = useAuthStore((s) => s.setMock)
-  return (
-    <button
-      type="button"
-      className={`mock-toggle${mock ? ' on' : ''}`}
-      onClick={() => setMock(!mock)}
-    >
-      <span className="mt-dot" />
-      {mock ? 'Demo (Mock) mode is on — local data, no server' : 'API mode — tap to try Demo (Mock) mode'}
-    </button>
-  )
-}
-
 /*
  * Two doors into the same app. Attendees are handed /login on their ticket;
  * booth and sponsor crews are handed /tenant/login, which says "Booth
@@ -231,7 +216,6 @@ export default function Login({ audience = 'attendee' }) {
             <p className="auth-hint">{copy.hint}</p>
 
             <div className="auth-foot">
-              <MockToggle />
               {mock && (
                 <p className="auth-note">Demo mode stays on this device and accepts any password.</p>
               )}

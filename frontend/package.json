@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "android:sync": "npm run build && cap sync android",
+    "android:apk": "../scripts/build-apk.sh"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/core": "^7.6.8",
     "html5-qrcode": "^2.3.8",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
@@ -18,6 +22,7 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.8",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^5.4.19",
     "vitest": "^4.1.10"

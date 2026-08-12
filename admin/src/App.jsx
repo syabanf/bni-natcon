@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { api, getToken, setToken, clearToken, isMockMode, setMockMode } from './api'
+import { api, getToken, setToken, clearToken, isMockMode } from './api'
 import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
@@ -26,25 +26,6 @@ const REPORT_MENU = [
   { key: 'report-seminars', label: 'Class Reg.', icon: '≣' },
   { key: 'report-coupons', label: 'Attendee Pins', icon: '≣' },
 ]
-
-function MockToggle({ onChange }) {
-  const [mock, setMock] = useState(isMockMode())
-  return (
-    <button
-      type="button"
-      className={`mock-toggle${mock ? ' on' : ''}`}
-      onClick={() => {
-        const next = !mock
-        setMockMode(next)
-        setMock(next)
-        onChange?.(next)
-      }}
-    >
-      <span className="mt-dot" />
-      {mock ? 'Demo (Mock) mode is on — local data, no server' : 'API mode — tap to try Demo (Mock) mode'}
-    </button>
-  )
-}
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('admin@natcon.id')
@@ -136,9 +117,6 @@ function Login({ onLogin }) {
               {busy ? 'Signing in…' : 'Sign in'}
             </button>
 
-            <div className="auth-foot">
-              <MockToggle onChange={() => setError('')} />
-            </div>
           </form>
         </section>
 

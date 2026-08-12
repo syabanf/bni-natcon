@@ -55,8 +55,12 @@ func Load() Config {
 	// atau di folder backend saat dijalankan dari sana.
 	loadDotEnv(".env")
 	loadDotEnv("../.env")
+	// The Android APK is a WebView served from https://localhost (Capacitor's
+	// androidScheme), so that origin has to be allowed or every call from the
+	// installed app fails CORS. Production must keep it in ALLOWED_ORIGINS
+	// too — see docs/ANDROID.md.
 	origins := strings.Split(getenv("ALLOWED_ORIGINS",
-		"http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"), ",")
+		"http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,https://localhost"), ",")
 	for i := range origins {
 		origins[i] = strings.TrimSpace(origins[i])
 	}
