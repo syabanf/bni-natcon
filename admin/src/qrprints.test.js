@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tableQRValue, seminarQRValue, tenantQRValue } from './QRPrints'
+import { tableQRValue, seminarQRValue, tenantQRValue, doorQRValue, DOORS, PUBLIC_APP_URL } from './QRPrints'
 
 // Mirror of the attendee parser (frontend/src/pages/member/Networking.jsx),
 // which is itself tested there against these same literals. Anchored at both
@@ -27,5 +27,21 @@ describe('printed QR payloads', () => {
 
   it('tenant QR carries the booth code', () => {
     expect(tenantQRValue({ booth: 'A-03' })).toBe('BOOTH:A-03')
+  })
+
+  it('door QRs carry the two sign-in URLs attendees and booths actually open', () => {
+    const byKey = Object.fromEntries(DOORS.map((d) => [d.key, doorQRValue(d.path)]))
+    expect(byKey['door-attendee']).toBe(`${PUBLIC_APP_URL}/login`)
+    expect(byKey['door-tenant']).toBe(`${PUBLIC_APP_URL}/tenant/login`)
+    // The two doors must never collapse into one — a booth crew sent to the
+    // attendee door gets attendee-only wording and a recovery link they
+    // cannot use.
+    expect(byKey['door-attendee']).not.toBe(byKey['door-tenant'])
+    for (const url of Object.values(byKey)) {
+      // Absolute https, or a phone camera will not offer to open it...
+      expect(url).toMatch(/^https:\/\/[^/]+\/\S+$/)
+      // ...and no doubled slash from a base URL that ended in one.
+      expect(url.slice('https://'.length)).not.toContain('//')
+    }
   })
 })

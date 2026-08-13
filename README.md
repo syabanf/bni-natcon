@@ -107,7 +107,11 @@ cover picker go to the API's `UPLOAD_DIR` instead.
 one for the attendee door (`/login`), one for the booth door
 (`/tenant/login`), as SVG + PNG plus a ready-to-print A4 card sheet.
 Regenerate them (and point them at another host) with
-`python3 scripts/make_login_qr.py https://your-domain`.
+`python3 scripts/make_login_qr.py https://your-domain`. The committee can
+also print the same two cards from **QR Prints → Sign-in Doors** in the admin
+panel; that tab reads `VITE_PUBLIC_APP_URL` (default `https://bninatcon.com`)
+and prints the address under each code, so a wrong host is visible before the
+paper is cut.
 
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a

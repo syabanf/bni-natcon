@@ -84,6 +84,11 @@ variabel ini di **kedua-duanya**, plus `VITE_ADMIN_URL` di project
 peserta agar link "Committee? Open the admin panel" mengarah ke domain
 admin.
 
+Di project admin, isi juga `VITE_PUBLIC_APP_URL` dengan domain app peserta
+(mis. `https://bninatcon.com`). Itu yang dipakai halaman **QR Prints →
+Sign-in Doors** untuk membuat QR pintu login yang dicetak; kalau salah,
+QR-nya mengarah ke domain yang salah.
+
 Root Directory tiap project: `frontend` dan `admin`. `vercel.json` di
 masing-masing folder sudah mengatur build command, output `dist`, dan
 SPA fallback (deep link seperti `/attendee/qr` tidak 404). Rewrite-nya

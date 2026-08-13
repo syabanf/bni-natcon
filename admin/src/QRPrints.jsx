@@ -7,6 +7,7 @@ import { api } from './api'
  *   Tables   — TABLE:<no>, scanned by attendees to join a table's network
  *   Classes  — SEMINAR:<id>, scanned on the Door Check-in page to switch room
  *   Tenants  — BOOTH:<code>, booth/sponsor signage
+ *   Doors    — the sign-in URLs themselves, for registration desk & booth kits
  * Only the selected cards are printed (see the @media print rules).
  */
 
@@ -14,10 +15,36 @@ export const tableQRValue = (t) => `TABLE:${t.table_no}`
 export const seminarQRValue = (s) => `SEMINAR:${s.id}`
 export const tenantQRValue = (t) => `BOOTH:${t.booth}`
 
+// Where the attendee/booth app is published. The QR is useless if this is
+// wrong, so the card prints the address underneath it — a mistake is visible
+// before the paper is cut, not after.
+export const PUBLIC_APP_URL = (import.meta.env?.VITE_PUBLIC_APP_URL || 'https://bninatcon.com')
+  .replace(/\/+$/, '')
+
+export const doorQRValue = (path) => `${PUBLIC_APP_URL}${path}`
+
+export const DOORS = [
+  {
+    key: 'door-attendee',
+    path: '/login',
+    eyebrow: 'Attendee',
+    title: 'Sign in',
+    sub: 'Scan to open your digital pass. First sign-in asks you to choose your own password.',
+  },
+  {
+    key: 'door-tenant',
+    path: '/tenant/login',
+    eyebrow: 'Booth & Sponsor',
+    title: 'Booth Scanner',
+    sub: 'Scan to open the booth sign-in. Password comes from the committee.',
+  },
+]
+
 const KINDS = [
   { key: 'tables', label: 'Networking Tables' },
   { key: 'seminars', label: 'Breakout Classes' },
   { key: 'tenants', label: 'Tenants' },
+  { key: 'doors', label: 'Sign-in Doors' },
 ]
 
 const SIZES = { small: 132, medium: 190, large: 260 }
@@ -25,7 +52,8 @@ const SIZES = { small: 132, medium: 190, large: 260 }
 export default function QRPrints({ onUnauthorized }) {
   const [kind, setKind] = useState('tables')
   const [size, setSize] = useState('medium')
-  const [data, setData] = useState({ tables: null, seminars: null, tenants: null })
+  // Door cards need no server round-trip — they are the published URLs.
+  const [data, setData] = useState({ tables: null, seminars: null, tenants: null, doors: DOORS })
   const [selected, setSelected] = useState({})
   const [error, setError] = useState('')
 
@@ -47,6 +75,15 @@ export default function QRPrints({ onUnauthorized }) {
         eyebrow: t.hall,
         title: `Table ${t.table_no}`,
         sub: `${t.capacity} seats · scan to join this table`,
+      }))
+    }
+    if (kind === 'doors') {
+      return rows.map((d) => ({
+        key: d.key,
+        value: doorQRValue(d.path),
+        eyebrow: d.eyebrow,
+        title: d.title,
+        sub: d.sub,
       }))
     }
     if (kind === 'seminars') {
@@ -83,7 +120,7 @@ export default function QRPrints({ onUnauthorized }) {
           <h1>QR Prints</h1>
           <p className="micro">
             Print-ready QR cards — tables (scanned by attendees), class rooms (scanned on Door
-            Check-in), and booth signage
+            Check-in), booth signage, and the two sign-in doors
           </p>
         </div>
         <div className="head-right">
@@ -133,7 +170,9 @@ export default function QRPrints({ onUnauthorized }) {
         </div>
         <p className="import-hint" style={{ marginBottom: 0 }}>
           Tap a card to include or exclude it, then hit <b>Print</b> — only the selected cards go on
-          paper (cut along the card edges). Table QRs are what attendees scan at Speed Networking.
+          paper (cut along the card edges). Table QRs are what attendees scan at Speed Networking;
+          the <b>Sign-in Doors</b> cards open <code>{PUBLIC_APP_URL}</code> — put the attendee one
+          on the registration desk and the booth one in the booth kit.
         </p>
       </div>
 
@@ -152,7 +191,10 @@ export default function QRPrints({ onUnauthorized }) {
           >
             <span className="qrc-eyebrow">{c.eyebrow}</span>
             <span className="qrc-title">{c.title}</span>
-            <QRCodeSVG value={c.value} size={SIZES[size]} />
+            {/* The spec's 4-module quiet zone, drawn inside the SVG — a card
+                trimmed tight to the ink is the classic reason a printed QR
+                will not scan. */}
+            <QRCodeSVG value={c.value} size={SIZES[size]} marginSize={4} level="H" />
             <span className="qrc-sub">{c.sub}</span>
             <span className="qrc-code">{c.value}</span>
           </button>
