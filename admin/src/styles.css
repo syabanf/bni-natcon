@@ -1825,6 +1825,135 @@ button:disabled {
   color: var(--gray);
 }
 
+/* ===== Lucky Draw — stage mode =====
+   The draw on the hall projector: nothing but the deck, read from the back
+   row. Everything scales with the viewport, because the screen behind a
+   stage is never the laptop's screen. */
+.draw-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(207, 32, 48, 0.45), transparent 60%),
+    linear-gradient(160deg, #17161a, #0a0a0c 60%);
+  color: #fff;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(8px, 2vh, 28px);
+  padding: clamp(16px, 3vh, 40px);
+  overflow: hidden;
+}
+.dfs-brand {
+  height: clamp(28px, 5vh, 54px);
+  object-fit: contain;
+  justify-self: center;
+  opacity: 0.95;
+}
+.dfs-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.dfs-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px clamp(12px, 3vw, 34px);
+  font-size: clamp(11px, 1.5vh, 15px);
+  color: rgba(255, 255, 255, 0.62);
+}
+.dfs-foot b {
+  color: #fff;
+}
+.dfs-count {
+  font-weight: 800;
+  color: #fff;
+}
+.dfs-won {
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dfs-exit {
+  position: absolute;
+  top: clamp(10px, 2vh, 22px);
+  right: clamp(10px, 2vw, 26px);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+.dfs-exit:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* The shared draw markup, blown up for the room. */
+.draw-fullscreen .draw-idle {
+  gap: clamp(18px, 4vh, 44px);
+  padding: 0;
+}
+.draw-fullscreen .draw-deck {
+  min-height: clamp(200px, 42vh, 460px);
+}
+.draw-fullscreen .draw-card {
+  width: clamp(260px, 30vw, 460px);
+  min-height: clamp(180px, 34vh, 380px);
+  gap: clamp(6px, 1.4vh, 16px);
+  border-radius: clamp(18px, 2.4vh, 30px);
+  /* The overlay paints its text white; a card is white paper, so it has to
+     say so — otherwise the winner's name is white on white. */
+  color: var(--ink);
+}
+/* The face-down deck keeps its red backs — only the card being read is
+   white. Stated explicitly because the size rule above sits at the same
+   specificity as the base .draw-card.stacked gradient. */
+.draw-fullscreen .draw-card.stacked {
+  background: linear-gradient(150deg, var(--red), var(--red-dark));
+  color: #fff;
+}
+.draw-fullscreen .draw-card.winner {
+  width: clamp(300px, 44vw, 720px);
+  border-width: 3px;
+  box-shadow: 0 30px 90px rgba(207, 32, 48, 0.5);
+}
+.draw-fullscreen .draw-card .dc-ini {
+  width: clamp(52px, 9vh, 104px);
+  height: clamp(52px, 9vh, 104px);
+  font-size: clamp(18px, 3.4vh, 40px);
+}
+.draw-fullscreen .draw-card b {
+  font-size: clamp(20px, 4.4vh, 54px);
+  line-height: 1.12;
+  padding: 0 12px;
+}
+.draw-fullscreen .draw-card small {
+  font-size: clamp(12px, 2vh, 22px);
+}
+.draw-fullscreen .draw-card .dc-crown {
+  font-size: clamp(28px, 5.5vh, 68px);
+}
+.draw-fullscreen .draw-card .pill {
+  font-size: clamp(11px, 1.7vh, 18px);
+}
+.draw-fullscreen .draw-btn {
+  font-size: clamp(14px, 2.2vh, 24px);
+  padding: clamp(12px, 1.8vh, 20px) clamp(24px, 3vw, 48px);
+}
+.draw-fullscreen .draw-note {
+  font-size: clamp(12px, 1.9vh, 20px);
+  color: rgba(255, 255, 255, 0.7);
+}
+.draw-fullscreen .empty {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 /* ===== Responsive: tablet & mobile ===== */
 @media (max-width: 1100px) {
   .content {

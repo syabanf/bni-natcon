@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from './api'
 
 function initials(name = '') {
@@ -30,6 +31,8 @@ export default function LuckyDraw({ onUnauthorized }) {
   const [current, setCurrent] = useState(null) // card face shown mid-shuffle
   const [winner, setWinner] = useState(null)
   const [winners, setWinners] = useState([])
+  // Stage mode: the draw on the hall projector, nothing else on screen.
+  const [stage, setStage] = useState(false)
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -43,6 +46,29 @@ export default function LuckyDraw({ onUnauthorized }) {
   const eligible = (members || []).filter((m) => !winners.some((w) => w.id === m.id))
   // Shuffle order: most pins first — they lead the deck and cycle through first.
   const deck = [...eligible].sort((a, b) => b.visits - a.visits)
+
+  const enterStage = () => {
+    setStage(true)
+    // Real fullscreen is a bonus, not the mechanism — the overlay already
+    // covers the screen, so a browser that refuses the request (or a policy
+    // that blocks it) still gets the stage.
+    document.documentElement.requestFullscreen?.().catch(() => {})
+  }
+
+  const exitStage = useCallback(() => {
+    setStage(false)
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {})
+  }, [])
+
+  // Leaving fullscreen by any route — Esc, the browser chrome, the OS —
+  // must drop the overlay too, or the operator is stuck on a stage screen.
+  useEffect(() => {
+    const sync = () => {
+      if (!document.fullscreenElement) setStage(false)
+    }
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
 
   const start = () => {
     if (deck.length === 0) return
@@ -72,24 +98,26 @@ export default function LuckyDraw({ onUnauthorized }) {
     tick()
   }
 
+  useEffect(() => {
+    if (!stage) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        exitStage()
+        return
+      }
+      if ((e.key === ' ' || e.key === 'Enter') && phase !== 'shuffling') {
+        e.preventDefault()
+        start()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
   if (members === null) return <div className="empty">Loading attendees…</div>
 
-  return (
+  const draw = (
     <>
-      <div className="content-head">
-        <div>
-          <h1>Lucky Draw</h1>
-          <p className="micro">
-            Card shuffle across all attendees with pins — every pin is one ticket, top collectors
-            lead the deck
-          </p>
-        </div>
-        <div className="head-right">
-          <span className="pill live">{eligible.length} eligible</span>
-        </div>
-      </div>
-
-      <div className="panel report-panel draw-stage">
         {phase === 'idle' && (
           <div className="draw-idle">
             <div className="draw-deck">
@@ -144,7 +172,51 @@ export default function LuckyDraw({ onUnauthorized }) {
             </button>
           </div>
         )}
+    </>
+  )
+
+  return (
+    <>
+      <div className="content-head">
+        <div>
+          <h1>Lucky Draw</h1>
+          <p className="micro">
+            Card shuffle across all attendees with pins — every pin is one ticket, top collectors
+            lead the deck
+          </p>
+        </div>
+        <div className="head-right">
+          <span className="pill live">{eligible.length} eligible</span>
+          <button className="md-secondary" onClick={enterStage} disabled={deck.length === 0}>
+            ⛶ Stage mode
+          </button>
+        </div>
       </div>
+
+      <div className="panel report-panel draw-stage">{draw}</div>
+
+      {stage &&
+        createPortal(
+          <div className="draw-fullscreen" role="dialog" aria-label="Lucky Draw — stage mode">
+            <img className="dfs-brand" src="/brand/logo-horizontal-white.png" alt="BNI Natcon 2026" />
+            <div className="dfs-body draw-stage">{draw}</div>
+            <div className="dfs-foot">
+              <span className="dfs-count">{eligible.length} eligible</span>
+              <span className="dfs-keys">
+                <b>Space</b> draw · <b>Esc</b> exit
+              </span>
+              {winners.length > 0 && (
+                <span className="dfs-won">
+                  {winners.length} drawn: {winners.map((w) => w.name.split(' ')[0]).join(' · ')}
+                </span>
+              )}
+            </div>
+            <button className="dfs-exit" onClick={exitStage} aria-label="Leave stage mode">
+              ✕
+            </button>
+          </div>,
+          document.body,
+        )}
 
       {winners.length > 0 && (
         <div className="panel report-panel">
