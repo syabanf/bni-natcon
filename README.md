@@ -32,9 +32,10 @@ a whole registration sheet**),
 generates the speed-networking tables, a **QR Prints** page with
 print-ready QR cards (tables, class rooms, booth signage, and the two
 **sign-in doors**), and a **Lucky Draw** page with a card-shuffle animation
-where every pin is a ticket and top collectors lead the deck — with a
-**stage mode** that throws the draw fullscreen for the hall projector,
-driven from the keyboard (Space draws, Esc leaves).
+across **every registered attendee** — one ticket each, pins change nobody's
+odds, and a winner drops out so no one is drawn twice — with a **stage mode**
+that throws the draw fullscreen for the hall projector, driven from the
+keyboard (Space draws, Esc leaves).
 
 All UI follows the original mockup theme (Plus Jakarta Sans, rounded cards,
 soft shadows, tinted pills, single red `#CF2030` accent) and carries the

@@ -163,10 +163,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | OPS-10 | P2 | Tables page | Delete a table nobody is sitting at. | It disappears from the list and from the attendee app. |
 | OPS-11 | P1 | QR Prints | Open the page and pick a size. | Print-ready QR cards for tables, class rooms and booth signage, each labelled. |
 | OPS-12 | P1 | QR Prints | Print (or print-preview) a page of table QRs, then scan one with the attendee app. | The scanned QR joins exactly that table — the printed number matches. |
-| OPS-13 | P1 | Lucky Draw, several attendees hold pins | Open the page. | Shows the eligible count. It must equal the number of attendees with at least one pin — check against the Attendee Pins report. |
+| OPS-13 | P1 | Lucky Draw, attendee list imported | Open the page. | Shows the eligible count. It must equal the TOTAL number of registered attendees — pins do not decide eligibility. Check against Master Data → Attendees. |
 | OPS-14 | P1 | Lucky Draw | Press Shuffle & draw a winner. | Cards shuffle and one winner is shown with their name and chapter. |
 | OPS-15 | P2 | After OPS-14 | Draw again. | The previous winner is not drawn a second time. |
 | OPS-16 | P2 | Admin | Delete an attendee who has scans and a class registration. | Deleted after the confirmation, and their scans and registration go with them; counts on the dashboard drop accordingly. |
+| OPS-24 | P2 | Lucky Draw | Press Stage mode, then Space, then Esc. | Space draws one winner (never two, however fast you press). Esc returns to the panel and the page is where you left it. |
 
 ## Reports & export
 
@@ -235,7 +236,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Attendee | 22 | 14 |
 | Booth scanner | 14 | 10 |
 | Admin master data | 32 | 25 |
-| Admin operations | 16 | 10 |
+| Admin operations | 17 | 10 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 11 | 3 |
-| **Total** | **129** | **84** |
+| **Total** | **130** | **84** |

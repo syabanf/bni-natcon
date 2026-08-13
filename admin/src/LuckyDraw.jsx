@@ -11,16 +11,11 @@ function initials(name = '') {
     .toUpperCase()
 }
 
-// Weighted pick: every pin is one ticket, so attendees with the most
-// pins have the best odds.
-function pickWeighted(pool) {
-  const total = pool.reduce((sum, m) => sum + m.visits, 0)
-  let roll = Math.random() * total
-  for (const m of pool) {
-    roll -= m.visits
-    if (roll <= 0) return m
-  }
-  return pool[pool.length - 1]
+// Every attendee holds exactly one ticket. Pins decide nothing here — a
+// person who never reached a booth has the same odds as the one who
+// collected them all.
+function pickOne(pool) {
+  return pool[Math.floor(Math.random() * pool.length)]
 }
 
 const SHUFFLE_MS = 3600
@@ -41,14 +36,15 @@ export default function LuckyDraw({ onUnauthorized }) {
   useEffect(() => {
     api
       .allMembers({ onUnauthorized })
-      .then((all) => setMembers(all.filter((m) => m.visits > 0)))
+      .then(setMembers)
       .catch(() => setMembers([]))
     return () => clearTimeout(timerRef.current)
   }, [onUnauthorized])
 
+  // Everyone who is registered is in the draw; only a previous winner drops
+  // out, so nobody can be drawn twice.
   const eligible = (members || []).filter((m) => !winners.some((w) => w.id === m.id))
-  // Shuffle order: most pins first — they lead the deck and cycle through first.
-  const deck = [...eligible].sort((a, b) => b.visits - a.visits)
+  const deck = eligible
 
   const enterStage = () => {
     setStage(true)
@@ -79,7 +75,7 @@ export default function LuckyDraw({ onUnauthorized }) {
     clearTimeout(timerRef.current)
     setPhase('shuffling')
     setWinner(null)
-    const finalWinner = pickWeighted(deck)
+    const finalWinner = pickOne(deck)
     const startedAt = Date.now()
     let i = 0
 
@@ -93,8 +89,8 @@ export default function LuckyDraw({ onUnauthorized }) {
         setPhase('winner')
         return
       }
-      // Highest-pin members cycle first, then wrap; the flip slows down
-      // as the draw approaches its end.
+      // The faces flip through the whole room in order, wrapping around;
+      // the flip slows down as the draw approaches its end.
       setCurrent(deck[i % deck.length])
       i += 1
       const progress = elapsed / SHUFFLE_MS
@@ -146,7 +142,7 @@ export default function LuckyDraw({ onUnauthorized }) {
                   <span className="dc-ini">{initials(m.name)}</span>
                 </div>
               ))}
-              {deck.length === 0 && <div className="empty">No attendees with pins yet — scans fill the deck.</div>}
+              {deck.length === 0 && <div className="empty">No attendees yet — import the list first.</div>}
             </div>
             {deck.length > 0 && (
               <button className="md-add draw-btn" onClick={start}>
@@ -162,9 +158,7 @@ export default function LuckyDraw({ onUnauthorized }) {
               <div className="draw-card face" key={current.id + Math.random()}>
                 <span className="dc-ini">{initials(current.name)}</span>
                 <b>{current.name}</b>
-                <small>
-                  {current.chapter} · {current.visits} pins
-                </small>
+                <small>{current.chapter}</small>
               </div>
               <div className="draw-card stacked" style={{ '--i': 1 }} />
               <div className="draw-card stacked" style={{ '--i': 2 }} />
@@ -184,7 +178,7 @@ export default function LuckyDraw({ onUnauthorized }) {
                 {winner.company ? ` · ${winner.company}` : ''}
               </small>
               <span className="pill live" style={{ marginTop: 8 }}>
-                {winner.visits} pins · {winner.member_code}
+                {winner.member_code}
               </span>
             </div>
             <button className="md-add draw-btn" onClick={start} disabled={eligible.length === 0}>
@@ -201,8 +195,8 @@ export default function LuckyDraw({ onUnauthorized }) {
         <div>
           <h1>Lucky Draw</h1>
           <p className="micro">
-            Card shuffle across all attendees with pins — every pin is one ticket, top collectors
-            lead the deck
+            Card shuffle across every registered attendee — one ticket each, pins do not change
+            anyone's odds
           </p>
         </div>
         <div className="head-right">
@@ -254,7 +248,7 @@ export default function LuckyDraw({ onUnauthorized }) {
                     {w.name} <small>· {w.chapter}</small>
                   </div>
                 </div>
-                <span className="rank-count">{w.visits}</span>
+                <span className="rank-code">{w.member_code}</span>
               </div>
             ))}
           </div>

@@ -1701,6 +1701,16 @@ button:disabled {
   gap: 8px;
 }
 
+/* The winners list identifies people by their member code — the number the
+   committee reads out and checks against a ticket. */
+.rank-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--gray);
+  white-space: nowrap;
+}
+
 /* ===== Lucky Draw ===== */
 .draw-stage {
   text-align: center;
@@ -1853,7 +1863,10 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* min-height:0 lets the row shrink; overflow keeps a tall card from
+     spilling over the footer on a short screen instead of scaling down. */
   min-height: 0;
+  overflow: hidden;
 }
 .dfs-foot {
   display: flex;
@@ -1896,15 +1909,20 @@ button:disabled {
 
 /* The shared draw markup, blown up for the room. */
 .draw-fullscreen .draw-idle {
-  gap: clamp(18px, 4vh, 44px);
+  gap: clamp(10px, 3vh, 40px);
   padding: 0;
+  /* The whole stack — deck, button — has to live inside the middle row of
+     the overlay grid, whatever the projector's aspect ratio. */
+  max-height: 100%;
+  justify-content: center;
 }
 .draw-fullscreen .draw-deck {
-  min-height: clamp(200px, 42vh, 460px);
+  min-height: 0;
+  height: clamp(120px, 40vh, 460px);
 }
 .draw-fullscreen .draw-card {
-  width: clamp(260px, 30vw, 460px);
-  min-height: clamp(180px, 34vh, 380px);
+  width: clamp(220px, 30vw, 460px);
+  min-height: clamp(120px, 32vh, 380px);
   gap: clamp(6px, 1.4vh, 16px);
   border-radius: clamp(18px, 2.4vh, 30px);
   /* The overlay paints its text white; a card is white paper, so it has to
@@ -1943,8 +1961,9 @@ button:disabled {
   font-size: clamp(11px, 1.7vh, 18px);
 }
 .draw-fullscreen .draw-btn {
-  font-size: clamp(14px, 2.2vh, 24px);
-  padding: clamp(12px, 1.8vh, 20px) clamp(24px, 3vw, 48px);
+  font-size: clamp(13px, 2.2vh, 24px);
+  padding: clamp(9px, 1.8vh, 20px) clamp(18px, 3vw, 48px);
+  flex: none;
 }
 .draw-fullscreen .draw-note {
   font-size: clamp(12px, 1.9vh, 20px);
