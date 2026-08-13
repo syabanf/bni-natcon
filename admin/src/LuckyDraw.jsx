@@ -34,6 +34,9 @@ export default function LuckyDraw({ onUnauthorized }) {
   // Stage mode: the draw on the hall projector, nothing else on screen.
   const [stage, setStage] = useState(false)
   const timerRef = useRef(null)
+  // Synchronous "a draw is running" latch. State cannot do this job: two key
+  // presses in the same frame both read the pre-update phase.
+  const drawingRef = useRef(false)
 
   useEffect(() => {
     api
@@ -71,7 +74,9 @@ export default function LuckyDraw({ onUnauthorized }) {
   }, [])
 
   const start = () => {
-    if (deck.length === 0) return
+    if (deck.length === 0 || drawingRef.current) return
+    drawingRef.current = true
+    clearTimeout(timerRef.current)
     setPhase('shuffling')
     setWinner(null)
     const finalWinner = pickWeighted(deck)
@@ -81,6 +86,7 @@ export default function LuckyDraw({ onUnauthorized }) {
     const tick = () => {
       const elapsed = Date.now() - startedAt
       if (elapsed >= SHUFFLE_MS) {
+        drawingRef.current = false
         setCurrent(null)
         setWinner(finalWinner)
         setWinners((w) => [...w, finalWinner])
@@ -98,6 +104,20 @@ export default function LuckyDraw({ onUnauthorized }) {
     tick()
   }
 
+  // Nothing is behind the stage to scroll to, and Space — the draw key —
+  // is also the browser's page-down. Without this the operator scrolls the
+  // hidden page under the overlay and lands somewhere else on exit.
+  useEffect(() => {
+    if (!stage) return undefined
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [stage])
+
+  // No dependency array on purpose: the handler closes over `phase` and
+  // `deck`, which change during a draw.
   useEffect(() => {
     if (!stage) return undefined
     const onKey = (e) => {
@@ -105,9 +125,9 @@ export default function LuckyDraw({ onUnauthorized }) {
         exitStage()
         return
       }
-      if ((e.key === ' ' || e.key === 'Enter') && phase !== 'shuffling') {
+      if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        start()
+        if (phase !== 'shuffling') start()
       }
     }
     window.addEventListener('keydown', onKey)
