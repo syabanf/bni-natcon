@@ -15,8 +15,10 @@
 > dan yang sudah discan turun ke bawah; networking **scan meja dulu**
 > + notes per orang + kontak email/telepon (tap → buka app); booth scanner
 > menerima **ID / nomor HP**, notes per pengunjung + detail pengunjung;
-> role **sponsor**; halaman **Lucky Draw** dengan animasi shuffle kartu
-> berbobot pin; quick login Reddie di landing.
+> role **sponsor**; halaman **Lucky Draw** dengan animasi shuffle kartu —
+> **semua peserta terdaftar ikut, satu tiket per orang, pin tidak
+> memengaruhi peluang** — lengkap dengan *stage mode* layar penuh untuk
+> proyektor; quick login Reddie di landing.
 
 ## 1. Konsep
 

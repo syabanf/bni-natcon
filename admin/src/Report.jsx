@@ -232,7 +232,7 @@ export function ReportCoupons({ onUnauthorized }) {
   return (
     <ReportShell
       title="Report — Attendee Pins"
-      sub="Pins per attendee — tickets for the gala dinner lucky draw"
+      sub="How many booths each attendee reached — the lucky draw is separate, and open to everyone"
       exportDisabled={members.length === 0}
       onExport={() =>
         exportSheet(
