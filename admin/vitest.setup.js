@@ -1,6 +1,5 @@
-// vitest's jsdom environment does not expose window.localStorage (jsdom only
-// provides it for a non-opaque origin, and the shim does not survive the
-// bridge into the test global). The offline scan queue is built on it, so the
+// Most of this suite runs in the node environment, and the jsdom files do not
+// get a working window.localStorage either. The admin app keeps its token there, so the
 // suite supplies a Storage of its own — same contract, no persistence.
 if (typeof globalThis.localStorage === 'undefined' || globalThis.localStorage === null) {
   const store = new Map()

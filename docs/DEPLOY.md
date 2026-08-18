@@ -112,6 +112,23 @@ request dari APK kena CORS. Lihat [`ANDROID.md`](ANDROID.md).
 Restart API setelah mengubahnya. Kalau kelewat, login gagal dengan error
 CORS di console browser — bukan 404.
 
+### Upload gambar gagal / 502 saat pilih foto
+
+Cover breakout class dan foto narasumber diambil dari HP, jadi ukurannya
+megabyte. Batasnya **5 MB per gambar** di API — tapi yang biasanya memutus
+duluan adalah proxy di depannya:
+
+| Bentuk deploy | Yang harus diset |
+| ------------- | ---------------- |
+| Docker compose | sudah beres: `client_max_body_size 6m` ada di `frontend/nginx.conf` dan `admin/nginx.conf` |
+| API di host lain (Railway/Render/VPS + nginx sendiri) | naikkan batas body proxy-nya ke **6 MB**; default nginx cuma 1 MB |
+
+Gejalanya khas: proxy berhenti membaca body di tengah jalan, lalu browser
+menerima **502** — bukan 413 — sehingga kelihatan seperti server mati padahal
+API-nya sehat. Panel admin sekarang menolak file >5 MB sebelum dikirim dan
+menerjemahkan 413/502/504 saat upload jadi "gambarnya kebesaran", supaya
+panitia tahu harus mengecilkan file, bukan menunggu server.
+
 ### Checklist saat login masih gagal
 
 | Gejala di Network tab                              | Penyebab                                              |

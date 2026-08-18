@@ -18,6 +18,9 @@ export function assetUrl(path) {
   return API_ORIGIN + path
 }
 
+// Matches maxUploadBytes in the API (and client_max_body_size in nginx).
+export const MAX_UPLOAD_BYTES = 5 << 20
+
 export const getToken = () => localStorage.getItem(TOKEN_KEY)
 export const setToken = (t) => localStorage.setItem(TOKEN_KEY, t)
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY)
@@ -208,6 +211,14 @@ export const api = {
   // Multipart image upload — returns { url } (served from /uploads/…).
   uploadImage: async (file) => {
     if (isMockMode()) return mock.uploadImage(file)
+    // Say no here rather than let a proxy cut the upload off mid-flight: a
+    // gateway that stops reading a body reports 502, which tells the
+    // committee nothing about the photo they picked.
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new ApiError(413,
+        `That image is ${(file.size / (1 << 20)).toFixed(1)} MB — the limit is 5 MB. ` +
+        'Resize it, or export it at a smaller quality.')
+    }
     const form = new FormData()
     form.append('file', file)
     let res
@@ -222,7 +233,12 @@ export const api = {
     }
     const data = await res.json().catch(() => null)
     if (!res.ok) {
-      throw new ApiError(res.status, data?.error || FRIENDLY_STATUS[res.status] || `Upload failed (code ${res.status}).`)
+      // 413 from a proxy, or a 502/504 from one that gave up mid-body, both
+      // mean the same thing to whoever is holding the phone.
+      const friendly = [413, 502, 504].includes(res.status)
+        ? 'The image did not get through — it is probably too large. The limit is 5 MB.'
+        : data?.error || FRIENDLY_STATUS[res.status] || `Upload failed (code ${res.status}).`
+      throw new ApiError(res.status, friendly)
     }
     return data
   },

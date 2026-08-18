@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
       // jsdom defaults to about:blank, an opaque origin where localStorage
       // does not exist — and the scan queue lives in localStorage.
       environmentOptions: { jsdom: { url: 'http://localhost/' } },
+      setupFiles: ['./vitest.setup.js'],
     },
     // `vite preview` serves the production bundle and does NOT reuse
     // server.proxy — mirror it so the built app can be checked locally
