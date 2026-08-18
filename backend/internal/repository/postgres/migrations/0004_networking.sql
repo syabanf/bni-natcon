@@ -5,9 +5,6 @@ CREATE TABLE networking_tables (
     capacity INT NOT NULL DEFAULT 8
 );
 
-INSERT INTO networking_tables (table_no)
-SELECT generate_series(1, 12);
-
 CREATE TABLE networking_checkins (
     id         BIGSERIAL PRIMARY KEY,
     table_id   BIGINT NOT NULL REFERENCES networking_tables (id) ON DELETE CASCADE,

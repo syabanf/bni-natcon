@@ -47,14 +47,14 @@ Environment yang wajib diisi:
 | `ADDR`            | `:8080`, atau `:$PORT` bila host menentukan port sendiri     |
 | `ALLOWED_ORIGINS` | domain Vercel, dipisah koma — lihat langkah 3                |
 | `UPLOAD_DIR`      | path di **persistent volume**, mis. `/data/uploads`          |
-| `SEED_PASSWORD`   | password akun demo hasil seeding                             |
+| `SEED_PASSWORD`   | password akun admin (dan akun booth yang dibuat nanti)        |
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
-Master data acara ikut di dalamnya — 31 booth asli (migrasi `0014`, lengkap
-dengan login scanner, kontak booth, dan chapter), 2 sponsor BNI, serta 4
-breakout class beserta narasumbernya. Jadi database baru maupun yang sudah
-jalan sama-sama berakhir dengan data yang sama; peserta tetap lewat import
-Excel.
+Database baru berisi **hanya** akun `admin@natcon.id` dan **4 breakout class
+beserta narasumbernya**. Tidak ada peserta demo, booth placeholder, chapter,
+atau meja networking bawaan — semuanya masuk lewat kerja panitia sendiri:
+peserta & chapter dari export ticketing, booth & sponsor dari sheet *Data
+Booth*, meja dibuat di halaman Tables.
 
 > **Cover seminar**: file upload disimpan di disk. Tanpa persistent
 > volume, gambar hilang setiap redeploy. Arahkan `UPLOAD_DIR` ke volume,

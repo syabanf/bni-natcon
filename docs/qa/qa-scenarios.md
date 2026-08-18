@@ -18,10 +18,10 @@ Use a second browser (or a private window) to hold two roles at once.
 Ask for a database reset if the data looks used — several cases assume nothing has been scanned yet.
 Camera cases need a real phone; a desktop browser without a camera falls back to manual input, which is a separate case.
 
-## Accounts (seeded, password: natcon2026)
-Admin — admin@natcon.id
-Attendee — reddie@natcon.id (NATCON-2026-08154) · sinta@natcon.id (…-08201) · agus@natcon.id (…-08322)
-Booth scanner — booth-a1@natcon.id (SSCX International) · booth-sp01@natcon.id (BNI Xpora, sponsor)
+## Accounts — a fresh database has ONE login
+
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). Everything else is created from there: import the attendee sheet (Data Peserta) and the booth sheet (Data Booth), then generate the networking tables on the Tables page.
+Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD, created automatically with each booth.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
 ## Sheets
@@ -34,8 +34,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
 | AUTH-01 | P1 | Admin account exists | Open the admin panel. Enter admin@natcon.id / natcon2026. Press Sign in. | Lands on the Dashboard with the sidebar visible. Stat tiles show numbers, not dashes. |
-| AUTH-02 | P1 | Seeded attendee | On the attendee app sign in as reddie@natcon.id / natcon2026. | Lands on Home: 'Hello, Reddie', member pass card with a QR and the member ID NATCON-2026-08154. |
-| AUTH-03 | P1 | Booth account | Open the booth door at /tenant/login. Sign in as booth-a1@natcon.id / natcon2026. | The page is headed 'Booth Scanner' and shows no 'Forgot your password?'. After sign-in: Booth Scanner titled 'SSCX International · Booth A1', bottom nav Scanner and Dashboard only. |
+| AUTH-02 | P1 | Attendee from the imported sheet | On the attendee app sign in with an attendee's email and their generated password (chapter + first name, lowercase, no spaces). | Asked to choose a password on this first sign-in, then lands on Home: 'Hello, <first name>', member pass card with a QR and their member ID. |
+| AUTH-03 | P1 | Booth account | Open the booth door at /tenant/login. Sign in as booth-<code>@natcon.id with SEED_PASSWORD. | The page is headed 'Booth Scanner' and shows no 'Forgot your password?'. After sign-in: Booth Scanner titled 'SSCX International · Booth A1', bottom nav Scanner and Dashboard only. |
 | AUTH-04 | P1 | Any account | Sign in with the right email and a wrong password. | Stays on sign-in and shows an error. The wording must not reveal whether the email exists. |
 | AUTH-05 | P1 | An attendee imported from the ticketing sheet, who has never signed in | Sign in with their email and the generated password (chapter + first name). | 'Choose your password' appears immediately. No other page is reachable until a password is saved. |
 | AUTH-06 | P1 | On the 'Choose your password' screen | Type a 5-character password in both fields and save. | Refused with a message about needing at least 8 characters. |
@@ -211,12 +211,12 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | What | Value | Notes |
 |---|---|---|
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
-| Attendee 1 | reddie@natcon.id / natcon2026 | NATCON-2026-08154 · BNI Chapter Jakarta Elite · +62811000154 |
-| Attendee 2 | sinta@natcon.id / natcon2026 | NATCON-2026-08201 · BNI Chapter Jakarta Elite · +62811000201 |
-| Attendee 3 | agus@natcon.id / natcon2026 | NATCON-2026-08322 · BNI Chapter Bandung Raya · +62811000322 |
-| Booth scanner | booth-a1@natcon.id / natcon2026 | SSCX International · booth A1 (from the official Data Booth sheet) |
+| Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
+| Attendees | import Data Peserta.xlsx | 769 rows; password = chapter + first name, then they set their own |
+| Booths & sponsors | import Data Booth.xlsx | each booth gets booth-<code>@natcon.id on SEED_PASSWORD |
+| Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-sp01@natcon.id / natcon2026 | BNI Xpora · booth SP-01 |
-| Booth login pattern | booth-<code without dashes>@natcon.id | A1 → booth-a1, SP-01 → booth-sp01 |
+| Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
 | Imported attendee password | chapter + first name, lowercase, no spaces | Heritage + Fahmi → heritagefahmi |
 | Unknown member code | NATCON-2026-99999 | For the not-found cases |
 | Table QR payload | TABLE:5 | What the QR Prints page prints |

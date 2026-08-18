@@ -2,56 +2,31 @@ package postgres
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strings"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SeedIfEmpty fills in whatever is missing: the admin account always, then
-// the demo attendee logins, the two BNI sponsors, the four breakout classes
-// and the networking tables — each only when that group is empty. The 31 real
-// booths arrive through migration 0014 instead, so an already-running
-// deployment picks them up too. All accounts get the given password.
+// SeedIfEmpty puts exactly two things into a fresh database: the committee's
+// admin login, and the event's own programme — the four breakout classes with
+// their speakers and moderators, taken from the Term of Reference documents.
+//
+// Nothing else is invented. Attendees, their chapters, the booths and the
+// networking tables all come from the committee's own spreadsheets and the
+// admin panel, so no demo account or placeholder booth can ever turn up in
+// front of a real guest.
 func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error {
 	if err := ensureAdmin(ctx, pool, password); err != nil {
 		return err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	// Booths inserted by migration 0014 carry a placeholder hash nobody can
-	// sign in with — give them the configured password. Only untouched
-	// placeholders are rewritten, so a booth whose password was changed in
-	// the admin panel keeps it.
-	if _, err := pool.Exec(ctx, `
-		UPDATE users SET password_hash = $1
-		WHERE role = 'tenant' AND password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`,
-		string(hash)); err != nil {
-		return err
-	}
-
-	// Each group is seeded on its own. A migration that fills one of them in
-	// (the real booths) must not stop the others from being seeded.
-	var demoMembers int
-	if err := pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM users WHERE role = 'member'`).Scan(&demoMembers); err != nil {
-		return err
-	}
-	var tenantCount, seminarCount int
-	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM tenants`).Scan(&tenantCount); err != nil {
-		return err
-	}
+	// The programme is written once. A committee that has since edited a
+	// class in the admin panel must not have it overwritten on restart.
+	var seminarCount int
 	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM seminars`).Scan(&seminarCount); err != nil {
 		return err
 	}
-	if demoMembers > 0 && tenantCount > 0 && seminarCount > 0 {
+	if seminarCount > 0 {
 		return nil
 	}
 
@@ -60,56 +35,6 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		return err
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
-
-	members := []struct {
-		name, email, code, chapter, company, phone, classification string
-	}{
-		{"Reddie Wijaya", "reddie@natcon.id", "NATCON-2026-08154", "BNI Chapter Jakarta Elite", "Witid Intelligence", "+62811000154", "IT & Software"},
-		{"Sinta Dewi", "sinta@natcon.id", "NATCON-2026-08201", "BNI Chapter Jakarta Elite", "Sinta Florist", "+62811000201", "Trade & Distribution"},
-		{"Agus Santoso", "agus@natcon.id", "NATCON-2026-08322", "BNI Chapter Bandung Raya", "Santoso Baja", "+62811000322", "Manufacturing"},
-	}
-	for _, m := range members {
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification)
-			VALUES ($1, $2, $3, 'member', $4, $5, $6, $7, $8)`,
-			m.name, m.email, string(hash), m.code, m.chapter, m.company, m.phone, m.classification); err != nil {
-			return err
-		}
-	}
-
-	// Only the two BNI sponsors are seeded here — the 31 real booths come
-	// from migration 0014, so every environment gets the same list whether it
-	// is a fresh laptop or an already-running deployment.
-	tenants := []struct {
-		name, category, booth, initials, kind, desc, contact, chapter string
-	}{
-		{"BNI Xpora", "Main Sponsor", "SP-01", "BX", "sponsor", "BNI's one-stop export hub — banking solutions for members going global.", "", ""},
-		{"Wondr by BNI", "Digital Sponsor", "SP-02", "WB", "sponsor", "Personal finance super-app: payments, savings goals, and lifestyle deals.", "", ""},
-	}
-	for _, t := range tenants {
-		email := fmt.Sprintf("booth-%s@natcon.id", strings.ToLower(strings.ReplaceAll(t.booth, "-", "")))
-		var ownerID int64
-		if err := tx.QueryRow(ctx, `
-			INSERT INTO users (name, email, password_hash, role, company)
-			VALUES ($1, $2, $3, 'tenant', $1)
-			ON CONFLICT DO NOTHING
-			RETURNING id`,
-			t.name, email, string(hash)).Scan(&ownerID); err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				continue // already present
-			}
-			return err
-		}
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO tenants (name, category, booth, initials, kind, description,
-			                     contact_name, chapter, owner_user_id)
-			SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9
-			WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE booth = $3)`,
-			t.name, t.category, t.booth, t.initials, t.kind, t.desc,
-			t.contact, t.chapter, ownerID); err != nil {
-			return err
-		}
-	}
 
 	// The four real breakout classes, from the Term of Reference documents.
 	// All share slot 1: they run in parallel, so an attendee picks exactly one

@@ -80,26 +80,27 @@ is allowed — that is how you close registration early. Once a class is at
 quota, both self-service and committee registration turn the next person
 away.
 
-**The real event data is in the migrations**, so a laptop, a staging box and
-production all converge on the same master data without anyone remembering to
-import a spreadsheet:
+**A fresh database holds two things and nothing else**: the committee's admin
+login, and the event's own programme.
 
-- **31 booths** from the committee's *Data Booth* sheet — migration `0014`,
-  each with its scanner login, booth contact and BNI chapter. Idempotent: a
-  booth already present under its code keeps its login and its collected
-  scans. The 12 placeholder booths from the original mockup are removed, but
-  only when nothing has been scanned at them.
-- **2 BNI sponsors** and the **4 breakout classes with their speakers** — the
-  seeder, which fills in each group only when that group is empty. An
-  already-seeded database can also load the classes with
+- **The 4 breakout classes with their 9 speakers and moderators**, from the
+  Term of Reference documents — written once, and never rewritten, so a class
+  edited in the admin panel survives a restart. An already-running database
+  can load them with
   [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
   safe to re-run; speaker rows are always refreshed (that is how you push
   updated photos).
-- **Attendees stay an import.** They change until the last minute, and 668
-  people's names, emails and phone numbers do not belong in git.
+- **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
 
-Booth scanner accounts land on `SEED_PASSWORD`, so set that before the event
-or reset the logins from the admin panel.
+Everything else is the committee's own data and arrives the way they already
+work: **attendees and their chapters** from the ticketing export, **booths and
+sponsors** from the *Data Booth* sheet, **networking tables** generated on the
+Tables page for the hall they actually get. No demo attendee, placeholder
+booth or invented chapter can turn up in front of a guest, because none exists
+to begin with.
+
+> Upgrading a database that was seeded by an older build? The demo rows are
+> still in it — delete them from the admin panel, or start the database fresh.
 
 Speaker photos live in [`assets/speakers/`](assets/speakers) and room posters
 in [`assets/covers/`](assets/covers); both are served from each app's
@@ -313,19 +314,23 @@ include or exclude them, and print — only the selected cards reach paper.
 > a phone over LAN you need HTTPS (e.g. `vite --host` + a tunnel such as
 > ngrok/tailscale). The scanner page also has a manual-code input fallback.
 
-## Demo accounts
+## Accounts
 
-All with password `natcon2026`:
+A fresh database has exactly one login:
 
-| Role    | Email                 | Notes                             |
-|---------|-----------------------|-----------------------------------|
-| Member  | `reddie@natcon.id`    | Member code `NATCON-2026-08154`   |
-| Member  | `sinta@natcon.id`     | Member code `NATCON-2026-08201`   |
-| Member  | `agus@natcon.id`      | Member code `NATCON-2026-08322`   |
-| Tenant  | `booth-a1@natcon.id`  | SSCX International · Booth A1 (sign in at `/tenant/login`) |
-| Tenant  | `booth-b01@natcon.id` | TechNesia Solutions · Booth B-01  |
-| Tenant  | …one per booth        | `booth-<code>@natcon.id`          |
-| Admin   | `admin@natcon.id`     | Committee dashboard + master data |
+| Role  | Email             | Password        | Notes                             |
+|-------|-------------------|-----------------|-----------------------------------|
+| Admin | `admin@natcon.id` | `SEED_PASSWORD` | Committee dashboard + master data |
+
+Everyone else is created by that account:
+
+| Role     | Login                        | Password                                   |
+|----------|------------------------------|--------------------------------------------|
+| Attendee | the email on their ticket    | chapter + first name, then they choose their own · signs in at `/login` |
+| Booth    | `booth-<code>@natcon.id`     | `SEED_PASSWORD`, or set in the admin panel · signs in at `/tenant/login` |
+
+Booth logins are created automatically when a booth is added or imported, so
+importing the *Data Booth* sheet also hands out 31 scanner accounts.
 
 ## API summary (`/api/v1`)
 

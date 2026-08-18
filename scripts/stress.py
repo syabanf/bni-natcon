@@ -44,6 +44,8 @@ READ_WORKERS = int(os.environ.get("WORKERS", "40"))
 READ_REQS_PER_WORKER = int(os.environ.get("REQS", "60"))
 CONTENDERS = int(os.environ.get("CONTENDERS", "60"))
 SEMINAR_CAPACITY = 10
+# The hall's tables seat 8 — the number section C contends against.
+TABLE_CAPACITY = 8
 
 parsed = urlparse(BASE)
 HOST, PORT = parsed.hostname, parsed.port or 80
@@ -124,6 +126,16 @@ status, body = c.req("POST", "/api/v1/auth/login",
 assert status == 200, f"admin login failed: {status} {body}"
 admin_tok = body["token"]
 
+# A fresh database has no booths and no networking tables — this suite makes
+# the ones it needs, the same way the committee would.
+status, body = c.req("POST", "/api/v1/admin/tenants", token=admin_tok,
+                     body={"name": "Stress Booth", "booth": "A1", "category": "Uji Beban"})
+assert status in (200, 201), f"booth fixture failed: {status} {body}"
+
+status, body = c.req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
+                     body={"count": 12, "hall": "Hall B", "capacity": TABLE_CAPACITY})
+assert status == 201, f"table fixture failed: {status} {body}"
+
 status, body = c.req("POST", "/api/v1/auth/login",
                      body={"email": "booth-a1@natcon.id", "password": PASSWORD})
 assert status == 200, "tenant login failed"
@@ -152,8 +164,9 @@ for start in range(0, CONTENDERS, 1000):
 contenders = [members[f"stress{i:04d}@natcon.id"] for i in range(CONTENDERS)]
 tokens = [mint_token(m["id"], "member") for m in contenders]
 
-status, body = c.req("GET", "/api/v1/admin/members?q=reddie", token=admin_tok)
-reddie_code = body["members"][0]["member_code"]
+# One attendee stands in for "the person a whole queue of scanners hits at
+# once" — any of the contenders will do.
+scan_target_code = contenders[0]["member_code"]
 
 status, body = c.req("POST", "/api/v1/admin/seminars", token=admin_tok,
                      body={"slot": 9, "room": "R. Stress", "title": "Uji Beban",
@@ -252,7 +265,7 @@ check("DB never oversells (seats_taken == capacity)",
 
 # ---------------------------------------------------------------- phase C
 
-section(f"C. Networking table contention ({CONTENDERS} members, 8 seats)")
+section(f"C. Networking table contention ({CONTENDERS} members, {TABLE_CAPACITY} seats)")
 results = {}
 
 
@@ -274,7 +287,8 @@ check("the rest rejected with 409 (meja penuh)",
 
 status, body = c.req("GET", "/api/v1/networking", token=tokens[0])
 table10 = next(t for t in body["tables"] if t["table_no"] == 10)
-check("table occupancy is exactly 8", table10["occupied"] == 8, f"occupied={table10['occupied']}")
+check(f"table occupancy is exactly {TABLE_CAPACITY}", table10["occupied"] == TABLE_CAPACITY,
+      f"occupied={table10['occupied']}")
 
 # ---------------------------------------------------------------- phase D
 
@@ -286,7 +300,7 @@ non_dup = [0]
 def scan_worker(_):
     client = Client()
     status, body = client.req("POST", "/api/v1/scans", token=tenant_tok,
-                              body={"member_code": reddie_code})
+                              body={"member_code": scan_target_code})
     with lock:
         results[status] = results.get(status, 0) + 1
         if status == 200 and body and body.get("duplicate") is False:

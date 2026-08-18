@@ -241,15 +241,18 @@ ke container API (tanpa urusan CORS). Set `JWT_SECRET` +
 check + suite stress vs container Postgres → Vitest + build produksi kedua
 frontend → `docker compose build`.
 
-## 9. Akun Demo
+## 9. Akun
 
-| Role | Email | Catatan |
-|---|---|---|
-| Peserta | `reddie@natcon.id` / `sinta@natcon.id` / `agus@natcon.id` | kode `NATCON-2026-xxxxx` |
-| Tenant | `booth-a03@natcon.id` (dst. per booth) | scanner booth |
-| Admin | `admin@natcon.id` | panel panitia |
+Database baru **hanya** punya satu login:
 
-Password semua: `natcon2026` (mode mock: password bebas).
+| Role | Email | Password | Catatan |
+|---|---|---|---|
+| Admin | `admin@natcon.id` | `SEED_PASSWORD` | panel panitia |
+
+Sisanya dibuat dari sana: peserta lewat import *Data Peserta* (password awal
+= chapter + nama depan, lalu peserta menentukan sendiri), booth lewat import
+*Data Booth* (login `booth-<kode>@natcon.id` dengan `SEED_PASSWORD`), meja
+networking lewat halaman Tables. Tidak ada akun demo bawaan.
 
 ## 10. Belum Dikerjakan / Ide Lanjutan
 

@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """End-to-end test suite for the BNI Natcon 2026 API.
 
-Run against a FRESH database (seed data only), e.g.:
+A fresh database holds only the committee's admin login and the four breakout
+classes, so this suite builds every attendee, booth and networking table it
+needs before it starts — the same way the committee does on the day, through
+the admin API.
+
+Run against a FRESH database, e.g.:
 
     createdb natcon_e2e
     ADDR=:8082 DATABASE_URL=postgres://natcon:natcon@localhost:5432/natcon_e2e?sslmode=disable \
@@ -19,11 +24,11 @@ import urllib.request
 
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
-# What a freshly migrated + seeded database holds: the 31 real booths from
-# migration 0014 plus the two BNI sponsors from the seeder.
-SEEDED_BOOTHS = 31
-SEEDED_SPONSORS = 2
-SEEDED_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS
+# Fixtures this suite creates for itself before anything else runs.
+FIXTURE_BOOTHS = 1
+FIXTURE_SPONSORS = 2
+FIXTURE_TENANTS = FIXTURE_BOOTHS + FIXTURE_SPONSORS
+FIXTURE_TABLES = 12
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
 passed = 0
@@ -89,6 +94,68 @@ check("healthz 200", status == 200 and body["status"] == "ok")
 check("security header nosniff", headers.get("X-Content-Type-Options") == "nosniff")
 check("security header frame deny", headers.get("X-Frame-Options") == "DENY")
 
+status, body = login("admin@natcon.id")
+check("admin login 200", status == 200 and body["user"]["role"] == "admin")
+admin_tok = body["token"]
+
+# ------------------------------------------------------------------- fixtures
+section("Fixtures (a fresh database has no attendees, booths or tables)")
+
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("a fresh database starts with no attendees and no tenants",
+      status == 200 and body["total_members"] == 0 and body["total_tenants"] == 0,
+      f"got {body}")
+
+status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
+check("...but the four breakout classes are already there, with their speakers",
+      status == 200 and len(body["seminars"]) == 4
+      and sum(len(s.get("speakers") or []) for s in body["seminars"]) == 9)
+
+FIXTURE_MEMBERS = [
+    {"name": "Reddie Wijaya", "email": "reddie@natcon.id", "chapter": "BNI Chapter Jakarta Elite",
+     "company": "Witid Intelligence", "phone": "+62811000154", "classification": "IT & Software"},
+    {"name": "Sinta Dewi", "email": "sinta@natcon.id", "chapter": "BNI Chapter Jakarta Elite",
+     "company": "Sinta Florist", "phone": "+62811000201", "classification": "Trade & Distribution"},
+    {"name": "Agus Santoso", "email": "agus@natcon.id", "chapter": "BNI Chapter Bandung Raya",
+     "company": "Santoso Baja", "phone": "+62811000322", "classification": "Manufacturing"},
+]
+created = {}
+for m in FIXTURE_MEMBERS:
+    status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok, body=m)
+    if status != 201:
+        print(f"  FAIL could not create fixture attendee {m['email']}: {status} {body}")
+        sys.exit(1)
+    created[m["email"]] = body["user"]
+check("three attendees created through the admin API", len(created) == 3)
+
+status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
+                      body={"tenants": [
+                          {"name": "BNI Xpora", "booth": "SP-01", "category": "Main Sponsor",
+                           "kind": "sponsor",
+                           "description": "BNI's one-stop export hub for members going global."},
+                          {"name": "Wondr by BNI", "booth": "SP-02", "category": "Digital Sponsor",
+                           "kind": "sponsor",
+                           "description": "Payments, savings goals and lifestyle deals in one app."},
+                          {"name": "SSCX International", "booth": "A1",
+                           "category": "Management Consultant", "kind": "booth",
+                           "contact_name": "Nicolaas Andrew", "chapter": "Star"},
+                      ]})
+check("two sponsors and one booth imported", status == 200 and body["created"] == FIXTURE_TENANTS)
+
+status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
+                      body={"count": FIXTURE_TABLES, "hall": "Hall B", "capacity": 8})
+check(f"{FIXTURE_TABLES} networking tables generated",
+      status == 201 and body["created"] == FIXTURE_TABLES)
+
+status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
+# Nothing pre-loads the chapter list any more: it is exactly the set of
+# chapters the attendees themselves carry. A booth's chapter is contact
+# detail, not membership, so it does not join the list.
+check("chapters registered themselves from the attendees, nothing pre-loaded",
+      status == 200
+      and {c["name"] for c in body["chapters"]} == {m["chapter"] for m in FIXTURE_MEMBERS},
+      f'got {sorted(c["name"] for c in body.get("chapters", []))}')
+
 status, body = login("reddie@natcon.id", "salah-total")
 check("wrong password -> 401", status == 401)
 
@@ -105,10 +172,6 @@ sinta_id = body["user"]["id"]
 status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
-
-status, body = login("admin@natcon.id")
-check("admin login 200", status == 200 and body["user"]["role"] == "admin")
-admin_tok = body["token"]
 
 # ------------------------------------------------- passwords (setup + recovery)
 section("Password setup & recovery")
@@ -246,11 +309,11 @@ check("member cannot admin -> 403", status == 403)
 section("Member basics")
 status, body, _ = req("GET", "/api/v1/me", token=member_tok)
 check("me: 33 tenants, 0 visited", status == 200
-      and body["stats"]["tenants_total"] == SEEDED_TENANTS and body["stats"]["tenants_visited"] == 0)
+      and body["stats"]["tenants_total"] == FIXTURE_TENANTS and body["stats"]["tenants_visited"] == 0)
 
 status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
 check("tenants list 33, none visited",
-      status == 200 and len(body["tenants"]) == SEEDED_TENANTS
+      status == 200 and len(body["tenants"]) == FIXTURE_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
 check("sponsors listed first with kind + description",
       body["tenants"][0]["kind"] == "sponsor" and body["tenants"][0]["description"] != ""
@@ -404,11 +467,11 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 check("overview splits sponsors from booths",
-      body["total_sponsors"] == SEEDED_SPONSORS and body["total_booths"] == SEEDED_BOOTHS
+      body["total_sponsors"] == FIXTURE_SPONSORS and body["total_booths"] == FIXTURE_BOOTHS
       and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
 check("overview: 3 members, 33 tenants, 2 visits",
       status == 200 and body["total_members"] == 3
-      and body["total_tenants"] == SEEDED_TENANTS and body["total_visits"] == 2)
+      and body["total_tenants"] == FIXTURE_TENANTS and body["total_visits"] == 2)
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E",
