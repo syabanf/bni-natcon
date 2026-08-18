@@ -125,9 +125,13 @@ duluan adalah proxy di depannya:
 
 Gejalanya khas: proxy berhenti membaca body di tengah jalan, lalu browser
 menerima **502** — bukan 413 — sehingga kelihatan seperti server mati padahal
-API-nya sehat. Panel admin sekarang menolak file >5 MB sebelum dikirim dan
-menerjemahkan 413/502/504 saat upload jadi "gambarnya kebesaran", supaya
-panitia tahu harus mengecilkan file, bukan menunggu server.
+API-nya sehat.
+
+Sejak panel admin **mengecilkan gambar di browser sebelum dikirim** (maksimum
+sisi panjang 1600 px, JPEG kualitas 0.82), foto HP 4–10 MB berangkat sebagai
+~300–500 KB, jadi batas ini jarang tersentuh. Yang tetap perlu diset adalah
+proxy-nya, untuk file yang tidak bisa didekode browser (mis. HEIC di Chrome)
+dan tetap dikirim apa adanya.
 
 ### Checklist saat login masih gagal
 

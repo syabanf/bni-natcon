@@ -117,6 +117,14 @@ panel; that tab reads `VITE_PUBLIC_APP_URL` (default `https://bninatcon.com`)
 and prints the address under each code, so a wrong host is visible before the
 paper is cut.
 
+**Image uploads** (class covers, speaker photos) are **scaled down in the
+browser before they are sent** — 1600 px on the long edge, JPEG quality 0.82.
+A 9.6 MB phone photo leaves as 499 KB, which is the difference between a
+half-minute wait on venue WiFi and an instant one; the server was never the
+slow part (~10 ms whatever the size). Files the browser cannot decode are
+passed through untouched and the API explains them
+([`admin/src/image.js`](admin/src/image.js)).
+
 **Excel import (attendees & tenants)**: both master-data pages carry an
 **Import Excel** button and a **Download format** button that generates a
 ready-to-fill template (headers + example rows).

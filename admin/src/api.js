@@ -1,4 +1,5 @@
 import { mockAdminApi, isMockMode } from './mock'
+import { shrinkForUpload } from './image'
 
 // Where the Go API lives. Empty (the default) means "same origin", which is
 // what the Vite dev proxy and the nginx image both provide. Static hosts that
@@ -25,6 +26,7 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY)
 export const setToken = (t) => localStorage.setItem(TOKEN_KEY, t)
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY)
 export { isMockMode, setMockMode, resetMockState } from './mock'
+export { shrinkForUpload } from './image'
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -211,11 +213,14 @@ export const api = {
     return total
   },
   // Multipart image upload — returns { url } (served from /uploads/…).
-  uploadImage: async (file) => {
-    if (isMockMode()) return mock.uploadImage(file)
-    // Say no here rather than let a proxy cut the upload off mid-flight: a
-    // gateway that stops reading a body reports 502, which tells the
-    // committee nothing about the photo they picked.
+  uploadImage: async (original) => {
+    if (isMockMode()) return mock.uploadImage(original)
+    // Scale the picture down before it goes anywhere. The upload is the slow
+    // part — the server answers in ~10 ms — and a cover is never displayed
+    // anywhere near the size a phone camera produces.
+    const file = await shrinkForUpload(original)
+    // Only then complain about size: a 6 MB photo usually comes out well
+    // under the limit, so refusing it up front would be wrong.
     if (file.size > MAX_UPLOAD_BYTES) {
       throw new ApiError(413,
         `That image is ${(file.size / (1 << 20)).toFixed(1)} MB — the limit is 5 MB. ` +
