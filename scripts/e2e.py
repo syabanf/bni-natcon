@@ -24,10 +24,11 @@ import urllib.request
 
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
-# Fixtures this suite creates for itself before anything else runs.
-FIXTURE_BOOTHS = 1
+# The 31 booths of the Data Booth sheet arrive with migration 0014; the
+# sponsors, attendees and tables are this suite's own fixtures.
+SEEDED_BOOTHS = 31
 FIXTURE_SPONSORS = 2
-FIXTURE_TENANTS = FIXTURE_BOOTHS + FIXTURE_SPONSORS
+FIXTURE_TENANTS = SEEDED_BOOTHS + FIXTURE_SPONSORS
 FIXTURE_TABLES = 12
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
@@ -102,8 +103,9 @@ admin_tok = body["token"]
 section("Fixtures (a fresh database has no attendees, booths or tables)")
 
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
-check("a fresh database starts with no attendees and no tenants",
-      status == 200 and body["total_members"] == 0 and body["total_tenants"] == 0,
+check("a fresh database starts with no attendees, and with the sheet's booths",
+      status == 200 and body["total_members"] == 0
+      and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == 0,
       f"got {body}")
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
@@ -136,11 +138,18 @@ status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                           {"name": "Wondr by BNI", "booth": "SP-02", "category": "Digital Sponsor",
                            "kind": "sponsor",
                            "description": "Payments, savings goals and lifestyle deals in one app."},
-                          {"name": "SSCX International", "booth": "A1",
-                           "category": "Management Consultant", "kind": "booth",
-                           "contact_name": "Nicolaas Andrew", "chapter": "Star"},
                       ]})
-check("two sponsors and one booth imported", status == 200 and body["created"] == FIXTURE_TENANTS)
+check("two sponsors imported alongside the seeded booths",
+      status == 200 and body["created"] == FIXTURE_SPONSORS)
+
+# Booth A1 comes from the sheet, not from this suite — it must already be
+# there, with its contact and chapter, and its scanner login must work.
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+a1 = next((t for t in body["tenants"] if t["booth"] == "A1"), None)
+check("booth A1 arrived from the Data Booth sheet with its contact",
+      a1 is not None and a1["name"] == "SSCX International"
+      and a1["contact_name"] == "Nicolaas Andrew" and a1["chapter"] == "Star",
+      f"got {a1}")
 
 status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                       body={"count": FIXTURE_TABLES, "hall": "Hall B", "capacity": 8})
@@ -467,7 +476,7 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 check("overview splits sponsors from booths",
-      body["total_sponsors"] == FIXTURE_SPONSORS and body["total_booths"] == FIXTURE_BOOTHS
+      body["total_sponsors"] == FIXTURE_SPONSORS and body["total_booths"] == SEEDED_BOOTHS
       and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
 check("overview: 3 members, 33 tenants, 2 visits",
       status == 200 and body["total_members"] == 3

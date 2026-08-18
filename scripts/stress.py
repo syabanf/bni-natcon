@@ -126,12 +126,8 @@ status, body = c.req("POST", "/api/v1/auth/login",
 assert status == 200, f"admin login failed: {status} {body}"
 admin_tok = body["token"]
 
-# A fresh database has no booths and no networking tables — this suite makes
-# the ones it needs, the same way the committee would.
-status, body = c.req("POST", "/api/v1/admin/tenants", token=admin_tok,
-                     body={"name": "Stress Booth", "booth": "A1", "category": "Uji Beban"})
-assert status in (200, 201), f"booth fixture failed: {status} {body}"
-
+# Booth A1 arrives with the Data Booth migration; the networking tables do
+# not exist until someone makes them, so this suite makes its own.
 status, body = c.req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                      body={"count": 12, "hall": "Hall B", "capacity": TABLE_CAPACITY})
 assert status == 201, f"table fixture failed: {status} {body}"

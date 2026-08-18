@@ -20,8 +20,8 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). Everything else is created from there: import the attendee sheet (Data Peserta) and the booth sheet (Data Booth), then generate the networking tables on the Tables page.
-Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD, created automatically with each booth.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 31 booths and the 4 breakout classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
+Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
 ## Sheets
@@ -213,7 +213,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
 | Attendees | import Data Peserta.xlsx | 769 rows; password = chapter + first name, then they set their own |
-| Booths & sponsors | import Data Booth.xlsx | each booth gets booth-<code>@natcon.id on SEED_PASSWORD |
+| Booths | already there — 31 from the Data Booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, e.g. A1 -> booth-a1@natcon.id |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-sp01@natcon.id / natcon2026 | BNI Xpora · booth SP-01 |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |

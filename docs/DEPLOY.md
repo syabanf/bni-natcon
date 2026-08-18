@@ -50,11 +50,11 @@ Environment yang wajib diisi:
 | `SEED_PASSWORD`   | password akun admin (dan akun booth yang dibuat nanti)        |
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
-Database baru berisi **hanya** akun `admin@natcon.id` dan **4 breakout class
-beserta narasumbernya**. Tidak ada peserta demo, booth placeholder, chapter,
-atau meja networking bawaan — semuanya masuk lewat kerja panitia sendiri:
-peserta & chapter dari export ticketing, booth & sponsor dari sheet *Data
-Booth*, meja dibuat di halaman Tables.
+Database baru berisi akun `admin@natcon.id`, **4 breakout class beserta
+narasumbernya**, dan **31 booth dari sheet *Data Booth*** (migrasi `0014`,
+lengkap dengan login scanner `booth-<kode>@natcon.id`). Tidak ada peserta
+demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
+import export ticketing, meja dibuat di halaman Tables.
 
 > **Cover seminar**: file upload disimpan di disk. Tanpa persistent
 > volume, gambar hilang setiap redeploy. Arahkan `UPLOAD_DIR` ke volume,

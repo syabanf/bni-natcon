@@ -80,27 +80,27 @@ is allowed — that is how you close registration early. Once a class is at
 quota, both self-service and committee registration turn the next person
 away.
 
-**A fresh database holds two things and nothing else**: the committee's admin
-login, and the event's own programme.
+**A fresh database holds the event's own master data and nothing invented:**
 
-- **The 4 breakout classes with their 9 speakers and moderators**, from the
-  Term of Reference documents — written once, and never rewritten, so a class
-  edited in the admin panel survives a restart. An already-running database
-  can load them with
-  [`scripts/real_breakout_classes.sql`](scripts/real_breakout_classes.sql),
-  safe to re-run; speaker rows are always refreshed (that is how you push
-  updated photos).
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
+- **The 4 breakout classes with their 9 speakers and moderators**, from the
+  Term of Reference documents — written once and never rewritten, so a class
+  edited in the admin panel survives a restart.
+- **The 31 booths of the committee's *Data Booth* sheet** (migration `0014`),
+  each with its contact, chapter and scanner login. Generated straight from
+  the spreadsheet by
+  [`scripts/booths_migration.py`](scripts/booths_migration.py) — edit the
+  sheet, re-run the script, restart. It works in both directions: a booth
+  already there keeps its login and its scans, and a booth that has left the
+  sheet is removed *unless somebody has already scanned it*.
 
-Everything else is the committee's own data and arrives the way they already
-work: **attendees and their chapters** from the ticketing export, **booths and
-sponsors** from the *Data Booth* sheet, **networking tables** generated on the
-Tables page for the hall they actually get. No demo attendee, placeholder
-booth or invented chapter can turn up in front of a guest, because none exists
-to begin with.
+**Attendees are the one import.** They change until the last minute, and 769
+people's names, emails and phone numbers do not belong in git. Their chapters
+come with them: every import registers the chapter names it meets, so the
+master list is exactly what the committee's sheet contains. **Networking
+tables** are generated on the Tables page for the hall they actually get.
 
-> Upgrading a database that was seeded by an older build? The demo rows are
-> still in it — delete them from the admin panel, or start the database fresh.
+No demo attendee, placeholder booth or invented chapter exists anywhere.
 
 Speaker photos live in [`assets/speakers/`](assets/speakers) and room posters
 in [`assets/covers/`](assets/covers); both are served from each app's

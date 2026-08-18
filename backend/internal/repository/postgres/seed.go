@@ -7,16 +7,30 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SeedIfEmpty puts exactly two things into a fresh database: the committee's
-// admin login, and the event's own programme — the four breakout classes with
-// their speakers and moderators, taken from the Term of Reference documents.
+// SeedIfEmpty puts the committee's admin login into a fresh database, gives
+// the booths from migration 0014 a password anyone can actually sign in with,
+// and writes the event's programme — the four breakout classes with their
+// speakers and moderators, from the Term of Reference documents.
 //
-// Nothing else is invented. Attendees, their chapters, the booths and the
-// networking tables all come from the committee's own spreadsheets and the
-// admin panel, so no demo account or placeholder booth can ever turn up in
-// front of a real guest.
+// Nothing is invented. Attendees and their chapters come from the ticketing
+// export, the booths from the Data Booth sheet, the networking tables from
+// the Tables page — so no demo account can ever turn up in front of a guest.
 func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error {
 	if err := ensureAdmin(ctx, pool, password); err != nil {
+		return err
+	}
+
+	// Migration 0014 writes the booths with a placeholder hash nobody can
+	// sign in with. Only untouched placeholders are rewritten, so a booth
+	// whose password was changed since keeps it.
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	if _, err := pool.Exec(ctx, `
+		UPDATE users SET password_hash = $1
+		WHERE role = 'tenant' AND password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`,
+		string(hash)); err != nil {
 		return err
 	}
 
