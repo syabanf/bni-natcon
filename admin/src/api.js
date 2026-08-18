@@ -37,6 +37,8 @@ export class ApiError extends Error {
 // rate limits, downtime).
 const FRIENDLY_STATUS = {
   404: 'The API is not reachable at this address. If this is a hosted build, VITE_API_URL is missing or wrong.',
+  413: 'That was too big to send — try a smaller file or fewer rows at a time.',
+  415: 'That file type is not supported here.',
   429: 'Too many attempts — wait a moment and try again.',
   500: 'The server is having trouble. Try again shortly, or turn on Demo (Mock) mode.',
   502: 'The server cannot be reached. Try again shortly.',
@@ -233,11 +235,14 @@ export const api = {
     }
     const data = await res.json().catch(() => null)
     if (!res.ok) {
-      // 413 from a proxy, or a 502/504 from one that gave up mid-body, both
-      // mean the same thing to whoever is holding the phone.
-      const friendly = [413, 502, 504].includes(res.status)
-        ? 'The image did not get through — it is probably too large. The limit is 5 MB.'
-        : data?.error || FRIENDLY_STATUS[res.status] || `Upload failed (code ${res.status}).`
+      // The API's own message is the most specific thing available — it
+      // knows the file was HEIC, or exactly how far over the limit it was.
+      // A proxy that killed the body sends HTML or nothing, and that is the
+      // only case worth guessing about.
+      const friendly = data?.error
+        || ([413, 502, 504].includes(res.status)
+          ? 'The image did not get through — it is probably too large. The limit is 5 MB.'
+          : FRIENDLY_STATUS[res.status] || `Upload failed (code ${res.status}).`)
       throw new ApiError(res.status, friendly)
     }
     return data

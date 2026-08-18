@@ -777,16 +777,52 @@ except urllib.error.HTTPError as e:
     img_bytes = b""
 check("uploaded image served back intact", img_status == 200 and img_bytes == PNG_1PX)
 
-bad_body, bad_ct = multipart("file", "notes.txt", "text/plain", b"just text, not an image")
-bad_req = urllib.request.Request(BASE + "/api/v1/admin/uploads", data=bad_body, method="POST")
-bad_req.add_header("Content-Type", bad_ct)
-bad_req.add_header("Authorization", f"Bearer {admin_tok}")
-try:
-    with urllib.request.urlopen(bad_req, timeout=15) as resp:
-        bad_status = resp.status
-except urllib.error.HTTPError as e:
-    bad_status = e.code
-check("non-image upload rejected -> 400", bad_status == 400)
+def upload_raw(filename, content_type, payload):
+    """Returns (status, error message) for a multipart upload."""
+    body, ct = multipart("file", filename, content_type, payload)
+    r = urllib.request.Request(BASE + "/api/v1/admin/uploads", data=body, method="POST")
+    r.add_header("Content-Type", ct)
+    r.add_header("Authorization", f"Bearer {admin_tok}")
+    try:
+        with urllib.request.urlopen(r, timeout=20) as resp:
+            return resp.status, ""
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, (json.loads(e.read()) or {}).get("error", "")
+        except json.JSONDecodeError:
+            return e.code, ""
+
+
+# 415, not 400: the request was fine, the file simply is not an image the
+# browser can show — and the message has to say what to do about it.
+bad_status, bad_msg = upload_raw("notes.txt", "text/plain", b"just text, not an image")
+check("non-image upload rejected -> 415", bad_status == 415, f"got {bad_status}")
+check("...and the message says what is accepted", "JPG, PNG, WEBP or GIF" in bad_msg, bad_msg)
+
+# The photo a committee member is most likely to pick first.
+heic_status, heic_msg = upload_raw("photo.heic", "image/heic",
+                                   b"\x00\x00\x00\x18ftypheic" + b"\x00" * 256)
+check("an iPhone HEIC photo is named as such, not 'invalid'",
+      heic_status == 415 and "HEIC" in heic_msg, f"{heic_status} {heic_msg}")
+
+big_status, big_msg = upload_raw("huge.jpg", "image/jpeg",
+                                 b"\xff\xd8\xff\xe0" + b"\x00" * (6 << 20))
+check("an oversized image -> 413 with the limit spelled out",
+      big_status == 413 and "5 MB" in big_msg, f"{big_status} {big_msg}")
+
+# An import past the body cap used to be reported as "the list is empty",
+# which sends the committee looking at the wrong end of the problem.
+fat_rows = [{"name": f"Row {i}", "email": f"fat{i}@natcon.id", "chapter": "Fat",
+             "company": "X" * 3000} for i in range(900)]
+status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok,
+                      body={"members": fat_rows})
+check("an import past the body cap -> 413, not a confusing 400",
+      status == 413 and "smaller batches" in (body or {}).get("error", ""),
+      f"{status} {body}")
+
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok, raw_body=b"")
+check("an empty body says it arrived empty",
+      status == 400 and "empty" in (body or {}).get("error", ""), f"{status} {body}")
 
 status, _, _ = req("PUT", f"/api/v1/admin/seminars/{new_sem_id}", token=admin_tok,
                    body={"slot": 2, "room": "R. E2E", "title": "Uji E2E", "speaker": "Bot",

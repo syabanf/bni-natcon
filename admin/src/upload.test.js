@@ -18,6 +18,7 @@ describe('cover / speaker photo upload', () => {
 
   it('names the real cause when a proxy cuts the body off (413/502/504)', async () => {
     setToken('t')
+    // A proxy that gave up mid-body answers with HTML or nothing at all.
     for (const status of [413, 502, 504]) {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: false, status, json: () => Promise.resolve(null),
@@ -26,6 +27,23 @@ describe('cover / speaker photo upload', () => {
         message: expect.stringContaining('too large'),
       })
     }
+  })
+
+  it('prefers what the API said over its own guess', async () => {
+    setToken('t')
+    // The API knows things the client cannot: that the file was an iPhone
+    // HEIC, and how to turn that off.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 415,
+      json: () => Promise.resolve({
+        error: 'That looks like an iPhone HEIC photo, which browsers cannot display. Accepted: JPG, PNG, WEBP or GIF.',
+      }),
+    })
+    await expect(api.uploadImage(fakeFile(1024))).rejects.toMatchObject({
+      status: 415,
+      message: expect.stringContaining('HEIC'),
+    })
   })
 
   it('passes a normal photo straight through', async () => {

@@ -54,7 +54,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" || req.Password == "" {
-		respondError(w, http.StatusBadRequest, "email and password are required")
+		respondDecodeError(w, err, "email and password are required")
 		return
 	}
 	res, err := s.auth.Login(r.Context(), req.Email, req.Password)
@@ -93,7 +93,7 @@ func (s *Server) handleSelectAccount(w http.ResponseWriter, r *http.Request) {
 		UserID      int64  `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	res, err := s.auth.SelectAccount(r.Context(), req.ChoiceToken, req.UserID)
@@ -111,7 +111,7 @@ func (s *Server) handleSetPassword(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.auth.SetPassword(r.Context(), userIDFrom(r.Context()), req.Password); err != nil {
@@ -129,7 +129,7 @@ func (s *Server) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 		Phone   string `json:"phone"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	found, err := s.auth.ForgotPassword(r.Context(), req.Chapter, req.Phone)
@@ -156,7 +156,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		Password   string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.auth.ResetPassword(r.Context(), req.ResetToken, req.Password); err != nil {
@@ -297,7 +297,7 @@ func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {
 		MemberCode string `json:"member_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberCode == "" {
-		respondError(w, http.StatusBadRequest, "member code is required")
+		respondDecodeError(w, err, "member code is required")
 		return
 	}
 	result, err := s.scan.Scan(r.Context(), userIDFrom(r.Context()), req.MemberCode)
@@ -392,7 +392,7 @@ func (s *Server) handleVisitorNote(w http.ResponseWriter, r *http.Request) {
 		Note string `json:"note"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.booth.SetVisitorNote(r.Context(), userIDFrom(r.Context()), memberID, req.Note); err != nil {

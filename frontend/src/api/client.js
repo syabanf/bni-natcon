@@ -29,6 +29,8 @@ export class ApiError extends Error {
 // rate limits, downtime).
 const FRIENDLY_STATUS = {
   404: 'The API is not reachable at this address. If this is a hosted build, VITE_API_URL is missing or wrong.',
+  413: 'That was too big to send — try a smaller file or fewer rows at a time.',
+  415: 'That file type is not supported here.',
   429: 'Too many attempts — wait a moment and try again.',
   500: 'The server is having trouble. Try again shortly, or switch to Demo (Mock) mode.',
   502: 'The server cannot be reached. Try again shortly.',

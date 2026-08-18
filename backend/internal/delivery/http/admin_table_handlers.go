@@ -34,7 +34,7 @@ func (s *Server) handleAdminGenerateTables(w http.ResponseWriter, r *http.Reques
 		Capacity int    `json:"capacity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if req.Capacity == 0 {
@@ -62,7 +62,7 @@ func (s *Server) handleAdminUpdateTable(w http.ResponseWriter, r *http.Request) 
 		Capacity int    `json:"capacity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.admin.UpdateTable(r.Context(), id, req.Hall, req.Capacity); err != nil {

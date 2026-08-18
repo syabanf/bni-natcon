@@ -47,7 +47,7 @@ func (s *Server) handleNetworkingCheckIn(w http.ResponseWriter, r *http.Request)
 		TableNo int `json:"table_no"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.TableNo <= 0 {
-		respondError(w, http.StatusBadRequest, "table number is required")
+		respondDecodeError(w, err, "table number is required")
 		return
 	}
 	if err := s.networking.CheckIn(r.Context(), userIDFrom(r.Context()), req.TableNo); err != nil {
@@ -62,7 +62,7 @@ func (s *Server) handleNetworkingSaveContact(w http.ResponseWriter, r *http.Requ
 		MemberID int64 `json:"member_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MemberID <= 0 {
-		respondError(w, http.StatusBadRequest, "unknown contact")
+		respondDecodeError(w, err, "unknown contact")
 		return
 	}
 	if err := s.networking.SaveContact(r.Context(), userIDFrom(r.Context()), req.MemberID); err != nil {
@@ -154,7 +154,7 @@ func (s *Server) handleNetworkingContactNote(w http.ResponseWriter, r *http.Requ
 		Note string `json:"note"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.networking.SetContactNote(r.Context(), userIDFrom(r.Context()), id, req.Note); err != nil {

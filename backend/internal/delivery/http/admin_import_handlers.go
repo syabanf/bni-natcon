@@ -31,7 +31,7 @@ func (s *Server) handleAdminBulkMembers(w http.ResponseWriter, r *http.Request) 
 		} `json:"members"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Members) == 0 {
-		respondError(w, http.StatusBadRequest, "member list is empty — check the import file")
+		respondDecodeError(w, err, "member list is empty — check the import file")
 		return
 	}
 	if len(req.Members) > maxImportRows {
@@ -70,7 +70,7 @@ func (s *Server) handleAdminBulkTenants(w http.ResponseWriter, r *http.Request) 
 		} `json:"tenants"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Tenants) == 0 {
-		respondError(w, http.StatusBadRequest, "tenant list is empty — check the import file")
+		respondDecodeError(w, err, "tenant list is empty — check the import file")
 		return
 	}
 	if len(req.Tenants) > maxImportRows {
@@ -145,7 +145,7 @@ func (s *Server) handleAdminBulkRegistrations(w http.ResponseWriter, r *http.Req
 		} `json:"registrations"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || len(req.Registrations) == 0 {
-		respondError(w, http.StatusBadRequest, "registration list is empty — check the import file")
+		respondDecodeError(w, err, "registration list is empty — check the import file")
 		return
 	}
 	if len(req.Registrations) > maxImportRows {

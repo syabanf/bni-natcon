@@ -23,7 +23,7 @@ func (s *Server) handleAdminCreateChapter(w http.ResponseWriter, r *http.Request
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	c, err := s.admin.CreateChapter(r.Context(), req.Name)
@@ -46,7 +46,7 @@ func (s *Server) handleAdminRenameChapter(w http.ResponseWriter, r *http.Request
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.admin.RenameChapter(r.Context(), id, req.Name); err != nil {

@@ -1,12 +1,15 @@
 package http
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Image uploads (seminar covers) are stored on the local filesystem under
@@ -23,7 +26,14 @@ var imageExts = map[string]string{
 
 func (s *Server) handleAdminUpload(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
-		respondError(w, http.StatusBadRequest, "file is too large — maximum 5 MB")
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) || strings.Contains(err.Error(), "too large") {
+			respondError(w, http.StatusRequestEntityTooLarge,
+				"that image is larger than 5 MB — resize it, or export it at a smaller quality")
+			return
+		}
+		respondError(w, http.StatusBadRequest,
+			"the upload could not be read — send the image as the \"file\" field of a form")
 		return
 	}
 	file, _, err := r.FormFile("file")
@@ -36,9 +46,10 @@ func (s *Server) handleAdminUpload(w http.ResponseWriter, r *http.Request) {
 	// Sniff the real content type; the client-declared one is untrusted.
 	head := make([]byte, 512)
 	n, _ := io.ReadFull(file, head)
-	ext, ok := imageExts[http.DetectContentType(head[:n])]
+	sniffed := http.DetectContentType(head[:n])
+	ext, ok := imageExts[sniffed]
 	if !ok {
-		respondError(w, http.StatusBadRequest, "only JPG, PNG, WEBP, or GIF images are accepted")
+		respondError(w, http.StatusUnsupportedMediaType, unsupportedImageMessage(head[:n], sniffed))
 		return
 	}
 
@@ -74,4 +85,38 @@ func (s *Server) handleAdminUpload(w http.ResponseWriter, r *http.Request) {
 // FileServer over the flat directory is safe.
 func (s *Server) uploadsHandler() http.Handler {
 	return http.StripPrefix("/uploads/", http.FileServer(http.Dir(s.uploadDir)))
+}
+
+// unsupportedImageMessage names what actually arrived. "Only JPG, PNG, WEBP
+// or GIF" is true but unhelpful to someone who just picked a photo off an
+// iPhone and has no idea it is HEIC, or who grabbed the wrong file entirely.
+func unsupportedImageMessage(head []byte, sniffed string) string {
+	const accepted = "Accepted: JPG, PNG, WEBP or GIF."
+	switch {
+	case isHEIC(head):
+		return "That looks like an iPhone HEIC photo, which browsers cannot display. " +
+			"In Settings › Camera › Formats pick \"Most Compatible\", or share the photo " +
+			"to yourself first — it converts to JPG. " + accepted
+	case strings.HasPrefix(sniffed, "application/pdf"):
+		return "That is a PDF, not an image. " + accepted
+	case strings.HasPrefix(sniffed, "text/"), strings.Contains(sniffed, "spreadsheet"),
+		strings.Contains(sniffed, "zip"):
+		return "That is a document, not an image. " + accepted
+	case strings.HasPrefix(sniffed, "video/"):
+		return "That is a video, not an image. " + accepted
+	}
+	return "That file is not an image the browser can show. " + accepted
+}
+
+// isHEIC checks the ISO base-media brand, which http.DetectContentType does
+// not know: bytes 4..8 are "ftyp", then a brand like heic/heif/hevc/mif1.
+func isHEIC(head []byte) bool {
+	if len(head) < 12 || !bytes.Equal(head[4:8], []byte("ftyp")) {
+		return false
+	}
+	switch string(head[8:12]) {
+	case "heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs", "mif1", "msf1":
+		return true
+	}
+	return false
 }

@@ -83,7 +83,7 @@ func (s *Server) handleAdminSeminarCheckin(w http.ResponseWriter, r *http.Reques
 		MemberCode string `json:"member_code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	res, err := s.admin.SeminarCheckin(r.Context(), id, req.MemberCode)
@@ -103,7 +103,7 @@ func (s *Server) handleAdminSeminarCheckin(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request) {
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	user, err := s.admin.CreateMember(r.Context(), usecase.MemberInput{
@@ -125,7 +125,7 @@ func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request)
 	}
 	var req memberPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	err := s.admin.UpdateMember(r.Context(), id, domain.MemberUpdate{
@@ -170,7 +170,7 @@ type tenantPayload struct {
 func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request) {
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	tenant, err := s.admin.CreateTenant(r.Context(), usecase.TenantInput{
@@ -200,7 +200,7 @@ func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request)
 	}
 	var req tenantPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	err := s.admin.UpdateTenant(r.Context(), id, domain.TenantUpdate{
@@ -271,7 +271,7 @@ func (p seminarPayload) toInput() domain.SeminarInput {
 func (s *Server) handleAdminCreateSeminar(w http.ResponseWriter, r *http.Request) {
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	sem, err := s.admin.CreateSeminar(r.Context(), req.toInput())
@@ -296,7 +296,7 @@ func (s *Server) handleAdminUpdateSeminar(w http.ResponseWriter, r *http.Request
 	}
 	var req seminarPayload
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	if err := s.admin.UpdateSeminar(r.Context(), id, req.toInput()); err != nil {
@@ -320,7 +320,7 @@ func (s *Server) handleAdminSetSeminarQuota(w http.ResponseWriter, r *http.Reque
 		Capacity *int `json:"capacity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	quota := req.Quota
@@ -371,7 +371,7 @@ func (s *Server) handleAdminRegisterSeminarMember(w http.ResponseWriter, r *http
 		Member string `json:"member"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid data format")
+		respondDecodeError(w, err, "invalid data format")
 		return
 	}
 	res, err := s.admin.RegisterSeminarMember(r.Context(), id, req.Member)

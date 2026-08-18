@@ -3,6 +3,8 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -45,4 +47,39 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		respondError(w, http.StatusInternalServerError,
 			"something went wrong on our side — please try again shortly")
 	}
+}
+
+// respondDecodeError answers a request whose body could not be read.
+//
+// Two of these failures have a cause the client cannot guess from a generic
+// "invalid data": a body past the size cap, and an empty one. Both used to
+// arrive as whatever the handler's fallback said — a 5 MB import was
+// reported as "the list is empty", which sends the committee looking at the
+// wrong end of the problem. Everything else keeps the handler's own message,
+// which is more specific than anything this function could invent.
+func respondDecodeError(w http.ResponseWriter, err error, fallback string) {
+	var tooLarge *http.MaxBytesError
+	switch {
+	case errors.As(err, &tooLarge):
+		respondError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf(
+			"that request is larger than the %s limit — import it in smaller batches",
+			humanBytes(tooLarge.Limit)))
+	case errors.Is(err, io.EOF):
+		respondError(w, http.StatusBadRequest, "the request arrived empty — nothing was sent")
+	default:
+		respondError(w, http.StatusBadRequest, fallback)
+	}
+}
+
+// humanBytes renders a byte cap the way the person reading the message thinks
+// about it: "2 MB", not "2097152".
+func humanBytes(n int64) string {
+	const mb = 1 << 20
+	if n >= mb && n%mb == 0 {
+		return fmt.Sprintf("%d MB", n/mb)
+	}
+	if n >= mb {
+		return fmt.Sprintf("%.1f MB", float64(n)/mb)
+	}
+	return fmt.Sprintf("%d KB", n/1024)
 }
