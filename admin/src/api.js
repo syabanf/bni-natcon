@@ -218,7 +218,9 @@ export const api = {
     // Scale the picture down before it goes anywhere. The upload is the slow
     // part — the server answers in ~10 ms — and a cover is never displayed
     // anywhere near the size a phone camera produces.
+    const startedAt = Date.now()
     const file = await shrinkForUpload(original)
+    const shrankAt = Date.now()
     // Only then complain about size: a 6 MB photo usually comes out well
     // under the limit, so refusing it up front would be wrong.
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -238,6 +240,13 @@ export const api = {
     } catch {
       throw new ApiError(0, 'Cannot reach the server — check your connection, or turn on Demo (Mock) mode.')
     }
+    // One line per upload, so a slow upload can be explained instead of
+    // guessed at: it says whether the time went into the picture or the wire.
+    const kb = (n) => `${Math.round(n / 1024)} KB`
+    console.info(
+      `[upload] ${kb(original.size)} → ${kb(file.size)} in ${shrankAt - startedAt} ms, ` +
+      `sent in ${Date.now() - shrankAt} ms`)
+
     const data = await res.json().catch(() => null)
     if (!res.ok) {
       // The API's own message is the most specific thing available — it
