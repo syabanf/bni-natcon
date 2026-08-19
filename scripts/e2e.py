@@ -271,7 +271,24 @@ section("Rundown — the day in one-hour blocks")
 
 D, TZ = "2026-09-03", "+07:00"
 status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
-check("a fresh database has no schedule yet", status == 200 and body["rundown"] == [])
+draft = body["rundown"]
+check("a fresh database opens on a draft day, not an empty page",
+      status == 200 and len(draft) == 9
+      and draft[0]["kind"] == "registration"
+      and draft[0]["starts_at"] == f"{D}T07:00:00{TZ}"
+      and draft[-1]["kind"] == "doorprize", f"{status} {[b.get('title') for b in draft]}")
+# Two learning blocks, or "two classes that do not clash" can never happen.
+check("the draft leaves room for two learning classes",
+      sum(1 for b in draft if b["kind"] == "learning") == 2)
+check("...and every block sits on the hour grid",
+      all(b["starts_at"][14:19] == "00:00" and b["ends_at"][14:19] == "00:00" for b in draft))
+
+# The rest of this section builds its own day from scratch, the way a
+# committee that has thrown the draft away would.
+for b in draft:
+    req("DELETE", f"/api/v1/admin/rundown/{b['id']}", token=admin_tok)
+status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
+check("the committee can clear the draft away", body["rundown"] == [])
 
 status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
                       body={"starts_at": f"{D}T09:00:00{TZ}", "ends_at": f"{D}T10:00:00{TZ}",

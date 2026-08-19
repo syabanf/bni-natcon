@@ -89,6 +89,13 @@ away.
 **A fresh database holds the event's own master data and nothing invented:**
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
+- **A draft rundown for 3 September** (migration `0024`): nine one-hour
+  blocks from registration to the closing draw, including **two learning
+  blocks** — an attendee may hold two classes only if the day has two hours
+  to hold them in. Written only into an empty schedule, so a committee that
+  has typed their own day keeps it and a deleted block never returns. The
+  hours come from the ticket window and the shape of the programme; the
+  Rundown page is where they get corrected.
 - **The 4 learning classes with their 9 speakers and moderators**, from the
   Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.

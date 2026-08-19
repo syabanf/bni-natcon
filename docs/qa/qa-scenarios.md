@@ -184,7 +184,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | OPS-15 | P2 | After OPS-14 | Draw again. | The previous winner is not drawn a second time. |
 | OPS-16 | P2 | Admin | Delete an attendee who has scans and a class registration. | Deleted after the confirmation, and their scans and registration go with them; counts on the dashboard drop accordingly. |
 | OPS-24 | P2 | Lucky Draw | Press Stage mode, then Space, then Esc. | Space draws one winner (never two, however fast you press). Esc returns to the panel and the page is where you left it. |
-| OPS-25 | P1 | Admin · Rundown, empty | Add a block: 09:00, 1 hour, Plenary, 'Opening Ceremony', Grand Ballroom. | It appears in the table as 09:00 – 10:00 · 1 hour · Plenary. The attendee app's Today's agenda shows it without a redeploy. |
+| OPS-25 | P1 | Admin · Rundown, fresh database | Open the page before touching anything, then add a block: 09:00, 1 hour, Plenary, 'Opening Ceremony', Grand Ballroom. | The day already carries nine draft blocks, registration first and the draw last, two of them Learning Class. The new block appears as 09:00 – 10:00 · 1 hour · Plenary, and the attendee app's agenda shows it without a redeploy. |
 | OPS-26 | P1 | Admin · Rundown | Try to add a block starting at 13:30, and one that is 90 minutes long. | Both refused: blocks start on the hour and run in whole hours. |
 | OPS-27 | P2 | Admin · Rundown with two blocks at the same time | Look at the table. | Both overlapping rows are tinted and marked 'overlaps another block'. |
 | OPS-28 | P1 | Admin · Rundown | Delete a block that has a learning class in it. | The block goes, the class stays — it simply has no time until you give it a new block. |
@@ -201,6 +201,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | OPS-39 | P1 | A lucky draw winner exists | Switch to the Doorprize tab. | It has its own (empty) winners list, and the lucky draw's winner is not in its pool — nobody takes two prizes. |
 | OPS-40 | P2 | Admin · a draw whose pool is empty | Press draw. | Refused with 'nobody left to draw — everyone eligible has already won', not a silent failure. |
 | OPS-41 | P2 | Admin · Lucky Draw with winners | Press Clear winners and confirm. | The list empties and everyone returns to the pool — for a rehearsal, or a ceremony that restarts. |
+| OPS-42 | P1 | Admin · Rundown, draft blocks untouched | Delete a draft block, then restart the API (or ask for a redeploy). | It stays deleted. The draft is only ever written into an empty schedule. |
+| OPS-43 | P1 | Admin · Rundown with two learning blocks | Put two classes in the 13:00 block and two in the 14:00 block, from the Learning Classes page. | Each class shows its hour. An attendee can then hold one from each block, but never two from the same one. |
 
 ## Reports & export
 
@@ -279,6 +281,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Booth sign-in | http://localhost:5173/tenant/login | The door given to booth and sponsor crews |
 | Attendee QR payload | their ticket number, e.g. 16C6C-23BBA1745 | What the pass QR carries. The member code under it still scans. |
 | Unknown ticket number | 16C6C-NOSUCHTICKET | For the not-found cases at any scanner |
+| Rundown | 9 draft blocks on 3 Sep, 07:00 → 18:00 | Seeded only when the schedule is empty; two of them are Learning Class blocks |
 
 ## Coverage
 
@@ -288,8 +291,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Attendee | 27 | 18 |
 | Booth scanner | 17 | 11 |
 | Admin master data | 40 | 33 |
-| Admin operations | 34 | 22 |
+| Admin operations | 36 | 24 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 11 | 3 |
 | Door crew app | 10 | 9 |
-| **Total** | **173** | **118** |
+| **Total** | **175** | **120** |
