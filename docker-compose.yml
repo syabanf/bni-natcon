@@ -55,6 +55,14 @@ services:
     ports:
       - "${ADMIN_PORT:-8089}:80"
 
+  door:
+    build: ./door
+    container_name: natcon-door
+    depends_on:
+      - api
+    ports:
+      - "${DOOR_PORT:-8087}:80"
+
 volumes:
   natcon-pgdata:
   natcon-uploads:

@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [frontend, admin]
+        app: [frontend, admin, door]
     defaults:
       run:
         working-directory: ${{ matrix.app }}

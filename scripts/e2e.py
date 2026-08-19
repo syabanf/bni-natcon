@@ -965,6 +965,38 @@ for sem in classes:
 status, _, _ = req("POST", f"/api/v1/seminars/{sem2}/register", token=member_tok)
 check("the attendee is back on their original class", status == 201)
 
+# ---- the door crew's own account (MoM 19 Aug 2026)
+section("Door accounts do one job")
+
+status, body = login("door@natcon.id")
+check("a fresh database has a door account", status == 200 and body["user"]["role"] == "door")
+door_tok = body["token"]
+
+# What the door crew is for.
+status, _, _ = req("GET", "/api/v1/admin/seminars", token=door_tok)
+check("the door crew can list the classes", status == 200)
+status, body, _ = req("GET", "/api/v1/admin/redeem/counts", token=door_tok)
+check("...and see what has been handed over", status == 200 and "goodiebags" in body)
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=door_tok,
+                      body={"member_code": "agus@natcon.id", "item": "goodiebag"})
+check("...and hand over a goodiebag", status == 200, f"{status} {body}")
+
+# Everything else is the committee's, which is the reason this account exists.
+for label, method, path in [
+    ("the attendee list", "GET", "/api/v1/admin/members"),
+    ("booth master data", "GET", "/api/v1/admin/tenants"),
+    ("the draws", "GET", "/api/v1/admin/draws"),
+    ("drawing a winner", "POST", "/api/v1/admin/draws/lucky/pick"),
+    ("the rundown editor", "POST", "/api/v1/admin/rundown"),
+    ("the dashboard", "GET", "/api/v1/admin/overview"),
+    ("who is seated", "GET", "/api/v1/admin/tables/seats"),
+]:
+    status, _, _ = req(method, path, token=door_tok, body={} if method == "POST" else None)
+    check(f"a door account cannot reach {label}", status == 403, f"got {status}")
+
+status, _, _ = req("GET", "/api/v1/admin/seminars", token=member_tok)
+check("an attendee still cannot list the classes as staff", status == 403)
+
 # ---- the two draws (MoM 19 Aug 2026)
 section("Lucky Draw and Doorprize")
 

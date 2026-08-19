@@ -3,7 +3,6 @@ import { api, getToken, setToken, clearToken, isMockMode } from './api'
 import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
-import DoorCheckin from './DoorCheckin'
 import LuckyDraw from './LuckyDraw'
 import Rundown from './Rundown'
 import Chapters from './Chapters'
@@ -17,7 +16,6 @@ const MENU = [
   { key: 'chapters', label: 'Chapters', icon: '⬡' },
   { key: 'seminars', label: 'Learning Class', icon: '◈' },
   { key: 'tables', label: 'Tables', icon: '◍' },
-  { key: 'door', label: 'Door Check-in', icon: '▣' },
   { key: 'qr', label: 'QR Prints', icon: '⧉' },
   { key: 'rundown', label: 'Rundown', icon: '◷' },
   { key: 'draw', label: 'Lucky Draw', icon: '✦' },
@@ -183,7 +181,6 @@ function Shell({ onLogout }) {
         {view === 'chapters' && <Chapters onUnauthorized={onLogout} />}
         {view === 'seminars' && <SeminarsPage />}
         {view === 'tables' && <Tables onUnauthorized={onLogout} />}
-        {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
         {view === 'qr' && <QRPrints onUnauthorized={onLogout} />}
         {view === 'rundown' && <Rundown onUnauthorized={onLogout} />}
         {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}

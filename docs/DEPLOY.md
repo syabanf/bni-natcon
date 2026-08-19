@@ -19,6 +19,7 @@ docker compose up -d --build
 | -------- | ------------------- |
 | Frontend | 8088                |
 | Admin    | 8089                |
+| Door     | 8087                |
 | API      | 8090                |
 | Postgres | 5432                |
 

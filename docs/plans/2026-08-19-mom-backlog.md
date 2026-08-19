@@ -4,7 +4,7 @@
 menghalangi orang lain dikerjakan duluan (model waktu → sesi → validasi), dan
 yang berdiri sendiri bisa jalan kapan saja.
 
-Status: **fondasi jadwal selesai** (19 Agustus). Sisanya belum dikerjakan.
+Status: **17 dari 17 poin selesai** (19 Agustus).
 
 ---
 
@@ -71,7 +71,7 @@ dipakai.
 | # | Poin MoM | Catatan | Perkiraan |
 | --- | --- | --- | --- |
 | 16 | ~~**Poster portrait untuk learning class**~~ | **SELESAI** — dua gambar: banner landscape di daftar, poster portrait utuh di halaman detail | ✓ |
-| 17 | **Door Check-in jadi aplikasi sendiri** | sekarang satu halaman di admin ([`DoorCheckin.jsx`](../../admin/src/DoorCheckin.jsx), 211 baris). Jadi aplikasi terpisah artinya: app Vite ketiga, login sendiri (role baru `door`), build & deploy sendiri, plus masuk ke docker compose dan CI | 1–2 hari |
+| 17 | ~~**Door Check-in jadi aplikasi sendiri**~~ | **SELESAI** — app `door/` (port 5175), role `door` + akun `door@natcon.id`, masuk docker compose (port 8087) dan CI; halamannya dicabut dari admin | ✓ |
 
 ---
 

@@ -61,6 +61,11 @@ dropping in new artwork.
   and an *Accelerate* splash, and the service worker is skipped on native so
   a stale cache can never outlive an install. Signing keys stay out of the
   repo. Full guide: [`docs/ANDROID.md`](docs/ANDROID.md).
+- **Door crew** (`door/`, port 5175): the app on a learning class door —
+  class attendance, goodiebags and pins, each scanned once per attendee, and
+  nothing else. It is a separate app because the crew working a door should
+  not be handed the committee's login, which also opens the attendee list,
+  the master data and the draws. Signs in as `door@natcon.id`.
 - **Admin** (`admin/`, port 5174): committee panel — React 18 + Vite (JS) with sidebar navigation. Live dashboard (overview, booth ranking, class fill, activity feed), master-data CRUD in modal popups, **Excel import** for attendees/tenants (SheetJS, flexible headers, create-or-update, with a **Download format** button that generates a ready-to-fill template), and three report pages (Tenant Leads, Class Registrations, Attendee Pins) — each with flat SVG-style charts (scans per booth/hour, seat fill, pin distribution) and its own Excel export.
 
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)

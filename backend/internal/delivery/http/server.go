@@ -143,17 +143,27 @@ func (s *Server) Router() http.Handler {
 				r.Put("/booth/visitors/{memberID}/note", s.handleVisitorNote)
 			})
 
+			// The class door: attendance, goodiebags and pins. The committee
+			// does this too, but a door account can do nothing else — which
+			// is the point of giving the crew their own login.
+			r.Group(func(r chi.Router) {
+				r.Use(requireAnyRole(domain.RoleAdmin, domain.RoleDoor))
+				r.Get("/admin/seminars", s.handleAdminSeminars)
+				r.Get("/admin/seminars/{id}", s.handleAdminSeminarDetail)
+				r.Post("/admin/seminars/{id}/checkin", s.handleAdminSeminarCheckin)
+				r.Post("/admin/redeem", s.handleRedeem)
+				r.Get("/admin/redeem/counts", s.handleRedeemCounts)
+			})
+
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(domain.RoleAdmin))
 				r.Get("/admin/overview", s.handleAdminOverview)
 				r.Get("/admin/tenants", s.handleAdminTenants)
-				r.Get("/admin/seminars", s.handleAdminSeminars)
 				r.Get("/admin/activity", s.handleAdminActivity)
 
 				r.Get("/admin/members", s.handleAdminListMembers)
 				r.Get("/admin/members/{id}", s.handleAdminMemberDetail)
 				r.Get("/admin/tenants/{id}", s.handleAdminTenantDetail)
-				r.Get("/admin/seminars/{id}", s.handleAdminSeminarDetail)
 				r.Post("/admin/members", s.handleAdminCreateMember)
 				r.Put("/admin/members/{id}", s.handleAdminUpdateMember)
 				r.Delete("/admin/members/{id}", s.handleAdminDeleteMember)
@@ -162,7 +172,6 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/tenants/{id}", s.handleAdminUpdateTenant)
 				r.Delete("/admin/tenants/{id}", s.handleAdminDeleteTenant)
 
-				r.Post("/admin/seminars/{id}/checkin", s.handleAdminSeminarCheckin)
 				r.Post("/admin/seminars/{id}/registrations", s.handleAdminRegisterSeminarMember)
 				r.Delete("/admin/seminars/{id}/registrations/{code}", s.handleAdminUnregisterSeminarMember)
 				r.Post("/admin/seminars/registrations/bulk", s.handleAdminBulkRegistrations)
@@ -172,8 +181,6 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 
 				// The desk that hands over pins and goodiebags, by scan.
-				r.Post("/admin/redeem", s.handleRedeem)
-				r.Get("/admin/redeem/counts", s.handleRedeemCounts)
 
 				// The event schedule in one-hour blocks.
 				r.Get("/admin/rundown", s.handleListRundown)

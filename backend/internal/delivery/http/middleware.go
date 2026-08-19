@@ -44,6 +44,24 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// requireAnyRole guards work that more than one kind of account does. The
+// door crew and the committee share the class door, the goodiebag table and
+// the pin desk; everything else in /admin stays committee-only.
+func requireAnyRole(roles ...domain.Role) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			have := roleFrom(r.Context())
+			for _, want := range roles {
+				if have == want {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			respondError(w, http.StatusForbidden, "this account does not have access to that feature")
+		})
+	}
+}
+
 func requireRole(role domain.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,9 @@ const (
 	RoleMember Role = "member"
 	RoleTenant Role = "tenant"
 	RoleAdmin  Role = "admin"
+	// The crew on a learning class door: attendance, goodiebags and pins,
+	// and nothing else (MoM 19 Aug 2026).
+	RoleDoor Role = "door"
 )
 
 type User struct {
