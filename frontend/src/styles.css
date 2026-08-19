@@ -691,6 +691,18 @@ input {
 .agenda-strip {
   margin: 0 20px;
 }
+.agenda-day {
+  padding: 12px 16px 2px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.agenda-day + .agenda-item {
+  border-top: 0;
+}
+
 .agenda-item {
   display: flex;
   gap: 12px;

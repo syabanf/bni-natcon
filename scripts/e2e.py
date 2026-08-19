@@ -273,15 +273,27 @@ D, TZ = "2026-09-03", "+07:00"
 status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
 draft = body["rundown"]
 check("a fresh database opens on a draft day, not an empty page",
-      status == 200 and len(draft) == 9
+      status == 200 and len(draft) == 10
       and draft[0]["kind"] == "registration"
       and draft[0]["starts_at"] == f"{D}T07:00:00{TZ}"
-      and draft[-1]["kind"] == "doorprize", f"{status} {[b.get('title') for b in draft]}")
+      and [b for b in draft if b["starts_at"].startswith(D)][-1]["kind"] == "doorprize",
+      f"{status} {[b.get('title') for b in draft]}")
 # Two learning blocks, or "two classes that do not clash" can never happen.
 check("the draft leaves room for two learning classes",
       sum(1 for b in draft if b["kind"] == "learning") == 2)
 check("...and every block sits on the hour grid",
       all(b["starts_at"][14:19] == "00:00" and b["ends_at"][14:19] == "00:00" for b in draft))
+
+# 66 tickets are for the morning after, not the conference day. A schedule
+# that could only hold one date had nowhere to put them.
+breakfast = [b for b in draft if b["starts_at"].startswith("2026-09-04")]
+check("the Gold Club breakfast sits on its own day",
+      len(breakfast) == 1 and breakfast[0]["starts_at"] == f"2026-09-04T08:00:00{TZ}"
+      and breakfast[0]["ends_at"] == f"2026-09-04T11:00:00{TZ}", f"{breakfast}")
+check("...and says who it is for, because the agenda is one list for everybody",
+      "Gold Club" in breakfast[0]["title"] and "Gold Club" in breakfast[0]["place"])
+check("the draft runs in the order the days do",
+      [b["starts_at"] for b in draft] == sorted(b["starts_at"] for b in draft))
 
 # The rest of this section builds its own day from scratch, the way a
 # committee that has thrown the draft away would.
@@ -320,6 +332,19 @@ for label, payload in [
 ]:
     status, _, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok, body=payload)
     check(f"rejected: {label} -> 400", status == 400)
+
+status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
+                      body={"starts_at": "2026-09-04T08:00:00+07:00",
+                            "ends_at": "2026-09-04T11:00:00+07:00",
+                            "title": "Gold Club Breakfast", "kind": "break"})
+check("a block on the day after -> 201", status == 201, f"{status} {body}")
+second_day_id = body["block"]["id"]
+status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
+check("the second day comes back last, not first",
+      status == 200 and len(body["rundown"]) == 3
+      and body["rundown"][-1]["starts_at"] == "2026-09-04T08:00:00+07:00",
+      f'{[b["starts_at"] for b in body["rundown"]]}')
+req("DELETE", f"/api/v1/admin/rundown/{second_day_id}", token=admin_tok)
 
 status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
 check("attendees read the same schedule", status == 200 and len(body["rundown"]) == 2)

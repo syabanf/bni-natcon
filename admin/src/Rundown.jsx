@@ -11,10 +11,14 @@ import Modal from './Modal'
  * hours here rather than in three different screens.
  */
 
-// The event's own day. Blocks are stored with a timezone, but the committee
-// thinks in local Jakarta hours, so the form works in whole hours on one date.
+// Blocks are stored with a timezone, but the committee thinks in local
+// Jakarta hours, so the form works in whole hours on a date they pick. The
+// conference is one day, but not everything is on it: the Gold Club breakfast
+// is the morning after, and a schedule that could only hold 3 September had
+// nowhere to put it.
 export const EVENT_DATE = '2026-09-03'
 export const EVENT_TZ = '+07:00'
+export const EVENT_DATES = ['2026-09-03', '2026-09-04']
 
 export const KINDS = [
   { key: 'registration', label: 'Registration' },
@@ -29,14 +33,39 @@ const HOURS = Array.from({ length: 18 }, (_, i) => i + 6) // 06:00 – 23:00
 
 export const hhmm = (iso) => (iso || '').slice(11, 16)
 export const hourOf = (iso) => parseInt(hhmm(iso).slice(0, 2), 10)
+export const dateOf = (iso) => (iso || '').slice(0, 10)
 
-// The form speaks hours; the API speaks timestamps.
-export const toIso = (hour) =>
-  `${EVENT_DATE}T${String(hour).padStart(2, '0')}:00:00${EVENT_TZ}`
+// The form speaks a date and whole hours; the API speaks timestamps.
+export const toIso = (date, hour) =>
+  `${date}T${String(hour).padStart(2, '0')}:00:00${EVENT_TZ}`
 
 export function blockLength(block) {
-  const hours = hourOf(block.ends_at) - hourOf(block.starts_at)
+  // Measured, not subtracted: a block can end on the next date.
+  const hours = Math.round(
+    (new Date(block.ends_at) - new Date(block.starts_at)) / 3_600_000,
+  )
   return hours === 1 ? '1 hour' : `${hours} hours`
+}
+
+// Thursday 3 September — the committee reads dates, not ISO strings.
+export function dayLabel(date) {
+  const d = new Date(`${date}T00:00:00${EVENT_TZ}`)
+  if (Number.isNaN(d.getTime())) return date
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta',
+  })
+}
+
+// One heading per date, in the order the days run.
+export function groupByDay(rows) {
+  const days = []
+  for (const b of [...rows].sort((a, z) => a.starts_at.localeCompare(z.starts_at))) {
+    const date = dateOf(b.starts_at)
+    const last = days[days.length - 1]
+    if (last && last.date === date) last.blocks.push(b)
+    else days.push({ date, blocks: [b] })
+  }
+  return days
 }
 
 // Two blocks of the same kind at the same time is usually a typo, and it is
@@ -55,7 +84,7 @@ export function overlapping(blocks) {
   return clashes
 }
 
-const emptyForm = { hour: 9, hours: 1, title: '', place: '', kind: 'plenary' }
+const emptyForm = { date: EVENT_DATE, hour: 9, hours: 1, title: '', place: '', kind: 'plenary' }
 
 export default function Rundown({ onUnauthorized }) {
   const [rows, setRows] = useState(null)
@@ -75,14 +104,19 @@ export default function Rundown({ onUnauthorized }) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const clashes = useMemo(() => overlapping(rows || []), [rows])
+  const days = useMemo(() => groupByDay(rows || []), [rows])
 
   const submit = async (e) => {
     e.preventDefault()
     setBusy(true)
     setError('')
+    // A block that runs past midnight lands on the next date, which the
+    // Date arithmetic handles and string concatenation would not.
+    const startsAt = new Date(toIso(form.date, form.hour))
+    const endsAt = new Date(startsAt.getTime() + Number(form.hours) * 3_600_000)
     const body = {
-      starts_at: toIso(form.hour),
-      ends_at: toIso(form.hour + Number(form.hours)),
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
       title: form.title,
       place: form.place,
       kind: form.kind,
@@ -147,8 +181,11 @@ export default function Rundown({ onUnauthorized }) {
         </div>
       )}
 
-      {rows && rows.length > 0 && (
-        <div className="table-scroll">
+      {rows && rows.length > 0 && days.map((day) => (
+        <div className="table-scroll" key={day.date}>
+          {/* The conference is one day, but the Gold Club breakfast is the
+              morning after — so the day is named rather than assumed. */}
+          <div className="day-head">{dayLabel(day.date)}</div>
           <table className="md-table">
             <thead>
               <tr>
@@ -160,7 +197,7 @@ export default function Rundown({ onUnauthorized }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((b) => (
+              {day.blocks.map((b) => (
                 <tr key={b.id} className={clashes.has(b.id) ? 'row-warn' : ''}>
                   <td className="mono">
                     {hhmm(b.starts_at)} – {hhmm(b.ends_at)}
@@ -182,8 +219,11 @@ export default function Rundown({ onUnauthorized }) {
                       onClick={() =>
                         setForm({
                           id: b.id,
+                          date: dateOf(b.starts_at),
                           hour: hourOf(b.starts_at),
-                          hours: hourOf(b.ends_at) - hourOf(b.starts_at),
+                          hours: Math.round(
+                            (new Date(b.ends_at) - new Date(b.starts_at)) / 3_600_000,
+                          ),
                           title: b.title,
                           place: b.place,
                           kind: b.kind,
@@ -201,11 +241,25 @@ export default function Rundown({ onUnauthorized }) {
             </tbody>
           </table>
         </div>
-      )}
+      ))}
 
       {form && (
         <Modal title={form.id ? 'Edit Block' : 'Add Block'} onClose={() => setForm(null)}>
           <form className="modal-form" onSubmit={submit}>
+            <label className="md-field">
+              <span>Day</span>
+              <select
+                className="door-select"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              >
+                {EVENT_DATES.map((d) => (
+                  <option key={d} value={d}>
+                    {dayLabel(d)}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="md-field">
               <span>Starts at</span>
               <select

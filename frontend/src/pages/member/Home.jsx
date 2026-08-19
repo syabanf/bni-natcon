@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
+import { dayLabel, groupByDay, timeOf } from '../../agenda'
 import { scanCode } from '../../pass'
 import { useAuthStore } from '../../store/auth'
 
 // The agenda is the committee's rundown, read live from the API — it used to
-// be this list, baked into the bundle, which meant a change to the day's
-// timing needed a redeploy (MoM 19 Aug 2026).
-const timeOf = (iso) => (iso || '').slice(11, 16)
+// be a list baked into the bundle, which meant a change to the day's timing
+// needed a redeploy (MoM 19 Aug 2026).
 
 function initials(name = '') {
   return name
@@ -44,6 +44,7 @@ export default function Home() {
   }, [])
 
   const firstName = user?.name?.split(' ')[0] || ''
+  const days = groupByDay(agenda)
 
   return (
     <>
@@ -136,20 +137,27 @@ export default function Home() {
       </div>
 
       <div className="section-title" style={{ marginLeft: 20 }}>
-        Today's agenda
+        {days.length > 1 ? 'Agenda' : "Today's agenda"}
       </div>
       <div className="card agenda-strip">
         {agenda === null && <div className="agenda-item">Loading the day…</div>}
         {agenda?.length === 0 && (
           <div className="agenda-item">The programme is not published yet.</div>
         )}
-        {agenda?.map((a) => (
-          <div className="agenda-item" key={a.id}>
-            <div className="agenda-time">{timeOf(a.starts_at)}</div>
-            <div>
-              <h5>{a.title}</h5>
-              <p>{a.place}</p>
-            </div>
+        {days.map((day) => (
+          <div key={day.date}>
+            {/* Named only when the programme runs past one day — otherwise
+                every attendee reads a date they already know. */}
+            {days.length > 1 && <div className="agenda-day">{dayLabel(day.date)}</div>}
+            {day.blocks.map((a) => (
+              <div className="agenda-item" key={a.id}>
+                <div className="agenda-time">{timeOf(a.starts_at)}</div>
+                <div>
+                  <h5>{a.title}</h5>
+                  <p>{a.place}</p>
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

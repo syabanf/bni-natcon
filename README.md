@@ -96,6 +96,12 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
+- **The Gold Club Breakfast on 4 September** (migration `0025`). 66 tickets in
+  the export are for the morning after, not the conference day — the schedule
+  now holds both dates, the admin page groups blocks under the day they run
+  on, and the attendee agenda names the day once there is more than one. The
+  agenda is a single list for everybody, so the block says on it that it is
+  for Gold Club tickets; filtering by ticket type is not built.
 - **The 4 learning classes with their 9 speakers and moderators**, from the
   Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.

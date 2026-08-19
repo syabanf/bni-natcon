@@ -861,6 +861,17 @@ button:disabled {
 }
 
 /* ===== Tables ===== */
+/* Names the day above each rundown table — the conference day and the
+   morning after it read very differently on a printed schedule. */
+.day-head {
+  padding: 12px 16px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+
 .table-scroll {
   margin-top: 12px;
   background: var(--white);
