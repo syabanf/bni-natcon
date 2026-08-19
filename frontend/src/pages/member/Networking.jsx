@@ -512,7 +512,6 @@ export default function Networking() {
   const [showHistory, setShowHistory] = useState(false)
   const [cameraOn, setCameraOn] = useState(false)
   const [cameraError, setCameraError] = useState('')
-  const [manualTable, setManualTable] = useState('')
   const lastScanRef = useRef({ code: '', at: 0 })
 
   const load = () =>
@@ -527,6 +526,21 @@ export default function Networking() {
   useEffect(() => {
     load()
   }, [])
+
+  // Speed networking fills a table over a couple of minutes. Whoever sat down
+  // first would otherwise stare at a half-empty table until they navigated
+  // away and back — and never see the newcomer's Save button.
+  const seated = data?.checked_in && !choosing
+  useEffect(() => {
+    if (!seated) return undefined
+    const t = setInterval(() => {
+      api
+        .networking()
+        .then((d) => setData((prev) => (prev?.checked_in ? d : prev)))
+        .catch(() => {})
+    }, 5000)
+    return () => clearInterval(t)
+  }, [seated])
 
   const checkIn = async (tableNo) => {
     setBusy(true)
@@ -551,17 +565,6 @@ export default function Networking() {
       toast('That QR is not a networking table code')
       return
     }
-    checkIn(tableNo)
-  }
-
-  const submitManualTable = (e) => {
-    e.preventDefault()
-    const tableNo = parseTableCode(manualTable)
-    if (!tableNo) {
-      toast('Enter your table number, e.g. 5')
-      return
-    }
-    setManualTable('')
     checkIn(tableNo)
   }
 
@@ -630,7 +633,8 @@ export default function Networking() {
               <TableQRScanner onCode={onScanCode} onError={(msg) => setCameraError(msg)} />
               {cameraError ? (
                 <div className="vf-hint" style={{ position: 'static', padding: '20px 24px' }}>
-                  Camera unavailable ({cameraError}) — type your table number below.
+                  Camera unavailable ({cameraError}). Ask a committee member at the table — they
+                  can seat you from the admin panel.
                 </div>
               ) : (
                 <div className="vf-hint">Point at the table QR code</div>
@@ -644,20 +648,10 @@ export default function Networking() {
           )}
         </div>
 
-        <form className="manual-scan" onSubmit={submitManualTable}>
-          <input
-            value={manualTable}
-            onChange={(e) => setManualTable(e.target.value)}
-            placeholder="Or type your table number, e.g. 5"
-            inputMode="numeric"
-          />
-          <button type="submit" disabled={busy}>
-            Join
-          </button>
-        </form>
         <div className="empty-note" style={{ marginTop: 16 }}>
-          Every table seats 8 people. Scanning the table QR checks you in — everyone at the table is
-          automatically connected.
+          Every table seats 8 people. Scan the QR on your table to check in — everyone at the table
+          is connected automatically. No table number to type: the QR is what puts you at the right
+          one.
         </div>
         {data.checked_in && (
           <div style={{ padding: '6px 20px 24px' }}>
@@ -696,7 +690,10 @@ export default function Networking() {
             <h3>
               Table {data.table.table_no} · Seat {data.seat_no}
             </h3>
-            <p>{data.table.hall} · Round 2 of 3</p>
+            <p>
+              {data.table.name ? `${data.table.name} · ` : ''}
+              {data.table.hall}
+            </p>
           </div>
           <RoundTimer />
         </div>
@@ -704,7 +701,7 @@ export default function Networking() {
 
       <div className="card table-viz">
         <h4>
-          Table {data.table.table_no} — {data.mates.length} people connected
+          {data.table.name || `Table ${data.table.table_no}`} — {data.mates.length} people connected
         </h4>
         <p>Everyone who checked in at this table automatically shares contacts</p>
         <TableCircle tableNo={data.table.table_no} mates={data.mates} />

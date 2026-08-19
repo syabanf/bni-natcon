@@ -44,11 +44,11 @@ dipakai.
 | 2 | ~~**Logo perusahaan per booth**~~ | **SELESAI** — migrasi `0018`, unggah di form booth, tampil di passport; inisial tetap dipakai kalau logo kosong | ✓ |
 | 3 | ~~**Redeem pin & goodiebag**~~ | **SELESAI** — bukan toggle tapi **scan**, digabung di layar penjaga pintu (revisi 19 Agt): migrasi `0017`, endpoint `/admin/redeem`, mode Attendance / Goodiebag / Pin | ✓ |
 | 4 | ~~**Identifier ke-x untuk data kembar**~~ | **SELESAI** — `#2 of 3` di daftar peserta admin, `#2` di layar pilih akun saat login | ✓ |
-| 5 | **Penamaan antar meja** | kolom `name` di `networking_tables`, dipakai di admin, QR print, dan tampilan peserta | 2 jam |
-| 6 | **Hapus input nomor meja manual** | buang form ketik di [`Networking.jsx`](../../frontend/src/pages/member/Networking.jsx) — scan QR saja | 1 jam |
-| 7 | **Join networking langsung ada save/notes** | tombol simpan kontak + catatan muncul begitu masuk meja, tanpa buka detail | 2 jam |
-| 8 | **Chapter & business tampil saat join** | sudah ada di data; tinggal naikkan ke tampilan pertama | 1 jam |
-| 9 | **Simpan data meja di admin saat networking** | halaman admin menampilkan isi tiap meja (siapa duduk di mana) + ekspor | 3 jam |
+| 5 | ~~**Penamaan antar meja**~~ | **SELESAI** — migrasi `0019`, kolom Name di admin, tampil di layar peserta | ✓ |
+| 6 | ~~**Hapus input nomor meja manual**~~ | **SELESAI** — scan QR saja; kalau kamera gagal, peserta diarahkan ke panitia | ✓ |
+| 7 | ~~**Join networking langsung ada save/notes**~~ | **SELESAI** — meja disegarkan tiap 5 detik selama duduk, jadi yang baru datang langsung muncul lengkap dengan tombol Save/Note | ✓ |
+| 8 | ~~**Chapter & business tampil saat join**~~ | **SUDAH ADA** — chapter, perusahaan, dan klasifikasi bisnis sudah tampil di baris pertama tiap orang | ✓ |
+| 9 | ~~**Simpan data meja di admin saat networking**~~ | **SELESAI** — panel "Who is seated right now" di halaman Tables + ekspor Excel | ✓ |
 
 ## 2. Butuh fondasi jadwal
 

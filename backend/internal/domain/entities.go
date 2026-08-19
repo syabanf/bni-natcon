@@ -440,11 +440,30 @@ type CheckinResult struct {
 /* ----- Speed networking ----- */
 
 type NetworkingTable struct {
-	ID       int64
-	TableNo  int
+	ID      int64
+	TableNo int
+	// A name the room can use — "Startup Corner". Empty is normal: the
+	// number alone is a perfectly good name (MoM 19 Aug 2026).
+	Name     string
 	Hall     string
 	Capacity int
 	Occupied int
+}
+
+// TableSeat is one person sitting at a table, as the committee sees it while
+// networking is running.
+type TableSeat struct {
+	TableNo        int
+	TableName      string
+	SeatNo         int
+	MemberID       int64
+	MemberCode     string
+	Name           string
+	Chapter        string
+	Company        string
+	Classification string
+	Phone          string
+	JoinedAt       time.Time
 }
 
 // TableMate is one person seated at the member's table. Note is the

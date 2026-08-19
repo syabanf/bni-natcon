@@ -180,6 +180,7 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/admin/rundown/{id}", s.handleDeleteRundown)
 
 				r.Get("/admin/tables", s.handleAdminListTables)
+				r.Get("/admin/tables/seats", s.handleAdminTableSeats)
 				r.Post("/admin/tables/generate", s.handleAdminGenerateTables)
 				r.Put("/admin/tables/{id}", s.handleAdminUpdateTable)
 				r.Delete("/admin/tables/{id}", s.handleAdminDeleteTable)

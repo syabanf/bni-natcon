@@ -16,7 +16,8 @@ func (s *Server) handleNetworkingStatus(w http.ResponseWriter, r *http.Request) 
 	tables := make([]map[string]any, 0, len(status.Tables))
 	for _, t := range status.Tables {
 		tables = append(tables, map[string]any{
-			"table_no": t.TableNo, "hall": t.Hall, "capacity": t.Capacity, "occupied": t.Occupied,
+			"table_no": t.TableNo, "name": t.Name, "hall": t.Hall,
+			"capacity": t.Capacity, "occupied": t.Occupied,
 		})
 	}
 	resp := map[string]any{
@@ -33,7 +34,7 @@ func (s *Server) handleNetworkingStatus(w http.ResponseWriter, r *http.Request) 
 			})
 		}
 		resp["table"] = tableDTO(map[string]any{
-			"table_no": status.Table.TableNo, "hall": status.Table.Hall,
+			"table_no": status.Table.TableNo, "name": status.Table.Name, "hall": status.Table.Hall,
 			"capacity": status.Table.Capacity, "occupied": status.Table.Occupied,
 		})
 		resp["seat_no"] = status.SeatNo
@@ -117,7 +118,7 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"table": map[string]any{
-			"table_no": d.Table.TableNo, "hall": d.Table.Hall,
+			"table_no": d.Table.TableNo, "name": d.Table.Name, "hall": d.Table.Hall,
 			"capacity": d.Table.Capacity, "occupied": d.Table.Occupied,
 		},
 		"members": members,

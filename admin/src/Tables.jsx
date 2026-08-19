@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
+import { exportSheet } from './excel'
 import Modal from './Modal'
 
 // Networking tables master data: generate a block of tables before the
@@ -12,12 +13,23 @@ export default function Tables({ onUnauthorized }) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
+  const [seatRows, setSeatRows] = useState([])
+  const [showSeats, setShowSeats] = useState(false)
 
   const load = () =>
     api
       .tables({ onUnauthorized })
       .then((d) => setRows(d.tables || []))
       .catch((e) => setError(e.message))
+
+  // Occupancy lives on the table rows, so refreshing the seating without
+  // refreshing those leaves the header saying "0 seated" above a list of
+  // people. Same click, both numbers.
+  const loadSeats = () =>
+    Promise.all([
+      api.tableSeats({ onUnauthorized }).then((d) => setSeatRows(d.seats || [])),
+      load(),
+    ]).catch(() => {})
 
   useEffect(() => {
     load()
@@ -52,7 +64,11 @@ export default function Tables({ onUnauthorized }) {
     setError('')
     setBusy(true)
     try {
-      await api.updateTable(form.id, { hall: form.hall, capacity: Number(form.capacity) })
+      await api.updateTable(form.id, {
+        name: form.name,
+        hall: form.hall,
+        capacity: Number(form.capacity),
+      })
       setNotice(`Table ${form.table_no} updated.`)
       setForm(null)
       load()
@@ -92,6 +108,16 @@ export default function Tables({ onUnauthorized }) {
           <span className="pill live">
             {rows ? `${rows.length} tables · ${seats} seats · ${seated} seated` : 'Loading…'}
           </span>
+          <button
+            className="md-secondary"
+            onClick={() => {
+              const next = !showSeats
+              setShowSeats(next)
+              if (next) loadSeats()
+            }}
+          >
+            {showSeats ? 'Hide who is seated' : '◍ Who is seated'}
+          </button>
         </div>
       </div>
 
@@ -149,9 +175,85 @@ export default function Tables({ onUnauthorized }) {
         </form>
       </div>
 
+      {showSeats && (
+        <div className="panel report-panel">
+          <h2>
+            <span className="sec-no">02</span>Who is seated right now
+          </h2>
+          <p className="panel-sub">
+            The seating only exists in the attendees' phones otherwise — this is the committee's
+            copy, and the one to export before the room is cleared
+          </p>
+          <div className="head-right" style={{ marginBottom: 10 }}>
+            <span className="pill live">{seatRows.length} seated</span>
+            <button className="md-secondary" onClick={loadSeats}>
+              ⟳ Refresh
+            </button>
+            <button
+              className="md-secondary"
+              disabled={seatRows.length === 0}
+              onClick={() =>
+                exportSheet(
+                  seatRows.map((x) => ({
+                    Table: x.table_no,
+                    'Table Name': x.table_name,
+                    Seat: x.seat_no,
+                    'Member Code': x.member_code,
+                    Name: x.name,
+                    Chapter: x.chapter,
+                    Company: x.company,
+                    Classification: x.classification,
+                    Phone: x.phone,
+                    'Joined At': x.joined_at,
+                  })),
+                  'Seating',
+                  'natcon2026-networking-seating.xlsx',
+                )
+              }
+            >
+              ↓ Export Excel
+            </button>
+          </div>
+          {seatRows.length === 0 ? (
+            <div className="empty">Nobody has scanned a table yet.</div>
+          ) : (
+            <div className="seat-groups">
+              {Object.entries(
+                seatRows.reduce((acc, x) => {
+                  const key = `${x.table_no}`
+                  ;(acc[key] = acc[key] || []).push(x)
+                  return acc
+                }, {}),
+              ).map(([tableNo, people]) => (
+                <div className="seat-group" key={tableNo}>
+                  <h4>
+                    Table {tableNo}
+                    {people[0].table_name ? ` · ${people[0].table_name}` : ''}
+                    <span className="pill live">{people.length}</span>
+                  </h4>
+                  <ol className="seat-list">
+                    {people.map((x) => (
+                      <li key={x.member_id}>
+                        <b>{x.name}</b>
+                        <small>
+                          {x.chapter}
+                          {x.company ? ` · ${x.company}` : ''}
+                          {x.classification ? ` · ${x.classification}` : ''}
+                        </small>
+                        <span className="seat-when">{x.joined_at.slice(11, 16)}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>All Tables
+          <span className="sec-no">{showSeats ? '03' : '02'}</span>All Tables
         </h2>
         <p className="panel-sub">Occupancy is live — a seated table cannot be deleted</p>
         <div className="table-scroll">
@@ -159,6 +261,7 @@ export default function Tables({ onUnauthorized }) {
             <thead>
               <tr>
                 <th>Table</th>
+                <th>Name</th>
                 <th>Hall</th>
                 <th className="num">Seated</th>
                 <th className="num">Capacity</th>
@@ -169,13 +272,17 @@ export default function Tables({ onUnauthorized }) {
               {(rows || []).map((t) => (
                 <tr key={t.id}>
                   <td className="mono">#{t.table_no}</td>
+                  <td>{t.name || <span className="muted">— unnamed</span>}</td>
                   <td>{t.hall}</td>
                   <td className="num">{t.occupied}</td>
                   <td className="num">{t.capacity}</td>
                   <td className="md-actions">
                     <button
                       onClick={() =>
-                        setForm({ id: t.id, table_no: t.table_no, hall: t.hall, capacity: t.capacity })
+                        setForm({
+                          id: t.id, table_no: t.table_no, name: t.name || '',
+                          hall: t.hall, capacity: t.capacity,
+                        })
                       }
                     >
                       Edit
@@ -188,7 +295,7 @@ export default function Tables({ onUnauthorized }) {
               ))}
               {rows && rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="empty">
+                  <td colSpan={6} className="empty">
                     No tables yet — generate a block above.
                   </td>
                 </tr>
@@ -202,8 +309,19 @@ export default function Tables({ onUnauthorized }) {
         <Modal title={`Edit Table ${form.table_no}`} onClose={() => setForm(null)}>
           <form className="modal-form" onSubmit={submit}>
             <label className="md-field">
+              <span>
+                Name<em> — optional; "Table 7" alone is a fine name</em>
+              </span>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Startup Corner"
+                autoFocus
+              />
+            </label>
+            <label className="md-field">
               <span>Hall</span>
-              <input value={form.hall} onChange={(e) => setForm({ ...form, hall: e.target.value })} autoFocus />
+              <input value={form.hall} onChange={(e) => setForm({ ...form, hall: e.target.value })} />
             </label>
             <label className="md-field">
               <span>

@@ -12,7 +12,7 @@ import (
 // Networking tables are master data the committee generates before the
 // event; occupancy comes from the live check-ins.
 
-const tableColumns = `t.id, t.table_no, t.hall, t.capacity,
+const tableColumns = `t.id, t.table_no, t.name, t.hall, t.capacity,
 	(SELECT COUNT(*) FROM networking_checkins c WHERE c.table_id = t.id)`
 
 func scanTables(rows pgx.Rows) ([]domain.NetworkingTable, error) {
@@ -20,7 +20,7 @@ func scanTables(rows pgx.Rows) ([]domain.NetworkingTable, error) {
 	var out []domain.NetworkingTable
 	for rows.Next() {
 		var t domain.NetworkingTable
-		if err := rows.Scan(&t.ID, &t.TableNo, &t.Hall, &t.Capacity, &t.Occupied); err != nil {
+		if err := rows.Scan(&t.ID, &t.TableNo, &t.Name, &t.Hall, &t.Capacity, &t.Occupied); err != nil {
 			return nil, err
 		}
 		out = append(out, t)
@@ -47,9 +47,9 @@ func (r *AdminRepo) GenerateTables(ctx context.Context, count int, hall string, 
 			INSERT INTO networking_tables (table_no, hall, capacity)
 			SELECT next.start + g, $2, $3
 			FROM next, generate_series(1, $1) AS g
-			RETURNING id, table_no, hall, capacity
+			RETURNING id, table_no, name, hall, capacity
 		)
-		SELECT id, table_no, hall, capacity, 0 FROM created ORDER BY table_no`,
+		SELECT id, table_no, name, hall, capacity, 0 FROM created ORDER BY table_no`,
 		count, hall, capacity)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r *AdminRepo) GenerateTables(ctx context.Context, count int, hall string, 
 	return scanTables(rows)
 }
 
-func (r *AdminRepo) UpdateTable(ctx context.Context, id int64, hall string, capacity int) error {
+func (r *AdminRepo) UpdateTable(ctx context.Context, id int64, name, hall string, capacity int) error {
 	var occupied int
 	err := r.pool.QueryRow(ctx, `
 		SELECT (SELECT COUNT(*) FROM networking_checkins c WHERE c.table_id = t.id)
@@ -72,7 +72,8 @@ func (r *AdminRepo) UpdateTable(ctx context.Context, id int64, hall string, capa
 		return domain.ErrInvalidInput
 	}
 	_, err = r.pool.Exec(ctx,
-		`UPDATE networking_tables SET hall = $1, capacity = $2 WHERE id = $3`, hall, capacity, id)
+		`UPDATE networking_tables SET name = $1, hall = $2, capacity = $3 WHERE id = $4`,
+		name, hall, capacity, id)
 	return err
 }
 
@@ -92,4 +93,31 @@ func (r *AdminRepo) DeleteTable(ctx context.Context, id int64) error {
 	}
 	_, err = r.pool.Exec(ctx, `DELETE FROM networking_tables WHERE id = $1`, id)
 	return err
+}
+
+// TableSeats is what the committee watches while networking runs: every seat
+// that is taken, with enough about the person to find them in the room.
+func (r *AdminRepo) TableSeats(ctx context.Context) ([]domain.TableSeat, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT t.table_no, t.name, c.seat_no, u.id, COALESCE(u.member_code, ''),
+		       u.name, u.chapter, u.company, u.classification, u.phone, c.created_at
+		FROM networking_checkins c
+		JOIN networking_tables t ON t.id = c.table_id
+		JOIN users u ON u.id = c.member_id
+		ORDER BY t.table_no, c.seat_no`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := []domain.TableSeat{}
+	for rows.Next() {
+		var s domain.TableSeat
+		if err := rows.Scan(&s.TableNo, &s.TableName, &s.SeatNo, &s.MemberID, &s.MemberCode,
+			&s.Name, &s.Chapter, &s.Company, &s.Classification, &s.Phone, &s.JoinedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
 }

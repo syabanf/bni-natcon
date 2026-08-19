@@ -276,6 +276,8 @@ export const api = {
   updateRundown: (id, body) => request(`/admin/rundown/${id}`, { method: 'PUT', body }),
   deleteRundown: (id) => request(`/admin/rundown/${id}`, { method: 'DELETE' }),
   tables: (opts) => (isMockMode() ? mock.tables() : request('/admin/tables', opts)),
+  // Who is sitting where, while networking runs (MoM 19 Aug 2026).
+  tableSeats: (opts) => request('/admin/tables/seats', opts),
   generateTables: (body) =>
     isMockMode() ? mock.generateTables(body) : request('/admin/tables/generate', { method: 'POST', body }),
   updateTable: (id, body) =>

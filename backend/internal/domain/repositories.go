@@ -118,7 +118,9 @@ type AdminRepository interface {
 	// ErrTableInUse while somebody is checked in.
 	ListTables(ctx context.Context) ([]NetworkingTable, error)
 	GenerateTables(ctx context.Context, count int, hall string, capacity int) ([]NetworkingTable, error)
-	UpdateTable(ctx context.Context, id int64, hall string, capacity int) error
+	UpdateTable(ctx context.Context, id int64, name, hall string, capacity int) error
+	// Who is sitting where, live, while networking runs.
+	TableSeats(ctx context.Context) ([]TableSeat, error)
 	DeleteTable(ctx context.Context, id int64) error
 
 	VisitReport(ctx context.Context) ([]VisitReportRow, error)

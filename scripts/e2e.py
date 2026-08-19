@@ -841,6 +841,41 @@ check("delete an empty table -> 200", status == 200)
 status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
 check("table list shrinks after delete", len(body["tables"]) == seeded_tables + 2)
 
+# ---- table names and the committee's view of the seating (MoM 19 Aug 2026)
+first_table = body["tables"][0]
+status, _, _ = req("PUT", f"/api/v1/admin/tables/{first_table['id']}", token=admin_tok,
+                   body={"name": "Startup Corner", "hall": first_table["hall"],
+                         "capacity": first_table["capacity"]})
+check("a table can be named", status == 200)
+
+status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
+named = next(t for t in body["tables"] if t["id"] == first_table["id"])
+check("the name comes back on the table", named["name"] == "Startup Corner")
+check("tables nobody named stay empty-named, not null",
+      all(isinstance(t["name"], str) for t in body["tables"]))
+
+status, body, _ = req("GET", "/api/v1/networking", token=member_tok)
+listed = next(t for t in body["tables"] if t["table_no"] == named["table_no"])
+check("attendees see the name too", listed["name"] == "Startup Corner")
+
+# The seating only exists in the attendees' phones otherwise.
+status, body, _ = req("GET", "/api/v1/admin/tables/seats", token=admin_tok)
+check("the committee can see who is seated where", status == 200)
+before = [s for s in body["seats"] if s["table_no"] == named["table_no"]]
+check("...and that table is empty until somebody sits at it", before == [], f"{before}")
+
+status, _, _ = req("POST", "/api/v1/networking/checkin", token=member_tok,
+                   body={"table_no": named["table_no"]})
+status, body, _ = req("GET", "/api/v1/admin/tables/seats", token=admin_tok)
+mine = [s for s in body["seats"] if s["table_no"] == named["table_no"]]
+check("a fresh check-in shows up in the committee's view", len(mine) == 1, f"{body['seats']}")
+check("...with the table's name, the seat, and who they are",
+      mine[0]["table_name"] == "Startup Corner" and mine[0]["seat_no"] >= 1
+      and mine[0]["member_code"] and mine[0]["chapter"], f"{mine[0]}")
+
+status, _, _ = req("GET", "/api/v1/admin/tables/seats", token=member_tok)
+check("an attendee cannot read the whole room's seating", status == 403)
+
 # ---- tenant bulk import (create-or-update keyed by booth code)
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 sponsors_before, booths_before = body["total_sponsors"], body["total_booths"]

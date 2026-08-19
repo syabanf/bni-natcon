@@ -22,7 +22,7 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 	status := &domain.NetworkingStatus{}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT t.id, t.table_no, t.hall, t.capacity,
+		SELECT t.id, t.table_no, t.name, t.hall, t.capacity,
 		       (SELECT COUNT(*) FROM networking_checkins c WHERE c.table_id = t.id)
 		FROM networking_tables t
 		ORDER BY t.table_no`)
@@ -32,7 +32,7 @@ func (r *NetworkingRepo) Status(ctx context.Context, memberID int64) (*domain.Ne
 	defer rows.Close()
 	for rows.Next() {
 		var t domain.NetworkingTable
-		if err := rows.Scan(&t.ID, &t.TableNo, &t.Hall, &t.Capacity, &t.Occupied); err != nil {
+		if err := rows.Scan(&t.ID, &t.TableNo, &t.Name, &t.Hall, &t.Capacity, &t.Occupied); err != nil {
 			return nil, err
 		}
 		status.Tables = append(status.Tables, t)
@@ -187,10 +187,10 @@ func (r *NetworkingRepo) TableDetail(ctx context.Context, memberID int64, tableN
 	d := &domain.TableDetail{}
 	var tableID int64
 	err := r.pool.QueryRow(ctx, `
-		SELECT t.id, t.table_no, t.hall, t.capacity,
+		SELECT t.id, t.table_no, t.name, t.hall, t.capacity,
 		       (SELECT COUNT(*) FROM networking_checkins c WHERE c.table_id = t.id)
 		FROM networking_tables t WHERE t.table_no = $1`, tableNo).
-		Scan(&tableID, &d.Table.TableNo, &d.Table.Hall, &d.Table.Capacity, &d.Table.Occupied)
+		Scan(&tableID, &d.Table.TableNo, &d.Table.Name, &d.Table.Hall, &d.Table.Capacity, &d.Table.Occupied)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

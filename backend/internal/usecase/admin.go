@@ -370,7 +370,11 @@ func (u *AdminUsecase) GenerateTables(ctx context.Context, count int, hall strin
 	return u.admin.GenerateTables(ctx, count, hall, capacity)
 }
 
-func (u *AdminUsecase) UpdateTable(ctx context.Context, id int64, hall string, capacity int) error {
+func (u *AdminUsecase) TableSeats(ctx context.Context) ([]domain.TableSeat, error) {
+	return u.admin.TableSeats(ctx)
+}
+
+func (u *AdminUsecase) UpdateTable(ctx context.Context, id int64, name, hall string, capacity int) error {
 	if capacity <= 0 {
 		return invalid("capacity must be greater than 0")
 	}
@@ -378,7 +382,7 @@ func (u *AdminUsecase) UpdateTable(ctx context.Context, id int64, hall string, c
 	if hall == "" {
 		hall = "Hall B"
 	}
-	return u.admin.UpdateTable(ctx, id, hall, capacity)
+	return u.admin.UpdateTable(ctx, id, strings.TrimSpace(name), hall, capacity)
 }
 
 func (u *AdminUsecase) DeleteTable(ctx context.Context, id int64) error {
