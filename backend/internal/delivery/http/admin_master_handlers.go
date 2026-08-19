@@ -59,6 +59,10 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 
 		Classification string `json:"classification"`
 		Visits         int    `json:"visits"`
+		// Only meaningful when several attendees share a name, email and
+		// phone; the UI shows "#2 of 3" then and nothing otherwise.
+		TwinIndex int `json:"twin_index"`
+		TwinCount int `json:"twin_count"`
 	}
 	out := make([]row, 0, len(members))
 	for _, m := range members {
@@ -66,6 +70,7 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 			ID: m.ID, Name: m.Name, Email: m.Email, MemberCode: m.MemberCode,
 			Chapter: m.Chapter, Company: m.Company, Phone: m.Phone,
 			Classification: m.Classification, Visits: m.Visits,
+			TwinIndex: m.TwinIndex, TwinCount: m.TwinCount,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{

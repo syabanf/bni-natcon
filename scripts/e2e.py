@@ -182,6 +182,30 @@ status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 
+# ------------------------------------------------------- duplicate attendees
+section("Attendees who share a name, email and phone")
+
+twins = [{"name": "Kembar Sama", "email": "kembar-sama@natcon.id", "chapter": "Chapter Kembar",
+          "phone": "+628110005555", "ticket_number": f"TWIN-{i}"} for i in range(3)]
+status, body, _ = req("POST", "/api/v1/admin/members/bulk", token=admin_tok, body={"members": twins})
+check("three tickets on one name, email and phone import as three people",
+      status == 200 and body["created"] == 3, f"{status} {body}")
+
+status, body, _ = req("GET", "/api/v1/admin/members?q=kembar-sama@natcon.id&limit=50", token=admin_tok)
+rows = body["members"]
+check("each carries its position in the group",
+      sorted(r["twin_index"] for r in rows) == [1, 2, 3]
+      and all(r["twin_count"] == 3 for r in rows), f"{[(r['twin_index'], r['twin_count']) for r in rows]}")
+check("the numbering is stable, not random",
+      [r["twin_index"] for r in sorted(rows, key=lambda r: r["id"])] == [1, 2, 3])
+
+status, body, _ = req("GET", "/api/v1/admin/members?q=reddie@natcon.id", token=admin_tok)
+check("someone with no twin is marked as alone",
+      body["members"][0]["twin_count"] == 1 and body["members"][0]["twin_index"] == 1)
+
+for r in rows:
+    req("DELETE", f"/api/v1/admin/members/{r['id']}", token=admin_tok)
+
 # ------------------------------------------------- pin & goodiebag handover
 section("Door desk — pin and goodiebag handed over by scan")
 

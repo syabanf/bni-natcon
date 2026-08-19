@@ -440,6 +440,14 @@ export function MembersPage() {
               <td className="mono">{m.member_code}</td>
               <td>
                 <b>{m.name}</b>
+                {/* Same name, same email, same phone — several people bought
+                    on one account. Without a number these rows are literally
+                    indistinguishable (MoM 19 Aug 2026). */}
+                {m.twin_count > 1 && (
+                  <span className="twin-tag" title="Shares a name, email and phone with another attendee">
+                    #{m.twin_index} of {m.twin_count}
+                  </span>
+                )}
                 <small>{m.company}</small>
               </td>
               <td>

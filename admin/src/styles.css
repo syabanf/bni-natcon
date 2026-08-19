@@ -1711,6 +1711,20 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* The "#2 of 3" badge on attendees who share a name, email and phone. */
+.twin-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 /* A logo is artwork someone else made: show it whole, never cropped. */
 .logo-preview {
   max-width: 160px;

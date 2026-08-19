@@ -35,12 +35,26 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 		return nil, 0, err
 	}
 
+	// One buyer sometimes registers several people under their own name,
+	// email and phone. Those rows are indistinguishable on screen, so each
+	// one carries its position within the group — "#2 of 3" (MoM 19 Aug
+	// 2026). Numbered by id, so the order never changes under the committee.
 	rows, err := r.pool.Query(ctx, `
+		WITH twins AS (
+			SELECT id,
+			       ROW_NUMBER() OVER (PARTITION BY lower(btrim(name)), lower(btrim(email)),
+			                                       btrim(COALESCE(phone, ''))
+			                          ORDER BY id) AS idx,
+			       COUNT(*) OVER (PARTITION BY lower(btrim(name)), lower(btrim(email)),
+			                                   btrim(COALESCE(phone, ''))) AS total
+			FROM users WHERE role = 'member'
+		)
 		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.classification, u.created_at,
-		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id)
-		FROM users u
+		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id),
+		       t.idx, t.total
+		FROM users u JOIN twins t ON t.id = u.id
 		WHERE `+filter+`
-		ORDER BY u.name
+		ORDER BY u.name, u.id
 		LIMIT $2 OFFSET $3`, q, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -51,7 +65,8 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	for rows.Next() {
 		var m domain.MemberSummary
 		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Role, &m.MemberCode,
-			&m.Chapter, &m.Company, &m.Phone, &m.Classification, &m.CreatedAt, &m.Visits); err != nil {
+			&m.Chapter, &m.Company, &m.Phone, &m.Classification, &m.CreatedAt, &m.Visits,
+			&m.TwinIndex, &m.TwinCount); err != nil {
 			return nil, 0, err
 		}
 		out = append(out, m)

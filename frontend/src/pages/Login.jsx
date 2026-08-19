@@ -15,6 +15,25 @@ const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
  * Signing in at the wrong door still works — the account's role decides where
  * you land — so nobody is stranded at a desk with the wrong link.
  */
+// Two tickets bought on one email are often bought under one name as well,
+// and then the picker offers two buttons reading exactly the same thing.
+// Numbering them is what makes the choice a choice; the member code below
+// still says which is which (MoM 19 Aug 2026).
+export function withTwinNumbers(accounts) {
+  const seen = new Map()
+  const counts = new Map()
+  for (const a of accounts) {
+    const key = (a.name || '').trim().toLowerCase()
+    counts.set(key, (counts.get(key) || 0) + 1)
+  }
+  return accounts.map((a) => {
+    const key = (a.name || '').trim().toLowerCase()
+    const n = (seen.get(key) || 0) + 1
+    seen.set(key, n)
+    return { ...a, twinIndex: n, twinCount: counts.get(key) }
+  })
+}
+
 const AUDIENCE = {
   attendee: {
     eyebrow: 'Welcome to',
@@ -105,7 +124,7 @@ export default function Login({ audience = 'attendee' }) {
               </p>
               {error && <div className="auth-error">{error}</div>}
               <div className="account-picks">
-                {choice.accounts.map((a) => (
+                {withTwinNumbers(choice.accounts).map((a) => (
                   <button
                     type="button"
                     className="account-pick"
@@ -113,7 +132,10 @@ export default function Login({ audience = 'attendee' }) {
                     onClick={() => pick(a)}
                     disabled={busy}
                   >
-                    <span className="ap-name">{a.name}</span>
+                    <span className="ap-name">
+                      {a.name}
+                      {a.twinCount > 1 && <em className="ap-twin">#{a.twinIndex}</em>}
+                    </span>
                     <span className="ap-meta">
                       {a.member_code}
                       {a.chapter ? ` · ${a.chapter}` : ''}

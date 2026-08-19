@@ -265,6 +265,11 @@ type TenantUpsertResult struct {
 type MemberSummary struct {
 	User
 	Visits int
+	// Where this row sits among attendees sharing the same name, email and
+	// phone: TwinIndex of TwinCount. TwinCount is 1 for almost everyone, and
+	// the number is only worth showing when it is not (MoM 19 Aug 2026).
+	TwinIndex int
+	TwinCount int
 }
 
 // NewMember carries admin input for creating a member. PasswordHash is set by
