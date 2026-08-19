@@ -112,6 +112,23 @@ request dari APK kena CORS. Lihat [`ANDROID.md`](ANDROID.md).
 Restart API setelah mengubahnya. Kalau kelewat, login gagal dengan error
 CORS di console browser — bukan 404.
 
+### Deploy ulang (docker compose di VPS)
+
+```bash
+cd /path/ke/BNI-Digital-Stamp
+git pull
+docker compose build api frontend admin
+docker compose up -d
+docker compose logs -f api --tail=30
+```
+
+Yang dicari di log: baris `INFO image uploads ready dir=/data/uploads`.
+Kalau yang muncul `ERROR UPLOAD_DIR is not usable`, lihat bagian di bawah.
+
+Volume `natcon-uploads` dan `natcon-db` **tidak** tersentuh oleh perintah di
+atas — jangan pakai `docker compose down -v`, itu menghapus cover yang sudah
+di-upload dan seluruh database.
+
 ### Upload gambar gagal 500 — folder simpan tidak bisa ditulis
 
 Gambar disimpan ke disk di path `UPLOAD_DIR`. Kalau API tidak punya izin tulis
@@ -131,10 +148,24 @@ INFO  image uploads ready dir=/data/uploads
 ERROR UPLOAD_DIR is not usable — image uploads will fail dir=... err=...
 ```
 
-Yang perlu dicek di host: user yang menjalankan container/proses API harus
-pemilik (atau punya izin tulis) di folder itu. Di docker compose sudah beres
-lewat volume `natcon-uploads`. Di host lain, pastikan volume-nya di-mount
-**writable** — dan tetap persisten, kalau tidak semua cover hilang tiap
+**Penyebab paling sering (dan sudah diperbaiki di image):** container API
+berjalan sebagai user `app` (uid 10001), sementara Docker membuat volume
+baru dengan pemilik `root`. Akibatnya API tidak bisa menulis ke
+`/data/uploads`. Sejak `backend/Dockerfile` membuat folder itu di dalam image
+dan meng-`chown`-nya ke `app`, volume **baru** ikut mewarisi kepemilikan itu.
+
+**Volume yang terlanjur dibuat sebelum perbaikan tetap milik root** — Docker
+hanya menyalin kepemilikan saat volume masih kosong. Betulkan sekali saja:
+
+```bash
+docker compose run --rm --user root --entrypoint sh api \
+  -c 'chown -R 10001:10001 /data/uploads && ls -ld /data/uploads'
+docker compose restart api
+docker compose logs api --tail=5      # harus: image uploads ready
+```
+
+Di host non-docker: pastikan user yang menjalankan API punya izin tulis di
+`UPLOAD_DIR`, dan path-nya persisten — kalau tidak, semua cover hilang tiap
 redeploy.
 
 ### Upload gambar gagal / 502 saat pilih foto
