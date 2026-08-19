@@ -11,6 +11,16 @@ import (
 // The event schedule. Admin edits it; attendees read it to fill the agenda on
 // their home screen, which used to be a hard-coded list in the app bundle.
 
+// The event happens in Jakarta, and the schedule means Jakarta hours to
+// everyone reading it. Postgres hands timestamps back in the server's zone,
+// so a container running on UTC — which is every container by default —
+// would send 13:00 back as 06:00Z and the attendee agenda would show the
+// whole day shifted seven hours.
+//
+// A fixed offset rather than a loaded location: Indonesia has no daylight
+// saving, and the alpine image carries no tzdata to load from.
+var eventZone = time.FixedZone("WIB", 7*60*60)
+
 type rundownPayload struct {
 	StartsAt string `json:"starts_at"` // RFC3339
 	EndsAt   string `json:"ends_at"`   // RFC3339, optional — defaults to +1 hour
@@ -40,8 +50,8 @@ func (p rundownPayload) toDomain() (domain.RundownBlock, error) {
 func rundownDTO(b domain.RundownBlock) map[string]any {
 	return map[string]any{
 		"id":        b.ID,
-		"starts_at": b.StartsAt.Format(time.RFC3339),
-		"ends_at":   b.EndsAt.Format(time.RFC3339),
+		"starts_at": b.StartsAt.In(eventZone).Format(time.RFC3339),
+		"ends_at":   b.EndsAt.In(eventZone).Format(time.RFC3339),
 		"title":     b.Title,
 		"place":     b.Place,
 		"kind":      b.Kind,

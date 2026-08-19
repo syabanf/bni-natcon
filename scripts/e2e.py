@@ -200,7 +200,10 @@ status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
                       body={"starts_at": f"{D}T13:00:00{TZ}", "title": "Learning Class",
                             "kind": "learning"})
 check("a block with no end runs one hour",
-      status == 201 and body["block"]["ends_at"].startswith(f"{D}T14:00:00"))
+      status == 201 and body["block"]["ends_at"] == f"{D}T14:00:00{TZ}",
+      f'got {body["block"]["ends_at"]}')
+check("...and the time comes back in Jakarta hours, whatever zone the server runs in",
+      body["block"]["starts_at"] == f"{D}T13:00:00{TZ}", body["block"]["starts_at"])
 learning_id = body["block"]["id"]
 
 # The grid is the point of the MoM decision: half-hours would not line up
@@ -231,7 +234,8 @@ status, _, _ = req("PUT", f"/api/v1/admin/rundown/{block_id}", token=admin_tok,
 status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
 check("a moved block moves for everyone",
       body["rundown"][0]["title"] == "Opening Ceremony (moved)"
-      and body["rundown"][0]["starts_at"].startswith(f"{D}T08:00:00"))
+      and body["rundown"][0]["starts_at"] == f"{D}T08:00:00{TZ}",
+      body["rundown"][0]["starts_at"])
 
 status, _, _ = req("DELETE", f"/api/v1/admin/rundown/{learning_id}", token=admin_tok)
 status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
