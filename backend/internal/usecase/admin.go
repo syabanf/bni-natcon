@@ -96,6 +96,7 @@ type MemberInput struct {
 	Company        string
 	Phone          string
 	Classification string
+	TicketNumber   string
 }
 
 func (u *AdminUsecase) CreateMember(ctx context.Context, in MemberInput) (*domain.User, error) {
@@ -121,6 +122,7 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, in MemberInput) (*domai
 		Name: name, Email: email, PasswordHash: hash,
 		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(in.Company),
 		Phone: strings.TrimSpace(in.Phone), Classification: strings.TrimSpace(in.Classification),
+		TicketNumber: strings.TrimSpace(in.TicketNumber),
 	})
 }
 
@@ -133,6 +135,7 @@ func (u *AdminUsecase) UpdateMember(ctx context.Context, id int64, m domain.Memb
 		return invalid("invalid email format")
 	}
 	m.Phone = strings.TrimSpace(m.Phone)
+	m.TicketNumber = strings.TrimSpace(m.TicketNumber)
 	m.Chapter = strings.TrimSpace(m.Chapter)
 	if err := u.admin.EnsureChapter(ctx, m.Chapter); err != nil {
 		return err

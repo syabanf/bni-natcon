@@ -73,15 +73,17 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (*domain.User, error) 
 		`SELECT `+userColumns+` FROM users WHERE id = $1`, id))
 }
 
-func (r *UserRepo) GetByMemberCode(ctx context.Context, code string) (*domain.User, error) {
-	return r.scanUser(r.pool.QueryRow(ctx,
-		`SELECT `+userColumns+` FROM users WHERE member_code = $1 AND role = 'member'`, code))
-}
+// The attendee's QR carries their ticket number, so that is what a scanner
+// sees most of the day. The member code still works — it is printed on the
+// pass, and attendees added by hand in the admin panel have no ticket.
+const scanKeySQL = `(ticket_number <> '' AND ticket_number = $1)
+		        OR member_code = $1
+		        OR (phone <> '' AND phone = $1)`
 
-func (r *UserRepo) GetByCodeOrPhone(ctx context.Context, key string) (*domain.User, error) {
+func (r *UserRepo) GetByScanCode(ctx context.Context, key string) (*domain.User, error) {
 	return r.scanUser(r.pool.QueryRow(ctx,
 		`SELECT `+userColumns+` FROM users
-		 WHERE role = 'member' AND (member_code = $1 OR (phone <> '' AND phone = $1))
+		 WHERE role = 'member' AND (`+scanKeySQL+`)
 		 LIMIT 1`, key))
 }
 

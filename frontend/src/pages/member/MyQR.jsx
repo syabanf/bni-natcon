@@ -1,9 +1,11 @@
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
+import { scanCode } from '../../pass'
 import { useAuthStore } from '../../store/auth'
 
 export default function MyQR() {
   const user = useAuthStore((s) => s.user)
+  const code = scanCode(user)
 
   return (
     <div className="qr-page">
@@ -13,7 +15,7 @@ export default function MyQR() {
           MEMBER PASS
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          {user?.member_code && <QRCodeSVG value={user.member_code} size={190} />}
+          {code && <QRCodeSVG value={code} size={190} />}
         </div>
         <div className="qp-name">{user?.name}</div>
         <div className="qp-sub">
@@ -21,6 +23,7 @@ export default function MyQR() {
           {user?.company ? ` · ${user.company}` : ''}
         </div>
         <div className="qp-id">{user?.member_code}</div>
+        {user?.ticket_number && <div className="qp-ticket">Ticket {user.ticket_number}</div>}
       </div>
 
       <div className="qr-uses">

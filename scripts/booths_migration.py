@@ -1,29 +1,36 @@
 #!/usr/bin/env python3
-"""Turn the committee's *Data Booth* sheet into the booth migration.
+"""Turn the committee's booth sheet into the booth migration.
 
 The booth list is event master data, so it lives in a migration: a laptop, a
 staging box and production all end up with the same booths without anyone
 remembering to import a spreadsheet.
 
     pip install openpyxl
-    python3 scripts/booths_migration.py "~/Downloads/Data Booth ... .xlsx"
+    python3 scripts/booths_migration.py "~/Downloads/Booth BNI ... .xlsx"
 
-Rewrites backend/internal/repository/postgres/migrations/0014_booths.sql.
-Re-run it whenever the sheet changes, then restart the API — booths that left
-the sheet are removed (unless someone has already scanned them), and booths
-that stayed keep their login and their scans.
+Rewrites backend/internal/repository/postgres/migrations/0023_booths.sql.
+Re-run it whenever the sheet changes, then restart the API — exhibitors that
+left the sheet are removed (unless someone has already scanned them), and the
+ones that stayed keep their login and their scans.
 
-Expected columns: Booth Number · Name · BNI Chapter · Company Name ·
-Business Classification. That is the ticketing team's own export, unedited.
+Expected columns: Booth Number · Company Name · Business Classification. That
+is the committee's own export, unedited. A row whose only filled cell reads
+"Sponsor" is the sheet's own divider: everything under it is a sponsor rather
+than a floor booth.
+
+Two booth numbers on one row ("A18 & A20", "A47 - 48") means one exhibitor
+holding two positions on the floor plan. Each position becomes its own booth,
+because each has its own sign to print a QR for.
 """
 
 import pathlib
+import re
 import sys
 
 import openpyxl
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "backend/internal/repository/postgres/migrations/0014_booths.sql"
+OUT = ROOT / "backend/internal/repository/postgres/migrations/0023_booths.sql"
 
 PLACEHOLDER_HASH = "$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH"
 
@@ -43,8 +50,26 @@ def q(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def booth_codes(cell: str):
+    """'A18 & A20' -> ['A18', 'A20'];  'A47 - 48' -> ['A47', 'A48'].
+
+    The second half is often written as a bare number, so it borrows the
+    letter from the first.
+    """
+    parts = [p.strip() for p in re.split(r"\s*(?:&|,|\band\b|-|–)\s*", cell) if p.strip()]
+    if not parts:
+        return []
+    prefix = re.match(r"[A-Za-z]+", parts[0])
+    prefix = prefix.group(0).upper() if prefix else ""
+    out = []
+    for p in parts:
+        p = p.upper()
+        out.append(p if re.match(r"[A-Z]", p) else prefix + p)
+    return out
+
+
 def read_booths(path: pathlib.Path):
-    ws = openpyxl.load_workbook(path, read_only=True).worksheets[0]
+    ws = openpyxl.load_workbook(path, data_only=True).worksheets[0]
     rows = list(ws.iter_rows(values_only=True))
     header = [str(h).strip() if h else "" for h in rows[0]]
     col = {h: i for i, h in enumerate(header)}
@@ -53,24 +78,32 @@ def read_booths(path: pathlib.Path):
             sys.exit(f"column {needed!r} missing — got {header}")
 
     booths, seen = [], set()
+    kind = "booth"
     for r in rows[1:]:
         def cell(name):
             i = col.get(name)
             return str(r[i]).strip() if i is not None and r[i] is not None else ""
 
-        booth, company = cell("Booth Number"), cell("Company Name")
-        if not booth or not company or booth in seen:
+        number, company = cell("Booth Number"), cell("Company Name")
+        if not number:
             continue
-        seen.add(booth)
-        booths.append({
-            "booth": booth,
-            "company": company,
-            "category": cell("Business Classification"),
-            "contact": cell("Name"),
-            "chapter": cell("BNI Chapter"),
-            "initials": initials(company),
-            "email": login_email(booth),
-        })
+        if not company:
+            # The divider the committee typed into the booth column.
+            if number.lower().startswith("sponsor"):
+                kind = "sponsor"
+            continue
+        for code in booth_codes(number):
+            if code in seen:
+                continue
+            seen.add(code)
+            booths.append({
+                "booth": code,
+                "company": company,
+                "category": cell("Business Classification"),
+                "initials": initials(company),
+                "kind": kind,
+                "email": login_email(code),
+            })
     return booths
 
 
@@ -78,7 +111,7 @@ def values_block(booths) -> str:
     lines = []
     for b in booths:
         lines.append("    (" + ", ".join(q(b[k]) for k in
-                     ("booth", "company", "category", "initials", "contact", "chapter", "email")) + ")")
+                     ("booth", "company", "category", "initials", "kind", "email")) + ")")
     return ",\n".join(lines)
 
 
@@ -92,18 +125,21 @@ def main() -> None:
 
     block = values_block(booths)
     codes = ", ".join(q(b["booth"]) for b in booths)
+    sponsors = sum(1 for b in booths if b["kind"] == "sponsor")
 
-    sql = f"""-- The {len(booths)} booths from the committee's "Data Booth" sheet.
+    sql = f"""-- The exhibitor floor: {len(booths) - sponsors} booths and {sponsors} sponsors, from the
+-- committee's booth sheet.
 -- GENERATED by scripts/booths_migration.py — edit the sheet, not this file.
 --
--- Idempotent in both directions:
---   · a booth already present under its code is left alone, keeping its
+-- This replaces the earlier booth migration, which was built from a sheet the
+-- committee has since redrawn. Idempotent in both directions:
+--   · an exhibitor already present under its code is left alone, keeping its
 --     scanner login and every scan it has collected;
---   · a booth that is NOT in the sheet is removed, but only when nobody has
---     scanned it — a database in use is never quietly emptied.
+--   · an exhibitor that is NOT in the sheet is removed, but only when nobody
+--     has scanned it — a database in use is never quietly emptied.
 --
 -- Scanner accounts land on the default password (booth-<code>@natcon.id /
--- SEED_PASSWORD): the row below carries a placeholder hash nobody can sign in
+-- SEED_PASSWORD): the rows below carry a placeholder hash nobody can sign in
 -- with, and the API's seeder rewrites it on the next start. Set
 -- SEED_PASSWORD before the event.
 
@@ -112,28 +148,35 @@ INSERT INTO users (name, email, password_hash, role, company)
 SELECT v.company, v.email, '{PLACEHOLDER_HASH}', 'tenant', v.company
 FROM (VALUES
 {block}
-) AS v (booth, company, category, initials, contact, chapter, email)
+) AS v (booth, company, category, initials, kind, email)
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = v.email)
   AND NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
 
 INSERT INTO tenants (name, category, booth, initials, kind, description,
                      contact_name, chapter, owner_user_id)
-SELECT v.company, v.category, v.booth, v.initials, 'booth', '',
-       v.contact, v.chapter, u.id
+SELECT v.company, v.category, v.booth, v.initials, v.kind, '', '', '', u.id
 FROM (VALUES
 {block}
-) AS v (booth, company, category, initials, contact, chapter, email)
+) AS v (booth, company, category, initials, kind, email)
 JOIN users u ON u.email = v.email
 WHERE NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
 
--- Anything else that calls itself a booth is not on the floor plan: leftovers
--- from an older sheet or a mockup. Sponsors are left alone — they never came
--- from this sheet. The tenant row goes first; its scanner login is behind a
--- foreign key.
+-- An exhibitor already on the floor plan under an older name or classification
+-- follows the sheet: the committee edits there, not here.
+UPDATE tenants t
+SET name = v.company, category = v.category, initials = v.initials, kind = v.kind
+FROM (VALUES
+{block}
+) AS v (booth, company, category, initials, kind, email)
+WHERE t.booth = v.booth
+  AND (t.name <> v.company OR t.category <> v.category OR t.kind <> v.kind);
+
+-- Anything else that calls itself a booth or a sponsor is not on this floor
+-- plan: leftovers from the sheet this migration replaces. The tenant row goes
+-- first; its scanner login is behind a foreign key.
 WITH removed AS (
     DELETE FROM tenants
-    WHERE kind = 'booth'
-      AND booth NOT IN ({codes})
+    WHERE booth NOT IN ({codes})
       AND NOT EXISTS (SELECT 1 FROM visits v WHERE v.tenant_id = tenants.id)
     RETURNING owner_user_id
 )
@@ -142,7 +185,7 @@ USING removed r
 WHERE u.id = r.owner_user_id AND u.role = 'tenant';
 """
     OUT.write_text(sql, encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)} — {len(booths)} booths from {src.name}")
+    print(f"{OUT.relative_to(ROOT)} — {len(booths)} exhibitors ({sponsors} sponsors) from {src.name}")
     print("  " + ", ".join(b["booth"] for b in booths))
 
 

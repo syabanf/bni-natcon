@@ -36,7 +36,7 @@ func (r *AdminRepo) RedeemItem(ctx context.Context, memberCode, item string) (*d
 		       pin_redeemed_at, goodiebag_redeemed_at,
 		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = users.id)
 		FROM users
-		WHERE role = 'member' AND (member_code = $1 OR lower(email) = lower($1) OR phone = $1)
+		WHERE role = 'member' AND (`+scanKeySQL+` OR lower(email) = lower($1))
 		FOR UPDATE`, memberCode).
 		Scan(&res.MemberID, &res.Name, &res.MemberCode, &res.Chapter, &res.Company,
 			&pinAt, &bagAt, &res.Visits)

@@ -299,6 +299,9 @@ type MemberUpdate struct {
 	Company        string
 	Phone          string
 	Classification string
+	// The number their QR carries. A typo here makes a pass unscannable, so
+	// the committee can correct it.
+	TicketNumber string
 }
 
 // NewTenant creates a booth/sponsor plus its scanner login user.

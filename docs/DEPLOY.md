@@ -52,8 +52,8 @@ Environment yang wajib diisi:
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
-narasumbernya**, dan **31 booth dari sheet *Data Booth*** (migrasi `0014`,
-lengkap dengan login scanner `booth-<kode>@natcon.id`). Tidak ada peserta
+narasumbernya**, dan **34 booth + 4 sponsor dari sheet booth** (migrasi
+`0023`, lengkap dengan login scanner `booth-<kode>@natcon.id`). Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 

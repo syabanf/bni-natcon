@@ -37,6 +37,7 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		errors.Is(err, domain.ErrTableFull),
 		errors.Is(err, domain.ErrNotRegistered),
 		errors.Is(err, domain.ErrEmailTaken),
+		errors.Is(err, domain.ErrTicketTaken),
 		errors.Is(err, domain.ErrNameTaken),
 		errors.Is(err, domain.ErrChapterInUse),
 		errors.Is(err, domain.ErrTableInUse):

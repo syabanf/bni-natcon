@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
 import { api, assetUrl } from '../../api/client'
 import { toast } from '../../components/Toast'
+import { scanCode } from '../../pass'
 import { useAuthStore } from '../../store/auth'
 
 // Cover: uploaded image when set, otherwise a themed gradient per room.
@@ -132,7 +133,7 @@ function RoomAttendees({ seminarId }) {
 
 // Full-page learning class detail: cover, description, speakers/moderator,
 // and the member's class entry QR (distinct payload from the general QR).
-function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy, locked }) {
+function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, locked }) {
   const [showQR, setShowQR] = useState(false)
   const full = seminar.seats_left <= 0
 
@@ -179,7 +180,7 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
                 </button>
                 {showQR && (
                   <div className="seminar-qr">
-                    <QRCodeSVG value={memberCode || ''} size={148} />
+                    <QRCodeSVG value={passCode || ''} size={148} />
                     <b>Class entry pass — {seminar.room}</b>
                     <p>
                       This QR is for the learning class door only (separate from your booth QR). The
@@ -267,7 +268,7 @@ export default function Seminars() {
     return (
       <SeminarDetail
         seminar={detail}
-        memberCode={user?.member_code}
+        passCode={scanCode(user)}
         onBack={() => setDetailID(null)}
         onRegister={register}
         onCancel={cancel}

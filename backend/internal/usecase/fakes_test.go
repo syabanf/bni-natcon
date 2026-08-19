@@ -33,15 +33,6 @@ func (f *fakeUserRepo) GetByID(_ context.Context, id int64) (*domain.User, error
 	return nil, domain.ErrNotFound
 }
 
-func (f *fakeUserRepo) GetByMemberCode(_ context.Context, code string) (*domain.User, error) {
-	for _, u := range f.users {
-		if u.MemberCode == code && u.Role == domain.RoleMember {
-			return u, nil
-		}
-	}
-	return nil, domain.ErrNotFound
-}
-
 func (f *fakeUserRepo) SetPassword(_ context.Context, userID int64, hash string) error {
 	for _, u := range f.users {
 		if u.ID == userID {
@@ -95,9 +86,11 @@ func (f *fakeUserRepo) ListByEmail(_ context.Context, email string) ([]*domain.U
 	return out, nil
 }
 
-func (f *fakeUserRepo) GetByCodeOrPhone(_ context.Context, key string) (*domain.User, error) {
+func (f *fakeUserRepo) GetByScanCode(_ context.Context, key string) (*domain.User, error) {
 	for _, u := range f.users {
-		if u.Role == domain.RoleMember && (u.MemberCode == key || (u.Phone != "" && u.Phone == key)) {
+		if u.Role == domain.RoleMember &&
+			((u.TicketNumber != "" && u.TicketNumber == key) ||
+				u.MemberCode == key || (u.Phone != "" && u.Phone == key)) {
 			return u, nil
 		}
 	}

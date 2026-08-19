@@ -17,8 +17,9 @@ straight into the table's network, where every person shows their **chapter**,
 **business classification** and a **WhatsApp link**, takes a **private note**
 straight from the seat, and whose contact details carry **email & phone** that
 open the mail/phone app on tap. Tenants
-scan member QRs with the camera or **manual input by member ID / phone
-number**, keep **notes per visitor** (shown in the visitor list), and open
+scan member QRs — which carry the attendee's **ticket number**, the one
+printed on their ticket — with the camera, or take **manual input by ticket
+number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
 gives the committee live monitoring (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
@@ -26,7 +27,7 @@ description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
 sponsor rows; learning classes carry a **speaker list with uploadable
 photos**, description + cover, a **seat quota you set straight from the
 class list** — click the number, type, Enter — and the committee can
-**register attendees into a class** by member code/email/phone or **import
+**register attendees into a class** by ticket number/member code/email/phone or **import
 a whole registration sheet**),
 **detail pages**, the **door check-in station**, a **Tables** page that
 generates the speed-networking tables, a **QR Prints** page with
@@ -91,9 +92,11 @@ away.
 - **The 4 learning classes with their 9 speakers and moderators**, from the
   Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
-- **The 31 booths of the committee's *Data Booth* sheet** (migration `0014`),
-  each with its contact, chapter and scanner login. Generated straight from
-  the spreadsheet by
+- **The 34 booths and 4 sponsors of the committee's booth sheet** (migration
+  `0023`), each with its scanner login. The sheet's own *Sponsor* divider
+  decides which is which, and an exhibitor holding two positions
+  ("A18 & A20") gets a booth — and a printable QR — for each. Generated
+  straight from the spreadsheet by
   [`scripts/booths_migration.py`](scripts/booths_migration.py) — edit the
   sheet, re-run the script, restart. It works in both directions: a booth
   already there keeps its login and its scans, and a booth that has left the
@@ -343,7 +346,7 @@ Everyone else is created by that account:
 | Booth    | `booth-<code>@natcon.id`     | `SEED_PASSWORD`, or set in the admin panel · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so
-importing the *Data Booth* sheet also hands out 31 scanner accounts.
+importing the booth sheet also hands out one scanner account per booth.
 
 ## API summary (`/api/v1`)
 
@@ -359,7 +362,7 @@ importing the *Data Booth* sheet also hands out 31 scanner accounts.
 | POST `/auth/login/select`      | public | pick which pass to sign in as, when one email holds several |
 | POST `/auth/forgot`            | public | chapter + ticket phone → one reset token per matching pass (rate-limited) |
 | POST `/auth/reset`             | public | consume the reset token, set a password  |
-| POST `/scans`                  | tenant | record visit — `member_code` accepts a member code **or phone number** |
+| POST `/scans`                  | tenant | record visit — `member_code` accepts the **ticket number** the QR carries, a member code, or a phone number |
 | GET `/booth`                   | tenant | booth profile                            |
 | GET `/booth/stats`             | tenant | total + today scan counts                |
 | GET `/booth/visitors`          | tenant | recent visitors (incl. per-visitor note) |
@@ -378,7 +381,7 @@ importing the *Data Booth* sheet also hands out 31 scanner accounts.
 | POST `/admin/tenants`, PUT/DELETE `/admin/tenants/{id}`       | admin | tenant CRUD (auto booth login)          |
 | POST `/admin/seminars`, PUT/DELETE `/admin/seminars/{id}`     | admin | seminar CRUD                            |
 | POST `/admin/seminars/{id}/checkin` | admin | door check-in by `member_code` (409 if not registered; duplicate flagged, not double-counted) |
-| POST `/admin/seminars/{id}/registrations` | admin | register an attendee by member code, email, or phone |
+| POST `/admin/seminars/{id}/registrations` | admin | register an attendee by ticket number, member code, email, or phone |
 | DELETE `/admin/seminars/{id}/registrations/{code}` | admin | drop a registration (and its attendance) |
 | POST `/admin/seminars/registrations/bulk` | admin | import a registration sheet (attendee + room per row) |
 | POST `/admin/uploads` | admin | multipart image upload (JPG/PNG/WEBP/GIF ≤5 MB) → stored locally in `UPLOAD_DIR`, served at GET `/uploads/{name}` — used for seminar covers |

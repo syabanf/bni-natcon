@@ -253,7 +253,7 @@ export default function DoorCheckin({ onUnauthorized }) {
         <p className="panel-sub">
           {mode === 'attendance'
             ? `${selected ? `${selected.room} door` : 'Loading…'} · camera or manual input — scanning a printed room QR switches the session`
-            : `Handing over ${mode === 'pin' ? 'pins' : 'goodiebags'} · camera or manual input — a member code, email or phone all work`}
+            : `Handing over ${mode === 'pin' ? 'pins' : 'goodiebags'} · camera or manual input — a ticket number, member code, email or phone all work`}
         </p>
 
         {cameraOn ? (
@@ -277,7 +277,7 @@ export default function DoorCheckin({ onUnauthorized }) {
           <input
             value={manual}
             onChange={(e) => setManual(e.target.value)}
-            placeholder="Manual input: NATCON-2026-XXXXX"
+            placeholder="Manual input: ticket number, member code, email or phone"
           />
           <button type="submit" className="md-add">
             Check-in

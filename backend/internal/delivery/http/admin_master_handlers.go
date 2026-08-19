@@ -27,6 +27,10 @@ type memberPayload struct {
 	Company        string `json:"company"`
 	Phone          string `json:"phone"`
 	Classification string `json:"classification"`
+	// The ticketing team's number. It is what the attendee's QR carries, so
+	// an attendee added by hand here can still be scanned against the ticket
+	// in their pocket.
+	TicketNumber string `json:"ticket_number"`
 }
 
 func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +62,10 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 		Phone      string `json:"phone"`
 
 		Classification string `json:"classification"`
-		Visits         int    `json:"visits"`
+		// The number their QR carries; the edit form has to show it, or
+		// saving an unrelated change would blank it.
+		TicketNumber string `json:"ticket_number"`
+		Visits       int    `json:"visits"`
 		// Only meaningful when several attendees share a name, email and
 		// phone; the UI shows "#2 of 3" then and nothing otherwise.
 		TwinIndex int `json:"twin_index"`
@@ -69,8 +76,8 @@ func (s *Server) handleAdminListMembers(w http.ResponseWriter, r *http.Request) 
 		out = append(out, row{
 			ID: m.ID, Name: m.Name, Email: m.Email, MemberCode: m.MemberCode,
 			Chapter: m.Chapter, Company: m.Company, Phone: m.Phone,
-			Classification: m.Classification, Visits: m.Visits,
-			TwinIndex: m.TwinIndex, TwinCount: m.TwinCount,
+			Classification: m.Classification, TicketNumber: m.TicketNumber,
+			Visits: m.Visits, TwinIndex: m.TwinIndex, TwinCount: m.TwinCount,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
@@ -114,6 +121,7 @@ func (s *Server) handleAdminCreateMember(w http.ResponseWriter, r *http.Request)
 	user, err := s.admin.CreateMember(r.Context(), usecase.MemberInput{
 		Name: req.Name, Email: req.Email, Password: req.Password, Chapter: req.Chapter,
 		Company: req.Company, Phone: req.Phone, Classification: req.Classification,
+		TicketNumber: req.TicketNumber,
 	})
 	if err != nil {
 		respondDomainError(w, err)
@@ -136,6 +144,7 @@ func (s *Server) handleAdminUpdateMember(w http.ResponseWriter, r *http.Request)
 	err := s.admin.UpdateMember(r.Context(), id, domain.MemberUpdate{
 		Name: req.Name, Email: req.Email, Chapter: req.Chapter, Company: req.Company,
 		Phone: req.Phone, Classification: req.Classification,
+		TicketNumber: req.TicketNumber,
 	})
 	if err != nil {
 		respondDomainError(w, err)

@@ -77,7 +77,7 @@ export default function Scanner() {
         setResult({
           kind: 'err',
           title: 'Scan failed',
-          detail: err.status === 404 ? 'Not recognized as a Natcon attendee — check the ID or phone number' : err.message,
+          detail: err.status === 404 ? 'Not recognized as a Natcon attendee — check the ticket number, member ID or phone' : err.message,
         })
       }
     } finally {
@@ -172,7 +172,7 @@ export default function Scanner() {
         <input
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}
-          placeholder="Manual input: member ID or phone number"
+          placeholder="Manual input: ticket number, member ID or phone"
         />
         <button type="submit">Check</button>
       </form>

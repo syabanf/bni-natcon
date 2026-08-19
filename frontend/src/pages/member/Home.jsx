@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
+import { scanCode } from '../../pass'
 import { useAuthStore } from '../../store/auth'
 
 // The agenda is the committee's rundown, read live from the API — it used to
@@ -76,7 +77,7 @@ export default function Home() {
             <div className="mc-id">{user?.member_code}</div>
           </div>
           <div className="mc-qr">
-            {user?.member_code && <QRCodeSVG value={user.member_code} size={64} />}
+            {scanCode(user) && <QRCodeSVG value={scanCode(user)} size={64} />}
           </div>
         </div>
       </div>

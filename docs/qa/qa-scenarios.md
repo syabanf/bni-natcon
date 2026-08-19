@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 31 booths and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 34 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -74,9 +74,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-10 | P2 | Registered | Open the class detail and scroll to 'In this room'. | Lists the people registered for that room with their chapter. Your own name is there. |
 | ATT-11 | P2 | Registered | Cancel the registration, then register for a different class. | Cancelling frees the choice; the other classes become available again and the new one registers. |
 | ATT-12 | P1 | The door crew has just checked this attendee in | Reopen Learning Class. | Banner reads 'Attendance recorded ✓' and the class button reads 'Registered · attended ✓'. |
-| ATT-13 | P1 | Network tab, not yet at a table | Type a table number and join. | Placement card shows 'Table N · Seat n' and the people already at that table. |
+| ATT-13 | P1 | Learning class tab, networking | Look for a way to type a table number. | There is none — scanning the table QR is the only way in. The note says so, and the camera-failure message points at the committee. |
 | ATT-14 | P1 | Network tab | Scan the printed table QR with the camera (real phone). | Same result as typing the number — checked in at that table. |
-| ATT-15 | P1 | Network tab | Type your own member code (NATCON-2026-…) into the table number box. | Refused with 'Enter your table number, e.g. 5'. It must NOT seat you at table 1. |
+| ATT-15 | P1 | Network tab | Scan your own member QR at the table screen. | Refused as 'not a networking table code'. It must NOT seat you at table 1. |
 | ATT-16 | P1 | At a table with other people | Read another person's row. | Shows their company, BNI chapter, business classification and a WhatsApp link with their number. |
 | ATT-17 | P1 | At a table | Press '+ Note' on someone you have NOT saved yet, write a note and save. | The note is stored and shown on their row; the contact is saved automatically (the row now offers 'Edit note'). |
 | ATT-18 | P2 | At a table | Press '+ Save' on someone. | They are added to your saved contacts. |
@@ -84,6 +84,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-20 | P2 | Saved contacts list | Open one contact. | Shows their profile with email and phone. Tapping the phone opens the dialer; tapping the email opens the mail app. |
 | ATT-21 | P3 | Any attendee screen | Scroll to the bottom. | 'System by WIT' is shown and links to wit.id. |
 | ATT-22 | P2 | Attendee app | Look at the top bar. | Logo only — no venue line. The bottom nav reads Home, My QR, Passport, Learning Class, Network, all on one level. |
+| ATT-23 | P1 | Attendee holding one learning class | Register for a second class at the SAME hour. | Refused: 'that class runs at the same time as one you already picked'. |
+| ATT-24 | P1 | Attendee holding one learning class | Register for a class at a DIFFERENT hour. | Accepted — two classes is the allowance. |
+| ATT-25 | P1 | Attendee holding two learning classes | Register for a third. | Refused: two is the limit. Cancelling one frees the place immediately. |
+| ATT-26 | P1 | Two attendees seated at the same table | Have the second one scan in while the first watches. | The newcomer appears on the first one's screen within about five seconds, with Save and Note ready — no refresh. |
+| ATT-27 | P2 | Attendee whose email holds two tickets | Sign in. | The picker numbers the passes #1 and #2 above their member codes, so two identical names can be told apart. |
 
 ## Booth scanner
 
@@ -102,9 +107,12 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-09 | P1 | At least one scan today | Open Dashboard. | Total scans and Scans today match what you scanned; the visitor appears in Recent visitors. |
 | BTH-10 | P1 | Dashboard | Tap a visitor row. | Visitor detail: name, company, chapter, member code, visit time, a Call button, and a Lead note box. |
 | BTH-11 | P1 | Visitor detail | Write a lead note, save, then go back to the dashboard. | The note is shown on that visitor's row in the list straight away — without reloading the page. |
-| BTH-12 | P2 | Signed in as a sponsor booth (booth-sp01@natcon.id) | Repeat BTH-04. | Works the same; sponsors scan exactly like booths. |
+| BTH-12 | P2 | Signed in as a sponsor booth (booth-b1@natcon.id) | Repeat BTH-04. | Works the same; sponsors scan exactly like booths. |
 | BTH-13 | P2 | Phone with the app open | Turn off mobile data and Wi-Fi, then scan an attendee. | Shows 'Offline — scan queued'. Turn the connection back on: the queued scan syncs and the attendee's pin appears. |
 | BTH-14 | P3 | Booth app | Look at the bottom nav. | Only Scanner and Dashboard — no attendee tabs. |
+| BTH-15 | P1 | Scanner, an attendee holding a ticket from the sheet | Scan their pass QR from the My QR screen. | Recorded, with their name — the QR carries the ticket number, not the member code. |
+| BTH-16 | P2 | Scanner, the same attendee | Type the member code printed under their QR instead. | Reported as a repeat visit of the same person — both keys reach one attendee, never two. |
+| BTH-17 | P2 | Scanner | Type a ticket number nobody holds (16C6C-NOSUCHTICKET). | A clear not-found message. Nothing is recorded. |
 
 ## Admin master data
 
@@ -144,6 +152,14 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-30 | P1 | A class showing FULL | Register one more attendee into it (Detail → register by code/email/phone). | Refused: 'this seminar is fully booked'. An attendee picking it in the app is turned away too. |
 | MD-31 | P2 | Admin · Learning Classes | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
 | MD-32 | P2 | Admin · Learning Classes | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
+| MD-33 | P1 | Admin · Learning Classes, rundown has learning blocks | Edit a class and pick a Time block. | The list shows the class's hour instead of 'not scheduled'; the attendee's class card shows the same hour. |
+| MD-34 | P1 | Admin · Learning Classes | Upload a landscape Banner image and a portrait Poster on the same class. | The class list shows the banner; the attendee's class detail shows the poster whole, not cropped. |
+| MD-35 | P1 | A class with both pictures | Edit only its description and save. | Both pictures survive. Losing one on an unrelated save is the bug this case exists for. |
+| MD-36 | P1 | Admin · Tenants | Upload a Company logo on a booth. | The attendee passport shows the logo in place of the two-letter initials; booths without a logo still show initials. |
+| MD-37 | P1 | Attendees imported from a sheet where several share a name, email and phone | Search for that email in Master Data → Attendees. | Each row carries #1 of 3, #2 of 3 … so identical-looking rows can be told apart. |
+| MD-38 | P1 | Admin · Attendees | Add an attendee by hand and give them a Ticket number. | Saved and shown under their member code in the list; their pass QR then carries that number. |
+| MD-39 | P1 | Admin · Attendees | Give a second attendee a ticket number another one already holds. | Refused — 'that ticket number belongs to another attendee'. Two people on one QR is the thing this prevents. |
+| MD-40 | P1 | An attendee imported with a ticket number | Edit only their phone number and save. | The ticket number is still there. Losing it would make their QR stop scanning. |
 
 ## Admin operations
 
@@ -168,6 +184,23 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | OPS-15 | P2 | After OPS-14 | Draw again. | The previous winner is not drawn a second time. |
 | OPS-16 | P2 | Admin | Delete an attendee who has scans and a class registration. | Deleted after the confirmation, and their scans and registration go with them; counts on the dashboard drop accordingly. |
 | OPS-24 | P2 | Lucky Draw | Press Stage mode, then Space, then Esc. | Space draws one winner (never two, however fast you press). Esc returns to the panel and the page is where you left it. |
+| OPS-25 | P1 | Admin · Rundown, empty | Add a block: 09:00, 1 hour, Plenary, 'Opening Ceremony', Grand Ballroom. | It appears in the table as 09:00 – 10:00 · 1 hour · Plenary. The attendee app's Today's agenda shows it without a redeploy. |
+| OPS-26 | P1 | Admin · Rundown | Try to add a block starting at 13:30, and one that is 90 minutes long. | Both refused: blocks start on the hour and run in whole hours. |
+| OPS-27 | P2 | Admin · Rundown with two blocks at the same time | Look at the table. | Both overlapping rows are tinted and marked 'overlaps another block'. |
+| OPS-28 | P1 | Admin · Rundown | Delete a block that has a learning class in it. | The block goes, the class stays — it simply has no time until you give it a new block. |
+| OPS-29 | P1 | Admin · Tables, nobody seated | Press Start round with 15 minutes. | The panel reads 'Round 1 is running · ends at HH:MM'. Every attendee's Network screen counts down to that same time. |
+| OPS-30 | P1 | A round is running, attendee on the Network screen | Reload the attendee's page. | The countdown continues from where it was. It must NOT restart at 15:00 — that was the old bug. |
+| OPS-31 | P1 | A round is running | Press Start next round. | The old round closes and a new one starts. Attendees follow within about 20 seconds; there are never two clocks. |
+| OPS-32 | P2 | No round has ever started | Look at an attendee's Network screen. | The clock reads --:-- and 'waiting to start', not an invented number. |
+| OPS-33 | P1 | Admin · Tables, some attendees seated | Press 'Who is seated'. | Each table lists who is sitting at it with chapter, company and the time they sat down. The header count agrees with the list. |
+| OPS-34 | P2 | Admin · Tables, seating on screen | Press Export Excel. | natcon2026-networking-seating.xlsx downloads with table, seat, member code, name, chapter, company, phone and joined-at. |
+| OPS-35 | P1 | Admin · Tables | Edit table 1 and give it the name 'Startup Corner'. | The list shows the name; an attendee seated there sees 'Startup Corner' on their placement card. |
+| OPS-36 | P1 | Admin · Lucky Draw | Look at the top of the page. | Two tabs: Lucky Draw and Doorprize, each showing how many have been drawn. |
+| OPS-37 | P1 | Admin · Lucky Draw | Set 'Booths to visit before entering' to 5. | The eligible count drops to only those who have visited five or more booths. Setting it back to 0 restores everyone. |
+| OPS-38 | P1 | Admin · Lucky Draw | Draw a winner, then RELOAD the page. | The winner is still listed and still out of the pool. Losing them on reload was the old behaviour and must not come back. |
+| OPS-39 | P1 | A lucky draw winner exists | Switch to the Doorprize tab. | It has its own (empty) winners list, and the lucky draw's winner is not in its pool — nobody takes two prizes. |
+| OPS-40 | P2 | Admin · a draw whose pool is empty | Press draw. | Refused with 'nobody left to draw — everyone eligible has already won', not a silent failure. |
+| OPS-41 | P2 | Admin · Lucky Draw with winners | Press Clear winners and confirm. | The list empties and everyone returns to the pool — for a rehearsal, or a ceremony that restarts. |
 
 ## Reports & export
 
@@ -206,6 +239,23 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-10 | P3 | Any page | Check the browser tab. | Title and favicon are the Natcon branding, not the Vite default. |
 | CRS-11 | P3 | Attendee and admin apps | Read the interface language. | Everything is in English, consistently — no leftover Indonesian labels. |
 
+## Door crew app
+
+*The door crew's own app (port 5175 / 8087): class attendance, goodiebags and pins.*
+
+| ID | Pri | Precondition | Steps | Expected result |
+|---|---|---|---|---|
+| DOOR-01 | P1 | Signed out | Open the door app and sign in as door@natcon.id / SEED_PASSWORD. | You land on Door Check-in with three modes: Class attendance, Goodiebag, Pin. |
+| DOOR-02 | P1 | Signed out | Try an ATTENDEE email and password. | Refused with 'That is not a door account. Ask the committee for the door login.' — not a wall of errors on the next screen. |
+| DOOR-03 | P1 | Signed out | Sign in with the wrong password. | It says the password is wrong. It must NOT say the session expired. |
+| DOOR-04 | P1 | Door app, Class attendance mode | Pick a class and scan an attendee registered for it. | Attendance recorded, with their name and chapter. Scanning again says they are already checked in. |
+| DOOR-05 | P1 | Door app, Class attendance mode | Scan an attendee NOT registered for that class. | Rejected clearly, naming the reason. |
+| DOOR-06 | P1 | Door app, Goodiebag mode | Scan an attendee. | 'Goodiebag handed over' with their name; the counter moves. The class picker is hidden in this mode. |
+| DOOR-07 | P1 | Door app, Goodiebag mode | Scan the same attendee again. | 'Already collected — <name> took it at HH:MM'. The time is what settles an argument at the desk. |
+| DOOR-08 | P1 | Door app, Pin mode | Scan an attendee who already has their goodiebag. | The pin is handed over: the two are counted separately. |
+| DOOR-09 | P2 | Door app | Type a member code, an email, and a phone number into the manual box. | All three find the attendee — a phone that will not scan must not stop the queue. |
+| DOOR-10 | P1 | Signed in to the door app | Look for the attendee list, master data, reports or the draws. | None of it exists here, and the API refuses a door account those pages. That separation is why this app exists. |
+
 ## Test data
 
 | What | Value | Notes |
@@ -213,30 +263,33 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
 | Attendees | import Data Peserta.xlsx | 769 rows; password = chapter + first name, then they set their own |
-| Booths | already there — 31 from the Data Booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, e.g. A1 -> booth-a1@natcon.id |
+| Booths | already there — 34 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, e.g. A1 -> booth-a1@natcon.id. A18/A20 and A47/A48 are one company on two stands. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
-| Sponsor scanner | booth-sp01@natcon.id / natcon2026 | BNI Xpora · booth SP-01 |
+| Sponsor scanner | booth-b1@natcon.id / SEED_PASSWORD | Bio Medika · booth B1 — the sheet's own Sponsor divider made it a sponsor |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
 | Imported attendee password | chapter + first name, lowercase, no spaces | Heritage + Fahmi → heritagefahmi |
 | Unknown member code | NATCON-2026-99999 | For the not-found cases |
 | Table QR payload | TABLE:5 | What the QR Prints page prints |
 | Class QR payload | SEMINAR:<id> | Scanned on Door Check-in to switch room |
 | Booth QR payload | BOOTH:A1 | Booth signage |
-| Breakout classes | Rooms 1–4, all slot 1, 60 seats each | All parallel — an attendee picks exactly one |
+| Learning classes | Rooms 1–4, 60 seats each | Give each one a rundown block before testing the two-class rule |
 | Attendee app | http://localhost:5173 |  |
 | Admin panel | http://localhost:5174 |  |
 | Attendee sign-in | http://localhost:5173/login | The door printed on the attendee ticket |
 | Booth sign-in | http://localhost:5173/tenant/login | The door given to booth and sponsor crews |
+| Attendee QR payload | their ticket number, e.g. 16C6C-23BBA1745 | What the pass QR carries. The member code under it still scans. |
+| Unknown ticket number | 16C6C-NOSUCHTICKET | For the not-found cases at any scanner |
 
 ## Coverage
 
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 22 | 14 |
-| Booth scanner | 14 | 10 |
-| Admin master data | 32 | 25 |
-| Admin operations | 17 | 10 |
+| Attendee | 27 | 18 |
+| Booth scanner | 17 | 11 |
+| Admin master data | 40 | 33 |
+| Admin operations | 34 | 22 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 11 | 3 |
-| **Total** | **130** | **84** |
+| Door crew app | 10 | 9 |
+| **Total** | **173** | **118** |

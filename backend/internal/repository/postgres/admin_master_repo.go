@@ -49,7 +49,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 			                                   btrim(COALESCE(phone, ''))) AS total
 			FROM users WHERE role = 'member'
 		)
-		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.classification, u.created_at,
+		SELECT u.id, u.name, u.email, u.role, COALESCE(u.member_code, ''), u.chapter, u.company, u.phone, u.classification, u.ticket_number, u.created_at,
 		       (SELECT COUNT(*) FROM visits v WHERE v.member_id = u.id),
 		       t.idx, t.total
 		FROM users u JOIN twins t ON t.id = u.id
@@ -65,7 +65,7 @@ func (r *AdminRepo) ListMembers(ctx context.Context, q string, limit, offset int
 	for rows.Next() {
 		var m domain.MemberSummary
 		if err := rows.Scan(&m.ID, &m.Name, &m.Email, &m.Role, &m.MemberCode,
-			&m.Chapter, &m.Company, &m.Phone, &m.Classification, &m.CreatedAt, &m.Visits,
+			&m.Chapter, &m.Company, &m.Phone, &m.Classification, &m.TicketNumber, &m.CreatedAt, &m.Visits,
 			&m.TwinIndex, &m.TwinCount); err != nil {
 			return nil, 0, err
 		}
@@ -88,7 +88,8 @@ func (r *AdminRepo) SeminarCheckin(ctx context.Context, seminarID int64, memberC
 	var memberID int64
 	err := r.pool.QueryRow(ctx, `
 		SELECT id, name, COALESCE(member_code, ''), chapter
-		FROM users WHERE member_code = $1 AND role = 'member'`, memberCode).
+		FROM users WHERE role = 'member' AND (`+scanKeySQL+`)
+		LIMIT 1`, memberCode).
 		Scan(&memberID, &res.MemberName, &res.MemberCode, &res.MemberChapter)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -141,18 +142,22 @@ func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*doma
 	var u domain.User
 	err := r.pool.QueryRow(ctx, `
 		INSERT INTO users (name, email, password_hash, role, member_code, chapter, company, phone, classification,
-		                   must_set_password)
+		                   must_set_password, ticket_number)
 		VALUES ($1, $2, $3, 'member',
 		        'NATCON-2026-' || lpad(nextval('member_code_seq')::text, 5, '0'),
-		        $4, $5, $6, $7, true)
+		        $4, $5, $6, $7, true, $8)
 		RETURNING id, name, email, role, member_code, chapter, company, phone, classification,
 		          must_set_password, ticket_number, created_at`,
-		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification).
+		m.Name, m.Email, m.PasswordHash, m.Chapter, m.Company, m.Phone, m.Classification, m.TicketNumber).
 		Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
 			&u.TicketNumber, &u.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_staff_key") {
 			return nil, domain.ErrEmailTaken
+		}
+		// Two attendees on one ticket number would make the QR ambiguous.
+		if isUniqueViolation(err, "users_ticket_number_key") {
+			return nil, domain.ErrTicketTaken
 		}
 		return nil, err
 	}
@@ -162,12 +167,16 @@ func (r *AdminRepo) CreateMember(ctx context.Context, m domain.NewMember) (*doma
 func (r *AdminRepo) UpdateMember(ctx context.Context, id int64, m domain.MemberUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE users SET name = $1, email = $2, chapter = $3, company = $4, phone = $5,
-		       classification = $6
-		WHERE id = $7 AND role = 'member'`,
-		m.Name, m.Email, m.Chapter, m.Company, m.Phone, m.Classification, id)
+		       classification = $6, ticket_number = $7
+		WHERE id = $8 AND role = 'member'`,
+		m.Name, m.Email, m.Chapter, m.Company, m.Phone, m.Classification,
+		m.TicketNumber, id)
 	if err != nil {
 		if isUniqueViolation(err, "users_email_staff_key") {
 			return domain.ErrEmailTaken
+		}
+		if isUniqueViolation(err, "users_ticket_number_key") {
+			return domain.ErrTicketTaken
 		}
 		return err
 	}
@@ -707,8 +716,9 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 
 /* ----- Class registrations made by the committee ----- */
 
-// resolveMember finds an attendee by member code, email, or phone — whichever
-// the committee happened to type or the import sheet happened to carry.
+// resolveMember finds an attendee by ticket number, member code, email, or
+// phone — whichever the committee happened to type, scan, or the import sheet
+// happened to carry.
 func (r *AdminRepo) resolveMember(ctx context.Context, lookup string) (int64, string, string, string, error) {
 	lookup = strings.TrimSpace(lookup)
 	if lookup == "" {
@@ -720,7 +730,7 @@ func (r *AdminRepo) resolveMember(ctx context.Context, lookup string) (int64, st
 		SELECT id, name, COALESCE(member_code, ''), chapter
 		FROM users
 		WHERE role = 'member'
-		  AND (member_code = $1 OR lower(email) = lower($1) OR (phone <> '' AND phone = $1))
+		  AND (`+scanKeySQL+` OR lower(email) = lower($1))
 		LIMIT 1`, lookup).Scan(&id, &name, &code, &chapter)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

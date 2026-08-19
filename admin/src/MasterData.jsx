@@ -402,7 +402,7 @@ export function MembersPage() {
           }}
         />
         <TemplateButton template={MEMBER_TEMPLATE} />
-        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '', classification: '' })}>
+        <button className="md-add" onClick={() => crud.setForm({ name: '', email: '', chapter: '', company: '', phone: '', classification: '', ticket_number: '' })}>
           + Add Attendee
         </button>
       </PageHead>
@@ -437,7 +437,12 @@ export function MembersPage() {
         <tbody>
           {crud.rows.map((m) => (
             <tr key={m.id}>
-              <td className="mono">{m.member_code}</td>
+              <td className="mono">
+                {m.member_code}
+                {/* The QR on their pass carries this, so the desk needs to
+                    read it off the row it is looking at. */}
+                {m.ticket_number && <small>{m.ticket_number}</small>}
+              </td>
               <td>
                 <b>{m.name}</b>
                 {/* Same name, same email, same phone — several people bought
@@ -465,6 +470,7 @@ export function MembersPage() {
                   crud.setForm({
                     id: m.id, name: m.name, email: m.email, chapter: m.chapter,
                     company: m.company, phone: m.phone || '', classification: m.classification || '',
+                    ticket_number: m.ticket_number || '',
                   })
                 }
                 onDelete={() => crud.del(m.id, m.name)}
@@ -496,6 +502,7 @@ export function MembersPage() {
             <Field label="Company" value={crud.form.company} onChange={(e) => crud.setForm({ ...crud.form, company: e.target.value })} />
             <Field label="Phone" hint="used by the booth scanner's manual input and the WhatsApp link at networking tables" value={crud.form.phone || ''} onChange={(e) => crud.setForm({ ...crud.form, phone: e.target.value })} />
             <Field label="Business classification" hint="shown next to this person at the networking table" value={crud.form.classification || ''} onChange={(e) => crud.setForm({ ...crud.form, classification: e.target.value })} />
+            <Field label="Ticket number" hint="from the ticketing export — this is what their pass QR carries, so every scanner reads it" value={crud.form.ticket_number || ''} onChange={(e) => crud.setForm({ ...crud.form, ticket_number: e.target.value })} />
             {crud.error && <div className="error">{crud.error}</div>}
             <div className="modal-actions">
               <button className="btn" disabled={crud.busy} type="submit">

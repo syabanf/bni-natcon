@@ -12,6 +12,7 @@ var (
 	ErrAlreadyRegistered  = errors.New("you are already registered for another seminar in this slot")
 	ErrForbidden          = errors.New("this account does not have access to that feature")
 	ErrEmailTaken         = errors.New("that email is already used by another account")
+	ErrTicketTaken        = errors.New("that ticket number belongs to another attendee")
 	ErrInvalidInput       = errors.New("invalid input")
 	ErrTableFull          = errors.New("this table is full — please join another one")
 	ErrNotRegistered      = errors.New("this attendee is not registered for this seminar")

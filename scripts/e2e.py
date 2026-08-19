@@ -24,11 +24,13 @@ import urllib.request
 
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
-# The 31 booths of the Data Booth sheet arrive with migration 0014; the
-# sponsors, attendees and tables are this suite's own fixtures.
-SEEDED_BOOTHS = 31
+# The exhibitor floor of the committee's booth sheet arrives with migration
+# 0023 — booths and the four sponsors printed under its own "Sponsor" divider.
+# The extra sponsors, the attendees and the tables are this suite's fixtures.
+SEEDED_BOOTHS = 34
+SEEDED_SPONSORS = 4
 FIXTURE_SPONSORS = 2
-FIXTURE_TENANTS = SEEDED_BOOTHS + FIXTURE_SPONSORS
+FIXTURE_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS + FIXTURE_SPONSORS
 FIXTURE_TABLES = 12
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
@@ -105,7 +107,7 @@ section("Fixtures (a fresh database has no attendees, booths or tables)")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 check("a fresh database starts with no attendees, and with the sheet's booths",
       status == 200 and body["total_members"] == 0
-      and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == 0,
+      and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == SEEDED_SPONSORS,
       f"got {body}")
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
@@ -143,13 +145,26 @@ check("two sponsors imported alongside the seeded booths",
       status == 200 and body["created"] == FIXTURE_SPONSORS)
 
 # Booth A1 comes from the sheet, not from this suite — it must already be
-# there, with its contact and chapter, and its scanner login must work.
+# there, and its scanner login must work.
 status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
-a1 = next((t for t in body["tenants"] if t["booth"] == "A1"), None)
-check("booth A1 arrived from the Data Booth sheet with its contact",
+by_booth = {t["booth"]: t for t in body["tenants"]}
+a1 = by_booth.get("A1")
+check("booth A1 arrived from the booth sheet",
       a1 is not None and a1["name"] == "SSCX International"
-      and a1["contact_name"] == "Nicolaas Andrew" and a1["chapter"] == "Star",
-      f"got {a1}")
+      and a1["category"] == "Management Consultant", f"got {a1}")
+# One exhibitor on two floor positions gets a booth — and a printable QR —
+# for each, because each position has its own sign.
+check("a double-width stand became two booths under one company",
+      by_booth.get("A18", {}).get("name") == "GrasiaCare"
+      and by_booth.get("A20", {}).get("name") == "GrasiaCare"
+      and by_booth.get("A47", {}).get("name") == "Alpha leaders"
+      and by_booth.get("A48", {}).get("name") == "Alpha leaders",
+      f'got {[by_booth.get(c, {}).get("name") for c in ("A18", "A20", "A47", "A48")]}')
+check("the sheet's own Sponsor divider decided who is a sponsor",
+      by_booth.get("B1", {}).get("kind") == "sponsor"
+      and by_booth.get("C1", {}).get("kind") == "sponsor"
+      and by_booth.get("A1", {}).get("kind") == "booth",
+      f'got {[(c, by_booth.get(c, {}).get("kind")) for c in ("B1", "C1", "A1")]}')
 
 status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                       body={"count": FIXTURE_TABLES, "hall": "Hall B", "capacity": 8})
@@ -451,16 +466,20 @@ check("member cannot admin -> 403", status == 403)
 # ---------------------------------------------------------------- member basics
 section("Member basics")
 status, body, _ = req("GET", "/api/v1/me", token=member_tok)
-check("me: 33 tenants, 0 visited", status == 200
+check("me: every exhibitor listed, none visited", status == 200
       and body["stats"]["tenants_total"] == FIXTURE_TENANTS and body["stats"]["tenants_visited"] == 0)
 
 status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
-check("tenants list 33, none visited",
+check("tenants list complete, none visited",
       status == 200 and len(body["tenants"]) == FIXTURE_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
-check("sponsors listed first with kind + description",
-      body["tenants"][0]["kind"] == "sponsor" and body["tenants"][0]["description"] != ""
-      and body["tenants"][-1]["kind"] == "booth")
+kinds = [t["kind"] for t in body["tenants"]]
+xpora = next((t for t in body["tenants"] if t["name"] == "BNI Xpora"), None)
+check("every sponsor is listed before the booths, descriptions intact",
+      kinds.count("sponsor") == SEEDED_SPONSORS + FIXTURE_SPONSORS
+      and kinds[:kinds.count("sponsor")] == ["sponsor"] * kinds.count("sponsor")
+      and xpora is not None and xpora["description"] != "",
+      f"{kinds[:8]}")
 
 # ---------------------------------------------------------------- scan flow
 section("Booth scan (digital stamp)")
@@ -498,6 +517,62 @@ check("visitor list shows the note",
       any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
 status, _, _ = req("PUT", "/api/v1/booth/visitors/999999/note", token=tenant_tok, body={"note": "x"})
 check("note for non-visitor -> 404", status == 404)
+
+# ------------------------------------------------- the QR carries the ticket
+section("The pass QR carries the ticket number")
+
+# The ticketing team's number is what is printed on the physical ticket and
+# what the attendee app puts in the QR, so every scanner in the building has
+# to resolve it — booth, class door, goodiebag and pin desk alike. The member
+# code still works: it is printed under the QR, and an attendee the committee
+# typed in by hand has no ticket at all.
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
+                      body={"name": "Tiket Sah", "email": "tiket-sah@natcon.id",
+                            "chapter": "Chapter Tiket", "phone": "+628110009090",
+                            "ticket_number": "16C6C-23BBA1745"})
+ticket_member = body["user"]
+check("an imported attendee keeps their ticket number",
+      status == 201 and ticket_member["ticket_number"] == "16C6C-23BBA1745", f"{status} {body}")
+
+status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok,
+                      body={"member_code": "16C6C-23BBA1745"})
+check("a booth scans the ticket number and gets the attendee",
+      status == 200 and body["member_name"] == "Tiket Sah" and body["duplicate"] is False,
+      f"{status} {body}")
+status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok,
+                      body={"member_code": ticket_member["member_code"]})
+check("the member code under the QR reaches the same person",
+      status == 200 and body["duplicate"] is True, f"{status} {body}")
+
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "16C6C-23BBA1745", "item": "goodiebag"})
+check("the goodiebag desk takes the ticket number",
+      status == 200 and body["name"] == "Tiket Sah", f"{status} {body}")
+
+status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
+first_class = body["seminars"][0]["id"]
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{first_class}/registrations", token=admin_tok,
+                      body={"member": "16C6C-23BBA1745"})
+check("the committee can register by ticket number", status == 201, f"{status} {body}")
+status, body, _ = req("POST", f"/api/v1/admin/seminars/{first_class}/checkin", token=admin_tok,
+                      body={"member_code": "16C6C-23BBA1745"})
+check("the class door records attendance from the ticket number",
+      status == 200 and body["member_name"] == "Tiket Sah"
+      and body["duplicate"] is False, f"{status} {body}")
+
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
+                      body={"name": "Tiket Kembar", "email": "tiket-kembar@natcon.id",
+                            "chapter": "Chapter Tiket", "ticket_number": "16C6C-23BBA1745"})
+check("a second attendee on the same ticket number is refused",
+      status == 409 and "ticket" in body.get("error", "").lower(), f"{status} {body}")
+
+status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok,
+                   body={"member_code": "16C6C-NOSUCHTICKET"})
+check("a ticket number nobody holds -> 404", status == 404)
+
+# Put the floor back the way the rest of the suite expects it: the visit, the
+# registration and the attendance go with the attendee.
+req("DELETE", f"/api/v1/admin/members/{ticket_member['id']}", token=admin_tok)
 
 # ---------------------------------------------------------------- seminars
 section("Breakout classes (register / slot lock / cancel / switch)")
@@ -610,9 +685,10 @@ check("mate moved away, 1 left at table", len(body["mates"]) == 1)
 section("Admin: overview, CRUD, details, import, reports")
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 check("overview splits sponsors from booths",
-      body["total_sponsors"] == FIXTURE_SPONSORS and body["total_booths"] == SEEDED_BOOTHS
+      body["total_sponsors"] == FIXTURE_SPONSORS + SEEDED_SPONSORS
+      and body["total_booths"] == SEEDED_BOOTHS
       and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
-check("overview: 3 members, 33 tenants, 2 visits",
+check("overview: 3 members, every exhibitor, 2 visits",
       status == 200 and body["total_members"] == 3
       and body["total_tenants"] == FIXTURE_TENANTS and body["total_visits"] == 2)
 
@@ -1145,7 +1221,7 @@ check("existing booth refreshed in place (single row, new details)",
 
 # The official booth sheet carries the person manning the booth and their
 # chapter alongside the company; both ride through the import onto the tenant.
-# Booth A1 already exists from migration 0014, so re-importing the sheet the
+# Booth A1 already exists from migration 0023, so re-importing the sheet the
 # committee already has must refresh it rather than create a second booth.
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [

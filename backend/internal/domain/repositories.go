@@ -11,10 +11,10 @@ type UserRepository interface {
 	// when a buyer holds several tickets.
 	ListByEmail(ctx context.Context, email string) ([]*User, error)
 	GetByID(ctx context.Context, id int64) (*User, error)
-	GetByMemberCode(ctx context.Context, code string) (*User, error)
-	// GetByCodeOrPhone resolves a member by member code OR phone number —
-	// the booth scanner's manual input accepts either.
-	GetByCodeOrPhone(ctx context.Context, key string) (*User, error)
+	// GetByScanCode resolves a member by whatever a scanner hands it: the
+	// ticket number their QR carries, the member code printed under it, or a
+	// phone number typed by hand when a screen will not scan.
+	GetByScanCode(ctx context.Context, key string) (*User, error)
 	SetPassword(ctx context.Context, userID int64, hash string) error
 	// FindMembersByChapterPhone backs password recovery — chapter plus the
 	// phone number on the ticket is what an attendee has to prove. Two tickets
