@@ -44,6 +44,9 @@ type Tenant struct {
 	Initials    string
 	Kind        string // "booth" | "sponsor"
 	Description string
+	// The company's own logo. Empty falls back to the initials, so a booth
+	// that never sends artwork still looks deliberate.
+	LogoURL string
 	// The BNI member manning the booth, and the chapter they belong to.
 	ContactName string
 	Chapter     string
@@ -294,6 +297,7 @@ type NewTenant struct {
 	Initials     string
 	Kind         string
 	Description  string
+	LogoURL      string
 	ContactName  string
 	Chapter      string
 	Email        string
@@ -307,6 +311,7 @@ type TenantUpdate struct {
 	Initials    string
 	Kind        string
 	Description string
+	LogoURL     string
 	ContactName string
 	Chapter     string
 }

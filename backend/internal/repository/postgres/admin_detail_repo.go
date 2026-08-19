@@ -65,13 +65,13 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 	var d domain.TenantDetail
 	err := r.pool.QueryRow(ctx, `
 		SELECT t.id, t.name, t.category, t.booth, t.initials, t.kind, t.description,
-		       t.contact_name, t.chapter, t.owner_user_id, u.email,
+		       t.logo_url, t.contact_name, t.chapter, t.owner_user_id, u.email,
 		       (SELECT COUNT(*) FROM visits v WHERE v.tenant_id = t.id),
 		       (SELECT COUNT(*) FROM visits v WHERE v.tenant_id = t.id AND v.created_at::date = CURRENT_DATE)
 		FROM tenants t JOIN users u ON u.id = t.owner_user_id
 		WHERE t.id = $1`, id).
 		Scan(&d.ID, &d.Name, &d.Category, &d.Booth, &d.Initials, &d.Kind, &d.Description,
-			&d.ContactName, &d.Chapter,
+			&d.LogoURL, &d.ContactName, &d.Chapter,
 			&d.OwnerUserID, &d.OwnerEmail, &d.TotalScans, &d.ScansToday)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

@@ -201,6 +201,7 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		Initials    string `json:"initials"`
 		Kind        string `json:"kind"`
 		Description string `json:"description"`
+		LogoURL     string `json:"logo_url"`
 		ContactName string `json:"contact_name"`
 		Chapter     string `json:"chapter"`
 		Visited     bool   `json:"visited"`
@@ -210,7 +211,8 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		out = append(out, tenantDTO{
 			ID: t.ID, Name: t.Name, Category: t.Category,
 			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
-			Description: t.Description, ContactName: t.ContactName, Chapter: t.Chapter,
+			Description: t.Description, LogoURL: t.LogoURL,
+			ContactName: t.ContactName, Chapter: t.Chapter,
 			Visited: t.Visited,
 		})
 	}
@@ -325,6 +327,7 @@ func (s *Server) handleBooth(w http.ResponseWriter, r *http.Request) {
 		"id": booth.ID, "name": booth.Name, "category": booth.Category,
 		"booth": booth.Booth, "initials": booth.Initials,
 		"kind": booth.Kind, "description": booth.Description,
+		"logo_url": booth.LogoURL,
 		"contact_name": booth.ContactName, "chapter": booth.Chapter,
 	})
 }

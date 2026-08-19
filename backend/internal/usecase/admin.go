@@ -152,6 +152,7 @@ type TenantInput struct {
 	Initials    string
 	Kind        string
 	Description string
+	LogoURL     string
 	ContactName string
 	Chapter     string
 	Email       string
@@ -183,6 +184,7 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domai
 	}
 	return u.admin.CreateTenant(ctx, domain.NewTenant{
 		Name: name, Category: strings.TrimSpace(category), Booth: booth,
+		LogoURL: strings.TrimSpace(in.LogoURL),
 		Initials: strings.ToUpper(strings.TrimSpace(initials)), Kind: kind,
 		Description: strings.TrimSpace(description),
 		ContactName: strings.TrimSpace(in.ContactName), Chapter: strings.TrimSpace(in.Chapter),

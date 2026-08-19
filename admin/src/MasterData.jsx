@@ -33,10 +33,18 @@ function Field({ label, hint, ...props }) {
   )
 }
 
-// Manual cover upload — the image is stored locally on the server
-// (UPLOAD_DIR, served at /uploads/…) and the returned URL saved on the
-// seminar. Gradient cover is used while empty.
-function CoverUpload({ value, onChange, onError }) {
+// Manual image upload — the file is stored on the server (UPLOAD_DIR, served
+// at /uploads/…) and the returned URL saved on the record. Used for the class
+// cover and for a booth's company logo; both fall back to something drawn in
+// the app when empty.
+function CoverUpload({
+  value,
+  onChange,
+  onError,
+  label = 'Cover image',
+  hint = 'optional, uploaded & stored locally; gradient cover when blank',
+  previewClass = 'cover-preview',
+}) {
   const inputRef = useRef(null)
   const [busy, setBusy] = useState(false)
 
@@ -58,7 +66,8 @@ function CoverUpload({ value, onChange, onError }) {
   return (
     <div className="md-field">
       <span>
-        Cover image<em> — optional, uploaded &amp; stored locally; gradient cover when blank</em>
+        {label}
+        <em> — {hint}</em>
       </span>
       <input
         ref={inputRef}
@@ -67,7 +76,7 @@ function CoverUpload({ value, onChange, onError }) {
         style={{ display: 'none' }}
         onChange={onFile}
       />
-      {value && <img className="cover-preview" src={assetUrl(value)} alt="Seminar cover preview" />}
+      {value && <img className={previewClass} src={assetUrl(value)} alt={`${label} preview`} />}
       <div className="cover-actions">
         <button type="button" className="md-secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
           {busy ? 'Uploading…' : value ? '⇪ Replace image' : '⇪ Upload image'}
@@ -549,7 +558,7 @@ export function TenantsPage() {
             crud.setForm({
               name: '', category: '', booth: '', initials: '', email: '',
               kind: kindFilter === 'sponsor' ? 'sponsor' : 'booth', description: '',
-              contact_name: '', chapter: '',
+              logo_url: '', contact_name: '', chapter: '',
             })
           }
         >
@@ -615,6 +624,7 @@ export function TenantsPage() {
                   crud.setForm({
                     id: t.id, name: t.name, category: t.category, booth: t.booth,
                     initials: t.initials, kind: t.kind || 'booth', description: t.description || '',
+                    logo_url: t.logo_url || '',
                     contact_name: t.contact_name || '', chapter: t.chapter || '',
                   })
                 }
@@ -657,6 +667,14 @@ export function TenantsPage() {
               onChange={(e) => crud.setForm({ ...crud.form, chapter: e.target.value })}
             />
             <Field label="Description" hint="shown on the attendee passport" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
+            <CoverUpload
+              label="Company logo"
+              hint="shown on the attendee passport; the initials are used when blank"
+              previewClass="logo-preview"
+              value={crud.form.logo_url || ''}
+              onChange={(url) => crud.setForm({ ...crud.form, logo_url: url })}
+              onError={(msg) => crud.setError(msg)}
+            />
             {!crud.form.id && (
               <Field label="Login email" hint="leave blank to auto-fill" value={crud.form.email} onChange={(e) => crud.setForm({ ...crud.form, email: e.target.value })} />
             )}

@@ -60,6 +60,7 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 		"tenant": map[string]any{
 			"id": d.ID, "name": d.Name, "category": d.Category, "booth": d.Booth,
 			"initials": d.Initials, "kind": d.Kind, "description": d.Description,
+			"logo_url": d.LogoURL,
 			"owner_email": d.OwnerEmail,
 		},
 		"total_scans": d.TotalScans,

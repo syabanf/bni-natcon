@@ -199,14 +199,15 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 	var tenant domain.Tenant
 	err = tx.QueryRow(ctx, `
 		INSERT INTO tenants (name, category, booth, initials, kind, description,
-		                     contact_name, chapter, owner_user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		                     logo_url, contact_name, chapter, owner_user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, name, category, booth, initials, kind, description,
-		          contact_name, chapter, owner_user_id`,
+		          logo_url, contact_name, chapter, owner_user_id`,
 		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description,
-		t.ContactName, t.Chapter, ownerID).
+		t.LogoURL, t.ContactName, t.Chapter, ownerID).
 		Scan(&tenant.ID, &tenant.Name, &tenant.Category, &tenant.Booth, &tenant.Initials,
-			&tenant.Kind, &tenant.Description, &tenant.ContactName, &tenant.Chapter, &tenant.OwnerUserID)
+			&tenant.Kind, &tenant.Description, &tenant.LogoURL, &tenant.ContactName,
+			&tenant.Chapter, &tenant.OwnerUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -219,10 +220,10 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 func (r *AdminRepo) UpdateTenant(ctx context.Context, id int64, t domain.TenantUpdate) error {
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE tenants SET name = $1, category = $2, booth = $3, initials = $4,
-		       kind = $5, description = $6, contact_name = $7, chapter = $8
-		WHERE id = $9`,
+		       kind = $5, description = $6, logo_url = $7, contact_name = $8, chapter = $9
+		WHERE id = $10`,
 		t.Name, t.Category, t.Booth, t.Initials, t.Kind, t.Description,
-		t.ContactName, t.Chapter, id)
+		t.LogoURL, t.ContactName, t.Chapter, id)
 	if err != nil {
 		return err
 	}

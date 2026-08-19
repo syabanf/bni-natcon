@@ -634,6 +634,35 @@ check("auto booth login works", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
 check("tenant detail 200", status == 200 and body["tenant"]["owner_email"] == "booth-z01@natcon.id")
 
+# A booth shows its own logo on the passport; the initials are the fallback,
+# so the field has to survive an edit like every other one.
+status, _, _ = req("PUT", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok,
+                   body={"name": "E2E Booth", "category": "Uji", "booth": "Z-01",
+                         "logo_url": "/uploads/e2e-logo.png"})
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+z01 = next(t for t in body["tenants"] if t["booth"] == "Z-01")
+check("a booth logo round-trips through the admin list", z01["logo_url"] == "/uploads/e2e-logo.png",
+      f'got {z01.get("logo_url")!r}')
+
+status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
+check("...and through the detail page", body["tenant"]["logo_url"] == "/uploads/e2e-logo.png")
+
+status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
+passport = next(t for t in body["tenants"] if t["booth"] == "Z-01")
+check("...and reaches the attendee passport", passport["logo_url"] == "/uploads/e2e-logo.png")
+check("booths without a logo still send their initials",
+      all(t["initials"] for t in body["tenants"] if not t["logo_url"]))
+
+# Saving the form again without touching the logo must not wipe it — the
+# same trap that once blanked class descriptions.
+status, _, _ = req("PUT", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok,
+                   body={"name": "E2E Booth", "category": "Uji", "booth": "Z-01",
+                         "logo_url": "/uploads/e2e-logo.png", "description": "with a description"})
+status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
+check("editing another field keeps the logo",
+      body["tenant"]["logo_url"] == "/uploads/e2e-logo.png"
+      and body["tenant"]["description"] == "with a description")
+
 status, body, _ = req("POST", "/api/v1/admin/seminars", token=admin_tok,
                       body={"slot": 2, "room": "R. E2E", "title": "Uji E2E", "speaker": "Bot", "capacity": 5})
 check("create seminar 201", status == 201)

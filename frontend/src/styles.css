@@ -928,6 +928,13 @@ input {
   background: var(--red);
   color: #fff;
 }
+/* A logo is somebody's brand: fit it inside the square, never crop or
+   stretch it. */
+.t-logo.img {
+  object-fit: contain;
+  background: #fff;
+  padding: 6px;
+}
 .tenant-card.sponsor h5 {
   font-size: 14px;
 }

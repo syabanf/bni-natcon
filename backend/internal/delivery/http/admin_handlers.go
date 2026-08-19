@@ -40,6 +40,7 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 		Initials    string `json:"initials"`
 		Kind        string `json:"kind"`
 		Description string `json:"description"`
+		LogoURL     string `json:"logo_url"`
 		ContactName string `json:"contact_name"`
 		Chapter     string `json:"chapter"`
 		ScanCount   int    `json:"scan_count"`
@@ -49,7 +50,8 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 		out = append(out, row{
 			ID: t.ID, Name: t.Name, Category: t.Category,
 			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
-			Description: t.Description, ContactName: t.ContactName, Chapter: t.Chapter,
+			Description: t.Description, LogoURL: t.LogoURL,
+			ContactName: t.ContactName, Chapter: t.Chapter,
 			ScanCount: t.ScanCount,
 		})
 	}

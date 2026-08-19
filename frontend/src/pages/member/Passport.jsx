@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icon from '../../components/Icon'
-import { api } from '../../api/client'
+import { api, assetUrl } from '../../api/client'
 
 // Unvisited tenants stay on top so the user focuses on what's left;
 // visited ones sink to the bottom of their group.
@@ -15,7 +15,13 @@ function TenantCard({ t, sponsor }) {
       <div className="t-check">
         <Icon name="check" size={12} />
       </div>
-      <div className="t-logo">{t.initials}</div>
+      {/* The company's own logo when they sent one; their initials when they
+          did not, because a blank square looks like a bug. */}
+      {t.logo_url ? (
+        <img className="t-logo img" src={assetUrl(t.logo_url)} alt={t.name} />
+      ) : (
+        <div className="t-logo">{t.initials}</div>
+      )}
       <h5>{t.name}</h5>
       <p>
         {sponsor ? t.category : `${t.category} · Booth ${t.booth}`}

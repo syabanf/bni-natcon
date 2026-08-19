@@ -161,6 +161,7 @@ type tenantPayload struct {
 	Initials    string `json:"initials"`
 	Kind        string `json:"kind"`
 	Description string `json:"description"`
+	LogoURL     string `json:"logo_url"`
 	ContactName string `json:"contact_name"`
 	Chapter     string `json:"chapter"`
 	Email       string `json:"email"`
@@ -175,7 +176,8 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 	}
 	tenant, err := s.admin.CreateTenant(r.Context(), usecase.TenantInput{
 		Name: req.Name, Category: req.Category, Booth: req.Booth, Initials: req.Initials,
-		Kind: req.Kind, Description: req.Description, ContactName: req.ContactName,
+		Kind: req.Kind, Description: req.Description, LogoURL: req.LogoURL,
+		ContactName: req.ContactName,
 		Chapter: req.Chapter, Email: req.Email, Password: req.Password,
 	})
 	if err != nil {
@@ -187,6 +189,7 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 			"id": tenant.ID, "name": tenant.Name, "category": tenant.Category,
 			"booth": tenant.Booth, "initials": tenant.Initials,
 			"kind": tenant.Kind, "description": tenant.Description,
+			"logo_url": tenant.LogoURL,
 			"contact_name": tenant.ContactName, "chapter": tenant.Chapter,
 		},
 	})
@@ -205,7 +208,7 @@ func (s *Server) handleAdminUpdateTenant(w http.ResponseWriter, r *http.Request)
 	}
 	err := s.admin.UpdateTenant(r.Context(), id, domain.TenantUpdate{
 		Name: req.Name, Category: req.Category, Booth: req.Booth, Initials: req.Initials,
-		Kind: req.Kind, Description: req.Description,
+		Kind: req.Kind, Description: req.Description, LogoURL: req.LogoURL,
 		ContactName: req.ContactName, Chapter: req.Chapter,
 	})
 	if err != nil {
