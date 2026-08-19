@@ -33,6 +33,7 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		errors.Is(err, domain.ErrAlreadyRegistered),
 		errors.Is(err, domain.ErrTooManySessions),
 		errors.Is(err, domain.ErrSessionClash),
+		errors.Is(err, domain.ErrDrawPoolEmpty),
 		errors.Is(err, domain.ErrTableFull),
 		errors.Is(err, domain.ErrNotRegistered),
 		errors.Is(err, domain.ErrEmailTaken),

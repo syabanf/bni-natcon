@@ -182,6 +182,13 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/admin/rundown/{id}", s.handleDeleteRundown)
 
 				r.Get("/admin/tables", s.handleAdminListTables)
+				// The two prize draws.
+				r.Get("/admin/draws", s.handleDraws)
+				r.Get("/admin/draws/{key}", s.handleDrawPool)
+				r.Post("/admin/draws/{key}/pick", s.handleDrawPick)
+				r.Put("/admin/draws/{key}/minimum", s.handleDrawMinimum)
+				r.Delete("/admin/draws/{key}/winners", s.handleDrawReset)
+
 				r.Get("/admin/tables/seats", s.handleAdminTableSeats)
 				r.Post("/admin/networking/session/start", s.handleStartNetworkingSession)
 				r.Post("/admin/networking/session/stop", s.handleStopNetworkingSession)

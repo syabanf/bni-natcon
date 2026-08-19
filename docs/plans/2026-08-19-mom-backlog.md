@@ -63,8 +63,8 @@ dipakai.
 | # | Poin MoM | Catatan |
 | --- | --- | --- |
 | 13 | **Tidak boleh menang 2 kali** | **sudah jalan** — pemenang keluar dari deck ([`LuckyDraw.jsx`](../../admin/src/LuckyDraw.jsx)), ada testnya. Tidak ada pekerjaan. |
-| 14 | **Syarat kunjungan booth minimum** | setting angka minimum (mis. 10 dari 31 booth) → hanya yang memenuhi masuk deck. Ini **membalik** keputusan 18 Agustus ("semua peserta ikut"), jadi dibuat sebagai **setting**, default 0 = semua ikut. | 4 jam |
-| 15 | **Doorprize ada 2** | perlu kejelasan — lihat pertanyaan terbuka | — |
+| 14 | ~~**Syarat kunjungan booth minimum**~~ | **SELESAI** — angka minimum per undian, diatur di halaman undian; default 0 = semua ikut | ✓ |
+| 15 | ~~**Doorprize ada 2**~~ | **SELESAI** — dua undian terpisah (Lucky Draw & Doorprize), masing-masing punya syarat, daftar pemenang, dan tombol tarik sendiri; pemenang tersimpan di server | ✓ |
 
 ## 4. Pekerjaan besar
 

@@ -460,6 +460,39 @@ type NetworkingTable struct {
 	Occupied int
 }
 
+// Draw is one of the event's two prize draws (MoM 19 Aug 2026).
+type Draw struct {
+	Key  string
+	Name string
+	// How many booths an attendee must have visited to be in this draw.
+	// Zero means everyone registered is in it.
+	MinBoothVisits int
+	WinnerCount    int
+}
+
+// DrawEntrant is someone currently eligible for a draw.
+type DrawEntrant struct {
+	MemberID   int64
+	Name       string
+	MemberCode string
+	Chapter    string
+	Company    string
+	Visits     int
+}
+
+// DrawWinner is an entrant who has been drawn, and the order they came out.
+type DrawWinner struct {
+	DrawEntrant
+	Position int
+	WonAt    time.Time
+}
+
+// The two draws the event runs.
+const (
+	DrawLucky     = "lucky"
+	DrawDoorprize = "doorprize"
+)
+
 // NetworkingSession is one speed-networking round: when it started, when it
 // ends, and whether the committee cut it short.
 type NetworkingSession struct {

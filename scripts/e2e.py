@@ -965,6 +965,73 @@ for sem in classes:
 status, _, _ = req("POST", f"/api/v1/seminars/{sem2}/register", token=member_tok)
 check("the attendee is back on their original class", status == 201)
 
+# ---- the two draws (MoM 19 Aug 2026)
+section("Lucky Draw and Doorprize")
+
+status, body, _ = req("GET", "/api/v1/admin/draws", token=admin_tok)
+check("there are two draws, not one",
+      status == 200 and {d["key"] for d in body["draws"]} == {"lucky", "doorprize"})
+check("both start with no condition and no winners",
+      all(d["min_booth_visits"] == 0 and d["winner_count"] == 0 for d in body["draws"]))
+
+status, body, _ = req("GET", "/api/v1/admin/draws/lucky", token=admin_tok)
+everyone = len(body["eligible"])
+check("with no condition, every attendee is in the draw", everyone >= 3, f"{everyone}")
+
+# member_tok's attendee has scans from the booth section; the others do not.
+status, _, _ = req("PUT", "/api/v1/admin/draws/lucky/minimum", token=admin_tok,
+                   body={"min_booth_visits": 1})
+status, body, _ = req("GET", "/api/v1/admin/draws/lucky", token=admin_tok)
+check("a minimum of one booth thins the pool",
+      0 < len(body["eligible"]) < everyone, f'{len(body["eligible"])} of {everyone}')
+check("...and everyone left has actually visited one",
+      all(e["visits"] >= 1 for e in body["eligible"]))
+
+status, _, _ = req("PUT", "/api/v1/admin/draws/lucky/minimum", token=admin_tok,
+                   body={"min_booth_visits": 999})
+status, body, _ = req("GET", "/api/v1/admin/draws/lucky", token=admin_tok)
+check("an impossible minimum empties it", body["eligible"] == [])
+status, body, _ = req("POST", "/api/v1/admin/draws/lucky/pick", token=admin_tok)
+check("drawing from an empty pool says so", status == 409 and "nobody left" in body["error"])
+
+status, _, _ = req("PUT", "/api/v1/admin/draws/lucky/minimum", token=admin_tok,
+                   body={"min_booth_visits": 0})
+status, body, _ = req("POST", "/api/v1/admin/draws/lucky/pick", token=admin_tok)
+check("a winner is drawn and recorded", status == 201 and body["winner"]["position"] == 1)
+first_winner = body["winner"]["member_id"]
+
+# The whole point of recording it server-side: a reload cannot lose this.
+status, body, _ = req("GET", "/api/v1/admin/draws/lucky", token=admin_tok)
+check("the winner survives a page reload",
+      [w["member_id"] for w in body["winners"]] == [first_winner])
+check("...and leaves the pool", all(e["member_id"] != first_winner for e in body["eligible"]))
+
+status, body, _ = req("GET", "/api/v1/admin/draws/doorprize", token=admin_tok)
+check("winning the lucky draw takes you out of the doorprize too",
+      all(e["member_id"] != first_winner for e in body["eligible"]))
+check("but the doorprize has its own, empty, winners list", body["winners"] == [])
+
+status, body, _ = req("POST", "/api/v1/admin/draws/doorprize/pick", token=admin_tok)
+check("the doorprize draws its own winner", status == 201)
+check("...who is not the lucky draw's", body["winner"]["member_id"] != first_winner)
+
+status, body, _ = req("GET", "/api/v1/admin/draws", token=admin_tok)
+counts = {d["key"]: d["winner_count"] for d in body["draws"]}
+check("each draw counts its own winners", counts == {"lucky": 1, "doorprize": 1}, f"{counts}")
+
+status, _, _ = req("PUT", "/api/v1/admin/draws/lucky/minimum", token=admin_tok,
+                   body={"min_booth_visits": -1})
+check("a negative minimum is refused", status == 400)
+status, _, _ = req("POST", "/api/v1/admin/draws/grand/pick", token=admin_tok)
+check("a draw that does not exist is refused", status == 400)
+status, _, _ = req("POST", "/api/v1/admin/draws/lucky/pick", token=member_tok)
+check("an attendee cannot draw their own name", status == 403)
+
+status, _, _ = req("DELETE", "/api/v1/admin/draws/lucky/winners", token=admin_tok)
+status, body, _ = req("GET", "/api/v1/admin/draws/lucky", token=admin_tok)
+check("winners can be cleared for a rehearsal", body["winners"] == [])
+status, _, _ = req("DELETE", "/api/v1/admin/draws/doorprize/winners", token=admin_tok)
+
 # ---- the networking round (MoM 19 Aug 2026)
 status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
 check("before anyone starts a round, nothing is running",

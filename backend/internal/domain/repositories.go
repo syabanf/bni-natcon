@@ -122,6 +122,16 @@ type AdminRepository interface {
 	ListTables(ctx context.Context) ([]NetworkingTable, error)
 	GenerateTables(ctx context.Context, count int, hall string, capacity int) ([]NetworkingTable, error)
 	UpdateTable(ctx context.Context, id int64, name, hall string, capacity int) error
+	// The two prize draws. Pick records the winner in the same transaction
+	// that chooses them, so a reload on stage cannot lose the list or hand
+	// somebody a second prize.
+	Draws(ctx context.Context) ([]Draw, error)
+	SetDrawMinimum(ctx context.Context, key string, min int) error
+	DrawPool(ctx context.Context, key string) ([]DrawEntrant, error)
+	Pick(ctx context.Context, key string) (*DrawWinner, error)
+	DrawWinners(ctx context.Context, key string) ([]DrawWinner, error)
+	ResetDraw(ctx context.Context, key string) error
+
 	// The speed-networking round: one row, started and stopped by the
 	// committee, so every attendee reads the same clock.
 	CurrentSession(ctx context.Context) (*NetworkingSession, error)

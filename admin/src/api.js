@@ -276,6 +276,13 @@ export const api = {
   updateRundown: (id, body) => request(`/admin/rundown/${id}`, { method: 'PUT', body }),
   deleteRundown: (id) => request(`/admin/rundown/${id}`, { method: 'DELETE' }),
   tables: (opts) => (isMockMode() ? mock.tables() : request('/admin/tables', opts)),
+  // The two prize draws (MoM 19 Aug 2026).
+  draws: (opts) => request('/admin/draws', opts),
+  drawPool: (key, opts) => request(`/admin/draws/${key}`, opts),
+  drawPick: (key) => request(`/admin/draws/${key}/pick`, { method: 'POST' }),
+  setDrawMinimum: (key, min) =>
+    request(`/admin/draws/${key}/minimum`, { method: 'PUT', body: { min_booth_visits: min } }),
+  resetDraw: (key) => request(`/admin/draws/${key}/winners`, { method: 'DELETE' }),
   // The speed-networking round: everyone counts down to the same moment.
   networkingSession: (opts) => request('/networking/session', opts),
   startNetworkingSession: (minutes) =>

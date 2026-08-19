@@ -2,6 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from './api'
 
+/*
+ * Two draws, not one (MoM 19 Aug 2026): the Lucky Draw and the Doorprize,
+ * each with its own winners and its own entry condition.
+ *
+ * The winner is chosen by the server and written down before it reaches this
+ * screen. That matters on a stage: the list used to live in this component's
+ * memory, so a reload — a dropped wifi, a closed lid — emptied it, and the
+ * next spin could hand the same person a second prize in front of the room.
+ */
+const DRAWS = [
+  { key: 'lucky', label: 'Lucky Draw' },
+  { key: 'doorprize', label: 'Doorprize' },
+]
+
 function initials(name = '') {
   return name
     .split(' ')
@@ -11,17 +25,15 @@ function initials(name = '') {
     .toUpperCase()
 }
 
-// Every attendee holds exactly one ticket. Pins decide nothing here — a
-// person who never reached a booth has the same odds as the one who
-// collected them all.
-function pickOne(pool) {
-  return pool[Math.floor(Math.random() * pool.length)]
-}
+
 
 const SHUFFLE_MS = 3600
 
 export default function LuckyDraw({ onUnauthorized }) {
-  const [members, setMembers] = useState(null)
+  const [drawKey, setDrawKey] = useState('lucky')
+  const [draws, setDraws] = useState([])
+  const [pool, setPool] = useState(null)
+  const [error, setError] = useState('')
   const [phase, setPhase] = useState('idle') // idle | shuffling | winner
   const [current, setCurrent] = useState(null) // card face shown mid-shuffle
   const [winner, setWinner] = useState(null)
@@ -33,18 +45,46 @@ export default function LuckyDraw({ onUnauthorized }) {
   // presses in the same frame both read the pre-update phase.
   const drawingRef = useRef(false)
 
-  useEffect(() => {
-    api
-      .allMembers({ onUnauthorized })
-      .then(setMembers)
-      .catch(() => setMembers([]))
-    return () => clearTimeout(timerRef.current)
-  }, [onUnauthorized])
+  // The tab labels carry each draw's winner count, so they have to be
+  // refreshed alongside the pool — otherwise the tab says "0 drawn" above a
+  // winner who is on screen.
+  const loadDraws = useCallback(
+    () => api.draws({ onUnauthorized }).then((d) => setDraws(d.draws || [])).catch(() => {}),
+    [onUnauthorized],
+  )
 
-  // Everyone who is registered is in the draw; only a previous winner drops
-  // out, so nobody can be drawn twice.
-  const eligible = (members || []).filter((m) => !winners.some((w) => w.id === m.id))
-  const deck = eligible
+  const loadPool = useCallback(
+    (key) =>
+      api
+        .drawPool(key, { onUnauthorized })
+        .then((d) => {
+          setPool(d.eligible || [])
+          setWinners(d.winners || [])
+          return loadDraws()
+        })
+        .catch((e) => {
+          setPool([])
+          setError(e.message)
+        }),
+    [onUnauthorized],
+  )
+
+  useEffect(() => {
+    loadDraws()
+  }, [loadDraws])
+
+  useEffect(() => {
+    setPhase('idle')
+    setWinner(null)
+    setPool(null)
+    loadPool(drawKey)
+    return () => clearTimeout(timerRef.current)
+  }, [drawKey, loadPool])
+
+  // The server decides who is eligible: enough booths visited, and not
+  // already a winner of either draw.
+  const deck = pool || []
+  const draw = draws.find((d) => d.key === drawKey)
 
   const enterStage = () => {
     setStage(true)
@@ -75,18 +115,34 @@ export default function LuckyDraw({ onUnauthorized }) {
     clearTimeout(timerRef.current)
     setPhase('shuffling')
     setWinner(null)
-    const finalWinner = pickOne(deck)
+    setError('')
+    // The server picks and records in one go; the shuffle is the ceremony
+    // over the top of it. Asking first means a reload cannot lose the result
+    // and two operators cannot pull the same name.
+    const pending = api.drawPick(drawKey)
     const startedAt = Date.now()
     let i = 0
 
     const tick = () => {
       const elapsed = Date.now() - startedAt
       if (elapsed >= SHUFFLE_MS) {
-        drawingRef.current = false
-        setCurrent(null)
-        setWinner(finalWinner)
-        setWinners((w) => [...w, finalWinner])
-        setPhase('winner')
+        pending
+          .then(({ winner: w }) => {
+            setCurrent(null)
+            setWinner(w)
+            setWinners((prev) => [...prev, w])
+            setPool((prev) => (prev || []).filter((e) => e.member_id !== w.member_id))
+            setPhase('winner')
+            loadDraws()
+          })
+          .catch((err) => {
+            setError(err.message)
+            setCurrent(null)
+            setPhase('idle')
+          })
+          .finally(() => {
+            drawingRef.current = false
+          })
         return
       }
       // The faces flip through the whole room in order, wrapping around;
@@ -130,19 +186,25 @@ export default function LuckyDraw({ onUnauthorized }) {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  if (members === null) return <div className="empty">Loading attendees…</div>
+  if (pool === null) return <div className="empty">Loading the draw…</div>
 
-  const draw = (
+  const stageContent = (
     <>
         {phase === 'idle' && (
           <div className="draw-idle">
             <div className="draw-deck">
               {deck.slice(0, 5).map((m, i) => (
-                <div className="draw-card stacked" style={{ '--i': i }} key={m.id}>
+                <div className="draw-card stacked" style={{ '--i': i }} key={m.member_id}>
                   <span className="dc-ini">{initials(m.name)}</span>
                 </div>
               ))}
-              {deck.length === 0 && <div className="empty">No attendees yet — import the list first.</div>}
+              {deck.length === 0 && (
+                <div className="empty">
+                  {draw?.min_booth_visits
+                    ? `Nobody has visited ${draw.min_booth_visits} booths yet — lower the requirement or wait.`
+                    : 'No attendees yet — import the list first.'}
+                </div>
+              )}
             </div>
             {deck.length > 0 && (
               <button className="md-add draw-btn" onClick={start}>
@@ -155,7 +217,7 @@ export default function LuckyDraw({ onUnauthorized }) {
         {phase === 'shuffling' && current && (
           <div className="draw-idle">
             <div className="draw-deck shuffling">
-              <div className="draw-card face" key={current.id + Math.random()}>
+              <div className="draw-card face" key={current.member_id + Math.random()}>
                 <span className="dc-ini">{initials(current.name)}</span>
                 <b>{current.name}</b>
                 <small>{current.chapter}</small>
@@ -181,8 +243,8 @@ export default function LuckyDraw({ onUnauthorized }) {
                 {winner.member_code}
               </span>
             </div>
-            <button className="md-add draw-btn" onClick={start} disabled={eligible.length === 0}>
-              {eligible.length === 0 ? 'Everyone has won 🎉' : '✦ Draw the next winner'}
+            <button className="md-add draw-btn" onClick={start} disabled={deck.length === 0}>
+              {deck.length === 0 ? 'Everyone eligible has won 🎉' : '✦ Draw the next winner'}
             </button>
           </div>
         )}
@@ -193,29 +255,90 @@ export default function LuckyDraw({ onUnauthorized }) {
     <>
       <div className="content-head">
         <div>
-          <h1>Lucky Draw</h1>
+          <h1>{draw?.name || 'Draws'}</h1>
           <p className="micro">
-            Card shuffle across every registered attendee — one ticket each, pins do not change
-            anyone's odds
+            One ticket each. A winner of either draw is out of both — nobody takes two prizes home
           </p>
         </div>
         <div className="head-right">
-          <span className="pill live">{eligible.length} eligible</span>
+          <span className="pill live">{deck.length} eligible</span>
           <button className="md-secondary" onClick={enterStage} disabled={deck.length === 0}>
             ⛶ Stage mode
           </button>
         </div>
       </div>
 
-      <div className="panel report-panel draw-stage">{draw}</div>
+      {error && (
+        <div className="error" onClick={() => setError('')}>
+          {error}
+        </div>
+      )}
+
+      <div className="panel report-panel">
+        <div className="draw-tabs">
+          {DRAWS.map((d) => {
+            const info = draws.find((x) => x.key === d.key)
+            return (
+              <button
+                key={d.key}
+                className={`draw-tab${drawKey === d.key ? ' on' : ''}`}
+                onClick={() => setDrawKey(d.key)}
+              >
+                <b>{d.label}</b>
+                <small>{info ? `${info.winner_count} drawn` : ''}</small>
+              </button>
+            )
+          })}
+        </div>
+        <div className="draw-rule">
+          <label className="md-field">
+            <span>
+              Booths to visit before entering
+              <em> — 0 lets everyone in; raise it to make the prize a reward for walking the floor</em>
+            </span>
+            <input
+              type="number"
+              min="0"
+              value={draw?.min_booth_visits ?? 0}
+              onChange={async (e) => {
+                const min = Number(e.target.value)
+                setDraws((prev) =>
+                  prev.map((x) => (x.key === drawKey ? { ...x, min_booth_visits: min } : x)),
+                )
+                try {
+                  await api.setDrawMinimum(drawKey, min)
+                  await loadPool(drawKey)
+                } catch (err) {
+                  setError(err.message)
+                }
+              }}
+            />
+          </label>
+          <button
+            className="md-secondary"
+            disabled={!winners.length}
+            onClick={async () => {
+              if (!confirm(`Clear all ${winners.length} winners of the ${draw?.name}?`)) return
+              await api.resetDraw(drawKey)
+              await loadPool(drawKey)
+              setWinner(null)
+              setPhase('idle')
+            }}
+          >
+            Clear winners
+          </button>
+        </div>
+      </div>
+
+      <div className="panel report-panel draw-stage">{stageContent}</div>
 
       {stage &&
         createPortal(
           <div className="draw-fullscreen" role="dialog" aria-label="Lucky Draw — stage mode">
             <img className="dfs-brand" src="/brand/logo-horizontal-white.png" alt="BNI Natcon 2026" />
-            <div className="dfs-body draw-stage">{draw}</div>
+            <div className="dfs-body draw-stage">{stageContent}</div>
             <div className="dfs-foot">
-              <span className="dfs-count">{eligible.length} eligible</span>
+              <span className="dfs-count">{deck.length} eligible</span>
               <span className="dfs-keys">
                 <b>Space</b> draw · <b>Esc</b> exit
               </span>
@@ -240,7 +363,7 @@ export default function LuckyDraw({ onUnauthorized }) {
           <p className="panel-sub">In draw order — announce on stage as you go</p>
           <div className="rank-list">
             {winners.map((w, i) => (
-              <div className="rank-row" key={w.id}>
+              <div className="rank-row" key={w.member_id}>
                 <span className="rank-no">#{i + 1}</span>
                 <span className="rank-ini">{initials(w.name)}</span>
                 <div className="rank-info">

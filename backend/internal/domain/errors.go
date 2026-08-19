@@ -21,4 +21,5 @@ var (
 	ErrAlreadyRedeemed = errors.New("already handed over — check the time it was collected")
 	ErrTooManySessions = errors.New("two learning classes is the limit — cancel one to pick another")
 	ErrSessionClash    = errors.New("that class runs at the same time as one you already picked")
+	ErrDrawPoolEmpty = errors.New("nobody left to draw — everyone eligible has already won")
 )
