@@ -40,9 +40,9 @@ dipakai.
 
 | # | Poin MoM | Yang berubah | Perkiraan |
 | --- | --- | --- | --- |
-| 1 | **Rename Breakout Room → Learning Class** | teks di 2 app + admin + QR print + dokumen; nama tabel `seminars` dibiarkan (rename tabel tidak sebanding risikonya) | 2 jam |
+| 1 | ~~**Rename Breakout Room → Learning Class**~~ | **SELESAI** — teks di 2 app, admin, QR print, dokumen, + migrasi `0016` untuk nama ruang yang sudah tersimpan | ✓ |
 | 2 | **Logo perusahaan per booth** | kolom `logo_url` di `tenants`, upload di admin (jalur upload yang sudah diperbaiki), dipakai menggantikan inisial di passport peserta | 3 jam |
-| 3 | **Redeem pin & goodiebag true/false** | 2 kolom boolean di `users` + toggle di admin + tampil di detail peserta | 3 jam |
+| 3 | ~~**Redeem pin & goodiebag**~~ | **SELESAI** — bukan toggle tapi **scan**, digabung di layar penjaga pintu (revisi 19 Agt): migrasi `0017`, endpoint `/admin/redeem`, mode Attendance / Goodiebag / Pin | ✓ |
 | 4 | **Identifier ke-x untuk data kembar** | urutan per grup (nama+email+telepon sama) → tampil `#2` di list, detail, dan layar pilih akun | 3 jam |
 | 5 | **Penamaan antar meja** | kolom `name` di `networking_tables`, dipakai di admin, QR print, dan tampilan peserta | 2 jam |
 | 6 | **Hapus input nomor meja manual** | buang form ketik di [`Networking.jsx`](../../frontend/src/pages/member/Networking.jsx) — scan QR saja | 1 jam |

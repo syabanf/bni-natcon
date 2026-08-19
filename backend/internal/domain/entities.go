@@ -112,6 +112,26 @@ type Seminar struct {
 	EndsAt    *time.Time
 }
 
+// RedeemResult is what the desk sees after scanning someone for their pin or
+// their goodiebag — enough to hand the right thing to the right person, and
+// to explain a refusal.
+type RedeemResult struct {
+	MemberID    int64
+	Name        string
+	MemberCode  string
+	Chapter     string
+	Company     string
+	Visits      int
+	RedeemedAt  time.Time
+	AlreadyDone bool
+}
+
+// The two things handed over at a desk.
+const (
+	RedeemPin       = "pin"
+	RedeemGoodiebag = "goodiebag"
+)
+
 // RundownBlock is one slice of the event's schedule — the one-hour blocks the
 // committee fills in (MoM 19 Aug 2026). Learning classes hang off these, and
 // the attendee agenda is built from them, so nothing carries its own private

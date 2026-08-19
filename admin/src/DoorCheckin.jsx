@@ -8,9 +8,16 @@ function fmtClock(d) {
 }
 
 /*
- * Door-crew mode: pick a learning class, scan attendee QRs (camera or manual
- * manual) — hadir tercatat sekali per peserta, dan yang belum terdaftar
- * input); anyone not registered for that class is rejected clearly.
+ * The door crew's screen. One place, three jobs, because it is the same crew
+ * with the same scanner at the same door (MoM 19 Aug 2026):
+ *
+ *   Attendance — scan into a learning class; anyone not registered for that
+ *                room is rejected clearly.
+ *   Goodiebag  — hand one over, once per attendee.
+ *   Pin        — same, for the collectible pin.
+ *
+ * All three are scans rather than ticks: in a queue nobody reliably finds the
+ * right row in a list of several hundred people.
  */
 export default function DoorCheckin({ onUnauthorized }) {
   const [seminars, setSeminars] = useState([])
@@ -21,6 +28,9 @@ export default function DoorCheckin({ onUnauthorized }) {
   const [manual, setManual] = useState('')
   const [cameraOn, setCameraOn] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  // 'attendance' | 'goodiebag' | 'pin'
+  const [mode, setMode] = useState('attendance')
+  const [counts, setCounts] = useState(null)
   // Switching rooms clears the result panel, so a "switched room" message
   // has to survive that reset — park it here until the effect runs.
   const pendingResultRef = useRef(null)
@@ -69,7 +79,41 @@ export default function DoorCheckin({ onUnauthorized }) {
       }
       return
     }
-    checkin(raw)
+    if (mode === 'attendance') checkin(raw)
+    else handOver(String(raw).trim())
+  }
+
+  const loadCounts = () => api.redeemCounts().then(setCounts).catch(() => {})
+
+  useEffect(() => {
+    if (mode !== 'attendance') loadCounts()
+  }, [mode])
+
+  // Handing over a pin or a goodiebag. The refusal matters as much as the
+  // success: a second scan has to say who already collected it and when,
+  // otherwise the crew cannot tell a queue-jumper from their own double tap.
+  const handOver = async (code) => {
+    try {
+      const res = await api.redeem(code, mode)
+      setResult({
+        kind: 'ok',
+        title: mode === 'pin' ? 'Pin handed over' : 'Goodiebag handed over',
+        sub: `${res.name} · ${res.chapter || res.company || res.member_code}`,
+      })
+      setRecent((r) => [{ name: res.name, at: fmtClock(new Date()) }, ...r].slice(0, 6))
+      loadCounts()
+    } catch (err) {
+      const at = err.body?.redeemed_at ? ` at ${err.body.redeemed_at.slice(11, 16)}` : ''
+      setResult(
+        err.status === 409
+          ? {
+              kind: 'dup',
+              title: 'Already collected',
+              sub: `${err.body?.name || 'This attendee'} took it${at}`,
+            }
+          : { kind: 'err', title: 'Rejected', sub: err.message },
+      )
+    }
   }
 
   const checkin = async (code) => {
@@ -108,13 +152,63 @@ export default function DoorCheckin({ onUnauthorized }) {
       <div className="content-head">
         <div>
           <h1>Door Check-in</h1>
-          <p className="micro">Scan attendee QRs at the class room door — attended vs registered updates live. Attendance = goodiebag claimed.</p>
+          <p className="micro">
+            One scanner for the door: class attendance, goodiebags and pins — each handed over once
+            per attendee
+          </p>
         </div>
       </div>
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Choose Learning Class
+          <span className="sec-no">01</span>What are you scanning for?
+        </h2>
+        <p className="panel-sub">Switch before the queue starts — the scanner does what this says</p>
+        <div className="door-modes">
+          {[
+            { key: 'attendance', label: 'Class attendance', hint: 'into a learning class' },
+            { key: 'goodiebag', label: 'Goodiebag', hint: 'one per attendee' },
+            { key: 'pin', label: 'Pin', hint: 'one per attendee' },
+          ].map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              className={`door-mode${mode === m.key ? ' on' : ''}`}
+              onClick={() => {
+                setMode(m.key)
+                setResult(null)
+                setRecent([])
+              }}
+            >
+              <b>{m.label}</b>
+              <small>{m.hint}</small>
+            </button>
+          ))}
+        </div>
+        {mode !== 'attendance' && counts && (
+          <div className="door-stats">
+            <div className="stat-card">
+              <div className="num accent">{mode === 'pin' ? counts.pins : counts.goodiebags}</div>
+              <div className="label">Handed over</div>
+            </div>
+            <div className="stat-card">
+              <div className="num">{counts.members}</div>
+              <div className="label">Attendees</div>
+            </div>
+            <div className="stat-card">
+              <div className="num">
+                {counts.members - (mode === 'pin' ? counts.pins : counts.goodiebags)}
+              </div>
+              <div className="label">Still to collect</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {mode === 'attendance' && (
+      <div className="panel report-panel">
+        <h2>
+          <span className="sec-no">02</span>Choose Learning Class
         </h2>
         <p className="panel-sub">Each door crew covers one room</p>
         <select
@@ -150,14 +244,16 @@ export default function DoorCheckin({ onUnauthorized }) {
           </div>
         )}
       </div>
+      )}
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Scan Attendees
+          <span className="sec-no">{mode === 'attendance' ? '03' : '02'}</span>Scan Attendees
         </h2>
         <p className="panel-sub">
-          {selected ? `${selected.room} door` : 'Loading…'} · camera or manual input — scanning a
-          printed room QR switches the session
+          {mode === 'attendance'
+            ? `${selected ? `${selected.room} door` : 'Loading…'} · camera or manual input — scanning a printed room QR switches the session`
+            : `Handing over ${mode === 'pin' ? 'pins' : 'goodiebags'} · camera or manual input — a member code, email or phone all work`}
         </p>
 
         {cameraOn ? (

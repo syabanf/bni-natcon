@@ -288,6 +288,34 @@ check(f"table occupancy is exactly {TABLE_CAPACITY}", table10["occupied"] == TAB
 
 # ---------------------------------------------------------------- phase D
 
+# Two door crews scanning the same attendee at the same moment: exactly one
+# goodiebag may leave the table.
+section("D2. Goodiebag handover burst (50 concurrent scans, one attendee)")
+status, body = c.req("POST", "/api/v1/admin/members", token=admin_tok,
+                     body={"name": "Rebutan Goodiebag", "email": "rebutan@natcon.id",
+                           "chapter": "Chapter Stress"})
+assert status == 201, f"handover fixture failed: {status} {body}"
+burst_code = body["user"]["member_code"]
+handover_results = {}
+
+
+def handover_worker(_):
+    client = Client()
+    status, _ = client.req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                           body={"member_code": burst_code, "item": "goodiebag"})
+    with lock:
+        handover_results[status] = handover_results.get(status, 0) + 1
+
+
+with ThreadPoolExecutor(max_workers=25) as ex:
+    list(ex.map(handover_worker, range(50)))
+
+print(f"  results: {handover_results}")
+check("exactly one goodiebag leaves the table",
+      handover_results.get(200, 0) == 1, f"{handover_results}")
+check("every other scan is told it is already collected",
+      handover_results.get(409, 0) == 49, f"{handover_results}")
+
 section("D. Scan burst (100 concurrent scans, one member, one booth)")
 results = {}
 non_dup = [0]

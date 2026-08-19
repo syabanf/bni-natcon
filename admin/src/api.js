@@ -29,9 +29,13 @@ export { isMockMode, setMockMode, resetMockState } from './mock'
 export { shrinkForUpload } from './image'
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  // `body` carries the server's whole reply. Some refusals are not just a
+  // message — a second goodiebag scan comes back with who collected it and
+  // when, and the door crew needs to see that, not "conflict".
+  constructor(status, message, body = null) {
     super(message)
     this.status = status
+    this.body = body
   }
 }
 
@@ -77,7 +81,8 @@ async function request(path, { method = 'GET', body, onUnauthorized } = {}) {
   if (!res.ok) {
     throw new ApiError(
       res.status,
-      data?.error || FRIENDLY_STATUS[res.status] || `Something went wrong (code ${res.status}). Please try again.`
+      data?.error || FRIENDLY_STATUS[res.status] || `Something went wrong (code ${res.status}). Please try again.`,
+      data,
     )
   }
   return data
@@ -261,6 +266,10 @@ export const api = {
     }
     return data
   },
+  // The desk that hands over pins and goodiebags, by scan (MoM 19 Aug 2026).
+  redeem: (memberCode, item) =>
+    request('/admin/redeem', { method: 'POST', body: { member_code: memberCode, item } }),
+  redeemCounts: (opts) => request('/admin/redeem/counts', opts),
   // Event schedule — one-hour blocks (MoM 19 Aug 2026).
   rundown: (opts) => request('/admin/rundown', opts),
   createRundown: (body) => request('/admin/rundown', { method: 'POST', body }),

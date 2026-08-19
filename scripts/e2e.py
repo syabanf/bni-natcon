@@ -182,6 +182,51 @@ status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 
+# ------------------------------------------------- pin & goodiebag handover
+section("Door desk — pin and goodiebag handed over by scan")
+
+status, body, _ = req("GET", "/api/v1/admin/redeem/counts", token=admin_tok)
+check("nothing handed over yet",
+      status == 200 and body["pins"] == 0 and body["goodiebags"] == 0)
+
+for item in ("goodiebag", "pin"):
+    status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                          body={"member_code": member_code, "item": item})
+    check(f"{item}: first scan hands it over",
+          status == 200 and body["member_code"] == member_code, f"{status} {body}")
+    first_time = body["redeemed_at"]
+
+    status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                          body={"member_code": member_code, "item": item})
+    # The refusal has to name the person and the time, or the crew cannot
+    # tell a queue-jumper from their own double tap.
+    check(f"{item}: second scan refused with who and when",
+          status == 409 and body["already"] is True
+          and body["name"] and body["redeemed_at"] == first_time, f"{status} {body}")
+
+status, body, _ = req("GET", "/api/v1/admin/redeem/counts", token=admin_tok)
+check("the desk counts what went out", body["pins"] == 1 and body["goodiebags"] == 1)
+
+# The desk scans a QR, but a phone that will not read gets typed in.
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "sinta@natcon.id", "item": "goodiebag"})
+check("an email works at the desk too", status == 200)
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "+62811000322", "item": "pin"})
+check("a phone number works too", status == 200)
+
+for label, payload, want in [
+    ("unknown code", {"member_code": "NATCON-2026-99999", "item": "pin"}, 404),
+    ("unknown item", {"member_code": member_code, "item": "t-shirt"}, 400),
+    ("empty code", {"member_code": "   ", "item": "pin"}, 400),
+]:
+    status, _, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok, body=payload)
+    check(f"rejected: {label} -> {want}", status == want)
+
+status, _, _ = req("POST", "/api/v1/admin/redeem", token=member_tok,
+                   body={"member_code": member_code, "item": "pin"})
+check("an attendee cannot hand themselves a pin", status == 403)
+
 # ---------------------------------------------------------------- rundown
 section("Rundown — the day in one-hour blocks")
 

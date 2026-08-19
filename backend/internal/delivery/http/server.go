@@ -169,6 +169,10 @@ func (s *Server) Router() http.Handler {
 				r.Patch("/admin/seminars/{id}/quota", s.handleAdminSetSeminarQuota)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
 
+				// The desk that hands over pins and goodiebags, by scan.
+				r.Post("/admin/redeem", s.handleRedeem)
+				r.Get("/admin/redeem/counts", s.handleRedeemCounts)
+
 				// The event schedule in one-hour blocks.
 				r.Get("/admin/rundown", s.handleListRundown)
 				r.Post("/admin/rundown", s.handleCreateRundown)
