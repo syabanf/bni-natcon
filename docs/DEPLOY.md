@@ -112,6 +112,31 @@ request dari APK kena CORS. Lihat [`ANDROID.md`](ANDROID.md).
 Restart API setelah mengubahnya. Kalau kelewat, login gagal dengan error
 CORS di console browser — bukan 404.
 
+### Upload gambar gagal 500 — folder simpan tidak bisa ditulis
+
+Gambar disimpan ke disk di path `UPLOAD_DIR`. Kalau API tidak punya izin tulis
+di sana, upload menjawab **500**. Sejak sekarang pesannya menyebut path-nya:
+
+```
+the server cannot write to its image folder (/data/uploads) — the volume is
+not writable by the API. Fix the permissions on that path, or point
+UPLOAD_DIR somewhere writable.
+```
+
+Dan saat start API mencetak salah satu dari dua baris ini, jadi salah setting
+ketahuan waktu deploy, bukan waktu panitia memasang cover:
+
+```
+INFO  image uploads ready dir=/data/uploads
+ERROR UPLOAD_DIR is not usable — image uploads will fail dir=... err=...
+```
+
+Yang perlu dicek di host: user yang menjalankan container/proses API harus
+pemilik (atau punya izin tulis) di folder itu. Di docker compose sudah beres
+lewat volume `natcon-uploads`. Di host lain, pastikan volume-nya di-mount
+**writable** — dan tetap persisten, kalau tidak semua cover hilang tiap
+redeploy.
+
 ### Upload gambar gagal / 502 saat pilih foto
 
 Cover breakout class dan foto narasumber diambil dari HP, jadi ukurannya

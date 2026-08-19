@@ -46,6 +46,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// A volume the API cannot write to is a deploy-time mistake; find it now
+	// rather than when someone tries to set a cover image.
+	httpdelivery.EnsureUploadDir(cfg.UploadDir)
+
 	userRepo := postgres.NewUserRepo(pool)
 	tenantRepo := postgres.NewTenantRepo(pool)
 	visitRepo := postgres.NewVisitRepo(pool)

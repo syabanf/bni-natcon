@@ -5,7 +5,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -54,7 +56,7 @@ func (s *Server) handleAdminUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := os.MkdirAll(s.uploadDir, 0o755); err != nil {
-		respondDomainError(w, err)
+		respondUploadDirError(w, s.uploadDir, err)
 		return
 	}
 	buf := make([]byte, 16)
@@ -65,7 +67,7 @@ func (s *Server) handleAdminUpload(w http.ResponseWriter, r *http.Request) {
 	name := hex.EncodeToString(buf) + ext
 	dst, err := os.Create(filepath.Join(s.uploadDir, name))
 	if err != nil {
-		respondDomainError(w, err)
+		respondUploadDirError(w, s.uploadDir, err)
 		return
 	}
 	defer dst.Close()
@@ -119,4 +121,43 @@ func isHEIC(head []byte) bool {
 		return true
 	}
 	return false
+}
+
+// respondUploadDirError explains a storage failure instead of hiding it
+// behind "something went wrong on our side".
+//
+// This endpoint is admin-only, and the person who sees it is the one who can
+// fix it: an upload directory the API cannot write to is a deployment
+// setting, not a bad request. Naming UPLOAD_DIR turns a mystery 500 into a
+// one-line instruction — without it, the only clue is a stack trace in the
+// browser console and a server log nobody is watching mid-event.
+func respondUploadDirError(w http.ResponseWriter, dir string, err error) {
+	slog.Error("upload storage unavailable", "dir", dir, "err", err)
+	if errors.Is(err, os.ErrPermission) {
+		respondError(w, http.StatusInternalServerError, fmt.Sprintf(
+			"the server cannot write to its image folder (%s) — the volume is not writable "+
+				"by the API. Fix the permissions on that path, or point UPLOAD_DIR somewhere writable.", dir))
+		return
+	}
+	respondError(w, http.StatusInternalServerError, fmt.Sprintf(
+		"the server could not store the image in %s — check that the path exists and has free space.", dir))
+}
+
+// EnsureUploadDir is called at start-up so a misconfigured volume is found
+// while someone is still looking at the deploy, not when the committee tries
+// to set a cover. It never stops the API: everything except image upload
+// works without it.
+func EnsureUploadDir(dir string) {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		slog.Error("UPLOAD_DIR is not usable — image uploads will fail", "dir", dir, "err", err)
+		return
+	}
+	probe := filepath.Join(dir, ".write-probe")
+	if err := os.WriteFile(probe, []byte("ok"), 0o600); err != nil {
+		slog.Error("UPLOAD_DIR exists but is not writable — image uploads will fail",
+			"dir", dir, "err", err)
+		return
+	}
+	_ = os.Remove(probe)
+	slog.Info("image uploads ready", "dir", dir)
 }
