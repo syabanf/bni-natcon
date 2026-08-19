@@ -213,6 +213,18 @@ const MOCK_RUNDOWN = [
 
 export const mockApi = {
   rundown: async () => ({ rundown: MOCK_RUNDOWN }),
+  // Demo mode has no committee to press start, so it shows a round that is
+  // always fifteen minutes from ending.
+  networkingSession: async () => {
+    const now = new Date()
+    return {
+      running: true,
+      round: 1,
+      server_now: now.toISOString(),
+      starts_at: now.toISOString(),
+      ends_at: new Date(now.getTime() + 15 * 60000).toISOString(),
+    }
+  },
   login(email) {
     const normalized = email.trim().toLowerCase()
     const members = MOCK_MEMBERS.filter((m) => m.email === normalized)

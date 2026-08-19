@@ -55,7 +55,7 @@ dipakai.
 | # | Poin MoM | Yang berubah | Perkiraan |
 | --- | --- | --- | --- |
 | 10 | **CRUD Rundown** | master data baru, blok 1 jam | 1 hari |
-| 11 | **Countdown tidak restart + tombol mulai sesi** | sekarang murni di browser ([`Networking.jsx:58`](../../frontend/src/pages/member/Networking.jsx)) — pindah ke server: panitia menekan "Mulai sesi", semua peserta melihat sisa waktu yang sama, refresh tidak me-reset | 1 hari |
+| 11 | ~~**Countdown tidak restart + tombol mulai sesi**~~ | **SELESAI** — migrasi `0020`, panel "The Round" di admin (mulai/stop/durasi), jam peserta menghitung ke waktu server; refresh tidak me-reset, HP yang jamnya meleset tetap benar | ✓ |
 | 12 | **Maks 2 learning session, tidak bertabrakan** | validasi di pendaftaran: hitung sesi yang sudah diambil + tolak yang jamnya beririsan | 4 jam |
 
 ## 3. Aturan undian

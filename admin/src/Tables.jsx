@@ -15,6 +15,8 @@ export default function Tables({ onUnauthorized }) {
   const [busy, setBusy] = useState(false)
   const [seatRows, setSeatRows] = useState([])
   const [showSeats, setShowSeats] = useState(false)
+  const [session, setSession] = useState(null)
+  const [minutes, setMinutes] = useState(15)
 
   const load = () =>
     api
@@ -31,10 +33,47 @@ export default function Tables({ onUnauthorized }) {
       load(),
     ]).catch(() => {})
 
+  const loadSession = () =>
+    api
+      .networkingSession({ onUnauthorized })
+      .then(setSession)
+      .catch(() => {})
+
   useEffect(() => {
     load()
+    loadSession()
+    // The committee watches this screen while the round runs, so it has to
+    // agree with the attendees' phones without anyone pressing refresh.
+    const t = setInterval(loadSession, 10000)
+    return () => clearInterval(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const startRound = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const s = await api.startNetworkingSession(Number(minutes))
+      setSession(s)
+      setNotice(`Round ${s.round} started — ${minutes} minutes.`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const stopRound = async () => {
+    setBusy(true)
+    try {
+      setSession(await api.stopNetworkingSession())
+      setNotice('Round stopped.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const generate = async (e) => {
     e.preventDefault()
@@ -134,7 +173,54 @@ export default function Tables({ onUnauthorized }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Generate Tables
+          <span className="sec-no">01</span>The Round
+        </h2>
+        <p className="panel-sub">
+          Attendees count down to the moment this sets — not to a timer in their own browser, which
+          used to restart every time they refreshed
+        </p>
+        <div className="round-control">
+          <div className={`round-state${session?.running ? ' live' : ''}`}>
+            {session?.running ? (
+              <>
+                <b>Round {session.round} is running</b>
+                <small>ends at {session.ends_at?.slice(11, 16)}</small>
+              </>
+            ) : (
+              <>
+                <b>{session?.round ? `Round ${session.round} has ended` : 'No round yet'}</b>
+                <small>
+                  {session?.round
+                    ? 'Everyone sees a stopped clock until the next one starts'
+                    : 'Attendees see “waiting to start”'}
+                </small>
+              </>
+            )}
+          </div>
+          <label className="md-field round-minutes">
+            <span>Minutes</span>
+            <input
+              type="number"
+              min="1"
+              max="180"
+              value={minutes}
+              onChange={(e) => setMinutes(e.target.value)}
+            />
+          </label>
+          <button className="md-add" onClick={startRound} disabled={busy}>
+            {session?.running ? '↻ Start next round' : '▶ Start round'}
+          </button>
+          {session?.running && (
+            <button className="md-secondary" onClick={stopRound} disabled={busy}>
+              ■ Stop
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="panel report-panel">
+        <h2>
+          <span className="sec-no">02</span>Generate Tables
         </h2>
         <p className="panel-sub">
           Numbering continues after the highest existing table, so you can add more rounds later
@@ -178,7 +264,7 @@ export default function Tables({ onUnauthorized }) {
       {showSeats && (
         <div className="panel report-panel">
           <h2>
-            <span className="sec-no">02</span>Who is seated right now
+            <span className="sec-no">03</span>Who is seated right now
           </h2>
           <p className="panel-sub">
             The seating only exists in the attendees' phones otherwise — this is the committee's
@@ -253,7 +339,7 @@ export default function Tables({ onUnauthorized }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">{showSeats ? '03' : '02'}</span>All Tables
+          <span className="sec-no">{showSeats ? '04' : '03'}</span>All Tables
         </h2>
         <p className="panel-sub">Occupancy is live — a seated table cannot be deleted</p>
         <div className="table-scroll">

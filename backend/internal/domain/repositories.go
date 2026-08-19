@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
@@ -119,6 +122,13 @@ type AdminRepository interface {
 	ListTables(ctx context.Context) ([]NetworkingTable, error)
 	GenerateTables(ctx context.Context, count int, hall string, capacity int) ([]NetworkingTable, error)
 	UpdateTable(ctx context.Context, id int64, name, hall string, capacity int) error
+	// The speed-networking round: one row, started and stopped by the
+	// committee, so every attendee reads the same clock.
+	CurrentSession(ctx context.Context) (*NetworkingSession, error)
+	StartSession(ctx context.Context, minutes int) (*NetworkingSession, error)
+	StopSession(ctx context.Context) error
+	ServerNow(ctx context.Context) (time.Time, error)
+
 	// Who is sitting where, live, while networking runs.
 	TableSeats(ctx context.Context) ([]TableSeat, error)
 	DeleteTable(ctx context.Context, id int64) error

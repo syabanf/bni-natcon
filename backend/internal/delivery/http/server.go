@@ -113,6 +113,8 @@ func (s *Server) Router() http.Handler {
 			// attendee agenda, the booth crew wondering when networking
 			// starts, the committee. No role owns it.
 			r.Get("/rundown", s.handleListRundown)
+			// Everyone in the hall counts down to the same moment.
+			r.Get("/networking/session", s.handleNetworkingSession)
 
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(domain.RoleMember))
@@ -181,6 +183,8 @@ func (s *Server) Router() http.Handler {
 
 				r.Get("/admin/tables", s.handleAdminListTables)
 				r.Get("/admin/tables/seats", s.handleAdminTableSeats)
+				r.Post("/admin/networking/session/start", s.handleStartNetworkingSession)
+				r.Post("/admin/networking/session/stop", s.handleStopNetworkingSession)
 				r.Post("/admin/tables/generate", s.handleAdminGenerateTables)
 				r.Put("/admin/tables/{id}", s.handleAdminUpdateTable)
 				r.Delete("/admin/tables/{id}", s.handleAdminDeleteTable)

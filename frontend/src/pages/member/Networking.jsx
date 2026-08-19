@@ -54,12 +54,43 @@ export function parseTableCode(raw) {
   return m ? parseInt(m[1], 10) : 0
 }
 
-function RoundTimer() {
-  const [secs, setSecs] = useState(14 * 60 + 32)
+/*
+ * The round clock.
+ *
+ * This used to be a number in the browser: it started at 14:32 on every page
+ * load and looped back to 15:00 at zero, so two people at the same table saw
+ * different times and a refresh bought you a fresh round. It now counts down
+ * to the moment the committee set.
+ *
+ * The countdown is measured against the server's clock, not the phone's — a
+ * phone ten minutes out would otherwise show a countdown ten minutes wrong.
+ */
+export function remainingSeconds(session, wallClockNow = Date.now()) {
+  if (!session?.ends_at || !session?.server_now) return null
+  if (!session.running) return 0
+  // How far this device's clock sits from the server's, measured once when
+  // the round was fetched.
+  const skew = wallClockNow - new Date(session.fetched_at ?? session.server_now).getTime()
+  const serverNow = new Date(session.server_now).getTime() + skew
+  return Math.max(0, Math.round((new Date(session.ends_at).getTime() - serverNow) / 1000))
+}
+
+function RoundTimer({ session }) {
+  const [, tick] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setSecs((s) => (s > 0 ? s - 1 : 15 * 60)), 1000)
+    const t = setInterval(() => tick((n) => n + 1), 1000)
     return () => clearInterval(t)
   }, [])
+
+  const secs = remainingSeconds(session)
+  if (secs === null) {
+    return (
+      <div className="round-timer">
+        <div className="rt-time">--:--</div>
+        <div className="rt-label">waiting to start</div>
+      </div>
+    )
+  }
   const m = String(Math.floor(secs / 60)).padStart(2, '0')
   const s = String(secs % 60).padStart(2, '0')
   return (
@@ -67,7 +98,7 @@ function RoundTimer() {
       <div className="rt-time">
         {m}:{s}
       </div>
-      <div className="rt-label">round left</div>
+      <div className="rt-label">{secs === 0 ? 'round over' : 'round left'}</div>
     </div>
   )
 }
@@ -523,8 +554,20 @@ export default function Networking() {
       })
       .catch(() => setData({ checked_in: false, tables: [] }))
 
+  const [session, setSession] = useState(null)
+  const loadSession = () =>
+    api
+      .networkingSession()
+      .then((s) => setSession({ ...s, fetched_at: new Date().toISOString() }))
+      .catch(() => {})
+
   useEffect(() => {
     load()
+    loadSession()
+    // The committee can start the next round at any moment, and the clock on
+    // this screen has to follow it.
+    const t = setInterval(loadSession, 20000)
+    return () => clearInterval(t)
   }, [])
 
   // Speed networking fills a table over a couple of minutes. Whoever sat down
@@ -695,7 +738,7 @@ export default function Networking() {
               {data.table.hall}
             </p>
           </div>
-          <RoundTimer />
+          <RoundTimer session={session} />
         </div>
       </div>
 

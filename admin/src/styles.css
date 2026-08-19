@@ -1736,6 +1736,28 @@ button:disabled {
   padding: 8px;
 }
 
+/* ===== The networking round, started by the committee ===== */
+.round-control {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.round-state {
+  flex: 1 1 220px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+}
+.round-state.live {
+  border-color: #047857;
+  background: #ecfdf5;
+}
+.round-state b { display: block; font-size: 14px; font-weight: 800; }
+.round-state small { color: var(--gray); font-size: 12px; }
+.round-minutes { max-width: 110px; }
+
 /* ===== Who is seated at which networking table ===== */
 .seat-groups {
   display: grid;

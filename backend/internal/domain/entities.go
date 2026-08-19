@@ -450,6 +450,21 @@ type NetworkingTable struct {
 	Occupied int
 }
 
+// NetworkingSession is one speed-networking round: when it started, when it
+// ends, and whether the committee cut it short.
+type NetworkingSession struct {
+	ID        int64
+	Round     int
+	StartsAt  time.Time
+	EndsAt    time.Time
+	StoppedAt *time.Time
+}
+
+// Live reports whether the round is running at the given moment.
+func (s NetworkingSession) Live(now time.Time) bool {
+	return s.StoppedAt == nil && now.Before(s.EndsAt)
+}
+
 // TableSeat is one person sitting at a table, as the committee sees it while
 // networking is running.
 type TableSeat struct {

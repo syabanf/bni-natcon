@@ -97,6 +97,8 @@ export const api = {
       : request('/auth/reset', { method: 'POST', body: { reset_token: resetToken, password } }),
   // The day's schedule, edited by the committee (MoM 19 Aug 2026).
   rundown: () => (isMock() ? mockApi.rundown() : request('/rundown')),
+  // The round everyone in the hall counts down to (MoM 19 Aug 2026).
+  networkingSession: () => (isMock() ? mockApi.networkingSession() : request('/networking/session')),
   tenants: () => (isMock() ? mockApi.tenants() : request('/tenants')),
   seminars: () => (isMock() ? mockApi.seminars() : request('/seminars')),
   seminarAttendees: (id) =>

@@ -276,6 +276,11 @@ export const api = {
   updateRundown: (id, body) => request(`/admin/rundown/${id}`, { method: 'PUT', body }),
   deleteRundown: (id) => request(`/admin/rundown/${id}`, { method: 'DELETE' }),
   tables: (opts) => (isMockMode() ? mock.tables() : request('/admin/tables', opts)),
+  // The speed-networking round: everyone counts down to the same moment.
+  networkingSession: (opts) => request('/networking/session', opts),
+  startNetworkingSession: (minutes) =>
+    request('/admin/networking/session/start', { method: 'POST', body: { minutes } }),
+  stopNetworkingSession: () => request('/admin/networking/session/stop', { method: 'POST' }),
   // Who is sitting where, while networking runs (MoM 19 Aug 2026).
   tableSeats: (opts) => request('/admin/tables/seats', opts),
   generateTables: (body) =>

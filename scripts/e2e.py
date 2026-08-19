@@ -876,6 +876,53 @@ check("...with the table's name, the seat, and who they are",
 status, _, _ = req("GET", "/api/v1/admin/tables/seats", token=member_tok)
 check("an attendee cannot read the whole room's seating", status == 403)
 
+# ---- the networking round (MoM 19 Aug 2026)
+status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
+check("before anyone starts a round, nothing is running",
+      status == 200 and body["running"] is False and "server_now" in body)
+
+status, body, _ = req("POST", "/api/v1/admin/networking/session/start", token=admin_tok,
+                      body={"minutes": 15})
+check("the committee starts a round", status == 201 and body["running"] is True and body["round"] >= 1)
+round_ends = body["ends_at"]
+
+status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
+check("every attendee reads the same end time", body["ends_at"] == round_ends)
+check("...and the same round number", body["round"] >= 1 and body["running"] is True)
+
+# Reading it again is what a refresh does. The old browser timer restarted
+# here; the end time must not move.
+status, body2, _ = req("GET", "/api/v1/networking/session", token=member_tok)
+check("a refresh does not restart the round", body2["ends_at"] == round_ends)
+
+status, body, _ = req("GET", "/api/v1/networking/session", token=tenant_tok)
+check("booth crews can see the round too", status == 200 and body["ends_at"] == round_ends)
+
+status, body, _ = req("POST", "/api/v1/admin/networking/session/start", token=admin_tok,
+                      body={"minutes": 10})
+check("starting the next round replaces the old one, never runs two",
+      status == 201 and body["round"] >= 2 and body["ends_at"] != round_ends)
+second_round = body["round"]
+
+status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
+check("attendees follow to the new round", body["round"] == second_round)
+
+status, body, _ = req("POST", "/api/v1/admin/networking/session/stop", token=admin_tok)
+check("stopping ends it for everyone", status == 200 and body["running"] is False)
+status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
+check("...and the attendee sees a stopped clock", body["running"] is False)
+
+status, _, _ = req("POST", "/api/v1/admin/networking/session/stop", token=admin_tok)
+check("stopping when nothing runs is not an error", status == 200)
+
+status, _, _ = req("POST", "/api/v1/admin/networking/session/start", token=admin_tok,
+                   body={"minutes": 999})
+check("a three-hour-plus round is refused as a typo", status == 400)
+
+status, _, _ = req("POST", "/api/v1/admin/networking/session/start", token=member_tok,
+                   body={"minutes": 15})
+check("an attendee cannot start the round", status == 403)
+
 # ---- tenant bulk import (create-or-update keyed by booth code)
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 sponsors_before, booths_before = body["total_sponsors"], body["total_booths"]
