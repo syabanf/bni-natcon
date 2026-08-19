@@ -18,7 +18,7 @@ const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
 const AUDIENCE = {
   attendee: {
     eyebrow: 'Welcome to',
-    sub: 'Sign in for your digital pass, breakout classes, and speed networking.',
+    sub: 'Sign in for your digital pass, learning classes, and speed networking.',
     hint: (
       <>
         Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
@@ -101,7 +101,7 @@ export default function Login({ audience = 'attendee' }) {
               <h2 className="auth-title">Which one are you?</h2>
               <p className="auth-sub">
                 This address holds more than one Natcon ticket. Pick the pass you want to use —
-                each has its own QR, pins and breakout class.
+                each has its own QR, pins and learning class.
               </p>
               {error && <div className="auth-error">{error}</div>}
               <div className="account-picks">

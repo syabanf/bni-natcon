@@ -678,7 +678,7 @@ export function TenantsPage() {
 
 /* ================= Seminar ================= */
 
-// Every breakout class has a seat quota, and the committee re-sizes rooms
+// Every learning class has a seat quota, and the committee re-sizes rooms
 // right up to the morning of the event. The quota therefore lives in the
 // class list as a number you can set in place — not only inside the full
 // edit form behind the speaker photos and the cover picker.
@@ -797,7 +797,7 @@ export function SeminarsPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Breakout Classes" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
+      <PageHead title="Master Data — Learning Classes" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
         <ImportButton
           label="Import Registrations"
           aliases={REGISTRATION_IMPORT_ALIASES}
@@ -866,14 +866,14 @@ export function SeminarsPage() {
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Edit Breakout Class' : 'Add Breakout Class'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Learning Class' : 'Add Learning Class'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
             <Field label="Slot" type="number" min="1" value={crud.form.slot} onChange={(e) => crud.setForm({ ...crud.form, slot: e.target.value })} required />
             <Field label="Room" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />
             <Field label="Title" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
             <Field label="Speaker(s)" hint="separate multiple speakers with a semicolon" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
             <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
-            <Field label="Quota" hint="seats this breakout room can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <Field label="Quota" hint="seats this learning class can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
             <Field label="Description" hint="shown on the attendee class detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             <SpeakerEditor
               value={crud.form.speakers}

@@ -237,16 +237,16 @@ describe('business classification', () => {
   })
 })
 
-describe('breakout classes', () => {
+describe('learning classes', () => {
   it('carry a moderator through create and update', async () => {
     const { seminar } = await mockAdminApi.createSeminar({
-      slot: 1, room: 'Breakout Room 9', title: 'Test Class',
+      slot: 1, room: 'Learning Class 9', title: 'Test Class',
       speaker: 'A; B', moderator: 'Mod Person', capacity: 30,
     })
     expect(seminar.moderator).toBe('Mod Person')
 
     await mockAdminApi.updateSeminar(seminar.id, {
-      slot: 1, room: 'Breakout Room 9', title: 'Test Class',
+      slot: 1, room: 'Learning Class 9', title: 'Test Class',
       speaker: 'A; B', moderator: 'Another Mod', capacity: 30,
     })
     const row = (await mockAdminApi.seminars()).seminars.find((s) => s.id === seminar.id)
@@ -353,7 +353,7 @@ describe('class registrations made by the committee', () => {
     ])
     expect(res.created).toBe(1)
     expect(res.failed).toBe(1)
-    expect(res.errors[0].error).toContain('no breakout class matches')
+    expect(res.errors[0].error).toContain('no learning class matches')
 
     // Re-importing the same person counts as updated, not created.
     const twice = await mockAdminApi.bulkRegistrations([{ member: 'sinta@natcon.id', room: 'Import Room' }])
@@ -363,7 +363,7 @@ describe('class registrations made by the committee', () => {
   })
 })
 
-describe('breakout class speakers', () => {
+describe('learning class speakers', () => {
   it('stores the speaker list with photos', async () => {
     const { seminar } = await mockAdminApi.createSeminar({
       slot: 93, room: 'Speaker Room', title: 'With People', capacity: 10,

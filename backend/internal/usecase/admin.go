@@ -241,7 +241,7 @@ func (u *AdminUsecase) UpdateSeminar(ctx context.Context, id int64, s domain.Sem
 	return u.admin.UpdateSeminar(ctx, id, s)
 }
 
-// SetSeminarQuota re-sizes one breakout class. Kept apart from
+// SetSeminarQuota re-sizes one learning class. Kept apart from
 // UpdateSeminar so the committee can change a number from the class list
 // without the rest of the class — cover, description, speaker photos —
 // having to be sent along and risk being blanked.
@@ -559,7 +559,7 @@ func (u *AdminUsecase) BulkRegisterSeminar(ctx context.Context, rows []Registrat
 			id, err := u.admin.SeminarIDByRoom(ctx, room)
 			if err != nil {
 				errs = append(errs, domain.BulkRowError{
-					Row: i + 1, Label: lookup, Err: "no breakout class matches " + room,
+					Row: i + 1, Label: lookup, Err: "no learning class matches " + room,
 				})
 				continue
 			}

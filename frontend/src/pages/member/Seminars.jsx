@@ -122,7 +122,7 @@ function RoomAttendees({ seminarId }) {
   )
 }
 
-// Full-page breakout class detail: cover, description, speakers/moderator,
+// Full-page learning class detail: cover, description, speakers/moderator,
 // and the member's class entry QR (distinct payload from the general QR).
 function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy, locked }) {
   const [showQR, setShowQR] = useState(false)
@@ -138,7 +138,7 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
       <div className="card seminar-card" style={{ marginTop: 4 }}>
         <SeminarCover seminar={seminar} tall />
         <div className="seminar-body">
-          <span className="pill red">{seminar.room} · Breakout class · 13:00 – 14:30</span>
+          <span className="pill red">{seminar.room} · Learning class · 13:00 – 14:30</span>
           <h4 style={{ marginTop: 10, fontSize: 17 }}>{seminar.title}</h4>
           <SpeakerLines seminar={seminar} />
           {seminar.description && <p className="seminar-desc">{seminar.description}</p>}
@@ -163,7 +163,7 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
                     <QRCodeSVG value={memberCode || ''} size={148} />
                     <b>Class entry pass — {seminar.room}</b>
                     <p>
-                      This QR is for the breakout class door only (separate from your booth QR). The
+                      This QR is for the learning class door only (separate from your booth QR). The
                       door crew scans it to record your attendance — then claim your{' '}
                       <b>goodiebag</b>.
                     </p>
@@ -175,7 +175,7 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
               </>
             ) : locked ? (
               <button className="btn" disabled>
-                You already picked another breakout class
+                You already picked another learning class
               </button>
             ) : full ? (
               <button className="btn" disabled>
@@ -239,7 +239,7 @@ export default function Seminars() {
   }
 
   if (seminars === null) {
-    return <div className="loading-note">Loading breakout classes…</div>
+    return <div className="loading-note">Loading learning classes…</div>
   }
 
   const detail = seminars.find((s) => s.id === detailID)
@@ -264,7 +264,7 @@ export default function Seminars() {
   return (
     <>
       <div className="hero-greet">
-        <h2>Breakout Class</h2>
+        <h2>Learning Class</h2>
         <p>
           All classes run at the same time — pick one, then show your class QR at the door to claim
           your goodiebag.
@@ -292,7 +292,7 @@ export default function Seminars() {
         const pickedInSlot = inSlot.some((s) => s.registered)
         return (
           <div key={slot}>
-            <div className="slot-label">Parallel breakout classes · 13:00 – 14:30</div>
+            <div className="slot-label">Parallel learning classes · 13:00 – 14:30</div>
             {inSlot.map((s) => {
               const few = s.seats_left <= 10
               const locked = pickedInSlot && !s.registered

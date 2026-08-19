@@ -109,7 +109,7 @@ check("a fresh database starts with no attendees, and with the sheet's booths",
       f"got {body}")
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
-check("...but the four breakout classes are already there, with their speakers",
+check("...but the four learning classes are already there, with their speakers",
       status == 200 and len(body["seminars"]) == 4
       and sum(len(s.get("speakers") or []) for s in body["seminars"]) == 9)
 
@@ -433,7 +433,7 @@ check("note for non-visitor -> 404", status == 404)
 # ---------------------------------------------------------------- seminars
 section("Breakout classes (register / slot lock / cancel / switch)")
 status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
-check("4 breakout classes listed", status == 200 and len(body["seminars"]) == 4)
+check("4 learning classes listed", status == 200 and len(body["seminars"]) == 4)
 check("class carries description + attended flag",
       body["seminars"][0]["description"] != "" and body["seminars"][0]["attended"] is False)
 # All four share slot 1, so picking one locks the rest — that single pick is
@@ -964,8 +964,8 @@ check("unknown attendee -> 404", status == 404)
 
 status, body, _ = req("POST", "/api/v1/admin/seminars/registrations/bulk", token=admin_tok,
                       body={"registrations": [
-                          {"member": "agus@natcon.id", "room": "Breakout Room 3"},
-                          {"member": "sinta@natcon.id", "room": "Breakout Room 3"},
+                          {"member": "agus@natcon.id", "room": "Learning Class 3"},
+                          {"member": "sinta@natcon.id", "room": "Learning Class 3"},
                           {"member": "agus@natcon.id", "room": "No Such Room"},
                       ]})
 check("bulk registration: 1 created, 1 already there, 1 unknown room",

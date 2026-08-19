@@ -154,14 +154,14 @@ export const REGISTRATION_IMPORT_ALIASES = {
   member: ['member', 'attendee', 'peserta'],
   email: ['email', 'e-mail'],
   member_code: ['member code', 'member_code', 'kode peserta', 'id'],
-  room: ['room', 'ruangan', 'class', 'kelas', 'breakout room', 'breakout class'],
+  room: ['room', 'ruangan', 'class', 'kelas', 'learning class', 'learning class'],
 }
 
 export const REGISTRATION_TEMPLATE = {
   columns: ['Email', 'Member Code', 'Room'],
   examples: [
-    { Email: 'reddie@natcon.id', 'Member Code': '', Room: 'Breakout Room 1' },
-    { Email: '', 'Member Code': 'NATCON-2026-08201', Room: 'Breakout Room 3' },
+    { Email: 'reddie@natcon.id', 'Member Code': '', Room: 'Learning Class 1' },
+    { Email: '', 'Member Code': 'NATCON-2026-08201', Room: 'Learning Class 3' },
   ],
   fileName: 'natcon2026-template-import-class-registrations.xlsx',
   sheetName: 'Registrations',

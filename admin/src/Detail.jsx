@@ -144,7 +144,7 @@ export function MemberDetail({ id, onBack }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Registered Breakout Classes
+          <span className="sec-no">02</span>Registered Learning Classes
         </h2>
         <p className="panel-sub">One class per parallel slot</p>
         <SimpleTable
@@ -221,7 +221,7 @@ export function TenantDetail({ id, onBack }) {
   )
 }
 
-/* ===== Breakout class detail ===== */
+/* ===== Learning class detail ===== */
 
 // The committee registers walk-ups and phone-ins straight into a class.
 // Accepts a member code, email, or phone number — whatever they have to hand.
@@ -290,13 +290,13 @@ export function SeminarDetail({ id, onBack }) {
     }
   }
 
-  if (error) return <DetailShell title="Breakout Class" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
-  if (!data) return <DetailShell title="Breakout Class" sub="Loading…" onBack={onBack} />
+  if (error) return <DetailShell title="Learning Class" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
+  if (!data) return <DetailShell title="Learning Class" sub="Loading…" onBack={onBack} />
 
   const { seminar, attendees } = data
   const pct = Math.round((seminar.seats_taken / seminar.capacity) * 100)
   return (
-    <DetailShell title={seminar.title} sub={`Breakout class · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
+    <DetailShell title={seminar.title} sub={`Learning class · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
       <div className="detail-hero">
         <div className="dh-avatar tenant">{seminar.room.replace('R. ', '').slice(0, 2).toUpperCase()}</div>
         <InfoGrid

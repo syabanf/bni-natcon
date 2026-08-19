@@ -50,7 +50,7 @@ Environment yang wajib diisi:
 | `SEED_PASSWORD`   | password akun admin (dan akun booth yang dibuat nanti)        |
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
-Database baru berisi akun `admin@natcon.id`, **4 breakout class beserta
+Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
 narasumbernya**, dan **31 booth dari sheet *Data Booth*** (migrasi `0014`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`). Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
@@ -170,7 +170,7 @@ redeploy.
 
 ### Upload gambar gagal / 502 saat pilih foto
 
-Cover breakout class dan foto narasumber diambil dari HP, jadi ukurannya
+Cover learning class dan foto narasumber diambil dari HP, jadi ukurannya
 megabyte. Batasnya **5 MB per gambar** di API — tapi yang biasanya memutus
 duluan adalah proxy di depannya:
 

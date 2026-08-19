@@ -9,7 +9,7 @@ import (
 
 // SeedIfEmpty puts the committee's admin login into a fresh database, gives
 // the booths from migration 0014 a password anyone can actually sign in with,
-// and writes the event's programme — the four breakout classes with their
+// and writes the event's programme — the four learning classes with their
 // speakers and moderators, from the Term of Reference documents.
 //
 // Nothing is invented. Attendees and their chapters come from the ticketing
@@ -50,7 +50,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// The four real breakout classes, from the Term of Reference documents.
+	// The four real learning classes, from the Term of Reference documents.
 	// All share slot 1: they run in parallel, so an attendee picks exactly one
 	// and that pick is what the goodiebag is claimed against.
 	seminars := []struct {
@@ -59,16 +59,16 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		capacity                   int
 		desc                       string
 	}{
-		{1, "Breakout Room 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
+		{1, "Learning Class 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
 			"Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai", "Roby Oktober", 60,
 			"Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team."},
-		{1, "Breakout Room 2", "Work-Life Balance & AI: The New Agency Equation",
+		{1, "Learning Class 2", "Work-Life Balance & AI: The New Agency Equation",
 			"Viktor Iwan; Irfan Arsandi — WIT Indonesia", "Ryan Kristomulyono", 60,
 			"AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity."},
-		{1, "Breakout Room 3", "How to Win in Retail: The 2026 Economic Reality",
+		{1, "Learning Class 3", "How to Win in Retail: The 2026 Economic Reality",
 			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
 			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
-		{1, "Breakout Room 4", "Your Face Tells a Story",
+		{1, "Learning Class 4", "Your Face Tells a Story",
 			"Suntoro Suciatmaja", "", 60,
 			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
@@ -77,21 +77,21 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	people := map[string][]struct {
 		name, role, title, photo string
 	}{
-		"Breakout Room 1": {
+		"Learning Class 1": {
 			{"Flavia N. Sungkit, M.Psi., Psikolog", "speaker", "HR Consultant · Ikigai", "/speakers/flavia-sungkit.jpg"},
 			{"Roby Oktober", "moderator", "", "/speakers/roby-oktober.jpg"},
 		},
-		"Breakout Room 2": {
+		"Learning Class 2": {
 			{"Viktor Iwan", "speaker", "", "/speakers/viktor-iwan.jpg"},
 			{"Irfan Arsandi", "speaker", "IT & Digital Transformation Consultant · WIT Indonesia", "/speakers/irfan-arsandi.jpg"},
 			{"Ryan Kristomulyono", "moderator", "", "/speakers/ryan-kristomulyono.jpg"},
 		},
-		"Breakout Room 3": {
+		"Learning Class 3": {
 			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan.jpg"},
 			{"Selina Nicole", "speaker", "Founder · LEKA", "/speakers/selina-nicole.jpg"},
 			{"David Gan", "moderator", "CEO & Founder · Arkova Training & Consulting", "/speakers/david-gan.jpg"},
 		},
-		"Breakout Room 4": {
+		"Learning Class 4": {
 			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
 		},
 	}
@@ -118,17 +118,17 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	return tx.Commit(ctx)
 }
 
-// coverFor maps a breakout room to the poster shipped in each app's
+// coverFor maps a learning class to the poster shipped in each app's
 // public/covers/. Rooms added later simply fall back to the gradient cover.
 func coverFor(room string) string {
 	switch room {
-	case "Breakout Room 1":
+	case "Learning Class 1":
 		return "/covers/breakout-room-1.jpg"
-	case "Breakout Room 2":
+	case "Learning Class 2":
 		return "/covers/breakout-room-2.jpg"
-	case "Breakout Room 3":
+	case "Learning Class 3":
 		return "/covers/breakout-room-3.jpg"
-	case "Breakout Room 4":
+	case "Learning Class 4":
 		return "/covers/breakout-room-4.jpg"
 	}
 	return ""

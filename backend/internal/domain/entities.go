@@ -76,7 +76,7 @@ type Visitor struct {
 	VisitedAt  time.Time
 }
 
-// SeminarSpeaker is one person on stage for a breakout class.
+// SeminarSpeaker is one person on stage for a learning class.
 const (
 	SpeakerRoleSpeaker   = "speaker"
 	SpeakerRoleModerator = "moderator"
@@ -303,7 +303,7 @@ type SeminarInput struct {
 	Speakers    []SeminarSpeaker
 }
 
-// SeminarQuota is the seat quota of one breakout class next to what is
+// SeminarQuota is the seat quota of one learning class next to what is
 // already booked against it — what the committee needs to see the moment
 // they change the number.
 type SeminarQuota struct {
@@ -389,7 +389,7 @@ type SeminarDetail struct {
 }
 
 // RegistrationResult is what the committee sees after booking an attendee
-// into a breakout class from the admin panel. Duplicate means they were
+// into a learning class from the admin panel. Duplicate means they were
 // already in that same class, which is fine — not an error.
 type RegistrationResult struct {
 	MemberName    string

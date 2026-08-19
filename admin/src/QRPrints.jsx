@@ -42,7 +42,7 @@ export const DOORS = [
 
 const KINDS = [
   { key: 'tables', label: 'Networking Tables' },
-  { key: 'seminars', label: 'Breakout Classes' },
+  { key: 'seminars', label: 'Learning Classes' },
   { key: 'tenants', label: 'Tenants' },
   { key: 'doors', label: 'Sign-in Doors' },
 ]

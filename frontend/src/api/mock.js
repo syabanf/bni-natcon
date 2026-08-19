@@ -55,7 +55,7 @@ const TENANTS = [
 
 const SEMINARS = [
   {
-    id: 1, slot: 1, room: 'Breakout Room 1', capacity: 60,
+    id: 1, slot: 1, room: 'Learning Class 1', capacity: 60,
     title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026',
     speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai',
     moderator: 'Roby Oktober',
@@ -68,7 +68,7 @@ const SEMINARS = [
       'Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team.',
   },
   {
-    id: 2, slot: 1, room: 'Breakout Room 2', capacity: 60,
+    id: 2, slot: 1, room: 'Learning Class 2', capacity: 60,
     title: 'Work-Life Balance & AI: The New Agency Equation',
     speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia',
     moderator: 'Ryan Kristomulyono',
@@ -82,7 +82,7 @@ const SEMINARS = [
       'AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity.',
   },
   {
-    id: 3, slot: 1, room: 'Breakout Room 3', capacity: 60,
+    id: 3, slot: 1, room: 'Learning Class 3', capacity: 60,
     title: 'How to Win in Retail: The 2026 Economic Reality',
     speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA',
     moderator: 'David Gan',
@@ -96,7 +96,7 @@ const SEMINARS = [
       'Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce.',
   },
   {
-    id: 4, slot: 1, room: 'Breakout Room 4', capacity: 60,
+    id: 4, slot: 1, room: 'Learning Class 4', capacity: 60,
     title: 'Your Face Tells a Story',
     speaker: 'Suntoro Suciatmaja',
     moderator: '',

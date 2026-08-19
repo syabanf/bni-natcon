@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 31 booths and the 4 breakout classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 31 booths and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -58,7 +58,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 ## Attendee
 
-*The attendee app: pass, passport, breakout class, speed networking.*
+*The attendee app: pass, passport, learning class, speed networking.*
 
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
@@ -68,12 +68,12 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-04 | P1 | Passport tab | Look at the top of the passport. | An 'Official Sponsors' band appears ABOVE the booths, with the count of sponsor stands visited. Sponsor cards are red-framed and carry a SPONSOR ribbon. |
 | ATT-05 | P1 | Passport | Read a booth card imported from the booth sheet. | Shows the company name, its category, the booth code, and underneath the booth contact and their chapter. |
 | ATT-06 | P1 | A booth has just scanned this attendee | Reopen the Passport. | That booth's card is marked Scanned and has moved to the bottom of its group. Pins collected went up by one. |
-| ATT-07 | P1 | Breakout Room tab | Look at the class list. | Four classes, each with a poster image, the room, seats left, and the speakers and moderator with their photos. |
+| ATT-07 | P1 | Learning Class tab | Look at the class list. | Four classes, each with a poster image, the room, seats left, and the speakers and moderator with their photos. |
 | ATT-08 | P1 | Class list | Register for one class. | The banner says the class ticket is ready. The other three classes become unavailable with 'You already picked another class'. |
 | ATT-09 | P1 | Registered | Open the class and show the entry QR. | A QR appears captioned 'Class entry pass — <room>' and explains it is for the class door, separate from the booth QR. |
 | ATT-10 | P2 | Registered | Open the class detail and scroll to 'In this room'. | Lists the people registered for that room with their chapter. Your own name is there. |
 | ATT-11 | P2 | Registered | Cancel the registration, then register for a different class. | Cancelling frees the choice; the other classes become available again and the new one registers. |
-| ATT-12 | P1 | The door crew has just checked this attendee in | Reopen Breakout Room. | Banner reads 'Attendance recorded ✓' and the class button reads 'Registered · attended ✓'. |
+| ATT-12 | P1 | The door crew has just checked this attendee in | Reopen Learning Class. | Banner reads 'Attendance recorded ✓' and the class button reads 'Registered · attended ✓'. |
 | ATT-13 | P1 | Network tab, not yet at a table | Type a table number and join. | Placement card shows 'Table N · Seat n' and the people already at that table. |
 | ATT-14 | P1 | Network tab | Scan the printed table QR with the camera (real phone). | Same result as typing the number — checked in at that table. |
 | ATT-15 | P1 | Network tab | Type your own member code (NATCON-2026-…) into the table number box. | Refused with 'Enter your table number, e.g. 5'. It must NOT seat you at table 1. |
@@ -83,7 +83,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-19 | P2 | Saved at least one contact | Open 'Table History & Saved Contacts'. | Lists the tables you joined and the contacts you saved, each with its note. |
 | ATT-20 | P2 | Saved contacts list | Open one contact. | Shows their profile with email and phone. Tapping the phone opens the dialer; tapping the email opens the mail app. |
 | ATT-21 | P3 | Any attendee screen | Scroll to the bottom. | 'System by WIT' is shown and links to wit.id. |
-| ATT-22 | P2 | Attendee app | Look at the top bar. | Logo only — no venue line. The bottom nav reads Home, My QR, Passport, Breakout Room, Network, all on one level. |
+| ATT-22 | P2 | Attendee app | Look at the top bar. | Logo only — no venue line. The bottom nav reads Home, My QR, Passport, Learning Class, Network, all on one level. |
 
 ## Booth scanner
 
@@ -108,7 +108,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 ## Admin master data
 
-*Attendees, tenants, breakout classes, chapters — CRUD and Excel import.*
+*Attendees, tenants, learning classes, chapters — CRUD and Excel import.*
 
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
@@ -126,24 +126,24 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-12 | P1 | After MD-11 | Open a booth's Detail. | Shows kind, booth code, category, booth contact, BNI chapter and the scanner login (booth-<code>@natcon.id). |
 | MD-13 | P1 | Tenants page | Edit a booth, change only the category, save, then reopen Edit. | The description and contact are still there — editing must not blank the fields it did not touch. |
 | MD-14 | P2 | Tenants page | Add a tenant with Kind = Sponsor. | It appears under Sponsors, the count goes up, and it shows above booths on the attendee passport. |
-| MD-15 | P1 | Breakout Classes page | Press Edit on a class. | Slot, room, title, speakers, moderator, capacity, description, the speaker list with photos, and the cover are all filled in — nothing blank. |
+| MD-15 | P1 | Learning Classes page | Press Edit on a class. | Slot, room, title, speakers, moderator, capacity, description, the speaker list with photos, and the cover are all filled in — nothing blank. |
 | MD-16 | P1 | Class edit modal | Add a person, set the role to Moderator, upload a photo, save. Reopen. | The person and photo persisted and appear on the attendee class card. |
 | MD-17 | P2 | Class edit modal | Upload a cover image and save. | The cover shows on the attendee class card and detail. |
 | MD-18 | P1 | Class detail page | Register an attendee by member code, then by email, then by phone. | Each is added to the attendee list of that class. |
 | MD-19 | P1 | Class detail | Register the same attendee twice. | Reported as already registered — not added twice. |
 | MD-20 | P1 | Class detail | Register an attendee who is already in a DIFFERENT class in the same slot. | Refused, saying they already hold another class in that slot. |
 | MD-21 | P1 | Class detail | Press Remove on a registered attendee. | They disappear from the list and the seat is freed. |
-| MD-22 | P1 | Breakout Classes page | Press Download format, fill a couple of rows (attendee + room), then Import Registrations. | Reports created / updated / failed; the attendees show on the class detail. |
+| MD-22 | P1 | Learning Classes page | Press Download format, fill a couple of rows (attendee + room), then Import Registrations. | Reports created / updated / failed; the attendees show on the class detail. |
 | MD-23 | P2 | Chapters page | Look at the list; add a chapter, rename one used by attendees. | Chapters list with member counts. A rename cascades to the attendees in that chapter. |
 | MD-24 | P2 | Any master-data page | Import a file with a bad row (no email, or a malformed email). | The good rows still import; the bad row is reported with its row number and reason. |
-| MD-25 | P1 | Admin · Breakout Classes | Read the Quota column for a class nobody has registered for. | Shows taken/quota (e.g. 0/60), an empty fill bar and 'N seats left'. |
-| MD-26 | P1 | Admin · Breakout Classes | Click the quota number, type 45, press Enter. | Saves without opening the edit form; the row shows 0/45 and '45 seats left'. Re-open the class in Edit: description, cover and speaker photos are untouched. |
-| MD-27 | P1 | Admin · Breakout Classes | Click the quota number, change it, press Esc. | The editor closes and the old quota stays — nothing was saved. |
+| MD-25 | P1 | Admin · Learning Classes | Read the Quota column for a class nobody has registered for. | Shows taken/quota (e.g. 0/60), an empty fill bar and 'N seats left'. |
+| MD-26 | P1 | Admin · Learning Classes | Click the quota number, type 45, press Enter. | Saves without opening the edit form; the row shows 0/45 and '45 seats left'. Re-open the class in Edit: description, cover and speaker photos are untouched. |
+| MD-27 | P1 | Admin · Learning Classes | Click the quota number, change it, press Esc. | The editor closes and the old quota stays — nothing was saved. |
 | MD-28 | P1 | A class with 3 attendees registered | Set its quota to 2. | Refused, with '3 already registered — cancel registrations first'. The old quota is still in place after a page reload. |
 | MD-29 | P1 | Same class, 3 registered | Set its quota to exactly 3. | Accepted. The row reads 3/3 with a full bar and FULL in red. |
 | MD-30 | P1 | A class showing FULL | Register one more attendee into it (Detail → register by code/email/phone). | Refused: 'this seminar is fully booked'. An attendee picking it in the app is turned away too. |
-| MD-31 | P2 | Admin · Breakout Classes | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
-| MD-32 | P2 | Admin · Breakout Classes | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
+| MD-31 | P2 | Admin · Learning Classes | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
+| MD-32 | P2 | Admin · Learning Classes | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
 
 ## Admin operations
 
@@ -153,7 +153,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|---|---|
 | OPS-01 | P1 | Admin, Dashboard | Look at the tiles. | Registered attendees, Sponsors and Booths counted separately, total visit scans, scans today, class registrations. |
 | OPS-02 | P2 | Dashboard | Leave it open while a booth records a scan. | Within a few seconds the scan count and the activity feed update on their own. |
-| OPS-03 | P1 | Door Check-in | Pick a breakout room from the dropdown. | Shows attended / registered / percentage for that room. |
+| OPS-03 | P1 | Door Check-in | Pick a learning class from the dropdown. | Shows attended / registered / percentage for that room. |
 | OPS-04 | P1 | Door Check-in, an attendee registered for that room | Type their member code and check in. | 'Attendance recorded' with their name; attended count goes up by one. |
 | OPS-05 | P1 | Continuing OPS-04 | Check the same person in again. | 'Already checked in' — the count does not move. |
 | OPS-06 | P1 | Door Check-in on the WRONG room | Check in someone registered elsewhere. | Rejected: not registered for this class. Nothing recorded. |
@@ -185,7 +185,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | RPT-08 | P2 | Any export | Sort by the time column. | Rows sort in true chronological order. |
 | RPT-09 | P1 | Attendees page | Press Download format and open the file. | natcon2026-template-import-attendees.xlsx with the documented headers and example rows. |
 | RPT-10 | P1 | Tenants page | Press Download format and open the file. | natcon2026-template-import-booths.xlsx, headers matching the official Data Booth sheet. |
-| RPT-11 | P1 | Breakout Classes page | Press Download format and open the file. | natcon2026-template-import-class-registrations.xlsx with Email / Member Code / Room. |
+| RPT-11 | P1 | Learning Classes page | Press Download format and open the file. | natcon2026-template-import-class-registrations.xlsx with Email / Member Code / Room. |
 | RPT-12 | P2 | A full event's worth of data | Press Export on Tenant Leads and time it. | The file arrives without the page freezing. Note the time and file size in Notes. |
 
 ## Cross-cutting
@@ -194,7 +194,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
-| CRS-01 | P1 | A phone (or a 375px window) | Walk the attendee app: Home, My QR, Passport, Breakout Room, Network. | Nothing is cut off and the page never slides sideways. The bottom nav stays level. |
+| CRS-01 | P1 | A phone (or a 375px window) | Walk the attendee app: Home, My QR, Passport, Learning Class, Network. | Nothing is cut off and the page never slides sideways. The bottom nav stays level. |
 | CRS-02 | P1 | A phone or 375px window | Walk every admin page. | No page scrolls sideways. Wide tables scroll inside their own card, not the whole page. |
 | CRS-03 | P2 | A tablet (768px) | Open the admin panel. | The sidebar becomes a top strip that scrolls; the last item is reachable. |
 | CRS-04 | P2 | A laptop (1280px+) | Open the admin panel. | Sidebar on the left, dashboard in two columns. |

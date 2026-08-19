@@ -147,7 +147,7 @@ export function ReportLeads({ onUnauthorized }) {
   )
 }
 
-/* ===== 02 — Breakout class registrations ===== */
+/* ===== 02 — Learning class registrations ===== */
 
 export function ReportSeminars({ onUnauthorized }) {
   const [registrations, setRegistrations] = useState([])
@@ -161,7 +161,7 @@ export function ReportSeminars({ onUnauthorized }) {
 
   return (
     <ReportShell
-      title="Report — Breakout Class Registrations"
+      title="Report — Learning Class Registrations"
       sub="Attendance sheet per room for the door crew"
       exportDisabled={registrations.length === 0}
       onExport={() =>

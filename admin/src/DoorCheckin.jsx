@@ -8,7 +8,7 @@ function fmtClock(d) {
 }
 
 /*
- * Door-crew mode: pick a breakout class, scan attendee QRs (camera or manual
+ * Door-crew mode: pick a learning class, scan attendee QRs (camera or manual
  * manual) — hadir tercatat sekali per peserta, dan yang belum terdaftar
  * input); anyone not registered for that class is rejected clearly.
  */
@@ -114,7 +114,7 @@ export default function DoorCheckin({ onUnauthorized }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">01</span>Choose Breakout Class
+          <span className="sec-no">01</span>Choose Learning Class
         </h2>
         <p className="panel-sub">Each door crew covers one room</p>
         <select

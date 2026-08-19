@@ -122,7 +122,7 @@ export default function Home() {
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
-          <h4>Breakout Class</h4>
+          <h4>Learning Class</h4>
           <p>Pick a class, claim your goodiebag</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/network')}>

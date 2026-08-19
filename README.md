@@ -8,7 +8,7 @@ in **English** (MoM revision). Members collect
 **pins** by having sponsors & booths scan their QR (the passport opens with
 an **Official Sponsors** band and red-framed, ribboned sponsor cards above
 a plain Booths section, visited tenants sink to the bottom; every tenant
-card carries a description), pick one of the four parallel **breakout
+card carries a description), pick one of the four parallel **learning
 classes** (**goodiebag on door check-in**, with a **separate class entry QR**,
 full class detail carrying **speaker & moderator photos**, a cover, a live
 attendance badge, and **who else is in the room**), and join **speed
@@ -23,7 +23,7 @@ a **visitor detail** page from the booth dashboard. A separate admin app
 gives the committee live monitoring (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
-sponsor rows; breakout classes carry a **speaker list with uploadable
+sponsor rows; learning classes carry a **speaker list with uploadable
 photos**, description + cover, a **seat quota you set straight from the
 class list** — click the number, type, Enter — and the committee can
 **register attendees into a class** by member code/email/phone or **import
@@ -66,8 +66,8 @@ dropping in new artwork.
 Members can cancel a class registration (`DELETE /seminars/{id}/register`)
 and pick another class in the same slot.
 
-**Every breakout class has a quota**, and rooms get re-sized right up to the
-morning of the event. The Breakout Classes page therefore shows each class as
+**Every learning class has a quota**, and rooms get re-sized right up to the
+morning of the event. The Learning Classes page therefore shows each class as
 `taken/quota` with a fill bar and either *N seats left* or **FULL**, and the
 number itself is the control: click it, type the new quota, press Enter.
 It posts `PATCH /admin/seminars/{id}/quota` — deliberately narrow, so
@@ -83,7 +83,7 @@ away.
 **A fresh database holds the event's own master data and nothing invented:**
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
-- **The 4 breakout classes with their 9 speakers and moderators**, from the
+- **The 4 learning classes with their 9 speakers and moderators**, from the
   Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
 - **The 31 booths of the committee's *Data Booth* sheet** (migration `0014`),
@@ -137,7 +137,7 @@ ready-to-fill template (headers + example rows).
   **create-or-update by ticket number** when the sheet carries one (falling
   back to email), so **one buyer holding two tickets becomes two attendees**
   on the same address — signing in then asks **which pass you are**, and each
-  pass keeps its own QR, pins and breakout class. New accounts sign in with
+  pass keeps its own QR, pins and learning class. New accounts sign in with
   username = email and password = chapter + first name (lowercase, no
   spaces), then
   **choose their own password on that first sign-in** — nothing else in the

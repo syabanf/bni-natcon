@@ -56,10 +56,10 @@ function seedState() {
   }))
 
   const seminars = [
-    { id: 1, slot: 1, room: 'Breakout Room 1', title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026', speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai', moderator: 'Roby Oktober', capacity: 60, description: 'A strategic HR roadmap for mid-sized companies in 2026.', cover_url: '' },
-    { id: 2, slot: 1, room: 'Breakout Room 2', title: 'Work-Life Balance & AI: The New Agency Equation', speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia', moderator: 'Ryan Kristomulyono', capacity: 60, description: 'Outcome-based performance and AI as a shield for work-life balance.', cover_url: '' },
-    { id: 3, slot: 1, room: 'Breakout Room 3', title: 'How to Win in Retail: The 2026 Economic Reality', speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA', moderator: 'David Gan', capacity: 60, description: 'Trade-down, the physical store, and the rise of agentic commerce.', cover_url: '' },
-    { id: 4, slot: 1, room: 'Breakout Room 4', title: 'Your Face Tells a Story', speaker: 'Suntoro Suciatmaja', moderator: '', capacity: 60, description: 'Reading faces as a practical business skill.', cover_url: '' },
+    { id: 1, slot: 1, room: 'Learning Class 1', title: 'Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026', speaker: 'Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai', moderator: 'Roby Oktober', capacity: 60, description: 'A strategic HR roadmap for mid-sized companies in 2026.', cover_url: '' },
+    { id: 2, slot: 1, room: 'Learning Class 2', title: 'Work-Life Balance & AI: The New Agency Equation', speaker: 'Viktor Iwan; Irfan Arsandi — WIT Indonesia', moderator: 'Ryan Kristomulyono', capacity: 60, description: 'Outcome-based performance and AI as a shield for work-life balance.', cover_url: '' },
+    { id: 3, slot: 1, room: 'Learning Class 3', title: 'How to Win in Retail: The 2026 Economic Reality', speaker: 'Ben Wirawan — Torch; Selina Nicole — LEKA', moderator: 'David Gan', capacity: 60, description: 'Trade-down, the physical store, and the rise of agentic commerce.', cover_url: '' },
+    { id: 4, slot: 1, room: 'Learning Class 4', title: 'Your Face Tells a Story', speaker: 'Suntoro Suciatmaja', moderator: '', capacity: 60, description: 'Reading faces as a practical business skill.', cover_url: '' },
   ]
 
   // (member_id, tenant_id, jam, menit) — tersebar supaya grafik hidup.
@@ -607,7 +607,7 @@ export const mockAdminApi = {
         (x) => x.room.toLowerCase() === room || x.title.toLowerCase() === room
       )
       if (!sem) {
-        errors.push({ row: i + 1, label: row.member, error: `no breakout class matches ${row.room}` })
+        errors.push({ row: i + 1, label: row.member, error: `no learning class matches ${row.room}` })
         return
       }
       const needle = String(row.member || '').trim().toLowerCase()
