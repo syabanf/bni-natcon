@@ -9,6 +9,7 @@ import (
 
 	"natcon2026/backend/internal/domain"
 	"natcon2026/backend/internal/usecase"
+	"time"
 )
 
 /* ---------- DTOs ---------- */
@@ -244,6 +245,9 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 		Attended    bool   `json:"attended"`
 		Description string `json:"description"`
 		CoverURL    string `json:"cover_url"`
+		PosterURL   string `json:"poster_url"`
+		StartsAt    string `json:"starts_at,omitempty"`
+		EndsAt      string `json:"ends_at,omitempty"`
 
 		Speakers []speakerDTO `json:"speakers"`
 	}
@@ -260,6 +264,8 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 			Speaker: sem.Speaker, Moderator: sem.Moderator, Capacity: sem.Capacity,
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
 			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
+			PosterURL: sem.PosterURL,
+			StartsAt: mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
 			Speakers: people,
 		})
 	}
@@ -429,3 +435,7 @@ func (s *Server) handleSeminarAttendees(w http.ResponseWriter, r *http.Request) 
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"attendees": out})
 }
+
+// Small helpers so the DTO stays a literal.
+func mustStart(a, b *time.Time) string { s, _ := classTimes(a, b); return s }
+func mustEnd(a, b *time.Time) string   { _, e := classTimes(a, b); return e }

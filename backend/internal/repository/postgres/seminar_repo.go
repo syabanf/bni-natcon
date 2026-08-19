@@ -20,12 +20,13 @@ func NewSeminarRepo(pool *pgxpool.Pool) *SeminarRepo {
 
 func (r *SeminarRepo) ListWithStatus(ctx context.Context, memberID int64) ([]domain.SeminarWithStatus, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity, s.description, s.cover_url,
+		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity, s.description,
+		       s.cover_url, s.poster_url, COALESCE(s.rundown_id, 0), b.starts_at, b.ends_at,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id) AS taken,
 		       EXISTS (SELECT 1 FROM seminar_registrations sr WHERE sr.seminar_id = s.id AND sr.member_id = $1) AS registered,
 		       EXISTS (SELECT 1 FROM seminar_attendance sa WHERE sa.seminar_id = s.id AND sa.member_id = $1) AS attended
-		FROM seminars s
-		ORDER BY s.slot, s.room`, memberID)
+		FROM seminars s LEFT JOIN rundown b ON b.id = s.rundown_id
+		ORDER BY b.starts_at NULLS LAST, s.slot, s.room`, memberID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,9 @@ func (r *SeminarRepo) ListWithStatus(ctx context.Context, memberID int64) ([]dom
 	var out []domain.SeminarWithStatus
 	for rows.Next() {
 		var s domain.SeminarWithStatus
-		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Moderator, &s.Capacity, &s.Description, &s.CoverURL, &s.SeatsTaken, &s.Registered, &s.Attended); err != nil {
+		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Moderator,
+			&s.Capacity, &s.Description, &s.CoverURL, &s.PosterURL, &s.RundownID,
+			&s.StartsAt, &s.EndsAt, &s.SeatsTaken, &s.Registered, &s.Attended); err != nil {
 			return nil, err
 		}
 		out = append(out, s)
@@ -91,9 +94,10 @@ func (r *SeminarRepo) Register(ctx context.Context, seminarID, memberID int64) e
 
 	// Lock the seminar row so concurrent registrations serialize on capacity.
 	var slot, capacity int
+	var rundownID *int64
 	err = tx.QueryRow(ctx,
-		`SELECT slot, capacity FROM seminars WHERE id = $1 FOR UPDATE`, seminarID).
-		Scan(&slot, &capacity)
+		`SELECT slot, capacity, rundown_id FROM seminars WHERE id = $1 FOR UPDATE`, seminarID).
+		Scan(&slot, &capacity, &rundownID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.ErrNotFound
@@ -101,18 +105,60 @@ func (r *SeminarRepo) Register(ctx context.Context, seminarID, memberID int64) e
 		return err
 	}
 
-	var alreadyInSlot bool
-	err = tx.QueryRow(ctx, `
-		SELECT EXISTS (
-			SELECT 1 FROM seminar_registrations sr
-			JOIN seminars s ON s.id = sr.seminar_id
-			WHERE sr.member_id = $1 AND s.slot = $2
-		)`, memberID, slot).Scan(&alreadyInSlot)
-	if err != nil {
+	// Two classes each, and never two at the same hour (MoM 19 Aug 2026).
+	// Counted here rather than in the usecase so a double-tap cannot slip two
+	// registrations past the check.
+	var held int
+	if err := tx.QueryRow(ctx,
+		`SELECT COUNT(*) FROM seminar_registrations WHERE member_id = $1`, memberID).Scan(&held); err != nil {
 		return err
 	}
-	if alreadyInSlot {
-		return domain.ErrAlreadyRegistered
+	if held >= domain.MaxLearningSessions {
+		return domain.ErrTooManySessions
+	}
+
+	// A class the committee has not placed in the rundown yet has no time to
+	// clash with — it still counts towards the two, but cannot be checked
+	// for overlap.
+	if rundownID != nil {
+		var clash bool
+		if err := tx.QueryRow(ctx, `
+			SELECT EXISTS (
+				SELECT 1
+				FROM seminar_registrations sr
+				JOIN seminars s  ON s.id = sr.seminar_id
+				JOIN rundown  b  ON b.id = s.rundown_id
+				JOIN rundown  nb ON nb.id = $2
+				WHERE sr.member_id = $1
+				  AND b.starts_at < nb.ends_at
+				  AND nb.starts_at < b.ends_at
+			)`, memberID, *rundownID).Scan(&clash); err != nil {
+			return err
+		}
+		if clash {
+			return domain.ErrSessionClash
+		}
+	}
+
+	// `slot` was the old stand-in for "at the same time", from before classes
+	// had real hours. Where a class sits in the rundown, the hours decide —
+	// otherwise two classes at 13:00 and 15:00 would still be refused for
+	// sharing a slot number. Classes the committee has not placed yet keep
+	// the old rule, because it is the only time signal they carry.
+	if rundownID == nil {
+		var alreadyInSlot bool
+		err = tx.QueryRow(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM seminar_registrations sr
+				JOIN seminars s ON s.id = sr.seminar_id
+				WHERE sr.member_id = $1 AND s.slot = $2 AND s.rundown_id IS NULL
+			)`, memberID, slot).Scan(&alreadyInSlot)
+		if err != nil {
+			return err
+		}
+		if alreadyInSlot {
+			return domain.ErrAlreadyRegistered
+		}
 	}
 
 	var taken int

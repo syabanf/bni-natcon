@@ -76,6 +76,10 @@ func (s *Server) handleAdminSeminars(w http.ResponseWriter, r *http.Request) {
 
 		Description string           `json:"description"`
 		CoverURL    string           `json:"cover_url"`
+		PosterURL   string           `json:"poster_url"`
+		RundownID   int64            `json:"rundown_id"`
+		StartsAt    string           `json:"starts_at,omitempty"`
+		EndsAt      string           `json:"ends_at,omitempty"`
 		Speakers    []map[string]any `json:"speakers"`
 	}
 	out := make([]row, 0, len(fill))
@@ -90,7 +94,9 @@ func (s *Server) handleAdminSeminars(w http.ResponseWriter, r *http.Request) {
 			ID: sem.ID, Slot: sem.Slot, Room: sem.Room, Title: sem.Title,
 			Speaker: sem.Speaker, Moderator: sem.Moderator, Capacity: sem.Capacity,
 			SeatsTaken: sem.SeatsTaken, Description: sem.Description,
-			CoverURL: sem.CoverURL, Speakers: people,
+			CoverURL: sem.CoverURL, PosterURL: sem.PosterURL, RundownID: sem.RundownID,
+			StartsAt: mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
+			Speakers: people,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"seminars": out})

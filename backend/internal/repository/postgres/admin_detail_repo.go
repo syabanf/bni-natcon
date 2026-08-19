@@ -102,11 +102,15 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 func (r *AdminRepo) SeminarDetail(ctx context.Context, id int64) (*domain.SeminarDetail, error) {
 	var d domain.SeminarDetail
 	err := r.pool.QueryRow(ctx, `
-		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity, s.description, s.cover_url,
+		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity, s.description,
+		       s.cover_url, s.poster_url, COALESCE(s.rundown_id, 0), b.starts_at, b.ends_at,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id),
 		       (SELECT COUNT(*) FROM seminar_attendance sa WHERE sa.seminar_id = s.id)
-		FROM seminars s WHERE s.id = $1`, id).
-		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Moderator, &d.Capacity, &d.Description, &d.CoverURL, &d.SeatsTaken, &d.AttendedCount)
+		FROM seminars s LEFT JOIN rundown b ON b.id = s.rundown_id
+		WHERE s.id = $1`, id).
+		Scan(&d.ID, &d.Slot, &d.Room, &d.Title, &d.Speaker, &d.Moderator, &d.Capacity, &d.Description,
+			&d.CoverURL, &d.PosterURL, &d.RundownID, &d.StartsAt, &d.EndsAt,
+			&d.SeatsTaken, &d.AttendedCount)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound

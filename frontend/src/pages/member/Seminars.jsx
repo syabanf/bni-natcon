@@ -27,6 +27,14 @@ function SeminarCover({ seminar, tall }) {
   )
 }
 
+// A class's hour comes from the rundown block it sits in. Empty means the
+// committee has not placed it yet — better to say nothing than to print a
+// time that is not true (MoM 19 Aug 2026).
+export function classHours(seminar) {
+  if (!seminar?.starts_at || !seminar?.ends_at) return ''
+  return `${seminar.starts_at.slice(11, 16)} – ${seminar.ends_at.slice(11, 16)}`
+}
+
 function initials(name = '') {
   return name
     .replace(/,.*$/, '')
@@ -138,7 +146,10 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
       <div className="card seminar-card" style={{ marginTop: 4 }}>
         <SeminarCover seminar={seminar} tall />
         <div className="seminar-body">
-          <span className="pill red">{seminar.room} · Learning class · 13:00 – 14:30</span>
+          <span className="pill red">
+            {seminar.room}
+            {classHours(seminar) ? ` · ${classHours(seminar)}` : ' · Learning class'}
+          </span>
           <h4 style={{ marginTop: 10, fontSize: 17 }}>{seminar.title}</h4>
           <SpeakerLines seminar={seminar} />
           {seminar.description && <p className="seminar-desc">{seminar.description}</p>}
@@ -290,9 +301,12 @@ export default function Seminars() {
       {slots.map((slot) => {
         const inSlot = seminars.filter((s) => s.slot === slot)
         const pickedInSlot = inSlot.some((s) => s.registered)
+        const hours = classHours(inSlot[0])
         return (
           <div key={slot}>
-            <div className="slot-label">Parallel learning classes · 13:00 – 14:30</div>
+            <div className="slot-label">
+              Parallel learning classes{hours ? ` · ${hours}` : ''}
+            </div>
             {inSlot.map((s) => {
               const few = s.seats_left <= 10
               const locked = pickedInSlot && !s.registered

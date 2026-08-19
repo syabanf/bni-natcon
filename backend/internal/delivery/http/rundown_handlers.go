@@ -126,3 +126,12 @@ func (s *Server) handleDeleteRundown(w http.ResponseWriter, r *http.Request) {
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted"})
 }
+
+// classTimes renders the block a class sits in. Absent means "not scheduled
+// yet", which the apps show as a class without a time rather than as 00:00.
+func classTimes(startsAt, endsAt *time.Time) (string, string) {
+	if startsAt == nil || endsAt == nil {
+		return "", ""
+	}
+	return startsAt.In(eventZone).Format(time.RFC3339), endsAt.In(eventZone).Format(time.RFC3339)
+}

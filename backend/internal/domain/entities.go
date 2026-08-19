@@ -156,6 +156,10 @@ func (b RundownBlock) Overlaps(other RundownBlock) bool {
 	return b.StartsAt.Before(other.EndsAt) && other.StartsAt.Before(b.EndsAt)
 }
 
+// MaxLearningSessions is how many classes one attendee may hold (MoM 19 Aug
+// 2026). Two, and never two at the same hour.
+const MaxLearningSessions = 2
+
 // Rundown block kinds. Only 'learning' blocks can hold a class.
 const (
 	RundownRegistration = "registration"
@@ -330,7 +334,13 @@ type SeminarInput struct {
 	Capacity    int
 	Description string
 	CoverURL    string
-	Speakers    []SeminarSpeaker
+	// The portrait poster for the class detail page; the landscape CoverURL
+	// stays the banner on the list.
+	PosterURL string
+	// Which one-hour block of the rundown this class runs in. Zero means the
+	// committee has not placed it yet.
+	RundownID int64
+	Speakers  []SeminarSpeaker
 }
 
 // SeminarQuota is the seat quota of one learning class next to what is

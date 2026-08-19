@@ -876,6 +876,69 @@ check("...with the table's name, the seat, and who they are",
 status, _, _ = req("GET", "/api/v1/admin/tables/seats", token=member_tok)
 check("an attendee cannot read the whole room's seating", status == 403)
 
+# ---- two learning classes, never at the same hour (MoM 19 Aug 2026)
+section("Learning classes: two each, no clashes")
+
+D2, TZ2 = "2026-09-03", "+07:00"
+blocks = {}
+for label, start in (("early", "13:00"), ("late", "15:00")):
+    status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
+                          body={"starts_at": f"{D2}T{start}:00{TZ2}", "kind": "learning",
+                                "title": f"Learning Class ({label})"})
+    blocks[label] = body["block"]["id"]
+
+status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
+classes = body["seminars"][:4]
+check("the event has classes to place", len(classes) == 4)
+
+
+def place(sem, block_id):
+    payload = {k: sem[k] for k in
+               ("slot", "room", "title", "speaker", "moderator", "capacity", "description",
+                "cover_url")}
+    payload["rundown_id"] = block_id
+    payload["speakers"] = sem.get("speakers") or []
+    return req("PUT", f"/api/v1/admin/seminars/{sem['id']}", token=admin_tok, body=payload)
+
+
+for sem, block in zip(classes, ("early", "early", "late", "late")):
+    place(sem, blocks[block])
+
+status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
+placed = {s["room"]: s for s in body["seminars"]}
+check("a class carries the hour of its block",
+      placed[classes[0]["room"]]["starts_at"].startswith(f"{D2}T13:00:00"))
+check("...and the attendee app can show it", "ends_at" in placed[classes[0]["room"]])
+
+# This attendee already holds a class from the fixtures section; start clean.
+for sem in classes:
+    req("DELETE", f"/api/v1/seminars/{sem['id']}/register", token=member_tok)
+
+status, _, _ = req("POST", f"/api/v1/seminars/{classes[0]['id']}/register", token=member_tok)
+check("first class accepted", status == 201)
+
+status, body, _ = req("POST", f"/api/v1/seminars/{classes[1]['id']}/register", token=member_tok)
+check("a second class at the same hour is refused",
+      status == 409 and "same time" in body["error"], f"{status} {body}")
+
+status, _, _ = req("POST", f"/api/v1/seminars/{classes[2]['id']}/register", token=member_tok)
+check("a class at a different hour is accepted", status == 201)
+
+status, body, _ = req("POST", f"/api/v1/seminars/{classes[3]['id']}/register", token=member_tok)
+check("a third class is refused whatever the hour",
+      status == 409 and "limit" in body["error"], f"{status} {body}")
+
+status, _, _ = req("DELETE", f"/api/v1/seminars/{classes[2]['id']}/register", token=member_tok)
+status, _, _ = req("POST", f"/api/v1/seminars/{classes[3]['id']}/register", token=member_tok)
+check("cancelling one frees the place", status == 201)
+
+# Leave this attendee where the rest of the suite expects to find them:
+# registered for seminar 2, which the door check-in section scans them into.
+for sem in classes:
+    req("DELETE", f"/api/v1/seminars/{sem['id']}/register", token=member_tok)
+status, _, _ = req("POST", f"/api/v1/seminars/{sem2}/register", token=member_tok)
+check("the attendee is back on their original class", status == 201)
+
 # ---- the networking round (MoM 19 Aug 2026)
 status, body, _ = req("GET", "/api/v1/networking/session", token=member_tok)
 check("before anyone starts a round, nothing is running",

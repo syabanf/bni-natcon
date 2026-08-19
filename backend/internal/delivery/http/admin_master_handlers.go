@@ -254,6 +254,8 @@ type seminarPayload struct {
 	Capacity    int    `json:"capacity"`
 	Description string `json:"description"`
 	CoverURL    string `json:"cover_url"`
+	PosterURL   string `json:"poster_url"`
+	RundownID   int64  `json:"rundown_id"`
 
 	Speakers []speakerPayload `json:"speakers"`
 }
@@ -272,7 +274,8 @@ func (p seminarPayload) toInput() domain.SeminarInput {
 	return domain.SeminarInput{
 		Slot: p.Slot, Room: p.Room, Title: p.Title, Speaker: p.Speaker,
 		Moderator: p.Moderator, Capacity: p.Capacity,
-		Description: p.Description, CoverURL: p.CoverURL, Speakers: people,
+		Description: p.Description, CoverURL: p.CoverURL, PosterURL: p.PosterURL,
+		RundownID: p.RundownID, Speakers: people,
 	}
 }
 

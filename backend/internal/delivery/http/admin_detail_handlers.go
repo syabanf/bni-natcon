@@ -102,6 +102,8 @@ func (s *Server) handleAdminSeminarDetail(w http.ResponseWriter, r *http.Request
 			"seats_taken":    d.SeatsTaken,
 			"attended_count": d.AttendedCount,
 			"description":    d.Description, "cover_url": d.CoverURL,
+			"poster_url": d.PosterURL, "rundown_id": d.RundownID,
+			"starts_at": mustStart(d.StartsAt, d.EndsAt), "ends_at": mustEnd(d.StartsAt, d.EndsAt),
 		},
 		"attendees": attendees,
 	})

@@ -66,10 +66,11 @@ func (r *AdminRepo) TenantRanking(ctx context.Context) ([]domain.TenantScanCount
 func (r *AdminRepo) SeminarFill(ctx context.Context) ([]domain.SeminarFill, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT s.id, s.slot, s.room, s.title, s.speaker, s.moderator, s.capacity,
-		       s.description, s.cover_url,
+		       s.description, s.cover_url, s.poster_url, COALESCE(s.rundown_id, 0),
+		       b.starts_at, b.ends_at,
 		       (SELECT COUNT(*) FROM seminar_registrations sr WHERE sr.seminar_id = s.id)
-		FROM seminars s
-		ORDER BY s.slot, s.room`)
+		FROM seminars s LEFT JOIN rundown b ON b.id = s.rundown_id
+		ORDER BY b.starts_at NULLS LAST, s.slot, s.room`)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,8 @@ func (r *AdminRepo) SeminarFill(ctx context.Context) ([]domain.SeminarFill, erro
 	for rows.Next() {
 		var s domain.SeminarFill
 		if err := rows.Scan(&s.ID, &s.Slot, &s.Room, &s.Title, &s.Speaker, &s.Moderator, &s.Capacity,
-			&s.Description, &s.CoverURL, &s.SeatsTaken); err != nil {
+			&s.Description, &s.CoverURL, &s.PosterURL, &s.RundownID, &s.StartsAt, &s.EndsAt,
+			&s.SeatsTaken); err != nil {
 			return nil, err
 		}
 		out = append(out, s)

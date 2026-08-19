@@ -280,11 +280,15 @@ func (r *AdminRepo) DeleteTenant(ctx context.Context, id int64) error {
 func (r *AdminRepo) CreateSeminar(ctx context.Context, s domain.SeminarInput) (*domain.Seminar, error) {
 	var sem domain.Seminar
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description, cover_url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, slot, room, title, speaker, moderator, capacity, description, cover_url`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL).
-		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Moderator, &sem.Capacity, &sem.Description, &sem.CoverURL)
+		INSERT INTO seminars (slot, room, title, speaker, moderator, capacity, description,
+		                      cover_url, poster_url, rundown_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULLIF($10, 0))
+		RETURNING id, slot, room, title, speaker, moderator, capacity, description,
+		          cover_url, poster_url, COALESCE(rundown_id, 0)`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description,
+		s.CoverURL, s.PosterURL, s.RundownID).
+		Scan(&sem.ID, &sem.Slot, &sem.Room, &sem.Title, &sem.Speaker, &sem.Moderator,
+			&sem.Capacity, &sem.Description, &sem.CoverURL, &sem.PosterURL, &sem.RundownID)
 	if err != nil {
 		return nil, err
 	}
@@ -332,9 +336,11 @@ func (r *AdminRepo) UpdateSeminar(ctx context.Context, id int64, s domain.Semina
 	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE seminars SET slot = $1, room = $2, title = $3, speaker = $4, moderator = $5,
-		       capacity = $6, description = $7, cover_url = $8
-		WHERE id = $9`,
-		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description, s.CoverURL, id); err != nil {
+		       capacity = $6, description = $7, cover_url = $8, poster_url = $9,
+		       rundown_id = NULLIF($10, 0)
+		WHERE id = $11`,
+		s.Slot, s.Room, s.Title, s.Speaker, s.Moderator, s.Capacity, s.Description,
+		s.CoverURL, s.PosterURL, s.RundownID, id); err != nil {
 		return err
 	}
 	// Speakers are swapped wholesale inside the same transaction, so a

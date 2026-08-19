@@ -800,10 +800,21 @@ function QuotaCell({ seminar, onSaved }) {
 
 export function SeminarsPage() {
   const [importResult, setImportResult] = useState(null)
+  // The blocks a class can run in. Only 'learning' blocks are offered: a
+  // class in the coffee break is a typo, not a schedule.
+  const [blocks, setBlocks] = useState([])
+  useEffect(() => {
+    api
+      .rundown()
+      .then((d) => setBlocks((d.rundown || []).filter((b) => b.kind === 'learning')))
+      .catch(() => {})
+  }, [])
   const crud = useCrud({
     list: () => api.seminars().then((d) => d.seminars || []),
-    create: (f) => api.createSeminar({ ...f, slot: +f.slot, capacity: +f.capacity }),
-    update: (id, f) => api.updateSeminar(id, { ...f, slot: +f.slot, capacity: +f.capacity }),
+    create: (f) =>
+      api.createSeminar({ ...f, slot: +f.slot, capacity: +f.capacity, rundown_id: +f.rundown_id || 0 }),
+    update: (id, f) =>
+      api.updateSeminar(id, { ...f, slot: +f.slot, capacity: +f.capacity, rundown_id: +f.rundown_id || 0 }),
     remove: (id) => api.deleteSeminar(id),
   })
 
@@ -839,7 +850,12 @@ export function SeminarsPage() {
         <TemplateButton template={REGISTRATION_TEMPLATE} />
         <button
           className="md-add"
-          onClick={() => crud.setForm({ slot: 1, room: '', title: '', speaker: '', moderator: '', capacity: 60, description: '', cover_url: '', speakers: [] })}
+          onClick={() =>
+            crud.setForm({
+              slot: 1, room: '', title: '', speaker: '', moderator: '', capacity: 60,
+              description: '', cover_url: '', poster_url: '', rundown_id: '', speakers: [],
+            })
+          }
         >
           + Add Class
         </button>
@@ -851,7 +867,7 @@ export function SeminarsPage() {
       <table className="md-table">
         <thead>
           <tr>
-            <th>Slot</th>
+            <th>When</th>
             <th>Room</th>
             <th>Title</th>
             <th className="quota-head">Quota</th>
@@ -861,7 +877,13 @@ export function SeminarsPage() {
         <tbody>
           {crud.rows.map((sm) => (
             <tr key={sm.id}>
-              <td className="mono">#{sm.slot}</td>
+              <td className="mono">
+                {sm.starts_at ? (
+                  `${sm.starts_at.slice(11, 16)}–${sm.ends_at.slice(11, 16)}`
+                ) : (
+                  <span className="muted">not scheduled</span>
+                )}
+              </td>
               <td>
                 <b>{sm.room}</b>
               </td>
@@ -881,6 +903,7 @@ export function SeminarsPage() {
                     speaker: sm.speaker, moderator: sm.moderator || '', capacity: sm.capacity,
                     speakers: sm.speakers || [],
                     description: sm.description || '', cover_url: sm.cover_url || '',
+                    poster_url: sm.poster_url || '', rundown_id: sm.rundown_id || '',
                   })
                 }
                 onDelete={() => crud.del(sm.id, sm.title)}
@@ -900,6 +923,29 @@ export function SeminarsPage() {
             <Field label="Speaker(s)" hint="separate multiple speakers with a semicolon" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
             <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
             <Field label="Quota" hint="seats this learning class can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <label className="md-field">
+              <span>
+                Time block
+                <em> — from the Rundown; this is what stops one attendee taking two classes at once</em>
+              </span>
+              <select
+                className="door-select"
+                value={crud.form.rundown_id || ''}
+                onChange={(e) => crud.setForm({ ...crud.form, rundown_id: e.target.value })}
+              >
+                <option value="">Not scheduled yet</option>
+                {blocks.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.starts_at.slice(11, 16)} – {b.ends_at.slice(11, 16)} · {b.title}
+                  </option>
+                ))}
+              </select>
+              {blocks.length === 0 && (
+                <em className="field-note">
+                  No learning blocks in the rundown yet — add one on the Rundown page first.
+                </em>
+              )}
+            </label>
             <Field label="Description" hint="shown on the attendee class detail" value={crud.form.description || ''} onChange={(e) => crud.setForm({ ...crud.form, description: e.target.value })} />
             <SpeakerEditor
               value={crud.form.speakers}

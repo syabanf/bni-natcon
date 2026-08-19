@@ -31,6 +31,8 @@ func respondDomainError(w http.ResponseWriter, err error) {
 		respondError(w, http.StatusUnauthorized, err.Error())
 	case errors.Is(err, domain.ErrSeminarFull),
 		errors.Is(err, domain.ErrAlreadyRegistered),
+		errors.Is(err, domain.ErrTooManySessions),
+		errors.Is(err, domain.ErrSessionClash),
 		errors.Is(err, domain.ErrTableFull),
 		errors.Is(err, domain.ErrNotRegistered),
 		errors.Is(err, domain.ErrEmailTaken),
