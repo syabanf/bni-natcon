@@ -8,12 +8,12 @@ import (
 )
 
 // SeedIfEmpty puts the committee's admin login into a fresh database, gives
-// the booths from migration 0014 a password anyone can actually sign in with,
+// the booths from migration 0023 a password anyone can actually sign in with,
 // and writes the event's programme — the four learning classes with their
 // speakers and moderators, from the Term of Reference documents.
 //
 // Nothing is invented. Attendees and their chapters come from the ticketing
-// export, the booths from the Data Booth sheet, the networking tables from
+// export, the booths from the committee's booth sheet, the networking tables from
 // the Tables page — so no demo account can ever turn up in front of a guest.
 func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error {
 	if err := ensureAdmin(ctx, pool, password); err != nil {
@@ -26,7 +26,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		return err
 	}
 
-	// Migration 0014 writes the booths with a placeholder hash nobody can
+	// Migration 0023 writes the booths with a placeholder hash nobody can
 	// sign in with. Only untouched placeholders are rewritten, so a booth
 	// whose password was changed since keeps it.
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
