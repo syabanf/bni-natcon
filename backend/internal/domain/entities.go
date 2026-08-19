@@ -101,8 +101,47 @@ type Seminar struct {
 	Capacity    int
 	Description string
 	CoverURL    string
-	Speakers    []SeminarSpeaker
+	// PosterURL is the portrait poster shown on the class detail page; the
+	// landscape CoverURL stays the banner on the list (MoM 19 Aug 2026).
+	PosterURL string
+	Speakers  []SeminarSpeaker
+	// RundownID ties the class to a block of the schedule. Zero means the
+	// committee has not placed it yet.
+	RundownID int64
+	StartsAt  *time.Time
+	EndsAt    *time.Time
 }
+
+// RundownBlock is one slice of the event's schedule — the one-hour blocks the
+// committee fills in (MoM 19 Aug 2026). Learning classes hang off these, and
+// the attendee agenda is built from them, so nothing carries its own private
+// idea of what time it is.
+type RundownBlock struct {
+	ID       int64
+	StartsAt time.Time
+	EndsAt   time.Time
+	Title    string
+	Place    string
+	Kind     string
+	Sort     int
+}
+
+// Overlaps reports whether two blocks share any moment. Touching edges do not
+// count: a block ending at 14:00 and one starting at 14:00 can both be
+// attended.
+func (b RundownBlock) Overlaps(other RundownBlock) bool {
+	return b.StartsAt.Before(other.EndsAt) && other.StartsAt.Before(b.EndsAt)
+}
+
+// Rundown block kinds. Only 'learning' blocks can hold a class.
+const (
+	RundownRegistration = "registration"
+	RundownPlenary      = "plenary"
+	RundownLearning     = "learning"
+	RundownNetworking   = "networking"
+	RundownBreak        = "break"
+	RundownDoorprize    = "doorprize"
+)
 
 // SeminarWithStatus is a seminar plus registration info for a given member.
 type SeminarWithStatus struct {

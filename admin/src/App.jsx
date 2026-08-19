@@ -5,6 +5,7 @@ import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
 import DoorCheckin from './DoorCheckin'
 import LuckyDraw from './LuckyDraw'
+import Rundown from './Rundown'
 import Chapters from './Chapters'
 import Tables from './Tables'
 import QRPrints from './QRPrints'
@@ -18,6 +19,7 @@ const MENU = [
   { key: 'tables', label: 'Tables', icon: '◍' },
   { key: 'door', label: 'Door Check-in', icon: '▣' },
   { key: 'qr', label: 'QR Prints', icon: '⧉' },
+  { key: 'rundown', label: 'Rundown', icon: '◷' },
   { key: 'draw', label: 'Lucky Draw', icon: '✦' },
 ]
 
@@ -183,6 +185,7 @@ function Shell({ onLogout }) {
         {view === 'tables' && <Tables onUnauthorized={onLogout} />}
         {view === 'door' && <DoorCheckin onUnauthorized={onLogout} />}
         {view === 'qr' && <QRPrints onUnauthorized={onLogout} />}
+        {view === 'rundown' && <Rundown onUnauthorized={onLogout} />}
         {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}
         {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
         {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}

@@ -98,6 +98,14 @@ type AdminRepository interface {
 	RenameChapter(ctx context.Context, id int64, name string) error
 	DeleteChapter(ctx context.Context, id int64) error
 
+	// The event schedule in one-hour blocks. Deleting a block leaves the
+	// classes in it un-placed rather than deleting them.
+	ListRundown(ctx context.Context) ([]RundownBlock, error)
+	CreateRundown(ctx context.Context, b RundownBlock) (*RundownBlock, error)
+	UpdateRundown(ctx context.Context, id int64, b RundownBlock) error
+	DeleteRundown(ctx context.Context, id int64) error
+	RundownForSeminars(ctx context.Context, ids []int64) (map[int64]RundownBlock, error)
+
 	// Networking tables master data. GenerateTables appends `count` tables,
 	// numbering continues after the highest existing table; UpdateTable
 	// refuses to shrink below the seats already taken; DeleteTable returns

@@ -261,6 +261,11 @@ export const api = {
     }
     return data
   },
+  // Event schedule — one-hour blocks (MoM 19 Aug 2026).
+  rundown: (opts) => request('/admin/rundown', opts),
+  createRundown: (body) => request('/admin/rundown', { method: 'POST', body }),
+  updateRundown: (id, body) => request(`/admin/rundown/${id}`, { method: 'PUT', body }),
+  deleteRundown: (id) => request(`/admin/rundown/${id}`, { method: 'DELETE' }),
   tables: (opts) => (isMockMode() ? mock.tables() : request('/admin/tables', opts)),
   generateTables: (body) =>
     isMockMode() ? mock.generateTables(body) : request('/admin/tables/generate', { method: 'POST', body }),

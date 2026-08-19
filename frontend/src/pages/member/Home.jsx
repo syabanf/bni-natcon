@@ -5,16 +5,10 @@ import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 import { useAuthStore } from '../../store/auth'
 
-// Programme for 3 September 2026 at Pullman Central Park Jakarta. Doors open
-// 07:30 and the ticket is valid until 18:30 (from the ticketing export).
-const AGENDA = [
-  { time: '07:30', title: 'Registration & door check-in', place: 'Main Lobby · claim your totebag' },
-  { time: '09:00', title: 'Opening Ceremony', place: 'Grand Ballroom' },
-  { time: '10:30', title: 'Sponsor & Booth Expo opens', place: 'Exhibition Foyer' },
-  { time: '13:00', title: 'Breakout Classes', place: 'Breakout Rooms 1–4 · pick one' },
-  { time: '15:30', title: 'Speed Networking', place: 'Grand Ballroom · 8 people per table' },
-  { time: '17:00', title: 'Lucky Draw & Closing', place: 'Grand Ballroom' },
-]
+// The agenda is the committee's rundown, read live from the API — it used to
+// be this list, baked into the bundle, which meant a change to the day's
+// timing needed a redeploy (MoM 19 Aug 2026).
+const timeOf = (iso) => (iso || '').slice(11, 16)
 
 function initials(name = '') {
   return name
@@ -30,6 +24,7 @@ export default function Home() {
   const cachedUser = useAuthStore((s) => s.user)
   const [user, setUser] = useState(cachedUser)
   const [stats, setStats] = useState(null)
+  const [agenda, setAgenda] = useState(null)
 
   useEffect(() => {
     api
@@ -39,6 +34,12 @@ export default function Home() {
         setStats(data.stats)
       })
       .catch(() => {})
+    // A missing agenda is not worth an error on the home screen — the card
+    // says the programme is not published and everything else still works.
+    api
+      .rundown()
+      .then((d) => setAgenda(d.rundown || []))
+      .catch(() => setAgenda([]))
   }, [])
 
   const firstName = user?.name?.split(' ')[0] || ''
@@ -137,9 +138,13 @@ export default function Home() {
         Today's agenda
       </div>
       <div className="card agenda-strip">
-        {AGENDA.map((a) => (
-          <div className="agenda-item" key={a.time}>
-            <div className="agenda-time">{a.time}</div>
+        {agenda === null && <div className="agenda-item">Loading the day…</div>}
+        {agenda?.length === 0 && (
+          <div className="agenda-item">The programme is not published yet.</div>
+        )}
+        {agenda?.map((a) => (
+          <div className="agenda-item" key={a.id}>
+            <div className="agenda-time">{timeOf(a.starts_at)}</div>
             <div>
               <h5>{a.title}</h5>
               <p>{a.place}</p>

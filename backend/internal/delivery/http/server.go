@@ -109,6 +109,11 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me", s.handleMe)
 			r.Post("/auth/password", s.handleSetPassword)
 
+			// The schedule is the same for everyone in the building — the
+			// attendee agenda, the booth crew wondering when networking
+			// starts, the committee. No role owns it.
+			r.Get("/rundown", s.handleListRundown)
+
 			r.Group(func(r chi.Router) {
 				r.Use(requireRole(domain.RoleMember))
 				r.Get("/tenants", s.handleListTenants)
@@ -163,6 +168,12 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/seminars/{id}", s.handleAdminUpdateSeminar)
 				r.Patch("/admin/seminars/{id}/quota", s.handleAdminSetSeminarQuota)
 				r.Delete("/admin/seminars/{id}", s.handleAdminDeleteSeminar)
+
+				// The event schedule in one-hour blocks.
+				r.Get("/admin/rundown", s.handleListRundown)
+				r.Post("/admin/rundown", s.handleCreateRundown)
+				r.Put("/admin/rundown/{id}", s.handleUpdateRundown)
+				r.Delete("/admin/rundown/{id}", s.handleDeleteRundown)
 
 				r.Get("/admin/tables", s.handleAdminListTables)
 				r.Post("/admin/tables/generate", s.handleAdminGenerateTables)

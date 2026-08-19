@@ -182,6 +182,67 @@ status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 
+# ---------------------------------------------------------------- rundown
+section("Rundown — the day in one-hour blocks")
+
+D, TZ = "2026-09-03", "+07:00"
+status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
+check("a fresh database has no schedule yet", status == 200 and body["rundown"] == [])
+
+status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
+                      body={"starts_at": f"{D}T09:00:00{TZ}", "ends_at": f"{D}T10:00:00{TZ}",
+                            "title": "Opening Ceremony", "place": "Grand Ballroom",
+                            "kind": "plenary"})
+check("create a block -> 201", status == 201 and body["block"]["title"] == "Opening Ceremony")
+block_id = body["block"]["id"]
+
+status, body, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok,
+                      body={"starts_at": f"{D}T13:00:00{TZ}", "title": "Learning Class",
+                            "kind": "learning"})
+check("a block with no end runs one hour",
+      status == 201 and body["block"]["ends_at"].startswith(f"{D}T14:00:00"))
+learning_id = body["block"]["id"]
+
+# The grid is the point of the MoM decision: half-hours would not line up
+# with the printed programme.
+for label, payload in [
+    ("half past the hour", {"starts_at": f"{D}T13:30:00{TZ}", "title": "Off-grid"}),
+    ("90 minutes long", {"starts_at": f"{D}T13:00:00{TZ}", "ends_at": f"{D}T14:30:00{TZ}",
+                         "title": "Off-grid"}),
+    ("ends before it starts", {"starts_at": f"{D}T14:00:00{TZ}", "ends_at": f"{D}T13:00:00{TZ}",
+                               "title": "Backwards"}),
+    ("unknown kind", {"starts_at": f"{D}T14:00:00{TZ}", "title": "X", "kind": "lunch"}),
+    ("no title", {"starts_at": f"{D}T14:00:00{TZ}", "title": "   "}),
+]:
+    status, _, _ = req("POST", "/api/v1/admin/rundown", token=admin_tok, body=payload)
+    check(f"rejected: {label} -> 400", status == 400)
+
+status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
+check("attendees read the same schedule", status == 200 and len(body["rundown"]) == 2)
+check("...in the order the day runs",
+      [b["title"] for b in body["rundown"]] == ["Opening Ceremony", "Learning Class"])
+
+status, body, _ = req("GET", "/api/v1/rundown", token=tenant_tok)
+check("booth crews can read it too", status == 200 and len(body["rundown"]) == 2)
+
+status, _, _ = req("PUT", f"/api/v1/admin/rundown/{block_id}", token=admin_tok,
+                   body={"starts_at": f"{D}T08:00:00{TZ}", "ends_at": f"{D}T09:00:00{TZ}",
+                         "title": "Opening Ceremony (moved)", "kind": "plenary"})
+status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
+check("a moved block moves for everyone",
+      body["rundown"][0]["title"] == "Opening Ceremony (moved)"
+      and body["rundown"][0]["starts_at"].startswith(f"{D}T08:00:00"))
+
+status, _, _ = req("DELETE", f"/api/v1/admin/rundown/{learning_id}", token=admin_tok)
+status, body, _ = req("GET", "/api/v1/rundown", token=member_tok)
+check("delete removes the block", len(body["rundown"]) == 1)
+status, _, _ = req("DELETE", f"/api/v1/admin/rundown/{learning_id}", token=admin_tok)
+check("deleting it twice -> 404", status == 404)
+status, _, _ = req("DELETE", f"/api/v1/admin/rundown/{block_id}", token=admin_tok)
+
+status, _, _ = req("GET", "/api/v1/admin/rundown", token=member_tok)
+check("an attendee cannot edit the schedule", status == 403)
+
 # ------------------------------------------------- passwords (setup + recovery)
 section("Password setup & recovery")
 # An imported attendee still carries the generated password, so the app must

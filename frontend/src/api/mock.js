@@ -200,7 +200,19 @@ function seatsTaken(state, seminarId) {
   ).length
 }
 
+// Demo mode carries a copy of the programme so the agenda is not empty when
+// the app runs without a server.
+const MOCK_RUNDOWN = [
+  { id: 1, starts_at: '2026-09-03T07:00:00+07:00', ends_at: '2026-09-03T09:00:00+07:00', kind: 'registration', title: 'Registration & door check-in', place: 'Main Lobby · claim your goodiebag' },
+  { id: 2, starts_at: '2026-09-03T09:00:00+07:00', ends_at: '2026-09-03T10:00:00+07:00', kind: 'plenary', title: 'Opening Ceremony', place: 'Grand Ballroom' },
+  { id: 3, starts_at: '2026-09-03T10:00:00+07:00', ends_at: '2026-09-03T13:00:00+07:00', kind: 'plenary', title: 'Sponsor & Booth Expo', place: 'Exhibition Foyer' },
+  { id: 4, starts_at: '2026-09-03T13:00:00+07:00', ends_at: '2026-09-03T15:00:00+07:00', kind: 'learning', title: 'Learning Class', place: 'Learning Rooms 1–4 · pick one' },
+  { id: 5, starts_at: '2026-09-03T15:00:00+07:00', ends_at: '2026-09-03T17:00:00+07:00', kind: 'networking', title: 'Speed Networking', place: 'Grand Ballroom · 8 people per table' },
+  { id: 6, starts_at: '2026-09-03T17:00:00+07:00', ends_at: '2026-09-03T18:00:00+07:00', kind: 'doorprize', title: 'Doorprize & Closing', place: 'Grand Ballroom' },
+]
+
 export const mockApi = {
+  rundown: async () => ({ rundown: MOCK_RUNDOWN }),
   login(email) {
     const normalized = email.trim().toLowerCase()
     const members = MOCK_MEMBERS.filter((m) => m.email === normalized)

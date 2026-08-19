@@ -4,7 +4,7 @@
 menghalangi orang lain dikerjakan duluan (model waktu → sesi → validasi), dan
 yang berdiri sendiri bisa jalan kapan saja.
 
-Status: **belum ada satupun yang dikerjakan** — dokumen ini rencananya.
+Status: **fondasi jadwal selesai** (19 Agustus). Sisanya belum dikerjakan.
 
 ---
 
@@ -28,7 +28,11 @@ Yang terbuka begitu ini ada:
 | Maks 2 learning session, tidak bertabrakan | "bertabrakan" hanya punya arti kalau ada jam |
 | Countdown networking tidak restart | sesi butuh waktu mulai & selesai yang tersimpan |
 
-**Perkiraan: 1 hari** (migrasi + CRUD admin + agenda peserta baca dari DB).
+**SELESAI** — migrasi `0015_rundown.sql`, halaman **Rundown** di admin, dan
+agenda peserta yang membaca dari API. Blok wajib mulai di awal jam dan
+panjangnya kelipatan 1 jam; tanpa jam selesai otomatis 1 jam. Kolom
+`rundown_id` sudah ada di `seminars` dan `poster_url` sudah disiapkan, tinggal
+dipakai.
 
 ---
 
@@ -76,15 +80,18 @@ Yang terbuka begitu ini ada:
 Tiga hal yang menentukan bentuk pekerjaannya, dan salah tebak berarti
 membongkar ulang:
 
-1. **Poster portrait vs banner landscape.** Kemarin banner dibuat landscape
-   penuh. Portrait di kartu daftar akan makan tinggi layar peserta.
-2. **"Doorprize ada 2"** — dua undian terpisah, atau dua pemenang sekali tarik?
-3. **Door Check-in sebagai aplikasi sendiri** — aplikasi ketiga dengan login
-   sendiri, atau cukup halaman terpisah dengan akun khusus?
+Sudah dijawab 19 Agustus:
+
+1. **Poster** — dua gambar: banner landscape tetap di kartu daftar, poster
+   portrait di halaman detail kelas. Kolom `poster_url` sudah dibuat.
+2. **Doorprize** — **dua undian terpisah**, masing-masing punya daftar
+   pemenang, syarat, dan tombol tariknya sendiri.
+3. **Door Check-in** — **aplikasi ketiga penuh**, login sendiri (role `door`),
+   masuk docker compose dan CI.
 
 ## Urutan yang disarankan
 
-1. Fondasi jadwal (blok 1 jam) — membuka 3 poin sekaligus
+1. ~~Fondasi jadwal (blok 1 jam)~~ — **selesai**
 2. Paket kecil no. 1–9 — terasa langsung, risikonya kecil
 3. Countdown sesi + validasi 2 learning session
 4. Aturan undian (minimum booth, doorprize)
