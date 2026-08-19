@@ -876,6 +876,32 @@ check("...with the table's name, the seat, and who they are",
 status, _, _ = req("GET", "/api/v1/admin/tables/seats", token=member_tok)
 check("an attendee cannot read the whole room's seating", status == 403)
 
+# ---- banner and poster are two pictures, not one cropped twice
+status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
+first = body["seminars"][0]
+payload = {k: first[k] for k in
+           ("slot", "room", "title", "speaker", "moderator", "capacity", "description")}
+payload["cover_url"] = "/uploads/banner.jpg"
+payload["poster_url"] = "/uploads/poster.jpg"
+payload["speakers"] = first.get("speakers") or []
+status, _, _ = req("PUT", f"/api/v1/admin/seminars/{first['id']}", token=admin_tok, body=payload)
+check("a class takes both a banner and a poster", status == 200)
+
+status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
+shown = next(s for s in body["seminars"] if s["id"] == first["id"])
+check("the attendee app gets both, not one",
+      shown["cover_url"] == "/uploads/banner.jpg" and shown["poster_url"] == "/uploads/poster.jpg",
+      f"{shown.get('cover_url')} / {shown.get('poster_url')}")
+
+# Saving the class again without mentioning the poster must not wipe it.
+payload["poster_url"] = "/uploads/poster.jpg"
+payload["description"] = "edited"
+status, _, _ = req("PUT", f"/api/v1/admin/seminars/{first['id']}", token=admin_tok, body=payload)
+status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
+shown = next(s for s in body["seminars"] if s["id"] == first["id"])
+check("editing the class keeps both pictures",
+      shown["cover_url"] == "/uploads/banner.jpg" and shown["poster_url"] == "/uploads/poster.jpg")
+
 # ---- two learning classes, never at the same hour (MoM 19 Aug 2026)
 section("Learning classes: two each, no clashes")
 

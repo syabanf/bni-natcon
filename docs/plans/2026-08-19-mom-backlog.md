@@ -70,7 +70,7 @@ dipakai.
 
 | # | Poin MoM | Catatan | Perkiraan |
 | --- | --- | --- | --- |
-| 16 | **Poster portrait untuk learning class** | bertabrakan dengan perubahan 18 Agustus (cover landscape memenuhi banner) — lihat pertanyaan terbuka | 2–4 jam |
+| 16 | ~~**Poster portrait untuk learning class**~~ | **SELESAI** — dua gambar: banner landscape di daftar, poster portrait utuh di halaman detail | ✓ |
 | 17 | **Door Check-in jadi aplikasi sendiri** | sekarang satu halaman di admin ([`DoorCheckin.jsx`](../../admin/src/DoorCheckin.jsx), 211 baris). Jadi aplikasi terpisah artinya: app Vite ketiga, login sendiri (role baru `door`), build & deploy sendiri, plus masuk ke docker compose dan CI | 1–2 hari |
 
 ---

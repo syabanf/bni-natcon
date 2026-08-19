@@ -1725,6 +1725,16 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* A portrait poster preview: tall, never cropped. */
+.poster-preview {
+  max-width: 140px;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
 /* A logo is artwork someone else made: show it whole, never cropped. */
 .logo-preview {
   max-width: 160px;

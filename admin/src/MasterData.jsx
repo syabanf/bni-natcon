@@ -953,8 +953,18 @@ export function SeminarsPage() {
               onError={(msg) => crud.setError(msg)}
             />
             <CoverUpload
+              label="Banner image"
+              hint="landscape; fills the wide card on the class list. Gradient when blank"
               value={crud.form.cover_url || ''}
               onChange={(url) => crud.setForm({ ...crud.form, cover_url: url })}
+              onError={(msg) => crud.setError(msg)}
+            />
+            <CoverUpload
+              label="Poster"
+              hint="portrait; shown whole on the class detail page. The banner is used when blank"
+              previewClass="poster-preview"
+              value={crud.form.poster_url || ''}
+              onChange={(url) => crud.setForm({ ...crud.form, poster_url: url })}
               onError={(msg) => crud.setError(msg)}
             />
             {crud.error && <div className="error">{crud.error}</div>}

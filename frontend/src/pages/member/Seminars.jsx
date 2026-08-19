@@ -144,7 +144,15 @@ function SeminarDetail({ seminar, memberCode, onBack, onRegister, onCancel, busy
         </button>
       </div>
       <div className="card seminar-card" style={{ marginTop: 4 }}>
-        <SeminarCover seminar={seminar} tall />
+        {seminar.poster_url ? (
+          <img
+            className="seminar-poster"
+            src={assetUrl(seminar.poster_url)}
+            alt={`${seminar.title} poster`}
+          />
+        ) : (
+          <SeminarCover seminar={seminar} tall />
+        )}
         <div className="seminar-body">
           <span className="pill red">
             {seminar.room}

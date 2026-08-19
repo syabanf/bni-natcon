@@ -1867,6 +1867,17 @@ input {
   padding: 16px 18px;
   color: #fff;
 }
+/* The portrait poster on the class detail page. Shown whole — a poster is
+   artwork with words on it, and cropping it to a banner shape loses the
+   half that says who is speaking. */
+.seminar-poster {
+  display: block;
+  width: 100%;
+  max-height: 62vh;
+  object-fit: contain;
+  background: #14040a;
+  border-radius: 18px 18px 0 0;
+}
 .seminar-hero-cover.tall {
   height: 170px;
 }
