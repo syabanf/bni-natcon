@@ -56,7 +56,13 @@ narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0023`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
 September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
-dihapus tidak muncul lagi saat restart. Tidak ada peserta
+dihapus tidak muncul lagi saat restart.
+
+**Peserta** tidak ikut di repo: datanya 769 orang lengkap dengan email dan
+nomor HP, sedangkan repo ini publik. Buat migrasinya di tempat deploy dengan
+`python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`, lalu jalankan
+`psql "$DATABASE_URL" -f backend/internal/repository/postgres/migrations/0028_attendees.sql`
+— atau tetap pakai Import Excel di panel admin seperti sebelumnya. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 

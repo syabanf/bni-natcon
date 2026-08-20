@@ -52,6 +52,21 @@
         "--strictPort"
       ],
       "port": 4180
+    },
+    {
+      "name": "admin-qa",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--prefix",
+        "admin",
+        "--",
+        "--port",
+        "4181",
+        "--strictPort"
+      ],
+      "port": 4181
     }
   ]
 }

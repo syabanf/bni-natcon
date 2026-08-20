@@ -88,6 +88,15 @@ away.
 
 **A fresh database holds the event's own master data and nothing invented:**
 
+The attendees are the one thing NOT in this list. Their sheet carries 769
+people's names, emails and phone numbers, this repository is public, and git
+history is forever — so [`scripts/attendees_migration.py`](scripts/attendees_migration.py)
+generates their migration and `.gitignore` keeps it out. Generate it where you
+deploy from, or apply it straight to the database with `psql -f`. If the
+committee makes the repository private, drop the gitignore line and it rides
+along with every deploy like the booth migration does.
+
+
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
 - **A draft rundown for 3 September** (migration `0024`): nine one-hour
   blocks from registration to the closing draw, including **two learning
