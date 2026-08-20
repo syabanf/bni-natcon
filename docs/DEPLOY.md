@@ -58,6 +58,13 @@ September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
 dihapus tidak muncul lagi saat restart.
 
+> **Setelah deploy migrasi `0029`**: nomor booth ikut denah terbaru dari
+> paket logo — GrasiaCare kini hanya A18, dan mulai Paper.id semuanya turun
+> satu slot. **Cetak ulang QR booth** dari halaman QR Prints, dan bagikan
+> login yang baru: pola `booth-<kode>@natcon.id` mengikuti stand, jadi
+> Paper.id kini masuk dengan `booth-a20@natcon.id`. Password tidak berubah,
+> scan yang sudah masuk tetap utuh.
+
 **Peserta** tidak ikut di repo: datanya 769 orang lengkap dengan email dan
 nomor HP, sedangkan repo ini publik. Buat migrasinya di tempat deploy dengan
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`, lalu jalankan

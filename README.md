@@ -105,11 +105,16 @@ along with every deploy like the booth migration does.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
-- **Company logos for the 10 exhibitors who sent one** (migration `0026`).
-  The logo pack numbers its booths on a different floor plan from the sheet,
-  so they are matched — and keyed — on the company name; the files ship with
-  the app rather than living on the upload volume, and a logo the committee
-  uploads later wins. Everyone else keeps their initials.
+- **The floor plan the committee last drew, and 34 company logos**
+  (migration `0029`). Their logo pack names each file `<booth> - <company>`,
+  and those numbers are newer than the sheet's: GrasiaCare has given up its
+  second stand and everything from Paper.id on has moved down a slot. So the
+  booths are renumbered to match, keyed on the company name, and each
+  scanner login follows its stand — `booth-a20@natcon.id` is whoever stands
+  on A20. Scans and passwords are untouched. The images are prepared by
+  [`scripts/booth_logos.py`](scripts/booth_logos.py) and ship with the app; a
+  logo the committee uploads later wins, and the two exhibitors who sent none
+  keep their initials.
 - **The Gold Club Breakfast on 4 September** (migration `0025`). 66 tickets in
   the export are for the morning after, not the conference day — the schedule
   now holds both dates, the admin page groups blocks under the day they run
