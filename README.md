@@ -96,6 +96,11 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
+- **Company logos for the 11 exhibitors who sent one** (migration `0026`).
+  The logo pack numbers its booths on a different floor plan from the sheet,
+  so they are matched on the company name and pinned by booth code; the files
+  ship with the app rather than living on the upload volume, and a logo the
+  committee uploads later wins. Everyone else keeps their initials.
 - **The Gold Club Breakfast on 4 September** (migration `0025`). 66 tickets in
   the export are for the morning after, not the conference day — the schedule
   now holds both dates, the admin page groups blocks under the day they run

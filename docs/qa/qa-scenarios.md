@@ -90,6 +90,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-26 | P1 | Two attendees seated at the same table | Have the second one scan in while the first watches. | The newcomer appears on the first one's screen within about five seconds, with Save and Note ready — no refresh. |
 | ATT-27 | P2 | Attendee whose email holds two tickets | Sign in. | The picker numbers the passes #1 and #2 above their member codes, so two identical names can be told apart. |
 | ATT-28 | P1 | Attendee home screen, rundown covering both days | Read the agenda card top to bottom. | It is headed 'Agenda', 3 September first, then a 'Friday 4 September' heading before the Gold Club Breakfast — which says on it that it is for Gold Club tickets. |
+| ATT-29 | P1 | Attendee passport | Scroll the booth list. | The exhibitors who sent a logo show it; the rest show their two-letter initials. No empty grey squares. |
 
 ## Booth scanner
 
@@ -161,6 +162,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-38 | P1 | Admin · Attendees | Add an attendee by hand and give them a Ticket number. | Saved and shown under their member code in the list; their pass QR then carries that number. |
 | MD-39 | P1 | Admin · Attendees | Give a second attendee a ticket number another one already holds. | Refused — 'that ticket number belongs to another attendee'. Two people on one QR is the thing this prevents. |
 | MD-40 | P1 | An attendee imported with a ticket number | Edit only their phone number and save. | The ticket number is still there. Losing it would make their QR stop scanning. |
+| MD-41 | P1 | Admin · Tenants, a booth with no logo | Edit it, change only the description, save. Then open the attendee passport. | Its initials are still on the tile. A save that leaves the initials field alone must not empty it. |
+| MD-42 | P2 | Admin · Tenants, a booth whose logo shipped with the app | Upload a different logo, then ask for a restart/redeploy. | The uploaded one stays. The shipped logo only fills a booth that has none. |
 
 ## Admin operations
 
@@ -237,12 +240,15 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-03 | P2 | A tablet (768px) | Open the admin panel. | The sidebar becomes a top strip that scrolls; the last item is reachable. |
 | CRS-04 | P2 | A laptop (1280px+) | Open the admin panel. | Sidebar on the left, dashboard in two columns. |
 | CRS-05 | P2 | Attendee app on a phone | Add it to the home screen, then open it with the phone in flight mode. | It opens (cached shell) instead of showing a browser error page. |
-| CRS-06 | P2 | Sign-in screen | Turn on Demo (Mock) mode and sign in with any password. | The app runs on local demo data with a red DEMO chip. No backend needed. |
-| CRS-07 | P2 | Demo mode | Sign in as duo@natcon.id. | The 'Which one are you?' chooser appears — two tickets on one email. |
+| CRS-06 | P2 | Sign-in screen | Look for a Demo / Mock mode switch. | There is none — it was removed so nobody demos fake data at the venue by accident. |
+| CRS-07 | P2 | An attendee whose email holds two tickets | Sign in with that email. | The 'Which one are you?' chooser appears, numbering the passes #1 and #2. |
 | CRS-08 | P1 | Any app | Stop the API (ask the developer) and try an action. | A human message says the server cannot be reached — not a blank page or a raw error. |
 | CRS-09 | P2 | Signed in, session left overnight | Return the next day and use the app. | Either it still works, or it says the session expired and returns you to sign-in — never a silent failure. |
 | CRS-10 | P3 | Any page | Check the browser tab. | Title and favicon are the Natcon branding, not the Vite default. |
 | CRS-11 | P3 | Attendee and admin apps | Read the interface language. | Everything is in English, consistently — no leftover Indonesian labels. |
+| CRS-12 | P1 | The door or admin password, typed into the ATTENDEE sign-in | Sign in as door@natcon.id at /login. | A card says it is a door crew account, links to the door app, and offers Sign out. It must NOT be a blank page — that was the bug: the app bounced the account between /attendee and itself forever. |
+| CRS-13 | P2 | Any attendee screen | Ask the developer to force a render error. | A card says the screen stopped working, with Reload and Sign out. Never a white page. |
+| CRS-14 | P1 | Attendee app open on a phone, then a new version is deployed | Close and reopen the app (or reload twice). | It comes up on the new version. The cache is per build, so a deploy cannot leave a phone on the old one — or worse, on a shell whose files the deploy deleted. |
 
 ## Door crew app
 
@@ -291,11 +297,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 28 | 19 |
+| Attendee | 29 | 20 |
 | Booth scanner | 17 | 11 |
-| Admin master data | 40 | 33 |
+| Admin master data | 42 | 34 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
-| Cross-cutting | 11 | 3 |
+| Cross-cutting | 14 | 5 |
 | Door crew app | 10 | 9 |
-| **Total** | **178** | **122** |
+| **Total** | **184** | **126** |

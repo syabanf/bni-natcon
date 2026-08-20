@@ -222,7 +222,11 @@ func (u *AdminUsecase) UpdateTenant(ctx context.Context, id int64, t domain.Tena
 	if t.Name == "" || t.Booth == "" {
 		return invalid("name and booth are required")
 	}
-	t.Initials = strings.ToUpper(strings.TrimSpace(t.Initials))
+	// Same rule as creating one: blank initials are derived from the name.
+	// Without this, any save that leaves the field out — the logo form, a
+	// script, an older client — left the passport tile empty, which reads as
+	// a broken image rather than as a booth.
+	t.Initials = strings.ToUpper(tenantInitials(t.Initials, t.Name))
 	t.Kind = normalizeTenantKind(t.Kind)
 	t.Description = strings.TrimSpace(t.Description)
 	return u.admin.UpdateTenant(ctx, id, t)

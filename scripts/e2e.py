@@ -160,11 +160,44 @@ check("a double-width stand became two booths under one company",
       and by_booth.get("A47", {}).get("name") == "Alpha leaders"
       and by_booth.get("A48", {}).get("name") == "Alpha leaders",
       f'got {[by_booth.get(c, {}).get("name") for c in ("A18", "A20", "A47", "A48")]}')
+# The committee's logo pack numbers its booths differently from the sheet, so
+# the logos are matched on company name and pinned by booth code here.
+logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
+check("exhibitors who sent a logo carry it",
+      len(logos) == 11 and logos.get("A22") == "/logos/a22.png"
+      and logos.get("C1") == "/logos/c1.png", f"{sorted(logos.items())}")
+check("both stands of one company carry the same logo",
+      logos.get("A18") and logos.get("A20"), f'{logos.get("A18")} {logos.get("A20")}')
+check("the ones who sent nothing keep their initials",
+      by_booth["A1"]["logo_url"] == "" and by_booth["A1"]["initials"] == "SI",
+      f'{by_booth["A1"]}')
+
 check("the sheet's own Sponsor divider decided who is a sponsor",
       by_booth.get("B1", {}).get("kind") == "sponsor"
       and by_booth.get("C1", {}).get("kind") == "sponsor"
       and by_booth.get("A1", {}).get("kind") == "booth",
       f'got {[(c, by_booth.get(c, {}).get("kind")) for c in ("B1", "C1", "A1")]}')
+
+# The migration fills an EMPTY logo only: a restart must never undo what the
+# committee uploaded through the admin panel.
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+a1 = next(t for t in body["tenants"] if t["booth"] == "A1")
+status, _, _ = req("PUT", f"/api/v1/admin/tenants/{a1['id']}", token=admin_tok,
+                   body={"name": a1["name"], "category": a1["category"], "booth": "A1",
+                         "kind": "booth", "description": a1.get("description", ""),
+                         "logo_url": "/uploads/committee-choice.png"})
+check("a committee upload replaces the shipped logo", status == 200, f"{status}")
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+a1 = next(t for t in body["tenants"] if t["booth"] == "A1")
+check("...and it is what the passport shows",
+      a1["logo_url"] == "/uploads/committee-choice.png", f'{a1["logo_url"]}')
+status, _, _ = req("PUT", f"/api/v1/admin/tenants/{a1['id']}", token=admin_tok,
+                   body={"name": a1["name"], "category": a1["category"], "booth": "A1",
+                         "kind": "booth", "description": a1.get("description", ""), "logo_url": ""})
+status, body, _ = req("GET", "/api/v1/admin/tenants", token=admin_tok)
+a1 = next(t for t in body["tenants"] if t["booth"] == "A1")
+# A save that leaves the initials out must not empty the passport tile.
+check("a save without initials keeps them", a1["initials"] == "SI", f'{a1["initials"]!r}')
 
 status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                       body={"count": FIXTURE_TABLES, "hall": "Hall B", "capacity": 8})
