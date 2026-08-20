@@ -29,6 +29,18 @@ describe('how a booth is marked in the committee’s lists', () => {
 
   it('keeps the caller’s own class so it can sit in a ranking row or a hero', () => {
     render(<TenantMark tenant={{ name: 'X', initials: 'X' }} className="rank-ini" />)
-    expect(screen.getByText('X').className).toContain('rank-ini')
+    expect(screen.getByText('X').closest('.tn-mark').className).toContain('rank-ini')
+  })
+
+  it('puts the logo and the initials in the same slot, so names line up', () => {
+    const { container } = render(
+      <>
+        <TenantMark tenant={{ name: 'With', initials: 'WI', logo_url: '/logos/a.png' }} />
+        <TenantMark tenant={{ name: 'Without', initials: 'WO' }} />
+      </>,
+    )
+    const slots = container.querySelectorAll('.tn-mark')
+    expect(slots).toHaveLength(2)
+    expect(slots[0].className).toBe(slots[1].className)
   })
 })

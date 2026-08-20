@@ -1000,13 +1000,12 @@ input {
    38px square left a line of unreadable specks — so an image keeps the row
    height and takes the width it needs. */
 .t-logo.img {
-  width: auto;
-  max-width: 100%;
+  width: 96px;
   height: 38px;
   object-fit: contain;
   object-position: left center;
   background: #fff;
-  padding: 4px 6px;
+  padding: 3px 5px;
 }
 .tenant-card.sponsor h5 {
   font-size: 14px;

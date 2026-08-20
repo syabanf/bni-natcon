@@ -33,10 +33,14 @@ from PIL import Image
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "frontend/public/logos"
 MIRROR = ROOT / "admin/public/logos"
-# The passport tile is 38px tall and the admin list 36px, so 320 is already
-# four times the pixels a retina phone can show. Every kilobyte here is
-# downloaded by 769 people on a venue WiFi.
-MAX_EDGE = 320
+# Every logo is exported onto the same canvas, so the apps can give them all
+# one fixed box: names line up in the admin list, and a square mark no longer
+# looks half the size of a wordmark sitting next to it. 320x128 is 2.5:1 —
+# wide enough for a wordmark, tall enough that a square logo still fills the
+# height — and already four times the pixels a retina phone shows in a 38px
+# tile. Every kilobyte here is downloaded by 769 people on a venue WiFi.
+CANVAS = (320, 128)
+MARGIN = 0.06
 PLATE = (17, 19, 23, 255)
 
 
@@ -117,17 +121,16 @@ def process(src: pathlib.Path, dest: pathlib.Path) -> str:
         box = ImageChops.difference(im.convert("RGB"), flat).getbbox()
     if box:
         im = im.crop(box)
-    im.thumbnail((MAX_EDGE, MAX_EDGE), Image.LANCZOS)
-    if needs_plate(im):
-        pad = max(12, im.size[1] // 6)
-        plate = Image.new("RGBA", (im.size[0] + pad * 2, im.size[1] + pad * 2), PLATE)
-        plate.alpha_composite(im, (pad, pad))
-        im = plate
-        note = " (dark plate — the mark is white)"
-    else:
-        note = ""
+    plate = needs_plate(im)
+    inner = (round(CANVAS[0] * (1 - MARGIN * 2)), round(CANVAS[1] * (1 - MARGIN * 2)))
+    im.thumbnail(inner, Image.LANCZOS)
+    canvas = Image.new("RGBA", CANVAS, PLATE if plate else (0, 0, 0, 0))
+    canvas.alpha_composite(im, ((CANVAS[0] - im.size[0]) // 2, (CANVAS[1] - im.size[1]) // 2))
+    shape = f"{im.size[0]}x{im.size[1]} on {CANVAS[0]}x{CANVAS[1]}"
+    im = canvas
+    note = " (dark plate — the mark is white)" if plate else ""
     smallest(im, dest)
-    return f"{im.size[0]}x{im.size[1]} {dest.stat().st_size // 1024}KB{note}"
+    return f"{shape} {dest.stat().st_size // 1024}KB{note}"
 
 
 def main() -> None:

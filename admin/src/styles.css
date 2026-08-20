@@ -648,9 +648,22 @@ button:disabled {
   width: 26px;
 }
 /* A booth's mark in a list: its logo when it sent one, its initials when it
-   did not. A wordmark is wide, so an image keeps the row height and takes
-   the width it needs rather than being squeezed into the square. */
+   did not — both in a slot of the same width, so every name in the column
+   starts at the same place. */
 .tn-mark {
+  width: 92px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tn-mark-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.tn-mark-ini {
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -661,32 +674,36 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-.tn-mark.img {
-  width: auto;
-  max-width: 120px;
-  height: 36px;
-  object-fit: contain;
-  object-position: left center;
-  background: #fff;
-  border: 1px solid var(--line);
-  padding: 3px 5px;
 }
 .tn-name {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.rank-ini.img,
-.dh-avatar.img {
+/* The ranking rows and the detail hero use the same slot, only bigger. */
+.tn-mark.rank-ini,
+.tn-mark.dh-avatar {
+  background: transparent;
   box-shadow: none;
+  border-radius: 0;
 }
-.dh-avatar.img {
-  width: auto;
-  max-width: 190px;
+.tn-mark.rank-ini {
+  /* Wide enough for a wordmark to stay readable; the initials chip inside
+     keeps its own square, so the column still lines up. */
+  width: 72px;
+  height: 36px;
+}
+.tn-mark.dh-avatar {
+  width: 160px;
   height: 64px;
-  border-radius: 14px;
+}
+.dh-avatar .tn-mark-ini {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 20px;
 }
 
 .rank-ini {
