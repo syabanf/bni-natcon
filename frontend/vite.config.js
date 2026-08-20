@@ -5,8 +5,13 @@ import react from '@vitejs/plugin-react'
 // address (default backend ADDR is :8080).
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  // Stamped into the service-worker URL so every deploy gets its own cache.
+  // VITE_BUILD_ID lets CI pin it to a commit; otherwise the build time is
+  // enough to tell one deploy from the next.
+  const buildId = env.VITE_BUILD_ID || new Date().toISOString().slice(0, 16).replace(/\D/g, '')
   return {
     plugins: [react()],
+    define: { __BUILD_ID__: JSON.stringify(buildId) },
     server: {
       proxy: {
         '/api': env.VITE_API_PROXY || 'http://localhost:8080',

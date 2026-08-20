@@ -7,7 +7,11 @@
  *  - navigasi      : network-first, fallback ke shell ter-cache saat offline.
  *  - aset statis   : stale-while-revalidate (cepat + tetap segar).
  */
-const CACHE = 'natcon-shell-v1'
+// One cache per build. The id arrives in the script URL
+// (/sw.js?v=<build>), so a deploy starts a new cache and the activate
+// handler below drops every older one — shell and assets together.
+const BUILD = new URL(self.location.href).searchParams.get('v') || 'dev'
+const CACHE = `natcon-shell-${BUILD}`
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

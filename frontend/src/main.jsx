@@ -1,11 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
 import './styles.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 )
 
@@ -18,6 +21,21 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 const isNativeApp = !!window.Capacitor?.isNativePlatform?.()
 if (import.meta.env.PROD && !isNativeApp && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+    // The build id rides along in the URL. A new deploy means a new service
+    // worker script URL, which means a fresh cache — otherwise the shell
+    // cached under "/" keeps pointing at asset files the deploy deleted, and
+    // an offline phone opens to a blank page.
+    navigator.serviceWorker.register(`/sw.js?v=${__BUILD_ID__}`).catch(() => {})
+
+    // A worker taking over from an older one means the tab is running the
+    // previous build. Reload once so the day's fix actually reaches the
+    // phone; `hadWorker` keeps a first install from reloading on arrival.
+    const hadWorker = !!navigator.serviceWorker.controller
+    let reloaded = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadWorker || reloaded) return
+      reloaded = true
+      location.reload()
+    })
   })
 }
