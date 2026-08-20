@@ -96,11 +96,11 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
-- **Company logos for the 11 exhibitors who sent one** (migration `0026`).
+- **Company logos for the 10 exhibitors who sent one** (migration `0026`).
   The logo pack numbers its booths on a different floor plan from the sheet,
-  so they are matched on the company name and pinned by booth code; the files
-  ship with the app rather than living on the upload volume, and a logo the
-  committee uploads later wins. Everyone else keeps their initials.
+  so they are matched — and keyed — on the company name; the files ship with
+  the app rather than living on the upload volume, and a logo the committee
+  uploads later wins. Everyone else keeps their initials.
 - **The Gold Club Breakfast on 4 September** (migration `0025`). 66 tickets in
   the export are for the morning after, not the conference day — the schedule
   now holds both dates, the admin page groups blocks under the day they run
@@ -110,10 +110,12 @@ away.
 - **The 4 learning classes with their 9 speakers and moderators**, from the
   Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
-- **The 34 booths and 4 sponsors of the committee's booth sheet** (migration
+- **The 32 booths and 4 sponsors of the committee's booth sheet** (migration
   `0023`), each with its scanner login. The sheet's own *Sponsor* divider
-  decides which is which, and an exhibitor holding two positions
-  ("A18 & A20") gets a booth — and a printable QR — for each. Generated
+  decides which is which, and an exhibitor holding two positions is **one
+  exhibitor**: the booth is labelled `A18 & A20`, keeps one login and one QR
+  (printed once per sign), and counts once towards the draw's booth minimum.
+  Migration `0027` merges the pair on a database that split them. Generated
   straight from the spreadsheet by
   [`scripts/booths_migration.py`](scripts/booths_migration.py) — edit the
   sheet, re-run the script, restart. It works in both directions: a booth

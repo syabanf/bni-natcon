@@ -52,7 +52,7 @@ Environment yang wajib diisi:
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
-narasumbernya**, **34 booth + 4 sponsor dari sheet booth** (migrasi `0023`,
+narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0023`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
 September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang

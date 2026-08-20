@@ -26,8 +26,9 @@ BASE = os.environ.get("BASE", "http://localhost:8082")
 
 # The exhibitor floor of the committee's booth sheet arrives with migration
 # 0023 — booths and the four sponsors printed under its own "Sponsor" divider.
+# A brand on two stands counts once: it is one exhibitor, not two.
 # The extra sponsors, the attendees and the tables are this suite's fixtures.
-SEEDED_BOOTHS = 34
+SEEDED_BOOTHS = 32
 SEEDED_SPONSORS = 4
 FIXTURE_SPONSORS = 2
 FIXTURE_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS + FIXTURE_SPONSORS
@@ -152,22 +153,30 @@ a1 = by_booth.get("A1")
 check("booth A1 arrived from the booth sheet",
       a1 is not None and a1["name"] == "SSCX International"
       and a1["category"] == "Management Consultant", f"got {a1}")
-# One exhibitor on two floor positions gets a booth — and a printable QR —
-# for each, because each position has its own sign.
-check("a double-width stand became two booths under one company",
-      by_booth.get("A18", {}).get("name") == "GrasiaCare"
-      and by_booth.get("A20", {}).get("name") == "GrasiaCare"
-      and by_booth.get("A47", {}).get("name") == "Alpha leaders"
-      and by_booth.get("A48", {}).get("name") == "Alpha leaders",
-      f'got {[by_booth.get(c, {}).get("name") for c in ("A18", "A20", "A47", "A48")]}')
+# One exhibitor on two floor positions is still one exhibitor: one card in
+# the passport, one stamp, one login. The label names both stands so the
+# printed sign and the floor plan agree.
+check("a double-width stand is one booth labelled with both numbers",
+      by_booth.get("A18 & A20", {}).get("name") == "GrasiaCare"
+      and by_booth.get("A47 & A48", {}).get("name") == "Alpha leaders"
+      and "A18" not in by_booth and "A20" not in by_booth,
+      f'got {sorted(b for b in by_booth if b.startswith("A1") or b.startswith("A4"))}')
+# One crew, one login — checked through the detail page rather than by
+# signing in, so this does not eat into the login rate limit the hardening
+# section measures at the end.
+merged_id = by_booth["A18 & A20"]["id"]
+status, detail, _ = req("GET", f"/api/v1/admin/tenants/{merged_id}", token=admin_tok)
+check("...and it has one scanner login, on the first stand's code",
+      status == 200 and detail["tenant"]["owner_email"] == "booth-a18@natcon.id",
+      f'{detail.get("tenant", {}).get("owner_email")}')
 # The committee's logo pack numbers its booths differently from the sheet, so
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
 check("exhibitors who sent a logo carry it",
-      len(logos) == 11 and logos.get("A22") == "/logos/a22.png"
-      and logos.get("C1") == "/logos/c1.png", f"{sorted(logos.items())}")
-check("both stands of one company carry the same logo",
-      logos.get("A18") and logos.get("A20"), f'{logos.get("A18")} {logos.get("A20")}')
+      len(logos) == 10 and logos.get("A22") == "/logos/paper-id.png"
+      and logos.get("C1") == "/logos/royal-medicalink.png", f"{sorted(logos.items())}")
+check("the double stand carries one logo, on one card",
+      logos.get("A18 & A20") == "/logos/grasiacare.png", f'{logos.get("A18 & A20")}')
 check("the ones who sent nothing keep their initials",
       by_booth["A1"]["logo_url"] == "" and by_booth["A1"]["initials"] == "SI",
       f'{by_booth["A1"]}')

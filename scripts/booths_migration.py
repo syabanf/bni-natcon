@@ -19,8 +19,10 @@ is the committee's own export, unedited. A row whose only filled cell reads
 than a floor booth.
 
 Two booth numbers on one row ("A18 & A20", "A47 - 48") means one exhibitor
-holding two positions on the floor plan. Each position becomes its own booth,
-because each has its own sign to print a QR for.
+holding two positions on the floor plan. That is ONE exhibitor: one entry in
+the passport, one stamp, one scanner login, and one QR printed twice — once
+for each sign. Splitting them would let an attendee collect two stamps from
+the same company and count it twice towards the draw's booth minimum.
 """
 
 import pathlib
@@ -92,18 +94,21 @@ def read_booths(path: pathlib.Path):
             if number.lower().startswith("sponsor"):
                 kind = "sponsor"
             continue
-        for code in booth_codes(number):
-            if code in seen:
-                continue
-            seen.add(code)
-            booths.append({
-                "booth": code,
-                "company": company,
-                "category": cell("Business Classification"),
-                "initials": initials(company),
-                "kind": kind,
-                "email": login_email(code),
-            })
+        codes = booth_codes(number)
+        if not codes or codes[0] in seen:
+            continue
+        seen.add(codes[0])
+        # Two stands, one exhibitor: the label names both so the passport and
+        # the printed sign say what the floor plan says, while the login and
+        # the QR follow the first code — there is only one of each.
+        booths.append({
+            "booth": " & ".join(codes),
+            "company": company,
+            "category": cell("Business Classification"),
+            "initials": initials(company),
+            "kind": kind,
+            "email": login_email(codes[0]),
+        })
     return booths
 
 

@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 34 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -91,6 +91,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-27 | P2 | Attendee whose email holds two tickets | Sign in. | The picker numbers the passes #1 and #2 above their member codes, so two identical names can be told apart. |
 | ATT-28 | P1 | Attendee home screen, rundown covering both days | Read the agenda card top to bottom. | It is headed 'Agenda', 3 September first, then a 'Friday 4 September' heading before the Gold Club Breakfast — which says on it that it is for Gold Club tickets. |
 | ATT-29 | P1 | Attendee passport | Scroll the booth list. | The exhibitors who sent a logo show it; the rest show their two-letter initials. No empty grey squares. |
+| ATT-30 | P1 | Attendee scanned at both stands of a double-width booth | Open the passport and count the stamps. | That company gives one stamp and appears once. Two stands are one exhibitor, so it counts once towards the lucky draw's booth minimum too. |
 
 ## Booth scanner
 
@@ -164,6 +165,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-40 | P1 | An attendee imported with a ticket number | Edit only their phone number and save. | The ticket number is still there. Losing it would make their QR stop scanning. |
 | MD-41 | P1 | Admin · Tenants, a booth with no logo | Edit it, change only the description, save. Then open the attendee passport. | Its initials are still on the tile. A save that leaves the initials field alone must not empty it. |
 | MD-42 | P2 | Admin · Tenants, a booth whose logo shipped with the app | Upload a different logo, then ask for a restart/redeploy. | The uploaded one stays. The shipped logo only fills a booth that has none. |
+| MD-43 | P1 | Admin · Tenants | Find GrasiaCare and Alpha leaders in the list. | One row each, booth reading 'A18 & A20' and 'A47 & A48'. Not two rows — one company on two stands is one exhibitor, with one login and one QR to print for both signs. |
 
 ## Admin operations
 
@@ -274,7 +276,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
 | Attendees | import Data Peserta.xlsx | 769 rows; password = chapter + first name, then they set their own |
-| Booths | already there — 34 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, e.g. A1 -> booth-a1@natcon.id. A18/A20 and A47/A48 are one company on two stands. |
+| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, e.g. A1 -> booth-a1@natcon.id. A brand on two stands is ONE booth labelled 'A18 & A20', logging in as booth-a18@natcon.id. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-b1@natcon.id / SEED_PASSWORD | Bio Medika · booth B1 — the sheet's own Sponsor divider made it a sponsor |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
@@ -297,11 +299,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 29 | 20 |
+| Attendee | 30 | 21 |
 | Booth scanner | 17 | 11 |
-| Admin master data | 42 | 34 |
+| Admin master data | 43 | 35 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 14 | 5 |
 | Door crew app | 10 | 9 |
-| **Total** | **184** | **126** |
+| **Total** | **186** | **128** |
