@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
+import TenantMark from './TenantMark'
 
 // Prefer the structured speaker rows; fall back to the plain-text columns
 // for classes that were typed in before speakers became first-class.
@@ -178,7 +179,10 @@ export function TenantDetail({ id, onBack }) {
       onBack={onBack}
     >
       <div className="detail-hero">
-        <div className={`dh-avatar${tenant.kind === 'sponsor' ? '' : ' tenant'}`}>{tenant.initials}</div>
+        <TenantMark
+          tenant={tenant}
+          className={`dh-avatar${tenant.kind === 'sponsor' ? '' : ' tenant'}`}
+        />
         <InfoGrid
           items={[
             ['Kind', tenant.kind === 'sponsor' ? 'Official sponsor' : 'Booth tenant'],

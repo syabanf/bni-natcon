@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, assetUrl } from './api'
 import Modal from './Modal'
+import TenantMark from './TenantMark'
 import {
   parseSheet,
   transformMemberRows,
@@ -628,8 +629,17 @@ export function TenantsPage() {
               </td>
               <td className="mono">{t.booth}</td>
               <td>
-                <b>{t.name}</b>
-                <small>{t.contact_name ? `${t.contact_name}${t.chapter ? ` · ${t.chapter}` : ''}` : t.initials}</small>
+                <div className="tn-name">
+                  {/* Their logo when they sent one — the fastest way to see
+                      which booths are still on initials. */}
+                  <TenantMark tenant={t} />
+                  <div>
+                    <b>{t.name}</b>
+                    {t.contact_name && (
+                      <small>{`${t.contact_name}${t.chapter ? ` · ${t.chapter}` : ''}`}</small>
+                    )}
+                  </div>
+                </div>
               </td>
               <td>{t.category}</td>
               <td className="num">{t.scan_count}</td>

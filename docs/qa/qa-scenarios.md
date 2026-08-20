@@ -166,6 +166,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-41 | P1 | Admin · Tenants, a booth with no logo | Edit it, change only the description, save. Then open the attendee passport. | Its initials are still on the tile. A save that leaves the initials field alone must not empty it. |
 | MD-42 | P2 | Admin · Tenants, a booth whose logo shipped with the app | Upload a different logo, then ask for a restart/redeploy. | The uploaded one stays. The shipped logo only fills a booth that has none. |
 | MD-43 | P1 | Admin · Tenants | Find GrasiaCare and Alpha leaders in the list. | One row each, booth reading 'A18 & A20' and 'A47 & A48'. Not two rows — one company on two stands is one exhibitor, with one login and one QR to print for both signs. |
+| MD-44 | P2 | Admin · Tenants, some booths have a logo | Look down the Name column, then open the Dashboard's Booth Ranking and one booth's detail page. | A booth with a logo shows it in all three; the rest show their two letters. That is how you spot which companies still owe the committee a logo. |
 
 ## Admin operations
 
@@ -301,9 +302,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Auth | 22 | 13 |
 | Attendee | 30 | 21 |
 | Booth scanner | 17 | 11 |
-| Admin master data | 43 | 35 |
+| Admin master data | 44 | 35 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 14 | 5 |
 | Door crew app | 10 | 9 |
-| **Total** | **186** | **128** |
+| **Total** | **187** | **128** |

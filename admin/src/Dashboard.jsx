@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
+import TenantMark from './TenantMark'
 
 const POLL_MS = 5000
 
@@ -85,7 +86,7 @@ export default function Dashboard({ onUnauthorized }) {
             {tenants.map((t, i) => (
               <div className="rank-row" key={t.id}>
                 <span className="rank-no">#{i + 1}</span>
-                <span className="rank-ini">{t.initials}</span>
+                <TenantMark tenant={t} className="rank-ini" />
                 <div className="rank-info">
                   <div className="rank-name">
                     {t.name} <small>· {t.booth}</small>

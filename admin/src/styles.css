@@ -647,6 +647,48 @@ button:disabled {
   color: var(--gray);
   width: 26px;
 }
+/* A booth's mark in a list: its logo when it sent one, its initials when it
+   did not. A wordmark is wide, so an image keeps the row height and takes
+   the width it needs rather than being squeezed into the square. */
+.tn-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tn-mark.img {
+  width: auto;
+  max-width: 120px;
+  height: 36px;
+  object-fit: contain;
+  object-position: left center;
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 3px 5px;
+}
+.tn-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rank-ini.img,
+.dh-avatar.img {
+  box-shadow: none;
+}
+.dh-avatar.img {
+  width: auto;
+  max-width: 190px;
+  height: 64px;
+  border-radius: 14px;
+}
+
 .rank-ini {
   width: 36px;
   height: 36px;
