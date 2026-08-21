@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
-import { seenTour, useTourStore } from '../store/tour'
+import { useTourStore } from '../store/tour'
 import { isMuted, setMuted, speak, speechAvailable, stop } from '../speak'
 
 /*
@@ -12,10 +12,10 @@ import { isMuted, setMuted, speak, speechAvailable, stop } from '../speak'
  * what the attendee reads is on top of the screen it describes rather than a
  * picture of it, and the tab it is talking about is lit up in the bar below.
  *
- * It opens itself once, the first time someone signs in, and after that lives
- * behind the button on Home. Each step is also read out loud — hands are busy
- * at a registration desk, and a phone held at arm's length is hard to read —
- * with a speaker button to silence it for good.
+ * It opens only when somebody presses Quick tour, next to Log out on every
+ * attendee screen. Each step is also read out loud — hands are busy at a
+ * registration desk, and a phone held at arm's length is hard to read — with
+ * a speaker button to silence it for good.
  */
 export const STEPS = [
   {
@@ -58,17 +58,11 @@ export const STEPS = [
 
 export default function Tour() {
   const open = useTourStore((s) => s.open)
-  const start = useTourStore((s) => s.start)
   const close = useTourStore((s) => s.close)
   const [step, setStep] = useState(0)
   const [muted, setMutedState] = useState(isMuted)
   const navigate = useNavigate()
   const { pathname } = useLocation()
-
-  // First sign-in: show it rather than wait to be found.
-  useEffect(() => {
-    if (!seenTour()) start()
-  }, [start])
 
   const current = STEPS[step]
 

@@ -33,7 +33,7 @@ window.SpeechSynthesisUtterance = class {
 }
 
 const { useAuthStore } = await import('./store/auth')
-const { useTourStore, TOUR_SEEN_KEY } = await import('./store/tour')
+const { useTourStore } = await import('./store/tour')
 const { STEPS } = await import('./components/Tour')
 const { default: App } = await import('./App')
 
@@ -42,6 +42,12 @@ const openApp = async () => {
   useAuthStore.setState({ token: 't', user: { id: 1, name: 'Ayu Pratiwi', role: 'member' } })
   render(<App />)
   await act(async () => {})
+}
+
+const openTour = async () => {
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /quick tour/i }))
+  })
 }
 
 const next = async () => {
@@ -59,14 +65,18 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('the guided tour', () => {
-  it('introduces itself the first time an attendee signs in', async () => {
+  it('stays out of the way until it is asked for', async () => {
     await openApp()
+    expect(screen.queryByText(/step 1 of 6/i)).toBeNull()
+
+    await openTour()
     expect(screen.getByText(STEPS[0].title)).toBeTruthy()
     expect(screen.getByText(/step 1 of 6/i)).toBeTruthy()
   })
 
   it('walks the app as it explains it', async () => {
     await openApp()
+    await openTour()
     await next()
     expect(screen.getByText(STEPS[1].title)).toBeTruthy()
     // The tour is talking about My QR, so that is the screen behind it.
@@ -75,6 +85,7 @@ describe('the guided tour', () => {
 
   it('goes back a step without losing its place', async () => {
     await openApp()
+    await openTour()
     await next()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /back/i }))
@@ -82,27 +93,28 @@ describe('the guided tour', () => {
     expect(screen.getByText(STEPS[0].title)).toBeTruthy()
   })
 
-  it('closes at the end and does not come back uninvited', async () => {
+  it('closes at the end, and starts from the beginning next time', async () => {
     await openApp()
+    await openTour()
     for (let i = 0; i < STEPS.length; i++) await next()
     expect(screen.queryByText(STEPS[0].title)).toBeNull()
-    expect(localStorage.getItem(TOUR_SEEN_KEY)).toBe('1')
 
-    cleanup()
-    await openApp()
-    expect(screen.queryByText(/step 1 of 6/i)).toBeNull()
+    await openTour()
+    expect(screen.getByText(/step 1 of 6/i)).toBeTruthy()
   })
 
-  it('remembers a skip too — dismissing it is an answer', async () => {
+  it('closes on Skip', async () => {
     await openApp()
+    await openTour()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /skip/i }))
     })
-    expect(localStorage.getItem(TOUR_SEEN_KEY)).toBe('1')
+    expect(screen.queryByText(STEPS[0].title)).toBeNull()
   })
 
   it('reads each step out loud', async () => {
     await openApp()
+    await openTour()
     expect(spoken[0]).toContain(STEPS[0].title)
     await next()
     expect(spoken[spoken.length - 1]).toContain(STEPS[1].title)
@@ -110,6 +122,7 @@ describe('the guided tour', () => {
 
   it('stops talking the moment it is closed', async () => {
     await openApp()
+    await openTour()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /skip/i }))
     })
@@ -118,6 +131,7 @@ describe('the guided tour', () => {
 
   it('can be silenced, and stays silent next time', async () => {
     await openApp()
+    await openTour()
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /stop reading out loud/i }))
     })
@@ -127,19 +141,18 @@ describe('the guided tour', () => {
 
     cleanup()
     spoken.length = 0
-    localStorage.removeItem('natcon-tour-seen')
     await openApp()
+    await openTour()
     expect(spoken).toHaveLength(0)
     expect(screen.getByRole('button', { name: /read the tour out loud/i })).toBeTruthy()
   })
 
-  it('is always one button away, next to Log out on every screen', async () => {
-    localStorage.setItem(TOUR_SEEN_KEY, '1')
+  it('is one button away from any attendee screen', async () => {
+    window.history.pushState({}, '', '/attendee/passport')
     await openApp()
-    expect(screen.queryByText(/step 1 of 6/i)).toBeNull()
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /quick tour/i }))
-    })
+    await openTour()
+    // Wherever it is started from, it begins at the beginning: on Home.
     expect(screen.getByText(STEPS[0].title)).toBeTruthy()
+    expect(window.location.pathname).toBe(STEPS[0].path)
   })
 })

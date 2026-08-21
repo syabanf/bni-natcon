@@ -13,11 +13,12 @@ classes** (**goodiebag on door check-in**, with a **separate class entry QR**,
 full class detail carrying **speaker & moderator photos**, a cover, a live
 attendance badge, and **who else is in the room**), and join **speed
 networking** — **scan the table QR first** (or type the table number) to drop
-The attendee app opens with a **six-step guided tour** the first time somebody
-signs in — it walks the tabs as it explains them, **reads each step out loud**
-(the browser's own speech, so there is nothing to download), and lives behind
-one button — **Quick tour**, beside Log out on every attendee screen — for
-whenever somebody wants it again. The speaker button silences it for good.
+The attendee app carries a **six-step guided tour** behind one button —
+**Quick tour**, beside Log out on every attendee screen. It walks the tabs as
+it explains them and **reads each step out loud** (the browser's own speech,
+so there is nothing to download); the speaker button silences it for good. It
+never opens by itself: somebody at a registration desk is trying to do one
+thing, and a sheet across the screen is in the way of it.
 straight into the table's network, where every person shows their **chapter**,
 **business classification** and a **WhatsApp link**, takes a **private note**
 straight from the seat, and whose contact details carry **email & phone** that
