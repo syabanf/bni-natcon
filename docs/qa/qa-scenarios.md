@@ -253,6 +253,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-12 | P1 | The door or admin password, typed into the ATTENDEE sign-in | Sign in as door@natcon.id at /login. | A card says it is a door crew account, links to the door app, and offers Sign out. It must NOT be a blank page — that was the bug: the app bounced the account between /attendee and itself forever. |
 | CRS-13 | P2 | Any attendee screen | Ask the developer to force a render error. | A card says the screen stopped working, with Reload and Sign out. Never a white page. |
 | CRS-14 | P1 | Attendee app open on a phone, then a new version is deployed | Close and reopen the app (or reload twice). | It comes up on the new version. The cache is per build, so a deploy cannot leave a phone on the old one — or worse, on a shell whose files the deploy deleted. |
+| CRS-15 | P1 | A phone (or a 375px window) | Open all four sign-ins: /login, /tenant/login, the admin panel, the door app. | Each one is a single column — brand on top, form below it at full width, fields and the Sign in button big enough to tap. Nothing scrolls sideways and the brand appears once, not twice. |
+| CRS-16 | P2 | The door app on a phone | Look at the sign-in fields and the Show button. | They are styled like the other apps — rounded fields with an icon, a Show/Hide toggle on the password. Plain browser boxes mean the stylesheet is not matching the markup. |
 
 ## Door crew app
 
@@ -306,6 +308,6 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin master data | 45 | 36 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
-| Cross-cutting | 14 | 5 |
+| Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **188** | **129** |
+| **Total** | **190** | **130** |

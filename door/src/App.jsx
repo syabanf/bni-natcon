@@ -16,6 +16,7 @@ function Login({ onSignedIn }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -39,41 +40,69 @@ function Login({ onSignedIn }) {
   }
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
+    <div className="auth-page">
+      <div className="auth-shell">
         <section className="auth-pane form">
-          <form className="auth-form" onSubmit={submit}>
+          <form className="auth-form-inner" onSubmit={submit}>
             <p className="auth-eyebrow">Door Crew</p>
             <img className="auth-logo" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
             <p className="auth-sub">
               Sign in to scan attendees into a learning class, and to hand over goodiebags and pins.
             </p>
-            <div className="auth-field">
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <div className="auth-input">
+              <span className="auth-input-ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                required
+                aria-label="Email"
                 autoComplete="username"
+                required
               />
             </div>
-            <div className="auth-field">
+
+            <div className="auth-input">
+              <span className="auth-input-ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+              </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                required
+                aria-label="Password"
                 autoComplete="current-password"
+                required
               />
+              {/* A door crew types this on a phone, standing up, in a hurry. */}
+              <button
+                type="button"
+                className="auth-reveal"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
             </div>
-            {error && <div className="auth-error">{error}</div>}
+
             <button className="auth-submit" disabled={busy}>
               {busy ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
         </section>
+
         <aside className="auth-pane hero" aria-hidden="true">
           <div className="auth-hero-inner">
             <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />

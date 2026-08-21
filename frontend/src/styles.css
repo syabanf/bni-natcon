@@ -535,7 +535,16 @@ input {
     font-size: 12px;
   }
   .auth-pane.form {
-    padding: 28px 24px 30px;
+    padding: 24px 22px 26px;
+  }
+  .auth-form-inner {
+    max-width: none;
+  }
+  /* The stacked brand is right above it once the panes are in one column, so
+     the lockup inside the form is the same logo twice — and 110px of the
+     phone's screen that the sign-in fields need more. */
+  .auth-logo {
+    display: none;
   }
 }
 

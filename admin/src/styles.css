@@ -367,6 +367,48 @@ button:disabled {
   background: var(--red);
 }
 
+/* ===== Sign-in on a phone =====
+   The committee signs in on a laptop, but the door crew and anyone helping at
+   the desk do it on whatever is in their pocket. Two columns on a 375px
+   screen gave the form about 150px to live in: fields squeezed to a third of
+   the width, the brand panel eating the other half. Stack them, put the brand
+   on top where it is a header rather than a competitor, and give the form the
+   whole width. */
+@media (max-width: 860px) {
+  .auth-page {
+    padding: 20px 16px;
+  }
+  .auth-shell {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+  .auth-pane.hero {
+    order: -1;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 22px 22px;
+    text-align: center;
+  }
+  .auth-hero-logo {
+    height: 110px;
+    margin: 0 auto 10px;
+  }
+  .auth-hero-meta {
+    font-size: 10px;
+  }
+  .auth-pane.form {
+    padding: 26px 22px 28px;
+  }
+  .auth-form-inner {
+    max-width: none;
+  }
+  /* The stacked brand sits right above it once the panes are in one column;
+     two lockups in a row is one too many. */
+  .auth-logo {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-streak,
   .auth-card {

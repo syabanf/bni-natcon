@@ -67,6 +67,21 @@
         "--strictPort"
       ],
       "port": 4181
+    },
+    {
+      "name": "door-qa",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--prefix",
+        "door",
+        "--",
+        "--port",
+        "4182",
+        "--strictPort"
+      ],
+      "runtimeExecutable": "npm",
+      "port": 4182
     }
   ]
 }

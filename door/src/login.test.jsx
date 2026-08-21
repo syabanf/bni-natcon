@@ -19,13 +19,16 @@ const signIn = async (email, password) => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v)
     el.dispatchEvent(new Event('input', { bubbles: true }))
   }
-  const [emailInput, passwordInput] = [...document.querySelectorAll('.auth-form input')]
+  // By placeholder rather than by class: the sign-in markup is styling, and
+  // a test that breaks when a class is renamed is testing the wrong thing.
+  const emailInput = screen.getByPlaceholderText('Email')
+  const passwordInput = screen.getByPlaceholderText('Password')
   await act(async () => {
     setVal(emailInput, email)
     setVal(passwordInput, password)
   })
   await act(async () => {
-    fireEvent.submit(document.querySelector('.auth-form'))
+    fireEvent.submit(emailInput.closest('form'))
   })
 }
 
