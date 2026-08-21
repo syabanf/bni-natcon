@@ -26,8 +26,3 @@ uploads/
 # these once reached CI and broke the Android resource merger, which rejects
 # a space in a resource file name.
 * [0-9].*
-
-# The attendee seed carries 769 peoples personal data and this repo is
-# public. Generate it with scripts/attendees_migration.py where you deploy
-# from; never commit it while the repository is open.
-backend/internal/repository/postgres/migrations/0028_attendees.sql

@@ -103,13 +103,23 @@ check("admin login 200", status == 200 and body["user"]["role"] == "admin")
 admin_tok = body["token"]
 
 # ------------------------------------------------------------------- fixtures
-section("Fixtures (a fresh database has no attendees, booths or tables)")
+section("Fixtures (the ticketing export and the sheet's booths arrive seeded)")
 
+# The attendees now arrive with a migration of their own, so a fresh database
+# is not empty. Everything downstream counts from this baseline rather than
+# from zero — the export changes whenever the committee re-exports it, and a
+# suite that hardcoded 769 would fail on the next sheet instead of on a bug.
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
-check("a fresh database starts with no attendees, and with the sheet's booths",
-      status == 200 and body["total_members"] == 0
+SEEDED_MEMBERS = body.get("total_members", 0)
+check("a fresh database arrives with the ticketing export and the sheet's booths",
+      status == 200 and SEEDED_MEMBERS > 0
       and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == SEEDED_SPONSORS,
       f"got {body}")
+
+status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
+SEEDED_CHAPTERS = {c["name"] for c in body["chapters"]}
+check("...and with the chapters those attendees carry",
+      status == 200 and len(SEEDED_CHAPTERS) > 1, f"{len(SEEDED_CHAPTERS)} chapters")
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
 check("...but the four learning classes are already there, with their speakers",
@@ -226,13 +236,15 @@ check(f"{FIXTURE_TABLES} networking tables generated",
       status == 201 and body["created"] == FIXTURE_TABLES)
 
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
-# Nothing pre-loads the chapter list any more: it is exactly the set of
-# chapters the attendees themselves carry. A booth's chapter is contact
-# detail, not membership, so it does not join the list.
-check("chapters registered themselves from the attendees, nothing pre-loaded",
+# Nothing pre-loads the chapter list: it is exactly the set of chapters the
+# attendees themselves carry — the seeded ones plus whatever this suite just
+# created. A booth's chapter is contact detail, not membership, so it does
+# not join the list.
+now_chapters = {c["name"] for c in body["chapters"]}
+check("chapters register themselves from the attendees, nothing pre-loaded",
       status == 200
-      and {c["name"] for c in body["chapters"]} == {m["chapter"] for m in FIXTURE_MEMBERS},
-      f'got {sorted(c["name"] for c in body.get("chapters", []))}')
+      and now_chapters == SEEDED_CHAPTERS | {m["chapter"] for m in FIXTURE_MEMBERS},
+      f"unexpected: {sorted(now_chapters - SEEDED_CHAPTERS - {m['chapter'] for m in FIXTURE_MEMBERS})}")
 
 status, body = login("reddie@natcon.id", "salah-total")
 check("wrong password -> 401", status == 401)
@@ -625,13 +637,13 @@ section("The pass QR carries the ticket number")
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "Tiket Sah", "email": "tiket-sah@natcon.id",
                             "chapter": "Chapter Tiket", "phone": "+628110009090",
-                            "ticket_number": "16C6C-23BBA1745"})
+                            "ticket_number": "E2E-TICKET-0001"})
 ticket_member = body["user"]
 check("an imported attendee keeps their ticket number",
-      status == 201 and ticket_member["ticket_number"] == "16C6C-23BBA1745", f"{status} {body}")
+      status == 201 and ticket_member["ticket_number"] == "E2E-TICKET-0001", f"{status} {body}")
 
 status, body, _ = req("POST", "/api/v1/scans", token=tenant_tok,
-                      body={"member_code": "16C6C-23BBA1745"})
+                      body={"member_code": "E2E-TICKET-0001"})
 check("a booth scans the ticket number and gets the attendee",
       status == 200 and body["member_name"] == "Tiket Sah" and body["duplicate"] is False,
       f"{status} {body}")
@@ -641,29 +653,29 @@ check("the member code under the QR reaches the same person",
       status == 200 and body["duplicate"] is True, f"{status} {body}")
 
 status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
-                      body={"member_code": "16C6C-23BBA1745", "item": "goodiebag"})
+                      body={"member_code": "E2E-TICKET-0001", "item": "goodiebag"})
 check("the goodiebag desk takes the ticket number",
       status == 200 and body["name"] == "Tiket Sah", f"{status} {body}")
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
 first_class = body["seminars"][0]["id"]
 status, body, _ = req("POST", f"/api/v1/admin/seminars/{first_class}/registrations", token=admin_tok,
-                      body={"member": "16C6C-23BBA1745"})
+                      body={"member": "E2E-TICKET-0001"})
 check("the committee can register by ticket number", status == 201, f"{status} {body}")
 status, body, _ = req("POST", f"/api/v1/admin/seminars/{first_class}/checkin", token=admin_tok,
-                      body={"member_code": "16C6C-23BBA1745"})
+                      body={"member_code": "E2E-TICKET-0001"})
 check("the class door records attendance from the ticket number",
       status == 200 and body["member_name"] == "Tiket Sah"
       and body["duplicate"] is False, f"{status} {body}")
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "Tiket Kembar", "email": "tiket-kembar@natcon.id",
-                            "chapter": "Chapter Tiket", "ticket_number": "16C6C-23BBA1745"})
+                            "chapter": "Chapter Tiket", "ticket_number": "E2E-TICKET-0001"})
 check("a second attendee on the same ticket number is refused",
       status == 409 and "ticket" in body.get("error", "").lower(), f"{status} {body}")
 
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok,
-                   body={"member_code": "16C6C-NOSUCHTICKET"})
+                   body={"member_code": "E2E-NOSUCHTICKET"})
 check("a ticket number nobody holds -> 404", status == 404)
 
 # Put the floor back the way the rest of the suite expects it: the visit, the
@@ -784,9 +796,10 @@ check("overview splits sponsors from booths",
       body["total_sponsors"] == FIXTURE_SPONSORS + SEEDED_SPONSORS
       and body["total_booths"] == SEEDED_BOOTHS
       and body["total_sponsors"] + body["total_booths"] == body["total_tenants"])
-check("overview: 3 members, every exhibitor, 2 visits",
-      status == 200 and body["total_members"] == 3
-      and body["total_tenants"] == FIXTURE_TENANTS and body["total_visits"] == 2)
+check("overview: the suite's 3 attendees on top of the export, every exhibitor, 2 visits",
+      status == 200 and body["total_members"] == SEEDED_MEMBERS + 3
+      and body["total_tenants"] == FIXTURE_TENANTS and body["total_visits"] == 2,
+      f'{body["total_members"]} vs {SEEDED_MEMBERS} + 3')
 
 status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
                       body={"name": "E2E Budi", "email": "e2e-budi@natcon.id", "chapter": "Chapter E2E",

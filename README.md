@@ -89,13 +89,15 @@ away.
 
 **A fresh database holds the event's own master data and nothing invented:**
 
-The attendees are the one thing NOT in this list. Their sheet carries 769
-people's names, emails and phone numbers, this repository is public, and git
-history is forever — so [`scripts/attendees_migration.py`](scripts/attendees_migration.py)
-generates their migration and `.gitignore` keeps it out. Generate it where you
-deploy from, or apply it straight to the database with `psql -f`. If the
-committee makes the repository private, drop the gitignore line and it rides
-along with every deploy like the booth migration does.
+- **The 769 attendees of the ticketing export** (migration `0028`), one per
+  ticket, with the chapters they carry and the password printed on their
+  ticket — chapter + first name, hashed at generation because 769 bcrypt
+  hashes would add a minute to every boot. `must_set_password` stays true, so
+  each attendee still picks their own on first sign-in. Regenerate it from a
+  newer export with
+  [`scripts/attendees_migration.py`](scripts/attendees_migration.py). **This
+  file carries personal data and this repository is public — the committee
+  decided to include it.**
 
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.

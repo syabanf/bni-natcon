@@ -65,11 +65,11 @@ dihapus tidak muncul lagi saat restart.
 > Paper.id kini masuk dengan `booth-a20@natcon.id`. Password tidak berubah,
 > scan yang sudah masuk tetap utuh.
 
-**Peserta** tidak ikut di repo: datanya 769 orang lengkap dengan email dan
-nomor HP, sedangkan repo ini publik. Buat migrasinya di tempat deploy dengan
-`python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`, lalu jalankan
-`psql "$DATABASE_URL" -f backend/internal/repository/postgres/migrations/0028_attendees.sql`
-— atau tetap pakai Import Excel di panel admin seperti sebelumnya. Tidak ada peserta
+**Peserta** ikut sebagai migrasi `0028`: 769 orang dari export ticketing,
+satu akun per tiket, password awal chapter + nama depan dan wajib diganti saat
+login pertama. Kalau panitia mengirim export baru, buat ulang dengan
+`python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
+file itu berisi nama, email, dan nomor HP 769 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 

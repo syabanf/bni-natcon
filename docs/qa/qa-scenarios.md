@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; import the attendee sheet (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 769 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -279,7 +279,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
-| Attendees | import Data Peserta.xlsx | 769 rows; password = chapter + first name, then they set their own |
+| Attendees | already there — 769 from the ticketing export | Seeded by migration 0028. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. |
 | Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, following the stand — Paper.id is on A20, so booth-a20@natcon.id. Alpha leaders holds two stands as one booth, 'A47 & A48', logging in as booth-a47@natcon.id. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-b1@natcon.id / SEED_PASSWORD | Bio Medika · booth B1 — the sheet's own Sponsor divider made it a sponsor |
