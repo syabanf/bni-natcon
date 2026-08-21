@@ -752,22 +752,22 @@ input {
 /* ===== Guided tour =====
    A sheet at the bottom, so what it describes stays on screen above it and
    the tab it is talking about is right beside it in the bar. */
-.hg-tour {
-  margin-top: 12px;
+/* Sits beside Log out in the top bar, so it is on every attendee screen
+   rather than only on the one they may have already left. */
+.tour-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  gap: 5px;
   font-size: 12px;
   font-weight: 700;
+  color: var(--red);
+  background: var(--red-tint);
+  padding: 8px 12px;
+  border-radius: 999px;
   cursor: pointer;
 }
-.hg-tour:active {
-  background: rgba(255, 255, 255, 0.28);
+.tour-btn:active {
+  filter: brightness(0.96);
 }
 .tour {
   position: fixed;

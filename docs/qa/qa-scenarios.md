@@ -94,7 +94,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-30 | P1 | Attendee scanned at both stands of a double-width booth | Open the passport and count the stamps. | That company gives one stamp and appears once. Two stands are one exhibitor, so it counts once towards the lucky draw's booth minimum too. |
 | ATT-31 | P2 | Attendee · Learning Class tab | Look at the four class cards. | Each carries the committee's banner with its own speakers on it — not a plain gradient, and not the same picture on two classes. |
 | ATT-32 | P1 | An attendee signing in for the very first time | Watch what happens after the password screen. | A six-step tour opens by itself, explaining the pass, the QR, the passport, the classes and networking — each step on top of the screen it is describing. |
-| ATT-33 | P1 | An attendee who has already seen the tour | Sign in again, then press 'How to use this app' on Home. | It does not open by itself a second time, and the button starts it again from step 1. Back, Next and Skip all work, and Skip counts as seen. |
+| ATT-33 | P1 | An attendee who has already seen the tour | Sign in again, then press 'Quick tour' in the top bar — try it from the Passport screen, not Home. | It does not open by itself a second time. The button is beside Log out on every attendee screen, and starting it from anywhere returns to step 1 on Home. Back, Next and Skip all work, and Skip counts as seen. |
 | ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
 
 ## Booth scanner

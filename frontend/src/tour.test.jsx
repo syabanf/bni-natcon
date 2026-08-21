@@ -133,12 +133,12 @@ describe('the guided tour', () => {
     expect(screen.getByRole('button', { name: /read the tour out loud/i })).toBeTruthy()
   })
 
-  it('is always one button away on Home afterwards', async () => {
+  it('is always one button away, next to Log out on every screen', async () => {
     localStorage.setItem(TOUR_SEEN_KEY, '1')
     await openApp()
     expect(screen.queryByText(/step 1 of 6/i)).toBeNull()
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /how to use this app/i }))
+      fireEvent.click(screen.getByRole('button', { name: /quick tour/i }))
     })
     expect(screen.getByText(STEPS[0].title)).toBeTruthy()
   })

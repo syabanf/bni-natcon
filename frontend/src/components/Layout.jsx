@@ -5,10 +5,11 @@ import Tour from './Tour'
 import { useTourStore } from '../store/tour'
 import { useAuthStore } from '../store/auth'
 
-function AppBar({ backTo }) {
+function AppBar({ backTo, tour = false }) {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const mock = useAuthStore((s) => s.mock)
+  const startTour = useTourStore((s) => s.start)
   // Signing out drops you at the door you came in by, so a booth crew is not
   // handed the attendee sign-in mid-event.
   const signOut = () => {
@@ -22,6 +23,14 @@ function AppBar({ backTo }) {
       </div>
       <div className="appbar-right">
         {mock && <span className="demo-chip">DEMO</span>}
+        {/* Next to Log out, on every attendee screen — the two things you
+            reach for when you are not sure what to do next. */}
+        {tour && (
+          <button className="tour-btn" onClick={startTour}>
+            <Icon name="award" size={13} />
+            Quick tour
+          </button>
+        )}
         <button className="logout-btn" onClick={signOut}>
           Log out
         </button>
@@ -60,7 +69,7 @@ export function MemberLayout() {
   const touring = useTourStore((s) => s.open)
   return (
     <div className={`app-shell${touring ? ' tour-open' : ''}`}>
-      <AppBar backTo="/login" />
+      <AppBar backTo="/login" tour />
       <div className="screen-body">
         <Outlet />
         <WitCredit />
