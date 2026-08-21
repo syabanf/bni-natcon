@@ -12,7 +12,7 @@ vi.mock('./api', () => ({
 }))
 vi.mock('./DoorCheckin', () => ({ default: () => <div data-testid="door-screen" /> }))
 
-const { default: App } = await import('./App')
+const { default: App, LOGIN_PATH, HOME_PATH } = await import('./App')
 
 const signIn = async (email, password) => {
   const setVal = (el, v) => {
@@ -34,11 +34,26 @@ const signIn = async (email, password) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.history.replaceState(null, '', '/')
   render(<App />)
 })
 afterEach(cleanup)
 
 describe('the door app sign-in', () => {
+  // The app has its own path, like /login and /tenant/login: a bookmark or a
+  // printed link should say which app it opens.
+  it('puts the sign-in on its own address', async () => {
+    await act(async () => {})
+    expect(window.location.pathname).toBe(LOGIN_PATH)
+  })
+
+  it('moves off the sign-in address once the crew is in', async () => {
+    login.mockResolvedValue({ token: 't', user: { role: 'door', name: 'Door Crew' } })
+    await signIn('door@natcon.id', 'secret')
+    expect(await screen.findByTestId('door-screen')).toBeTruthy()
+    expect(window.location.pathname).toBe(HOME_PATH)
+  })
+
   it('lets a door account in', async () => {
     login.mockResolvedValue({ token: 't', user: { role: 'door', name: 'Door Crew' } })
     await signIn('door@natcon.id', 'natcon2026')

@@ -6,6 +6,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
+    // The door app answers on its own path, the way the attendee and booth
+    // sign-ins do: /door/login to sign in, /door once you are in. A path says
+    // which app a printed link or a bookmark belongs to, and it lets all
+    // three be served from one domain without fighting over "/".
+    base: '/door/',
     plugins: [react()],
     server: {
       port: 5175,

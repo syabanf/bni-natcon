@@ -262,7 +262,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
-| DOOR-01 | P1 | Signed out | Open the door app and sign in as door@natcon.id / SEED_PASSWORD. | You land on Door Check-in with three modes: Class attendance, Goodiebag, Pin. |
+| DOOR-01 | P1 | Signed out | Open /door/login and sign in as door@natcon.id / SEED_PASSWORD. | You land on Door Check-in with three modes: Class attendance, Goodiebag, Pin — and the address becomes /door. |
 | DOOR-02 | P1 | Signed out | Try an ATTENDEE email and password. | Refused with 'That is not a door account. Ask the committee for the door login.' — not a wall of errors on the next screen. |
 | DOOR-03 | P1 | Signed out | Sign in with the wrong password. | It says the password is wrong. It must NOT say the session expired. |
 | DOOR-04 | P1 | Door app, Class attendance mode | Pick a class and scan an attendee registered for it. | Attendance recorded, with their name and chapter. Scanning again says they are already checked in. |
@@ -297,6 +297,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Attendee QR payload | their ticket number, e.g. 16C6C-23BBA1745 | What the pass QR carries. The member code under it still scans. |
 | Unknown ticket number | 16C6C-NOSUCHTICKET | For the not-found cases at any scanner |
 | Rundown | 10 draft blocks: 9 on 3 Sep (07:00 → 18:00) + Gold Club Breakfast 4 Sep 08:00–11:00 | Seeded only when the schedule is empty; two of them are Learning Class blocks |
+| Door crew app | /door/login | Its own path, like /login and /tenant/login. The bare address redirects there. |
 
 ## Coverage
 

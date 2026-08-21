@@ -16,7 +16,7 @@ import { WitCredit } from '../components/Layout'
  */
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
-const DOOR_URL = import.meta.env.VITE_DOOR_URL || 'http://localhost:5175'
+const DOOR_URL = import.meta.env.VITE_DOOR_URL || 'http://localhost:5175/door/login'
 
 const ELSEWHERE = {
   door: {

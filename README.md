@@ -62,7 +62,8 @@ dropping in new artwork.
   and an *Accelerate* splash, and the service worker is skipped on native so
   a stale cache can never outlive an install. Signing keys stay out of the
   repo. Full guide: [`docs/ANDROID.md`](docs/ANDROID.md).
-- **Door crew** (`door/`, port 5175): the app on a learning class door —
+- **Door crew** (`door/`, port 5175, served under **`/door`** — sign-in at
+  `/door/login`): the app on a learning class door —
   class attendance, goodiebags and pins, each scanned once per attendee, and
   nothing else. It is a separate app because the crew working a door should
   not be handed the committee's login, which also opens the attendee list,

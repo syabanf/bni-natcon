@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import { api, clearToken, getToken, setToken } from './api'
 import DoorCheckin from './DoorCheckin'
 
+// Vite is told the app lives under /door/, so every asset and every route it
+// owns hangs off that. BASE_URL is '/' in the test environment, which is
+// exactly what the tests want.
+const BASE = import.meta.env.BASE_URL
+export const LOGIN_PATH = `${BASE}login`
+export const HOME_PATH = BASE
+const asset = (name) => BASE + name
+
 /*
  * The door crew's app (MoM 19 Aug 2026).
  *
@@ -45,7 +53,7 @@ function Login({ onSignedIn }) {
         <section className="auth-pane form">
           <form className="auth-form-inner" onSubmit={submit}>
             <p className="auth-eyebrow">Door Crew</p>
-            <img className="auth-logo" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
+            <img className="auth-logo" src={asset('brand/logo-horizontal.png')} alt="BNI Natcon 2026" />
             <p className="auth-sub">
               Sign in to scan attendees into a learning class, and to hand over goodiebags and pins.
             </p>
@@ -105,7 +113,7 @@ function Login({ onSignedIn }) {
 
         <aside className="auth-pane hero" aria-hidden="true">
           <div className="auth-hero-inner">
-            <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
+            <img className="auth-hero-logo" src={asset('brand/logo-stacked-white.png')} alt="" />
             <span className="auth-hero-meta">3 September 2026 · Pullman Central Park Jakarta</span>
           </div>
         </aside>
@@ -127,6 +135,18 @@ export default function App() {
       .finally(() => setChecking(false))
   }, [])
 
+  // The address bar follows the screen: /door/login while signed out,
+  // /door once in. Nothing here reads the URL — there are only two screens
+  // and the session decides which — but a crew member who bookmarks the page
+  // or is handed a link should land on the one that says what it is.
+  useEffect(() => {
+    if (checking) return
+    const want = user ? HOME_PATH : LOGIN_PATH
+    if (window.location.pathname !== want) {
+      window.history.replaceState(null, '', want + window.location.search)
+    }
+  }, [checking, user])
+
   const signOut = () => {
     clearToken()
     setUser(null)
@@ -138,7 +158,7 @@ export default function App() {
   return (
     <div className="door-shell">
       <header className="door-top">
-        <img className="logo-mark" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
+        <img className="logo-mark" src={asset('brand/logo-horizontal.png')} alt="BNI Natcon 2026" />
         <button className="md-secondary" onClick={signOut}>
           ← Log out
         </button>
