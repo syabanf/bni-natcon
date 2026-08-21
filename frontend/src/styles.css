@@ -749,6 +749,146 @@ input {
   font-size: 11.5px;
 }
 
+/* ===== Guided tour =====
+   A sheet at the bottom, so what it describes stays on screen above it and
+   the tab it is talking about is right beside it in the bar. */
+.hg-tour {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hg-tour:active {
+  background: rgba(255, 255, 255, 0.28);
+}
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.tour-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(12, 6, 8, 0.55);
+}
+.tour-sheet {
+  position: relative;
+  margin: 0 10px calc(72px + env(safe-area-inset-bottom, 0px));
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 18px 44px rgba(20, 6, 8, 0.32);
+  padding: 18px 18px 16px;
+  animation: tourRise 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+@keyframes tourRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.tour-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tour-ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--red-tint);
+  color: var(--red);
+}
+.tour-count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.tour-skip {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--gray);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tour-sheet h3 {
+  margin: 12px 0 6px;
+  font-size: 17px;
+}
+.tour-sheet p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--gray);
+}
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  margin: 14px 0 12px;
+}
+.tour-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+}
+.tour-dots span.on {
+  width: 18px;
+  background: var(--red);
+}
+/* The app's .btn is width:100% because it is normally alone on its row.
+   Side by side that made Back fill the sheet and pushed Next off the edge,
+   so the pair sizes itself here: Next takes the room, Back takes a third,
+   and both keep a thumb-sized height. */
+.tour-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+.tour-actions .btn {
+  width: auto;
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 12px 16px;
+}
+.tour-actions .btn.ghost {
+  flex: 0 0 33%;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.tour-actions .btn.ghost:active {
+  background: var(--chip);
+}
+/* The tab being explained, lit through the scrim. */
+.app-shell.tour-open .bottomnav {
+  position: relative;
+  z-index: 61;
+}
+.app-shell.tour-open .bottomnav button.active {
+  background: var(--red-tint);
+  border-radius: 14px;
+}
+
 .agenda-day {
   padding: 12px 16px 2px;
   font-size: 10.5px;

@@ -1,6 +1,8 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import Icon from './Icon'
 import Toast from './Toast'
+import Tour from './Tour'
+import { useTourStore } from '../store/tour'
 import { useAuthStore } from '../store/auth'
 
 function AppBar({ backTo }) {
@@ -53,8 +55,11 @@ function NavButton({ to, icon, label }) {
 }
 
 export function MemberLayout() {
+  // While the tour is running the bar below gets a ring on the tab it is
+  // talking about, so the words and the screen point at the same thing.
+  const touring = useTourStore((s) => s.open)
   return (
-    <div className="app-shell">
+    <div className={`app-shell${touring ? ' tour-open' : ''}`}>
       <AppBar backTo="/login" />
       <div className="screen-body">
         <Outlet />
@@ -67,6 +72,7 @@ export function MemberLayout() {
         <NavButton to="/attendee/seminar" icon="mic" label="Learning Class" />
         <NavButton to="/attendee/network" icon="users" label="Network" />
       </nav>
+      <Tour />
       <Toast />
     </div>
   )

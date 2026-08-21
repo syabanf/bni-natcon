@@ -5,6 +5,7 @@ import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 import { dayLabel, groupByDay, timeOf } from '../../agenda'
 import { scanCode } from '../../pass'
+import { useTourStore } from '../../store/tour'
 import { useAuthStore } from '../../store/auth'
 
 // The agenda is the committee's rundown, read live from the API — it used to
@@ -44,6 +45,7 @@ export default function Home() {
   }, [])
 
   const firstName = user?.name?.split(' ')[0] || ''
+  const startTour = useTourStore((s) => s.start)
   const days = groupByDay(agenda)
 
   return (
@@ -56,6 +58,11 @@ export default function Home() {
           </div>
           <div className="avatar">{initials(user?.name)}</div>
         </div>
+        {/* One button, and the tour explains the rest of the app itself. */}
+        <button className="hg-tour" onClick={startTour}>
+          <Icon name="award" size={14} />
+          How to use this app
+        </button>
       </div>
 
       <div className="member-card">
