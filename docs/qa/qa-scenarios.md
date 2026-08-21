@@ -95,6 +95,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-31 | P2 | Attendee · Learning Class tab | Look at the four class cards. | Each carries the committee's banner with its own speakers on it — not a plain gradient, and not the same picture on two classes. |
 | ATT-32 | P1 | An attendee signing in for the very first time | Watch what happens after the password screen. | A six-step tour opens by itself, explaining the pass, the QR, the passport, the classes and networking — each step on top of the screen it is describing. |
 | ATT-33 | P1 | An attendee who has already seen the tour | Sign in again, then press 'How to use this app' on Home. | It does not open by itself a second time, and the button starts it again from step 1. Back, Next and Skip all work, and Skip counts as seen. |
+| ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
 
 ## Booth scanner
 
@@ -307,11 +308,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 33 | 23 |
+| Attendee | 34 | 23 |
 | Booth scanner | 17 | 11 |
 | Admin master data | 45 | 36 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **193** | **132** |
+| **Total** | **194** | **132** |

@@ -14,8 +14,9 @@ full class detail carrying **speaker & moderator photos**, a cover, a live
 attendance badge, and **who else is in the room**), and join **speed
 networking** — **scan the table QR first** (or type the table number) to drop
 The attendee app opens with a **six-step guided tour** the first time somebody
-signs in — it walks the tabs as it explains them and lives behind one button
-on Home afterwards.
+signs in — it walks the tabs as it explains them, **reads each step out loud**
+(the browser's own speech, so there is nothing to download), and lives behind
+one button on Home afterwards. The speaker button silences it for good.
 straight into the table's network, where every person shows their **chapter**,
 **business classification** and a **WhatsApp link**, takes a **private note**
 straight from the seat, and whose contact details carry **email & phone** that

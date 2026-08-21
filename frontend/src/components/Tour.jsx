@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { seenTour, useTourStore } from '../store/tour'
+import { isMuted, setMuted, speak, speechAvailable, stop } from '../speak'
 
 /*
  * A walk through the attendee app, in one button.
@@ -12,7 +13,9 @@ import { seenTour, useTourStore } from '../store/tour'
  * picture of it, and the tab it is talking about is lit up in the bar below.
  *
  * It opens itself once, the first time someone signs in, and after that lives
- * behind the button on Home.
+ * behind the button on Home. Each step is also read out loud — hands are busy
+ * at a registration desk, and a phone held at arm's length is hard to read —
+ * with a speaker button to silence it for good.
  */
 export const STEPS = [
   {
@@ -58,6 +61,7 @@ export default function Tour() {
   const start = useTourStore((s) => s.start)
   const close = useTourStore((s) => s.close)
   const [step, setStep] = useState(0)
+  const [muted, setMutedState] = useState(isMuted)
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
@@ -67,6 +71,20 @@ export default function Tour() {
   }, [start])
 
   const current = STEPS[step]
+
+  // Read the step aloud. A browser that will not speak yet — some wait for
+  // the page to be touched — simply says nothing, and the next step tries
+  // again.
+  useEffect(() => {
+    if (!open || !current) return
+    speak(`${current.title}. ${current.body}`)
+  }, [open, current])
+
+  // Nothing should still be talking after the sheet is gone.
+  useEffect(() => () => stop(), [])
+  useEffect(() => {
+    if (!open) stop()
+  }, [open])
 
   // Walk the app as the tour talks about it.
   useEffect(() => {
@@ -78,8 +96,16 @@ export default function Tour() {
 
   const last = step === STEPS.length - 1
   const finish = () => {
+    stop()
     close()
     setStep(0)
+  }
+
+  const toggleVoice = () => {
+    const next = !muted
+    setMuted(next)
+    setMutedState(next)
+    if (!next) speak(`${current.title}. ${current.body}`)
   }
 
   return (
@@ -93,6 +119,16 @@ export default function Tour() {
           <span className="tour-count">
             Step {step + 1} of {STEPS.length}
           </span>
+          {speechAvailable() && (
+            <button
+              className={`tour-voice${muted ? ' off' : ''}`}
+              onClick={toggleVoice}
+              aria-label={muted ? 'Read the tour out loud' : 'Stop reading out loud'}
+              aria-pressed={!muted}
+            >
+              <Icon name={muted ? 'mute' : 'sound'} size={16} />
+            </button>
+          )}
           <button className="tour-skip" onClick={finish}>
             Skip
           </button>
