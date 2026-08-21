@@ -124,8 +124,11 @@ away.
   on, and the attendee agenda names the day once there is more than one. The
   agenda is a single list for everybody, so the block says on it that it is
   for Gold Club tickets; filtering by ticket type is not built.
-- **The 4 learning classes with their 9 speakers and moderators**, from the
-  Term of Reference documents — written once and never rewritten, so a class
+- **The 4 learning classes with their 9 speakers and moderators**, and the
+  committee's own banner for each one (migration `0030`, prepared by
+  [`scripts/class_covers.py`](scripts/class_covers.py) — the speakers
+  photographed on the conference backdrop, mapped to their class by name).
+  From the Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
 - **The 32 booths and 4 sponsors of the committee's booth sheet** (migration
   `0023`), each with its scanner login. The sheet's own *Sponsor* divider

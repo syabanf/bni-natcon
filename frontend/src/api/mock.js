@@ -63,7 +63,7 @@ const SEMINARS = [
       { name: 'Flavia N. Sungkit, M.Psi., Psikolog', role: 'speaker', title: 'HR Consultant · Ikigai', photo_url: '/speakers/flavia-sungkit.jpg' },
       { name: 'Roby Oktober', role: 'moderator', title: '', photo_url: '/speakers/roby-oktober.jpg' },
     ],
-    cover_url: '/covers/breakout-room-1.jpg',
+    cover_url: '/covers/learning-class-1.jpg',
     description:
       'Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team.',
   },
@@ -77,7 +77,7 @@ const SEMINARS = [
       { name: 'Irfan Arsandi', role: 'speaker', title: 'IT & Digital Transformation Consultant · WIT Indonesia', photo_url: '/speakers/irfan-arsandi.jpg' },
       { name: 'Ryan Kristomulyono', role: 'moderator', title: '', photo_url: '/speakers/ryan-kristomulyono.jpg' },
     ],
-    cover_url: '/covers/breakout-room-2.jpg',
+    cover_url: '/covers/learning-class-2.jpg',
     description:
       'AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity.',
   },
@@ -91,7 +91,7 @@ const SEMINARS = [
       { name: 'Selina Nicole', role: 'speaker', title: 'Founder · LEKA', photo_url: '/speakers/selina-nicole.jpg' },
       { name: 'David Gan', role: 'moderator', title: 'CEO & Founder · Arkova Training & Consulting', photo_url: '/speakers/david-gan.jpg' },
     ],
-    cover_url: '/covers/breakout-room-3.jpg',
+    cover_url: '/covers/learning-class-3.jpg',
     description:
       'Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce.',
   },
@@ -103,7 +103,7 @@ const SEMINARS = [
     speakers: [
       { name: 'Suntoro Suciatmaja', role: 'speaker', title: '', photo_url: '/speakers/suntoro-suciatmaja.jpg' },
     ],
-    cover_url: '/covers/breakout-room-4.jpg',
+    cover_url: '/covers/learning-class-4.jpg',
     description:
       'Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast.',
   },

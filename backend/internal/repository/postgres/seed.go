@@ -124,18 +124,19 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	return tx.Commit(ctx)
 }
 
-// coverFor maps a learning class to the poster shipped in each app's
-// public/covers/. Rooms added later simply fall back to the gradient cover.
+// coverFor maps a learning class to the banner shipped in each app's
+// public/covers/ — the committee's own artwork, with the speakers on it.
+// Classes added later simply fall back to the gradient cover.
 func coverFor(room string) string {
 	switch room {
 	case "Learning Class 1":
-		return "/covers/breakout-room-1.jpg"
+		return "/covers/learning-class-1.jpg"
 	case "Learning Class 2":
-		return "/covers/breakout-room-2.jpg"
+		return "/covers/learning-class-2.jpg"
 	case "Learning Class 3":
-		return "/covers/breakout-room-3.jpg"
+		return "/covers/learning-class-3.jpg"
 	case "Learning Class 4":
-		return "/covers/breakout-room-4.jpg"
+		return "/covers/learning-class-4.jpg"
 	}
 	return ""
 }

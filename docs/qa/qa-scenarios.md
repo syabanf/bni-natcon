@@ -92,6 +92,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-28 | P1 | Attendee home screen, rundown covering both days | Read the agenda card top to bottom. | It is headed 'Agenda', 3 September first, then a 'Friday 4 September' heading before the Gold Club Breakfast — which says on it that it is for Gold Club tickets. |
 | ATT-29 | P1 | Attendee passport | Scroll the booth list. | The exhibitors who sent a logo show it; the rest show their two-letter initials. No empty grey squares. |
 | ATT-30 | P1 | Attendee scanned at both stands of a double-width booth | Open the passport and count the stamps. | That company gives one stamp and appears once. Two stands are one exhibitor, so it counts once towards the lucky draw's booth minimum too. |
+| ATT-31 | P2 | Attendee · Learning Class tab | Look at the four class cards. | Each carries the committee's banner with its own speakers on it — not a plain gradient, and not the same picture on two classes. |
 
 ## Booth scanner
 
@@ -304,11 +305,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 30 | 21 |
+| Attendee | 31 | 21 |
 | Booth scanner | 17 | 11 |
 | Admin master data | 45 | 36 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **190** | **130** |
+| **Total** | **191** | **130** |
