@@ -68,7 +68,6 @@ const AUDIENCE = {
 export default function Login({ audience = 'attendee' }) {
   const copy = AUDIENCE[audience] ?? AUDIENCE.attendee
   const setAuth = useAuthStore((s) => s.setAuth)
-  const mock = useAuthStore((s) => s.mock)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -238,9 +237,6 @@ export default function Login({ audience = 'attendee' }) {
             <p className="auth-hint">{copy.hint}</p>
 
             <div className="auth-foot">
-              {mock && (
-                <p className="auth-note">Demo mode stays on this device and accepts any password.</p>
-              )}
               <a className="auth-admin-link" href={copy.otherHref}>
                 {copy.otherLabel}
               </a>

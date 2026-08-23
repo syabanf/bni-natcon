@@ -332,7 +332,6 @@ button:disabled {
   opacity: 0.75;
 }
 
-/* Mock mode toggle */
 .mock-toggle {
   display: flex;
   align-items: center;

@@ -8,7 +8,6 @@ import { useAuthStore } from '../store/auth'
 function AppBar({ backTo, tour = false }) {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
-  const mock = useAuthStore((s) => s.mock)
   const startTour = useTourStore((s) => s.start)
   // Signing out drops you at the door you came in by, so a booth crew is not
   // handed the attendee sign-in mid-event.
@@ -22,7 +21,6 @@ function AppBar({ backTo, tour = false }) {
         <img className="brand-logo" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
       </div>
       <div className="appbar-right">
-        {mock && <span className="demo-chip">DEMO</span>}
         {/* Next to Log out, on every attendee screen — the two things you
             reach for when you are not sure what to do next. */}
         {tour && (

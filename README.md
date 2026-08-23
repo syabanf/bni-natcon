@@ -215,12 +215,10 @@ ready-to-fill template (headers + example rows).
 Both upload in chunks of 200 so big files never hit the request timeout,
 and report `created / updated / failed` per import.
 
-**Demo mock mode**: a toggle on both sign-in screens switches each app to a
-localStorage-backed mock layer — no backend needed. In the member/tenant app
-the state is shared across personas on the device (a booth scan shows up in
-that member's passport); the admin app ships with seeded demo data (8 members,
-12 demo booths, scattered scans for the charts) and full CRUD/import/report support.
-A red DEMO chip marks the mode; in mock mode any password is accepted.
+**No demo mode**: the apps talk to the API and to nothing else. There was
+once a localStorage mock layer with invented attendees and booths for
+developing without a backend; it was removed so that no made-up person can
+appear on a screen at the venue, on any device, for any reason.
 
 **PWA / offline**: the member/tenant app installs as a PWA (manifest + service
 worker, production builds only) — the app shell is cached so it opens without a
@@ -266,7 +264,7 @@ Design doc: [docs/plans/2026-07-24-natcon-digital-stamp-design.md](docs/plans/20
 [`docs/qa/`](docs/qa) holds the scenario pack QA runs by hand before the event:
 **118 cases** across sign-in, the attendee app, the booth scanner, admin master
 data, event-day operations, reports and exports, and cross-cutting concerns
-(devices, offline, demo mode, error states) — **77 of them P1**, meaning they
+(devices, offline, error states) — **77 of them P1**, meaning they
 must pass before the doors open. Each case carries its precondition, the exact
 steps, real test data and the expected result, with columns for the tester's
 result and notes.
@@ -339,7 +337,7 @@ Defaults (override via env or the root `.env` — see
 `DATABASE_URL=postgres://natcon:natcon@localhost:5432/natcon?sslmode=disable`,
 `JWT_SECRET=dev-secret-change-me`, `SEED_PASSWORD=natcon2026`.
 
-Migrations run automatically at startup; demo data is seeded when the DB is empty.
+Migrations run automatically at startup; the event's own data is seeded when the DB is empty.
 
 ### 3. Frontend
 
@@ -442,7 +440,7 @@ cd backend
 go test ./...
 ```
 
-Frontend tests (Vitest, mock-layer behavior in both apps):
+Frontend tests (Vitest):
 
 ```bash
 cd frontend && npm test

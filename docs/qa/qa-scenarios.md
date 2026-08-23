@@ -248,7 +248,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-03 | P2 | A tablet (768px) | Open the admin panel. | The sidebar becomes a top strip that scrolls; the last item is reachable. |
 | CRS-04 | P2 | A laptop (1280px+) | Open the admin panel. | Sidebar on the left, dashboard in two columns. |
 | CRS-05 | P2 | Attendee app on a phone | Add it to the home screen, then open it with the phone in flight mode. | It opens (cached shell) instead of showing a browser error page. |
-| CRS-06 | P2 | Sign-in screen | Look for a Demo / Mock mode switch. | There is none — it was removed so nobody demos fake data at the venue by accident. |
+| CRS-06 | P2 | Any sign-in screen, any app | Look for a Demo / Mock mode switch, and for any attendee or booth you do not recognise. | There is no switch and no invented data anywhere: demo mode and its made-up attendees and booths were removed, so every name on every screen comes from the committee's own sheets. |
 | CRS-07 | P2 | An attendee whose email holds two tickets | Sign in with that email. | The 'Which one are you?' chooser appears, numbering the passes #1 and #2. |
 | CRS-08 | P1 | Any app | Stop the API (ask the developer) and try an action. | A human message says the server cannot be reached — not a blank page or a raw error. |
 | CRS-09 | P2 | Signed in, session left overnight | Return the next day and use the app. | Either it still works, or it says the session expired and returns you to sign-in — never a silent failure. |

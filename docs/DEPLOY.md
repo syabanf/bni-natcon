@@ -216,5 +216,5 @@ dan tetap dikirim apa adanya.
 | `500` + log `JWT_SECRET`                            | `APP_ENV=production` tapi `JWT_SECRET` masih default   |
 | `401 invalid credentials`                           | akun/password memang salah — API-nya sendiri sudah oke |
 
-Selama API belum siap, tombol **"API mode — tap to try Demo (Mock) mode"**
-di halaman login menjalankan seluruh app dengan data lokal di browser.
+Mode demo sudah tidak ada: aplikasi hanya bicara ke API, supaya tidak ada
+data karangan yang bisa muncul di layar siapa pun saat acara.

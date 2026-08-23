@@ -1,5 +1,4 @@
 import { useAuthStore } from '../store/auth'
-import { mockApi } from './mock'
 
 // Where the Go API lives. Empty (the default) means "same origin", which is
 // what the Vite dev proxy and the nginx image both provide. Static hosts that
@@ -32,7 +31,7 @@ const FRIENDLY_STATUS = {
   413: 'That was too big to send — try a smaller file or fewer rows at a time.',
   415: 'That file type is not supported here.',
   429: 'Too many attempts — wait a moment and try again.',
-  500: 'The server is having trouble. Try again shortly, or switch to Demo (Mock) mode.',
+  500: 'The server is having trouble. Try again shortly.',
   502: 'The server cannot be reached. Try again shortly.',
   503: 'The server is busy. Try again shortly.',
   504: 'The server took too long to respond. Try again shortly.',
@@ -51,7 +50,7 @@ async function request(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach the server — check your connection, or try Demo (Mock) mode.')
+    throw new ApiError(0, 'Cannot reach the server — check your connection.')
   }
 
   if (res.status === 401 && path !== '/auth/login') {
@@ -74,70 +73,53 @@ async function request(path, { method = 'GET', body } = {}) {
   return data
 }
 
-const isMock = () => useAuthStore.getState().mock
-
-// Every call routes to the local mock layer when demo mode is on.
 export const api = {
   login: (email, password) =>
-    isMock() ? mockApi.login(email, password) : request('/auth/login', { method: 'POST', body: { email, password } }),
+    request('/auth/login', { method: 'POST', body: { email, password } }),
   selectAccount: (choiceToken, userId) =>
-    isMock()
-      ? mockApi.selectAccount(choiceToken, userId)
-      : request('/auth/login/select', { method: 'POST', body: { choice_token: choiceToken, user_id: userId } }),
-  me: () => (isMock() ? mockApi.me() : request('/me')),
+    request('/auth/login/select', { method: 'POST', body: { choice_token: choiceToken, user_id: userId } }),
+  me: () => request('/me'),
   setPassword: (password) =>
-    isMock() ? mockApi.setPassword(password) : request('/auth/password', { method: 'POST', body: { password } }),
+    request('/auth/password', { method: 'POST', body: { password } }),
   forgotPassword: (chapter, phone) =>
-    isMock()
-      ? mockApi.forgotPassword(chapter, phone)
-      : request('/auth/forgot', { method: 'POST', body: { chapter, phone } }),
+    request('/auth/forgot', { method: 'POST', body: { chapter, phone } }),
   resetPassword: (resetToken, password) =>
-    isMock()
-      ? mockApi.resetPassword(resetToken, password)
-      : request('/auth/reset', { method: 'POST', body: { reset_token: resetToken, password } }),
+    request('/auth/reset', { method: 'POST', body: { reset_token: resetToken, password } }),
   // The day's schedule, edited by the committee (MoM 19 Aug 2026).
-  rundown: () => (isMock() ? mockApi.rundown() : request('/rundown')),
+  rundown: () => request('/rundown'),
   // The round everyone in the hall counts down to (MoM 19 Aug 2026).
-  networkingSession: () => (isMock() ? mockApi.networkingSession() : request('/networking/session')),
-  tenants: () => (isMock() ? mockApi.tenants() : request('/tenants')),
-  seminars: () => (isMock() ? mockApi.seminars() : request('/seminars')),
+  networkingSession: () => request('/networking/session'),
+  tenants: () => request('/tenants'),
+  seminars: () => request('/seminars'),
   seminarAttendees: (id) =>
-    isMock() ? mockApi.seminarAttendees(id) : request(`/seminars/${id}/attendees`),
+    request(`/seminars/${id}/attendees`),
   registerSeminar: (id) =>
-    isMock() ? mockApi.registerSeminar(id) : request(`/seminars/${id}/register`, { method: 'POST' }),
+    request(`/seminars/${id}/register`, { method: 'POST' }),
   unregisterSeminar: (id) =>
-    isMock() ? mockApi.unregisterSeminar(id) : request(`/seminars/${id}/register`, { method: 'DELETE' }),
+    request(`/seminars/${id}/register`, { method: 'DELETE' }),
   scan: (memberCode) =>
-    isMock() ? mockApi.scan(memberCode) : request('/scans', { method: 'POST', body: { member_code: memberCode } }),
-  networking: () => (isMock() ? mockApi.networking() : request('/networking')),
+    request('/scans', { method: 'POST', body: { member_code: memberCode } }),
+  networking: () => request('/networking'),
   networkingHistory: () =>
-    isMock() ? mockApi.networkingHistory() : request('/networking/history'),
+    request('/networking/history'),
   networkingTableDetail: (tableNo) =>
-    isMock() ? mockApi.networkingTableDetail(tableNo) : request(`/networking/tables/${tableNo}`),
+    request(`/networking/tables/${tableNo}`),
   networkingContactDetail: (id) =>
-    isMock() ? mockApi.networkingContactDetail(id) : request(`/networking/contacts/${id}`),
+    request(`/networking/contacts/${id}`),
   networkingCheckIn: (tableNo) =>
-    isMock()
-      ? mockApi.networkingCheckIn(tableNo)
-      : request('/networking/checkin', { method: 'POST', body: { table_no: tableNo } }),
+    request('/networking/checkin', { method: 'POST', body: { table_no: tableNo } }),
   saveContact: (memberId) =>
-    isMock()
-      ? mockApi.saveContact(memberId)
-      : request('/networking/contacts', { method: 'POST', body: { member_id: memberId } }),
+    request('/networking/contacts', { method: 'POST', body: { member_id: memberId } }),
   saveAllContacts: () =>
-    isMock() ? mockApi.saveAllContacts() : request('/networking/contacts/all', { method: 'POST' }),
+    request('/networking/contacts/all', { method: 'POST' }),
   setContactNote: (id, note) =>
-    isMock()
-      ? mockApi.setContactNote(id, note)
-      : request(`/networking/contacts/${id}/note`, { method: 'PUT', body: { note } }),
-  booth: () => (isMock() ? mockApi.booth() : request('/booth')),
-  boothStats: () => (isMock() ? mockApi.boothStats() : request('/booth/stats')),
+    request(`/networking/contacts/${id}/note`, { method: 'PUT', body: { note } }),
+  booth: () => request('/booth'),
+  boothStats: () => request('/booth/stats'),
   boothVisitors: (limit = 10) =>
-    isMock() ? mockApi.boothVisitors(limit) : request(`/booth/visitors?limit=${limit}`),
+    request(`/booth/visitors?limit=${limit}`),
   visitorDetail: (memberId) =>
-    isMock() ? mockApi.visitorDetail(memberId) : request(`/booth/visitors/${memberId}`),
+    request(`/booth/visitors/${memberId}`),
   setVisitorNote: (memberId, note) =>
-    isMock()
-      ? mockApi.setVisitorNote(memberId, note)
-      : request(`/booth/visitors/${memberId}/note`, { method: 'PUT', body: { note } }),
+    request(`/booth/visitors/${memberId}/note`, { method: 'PUT', body: { note } }),
 }

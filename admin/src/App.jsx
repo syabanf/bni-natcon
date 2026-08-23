@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { api, getToken, setToken, clearToken, isMockMode } from './api'
+import { api, getToken, setToken, clearToken} from './api'
 import Dashboard from './Dashboard'
 import { ReportLeads, ReportSeminars, ReportCoupons } from './Report'
 import { MembersPage, TenantsPage, SeminarsPage } from './MasterData'
@@ -142,7 +142,6 @@ function Shell({ onLogout }) {
       <aside className="sidebar">
         <div className="sb-brand">
           <img className="logo-mark sb" src="/brand/logo-horizontal.png" alt="BNI Natcon 2026" />
-          {isMockMode() && <span className="demo-chip">DEMO</span>}
         </div>
         <nav className="sb-menu">
           {MENU.map((m) => (

@@ -463,7 +463,6 @@ input {
   opacity: 0.75;
 }
 
-/* Mock mode toggle */
 .mock-toggle {
   display: flex;
   align-items: center;
@@ -2033,15 +2032,6 @@ input {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.demo-chip {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--red);
-  background: var(--red-tint);
-  padding: 6px 11px;
-  border-radius: 999px;
 }
 .logout-btn {
   font-size: 12px;
