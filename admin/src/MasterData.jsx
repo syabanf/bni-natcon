@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, assetUrl } from './api'
 import Modal from './Modal'
 import TenantMark from './TenantMark'
+import { witFirst } from './order'
 import {
   parseSheet,
   transformMemberRows,
@@ -533,10 +534,13 @@ export function TenantsPage() {
   const [importResult, setImportResult] = useState(null)
   const [detailId, setDetailId] = useState(null)
 
-  const visibleTenants =
+  // The API returns them by scan count; the committee reads this list to find
+  // a company, so WIT.id sits at the top of whichever filter is showing.
+  const visibleTenants = witFirst(
     kindFilter === 'all'
       ? crud.rows
-      : crud.rows.filter((t) => (t.kind === 'sponsor') === (kindFilter === 'sponsor'))
+      : crud.rows.filter((t) => (t.kind === 'sponsor') === (kindFilter === 'sponsor')),
+  )
 
   if (detailId) {
     return (

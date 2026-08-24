@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api } from './api'
+import { witFirst } from './order'
 
 /*
  * QR print centre: print-ready cards for the physical event.
@@ -61,7 +62,10 @@ export default function QRPrints({ onUnauthorized }) {
     const opts = { onUnauthorized }
     api.tables(opts).then((d) => setData((s) => ({ ...s, tables: d.tables || [] }))).catch((e) => setError(e.message))
     api.seminars(opts).then((d) => setData((s) => ({ ...s, seminars: d.seminars || [] }))).catch(() => {})
-    api.tenants(opts).then((d) => setData((s) => ({ ...s, tenants: d.tenants || [] }))).catch(() => {})
+    api
+      .tenants(opts)
+      .then((d) => setData((s) => ({ ...s, tenants: witFirst(d.tenants || []) })))
+      .catch(() => {})
   }, [onUnauthorized])
 
   // Every card is selected by default — the common case is "print them all".

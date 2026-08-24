@@ -581,9 +581,13 @@ status, body, _ = req("GET", "/api/v1/tenants", token=member_tok)
 check("tenants list complete, none visited",
       status == 200 and len(body["tenants"]) == FIXTURE_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
-kinds = [t["kind"] for t in body["tenants"]]
+# WIT.id is placed first, ahead of the sponsors, at the committee's request.
+check("the passport opens with WIT.id",
+      body["tenants"][0]["name"] == "WIT.id", f'{body["tenants"][0]["name"]}')
+
+kinds = [t["kind"] for t in body["tenants"][1:]]
 xpora = next((t for t in body["tenants"] if t["name"] == "BNI Xpora"), None)
-check("every sponsor is listed before the booths, descriptions intact",
+check("every sponsor is listed before the rest of the booths, descriptions intact",
       kinds.count("sponsor") == SEEDED_SPONSORS + FIXTURE_SPONSORS
       and kinds[:kinds.count("sponsor")] == ["sponsor"] * kinds.count("sponsor")
       and xpora is not None and xpora["description"] != "",

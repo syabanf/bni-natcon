@@ -155,6 +155,10 @@ master list is exactly what the committee's sheet contains. **Networking
 tables** are generated on the Tables page for the hall they actually get.
 
 No demo attendee, placeholder booth or invented chapter exists anywhere.
+WIT.id is listed first wherever exhibitors are listed — the passport, the
+tenants page, the QR prints — at the committee's request, the way sponsors
+already came before booths. The dashboard's Booth Ranking is left alone: it
+counts scans, and a placement there would state something untrue.
 
 Speaker photos live in [`assets/speakers/`](assets/speakers) and room posters
 in [`assets/covers/`](assets/covers); both are served from each app's

@@ -96,6 +96,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-32 | P1 | An attendee signing in for the very first time | Sign in and watch the Home screen, then press 'Quick tour' in the top bar. | Nothing opens by itself. Pressing the button starts a six-step tour that explains the pass, the QR, the passport, the classes and networking — each step on top of the screen it is describing. |
 | ATT-33 | P1 | An attendee who has already run the tour | Press 'Quick tour' again, this time from the Passport screen. | It starts again at step 1 on Home, from wherever it was pressed. Back, Next and Skip all work, and it stays closed until asked for again. |
 | ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
+| ATT-35 | P2 | Attendee passport | Look at the order of the cards. | WIT.id is first, then the sponsors, then the booths by number. Placement only — the dashboard's Booth Ranking still counts scans honestly. |
 
 ## Booth scanner
 
@@ -308,11 +309,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 22 | 13 |
-| Attendee | 34 | 23 |
+| Attendee | 35 | 23 |
 | Booth scanner | 17 | 11 |
 | Admin master data | 45 | 36 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **194** | **132** |
+| **Total** | **195** | **132** |
