@@ -445,6 +445,21 @@ cd backend
 go test ./...
 ```
 
+Event-scale load test — the whole venue at once (`scripts/load.py`): 700 of
+the 769 seeded attendees sign in simultaneously (real bcrypt logins, one IP
+per phone), load every screen, rush the four 60-seat classes, get scanned by
+every booth and sit down at networking — correctness asserted (exactly 240
+seats won, zero oversells, zero duplicate scans), latency reported. On an
+M-series laptop: sign-in storm p95 6.4s (bcrypt-bound — the one intentionally
+expensive moment), everything after it p99 under 45ms at 3–9k rps. Run it
+before the event on production-shaped hardware:
+
+```bash
+createdb natcon_load
+ADDR=:8099 DATABASE_URL=postgres://user@localhost:5432/natcon_load?sslmode=disable go run ./backend/cmd/api &
+ulimit -n 4096 && BASE=http://localhost:8099 N=700 python3 scripts/load.py
+```
+
 Frontend tests (Vitest):
 
 ```bash
