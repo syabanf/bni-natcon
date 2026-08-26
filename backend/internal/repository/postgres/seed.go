@@ -33,8 +33,10 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	if err != nil {
 		return err
 	}
+	// The seed password only opens the door once: the crew must replace it
+	// on first sign-in, so no booth stays on the shared password.
 	if _, err := pool.Exec(ctx, `
-		UPDATE users SET password_hash = $1
+		UPDATE users SET password_hash = $1, must_set_password = true
 		WHERE role = 'tenant' AND password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`,
 		string(hash)); err != nil {
 		return err

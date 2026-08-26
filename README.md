@@ -391,7 +391,7 @@ Everyone else is created by that account:
 | Role     | Login                        | Password                                   |
 |----------|------------------------------|--------------------------------------------|
 | Attendee | the email on their ticket    | chapter + first name, then they choose their own · signs in at `/login` |
-| Booth    | `booth-<code>@natcon.id`     | `SEED_PASSWORD`, or set in the admin panel · signs in at `/tenant/login` |
+| Booth    | `booth-<code>@natcon.id`     | `SEED_PASSWORD` opens the door **once** — the crew must set their own on first sign-in · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so
 importing the booth sheet also hands out one scanner account per booth.

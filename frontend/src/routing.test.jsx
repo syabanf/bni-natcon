@@ -69,6 +69,18 @@ describe('an account from another app signs in at the attendee door', () => {
     expect(await screen.findByRole('button', { name: /sign in/i })).toBeTruthy()
   })
 
+  it('walks a booth crew through choosing their own password first', async () => {
+    window.history.pushState({}, '', '/tenant/scanner')
+    useAuthStore.setState({
+      token: 't',
+      user: { id: 9, name: 'WIT.id', role: 'tenant', must_set_password: true },
+    })
+    render(<App />)
+    // The handed-out password opened the door; nothing else opens until the
+    // crew replaces it.
+    expect(await screen.findByRole('heading', { name: /choose your password/i })).toBeTruthy()
+  })
+
   it('leaves the attendee app working for an attendee', async () => {
     signIn('member')
     render(<App />)

@@ -209,8 +209,8 @@ func (r *AdminRepo) CreateTenant(ctx context.Context, t domain.NewTenant) (*doma
 
 	var ownerID int64
 	err = tx.QueryRow(ctx, `
-		INSERT INTO users (name, email, password_hash, role, company)
-		VALUES ($1, $2, $3, 'tenant', $1)
+		INSERT INTO users (name, email, password_hash, role, company, must_set_password)
+		VALUES ($1, $2, $3, 'tenant', $1, true)
 		RETURNING id`,
 		t.Name, t.Email, t.PasswordHash).Scan(&ownerID)
 	if err != nil {
@@ -681,8 +681,8 @@ func (r *AdminRepo) UpsertTenant(ctx context.Context, t domain.NewTenant) (*doma
 	case errors.Is(err, pgx.ErrNoRows):
 		created = true
 		err = tx.QueryRow(ctx, `
-			INSERT INTO users (name, email, password_hash, role, company)
-			VALUES ($1, $2, $3, 'tenant', $1)
+			INSERT INTO users (name, email, password_hash, role, company, must_set_password)
+			VALUES ($1, $2, $3, 'tenant', $1, true)
 			RETURNING id`,
 			t.Name, t.Email, t.PasswordHash).Scan(&ownerID)
 		if err != nil {

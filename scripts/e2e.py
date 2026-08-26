@@ -262,6 +262,29 @@ sinta_id = body["user"]["id"]
 status, body = login("booth-a1@natcon.id")
 check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
+check("a booth's first login demands a password of its own",
+      body["user"]["must_set_password"] is True, f'{body["user"]}')
+
+# ------------------------------------------------ booth first-login password
+section("Booth crews replace the handed-out password")
+
+# Its three sign-ins ride a different source IP, or they would eat the
+# per-IP login budget the hardening section measures at the end.
+status, body = login("booth-a2@natcon.id", xff="10.77.0.9")
+a2_tok = body["token"]
+check("the shared password opens the door once",
+      status == 200 and body["user"]["must_set_password"] is True)
+status, _, _ = req("POST", "/api/v1/auth/password", token=a2_tok,
+                   body={"password": "rahasia-booth-a2"})
+check("the crew sets their own -> 200", status == 200)
+status, _ = login("booth-a2@natcon.id", xff="10.77.0.9")
+check("the shared password no longer works there", status == 401)
+status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
+# must_set_password is omitempty: gone from the JSON once it is false.
+check("their own password works, and the demand is gone",
+      status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
+# Put it back the way the rest of the suite expects it.
+req("POST", "/api/v1/auth/password", token=body["token"], body={"password": PASSWORD})
 
 # ------------------------------------------------------- duplicate attendees
 section("Attendees who share a name, email and phone")

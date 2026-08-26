@@ -121,6 +121,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-15 | P1 | Scanner, an attendee holding a ticket from the sheet | Scan their pass QR from the My QR screen. | Recorded, with their name — the QR carries the ticket number, not the member code. |
 | BTH-16 | P2 | Scanner, the same attendee | Type the member code printed under their QR instead. | Reported as a repeat visit of the same person — both keys reach one attendee, never two. |
 | BTH-17 | P2 | Scanner | Type a ticket number nobody holds (16C6C-NOSUCHTICKET). | A clear not-found message. Nothing is recorded. |
+| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login with the committee-issued password. | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
+| BTH-19 | P1 | A booth that already set its own password | Sign in again with the new password. | Straight to the scanner — no password screen. The old committee-issued password is refused. |
 
 ## Admin master data
 
@@ -285,7 +287,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
 | Attendees | already there — 769 from the ticketing export | Seeded by migration 0028. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. |
-| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, following the stand — Paper.id is on A20, so booth-a20@natcon.id. Alpha leaders holds two stands as one booth, 'A47 & A48', logging in as booth-a47@natcon.id. |
+| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id on SEED_PASSWORD, following the stand — Paper.id is on A20, so booth-a20@natcon.id. The seed password only opens the door once: each crew sets their own on first sign-in. Alpha leaders holds two stands as one booth, 'A47 & A48', logging in as booth-a47@natcon.id. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-b1@natcon.id / SEED_PASSWORD | Bio Medika · booth B1 — the sheet's own Sponsor divider made it a sponsor |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
@@ -310,10 +312,10 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Auth | 22 | 13 |
 | Attendee | 35 | 23 |
-| Booth scanner | 17 | 11 |
+| Booth scanner | 19 | 13 |
 | Admin master data | 45 | 36 |
 | Admin operations | 38 | 25 |
 | Reports & export | 12 | 9 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **195** | **132** |
+| **Total** | **197** | **134** |
