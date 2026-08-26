@@ -246,6 +246,13 @@ check("chapters register themselves from the attendees, nothing pre-loaded",
       and now_chapters == SEEDED_CHAPTERS | {m["chapter"] for m in FIXTURE_MEMBERS},
       f"unexpected: {sorted(now_chapters - SEEDED_CHAPTERS - {m['chapter'] for m in FIXTURE_MEMBERS})}")
 
+# The second committee login mirrors admin, so the desk crew never has to
+# borrow the main admin password.
+status, body = login("panitia@natcon.id", xff="10.77.0.8")
+check("panitia signs in with admin rights", status == 200 and body["user"]["role"] == "admin")
+status, _, _ = req("GET", "/api/v1/admin/overview", token=body["token"])
+check("...and the admin pages open for it", status == 200)
+
 status, body = login("reddie@natcon.id", "salah-total")
 check("wrong password -> 401", status == 401)
 
@@ -656,6 +663,14 @@ check("visitor detail carries note + phone", status == 200
 status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
 check("visitor list shows the note",
       any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
+
+# That note rides into the committee's leads report — the per-tenant handout
+# is built from these rows, and each sheet only ever shows its own notes.
+status, body, _ = req("GET", "/api/v1/admin/report/visits", token=admin_tok)
+check("the leads report carries the booth's note, and never a phone number",
+      status == 200
+      and any(v["note"] == "interested in bulk order" and v["booth"] == "A1" for v in body["visits"])
+      and all("phone" not in v for v in body["visits"]), f'{body["visits"][:2]}')
 status, _, _ = req("PUT", "/api/v1/booth/visitors/999999/note", token=tenant_tok, body={"note": "x"})
 check("note for non-visitor -> 404", status == 404)
 
@@ -1570,6 +1585,15 @@ check("unknown class attendees -> 404", status == 404)
 status, body, _ = req("GET", f"/api/v1/admin/seminars/{sem3}", token=admin_tok)
 codes = [a["member_code"] for a in body["attendees"]]
 check("class detail lists both registered attendees", len(codes) == 2)
+
+# The desk searches the person, not the class: the attendee's own detail page
+# carries each registration's seminar id, so a cancel can start from there.
+status, body, _ = req("GET", "/api/v1/admin/members?q=sinta@natcon.id", token=admin_tok)
+sid = body["members"][0]["id"]
+status, body, _ = req("GET", f"/api/v1/admin/members/{sid}", token=admin_tok)
+check("the attendee detail names the class a cancel would hit",
+      status == 200 and any(r.get("seminar_id") == sem3 for r in body["registrations"]),
+      f'{body.get("registrations")}')
 status, _, _ = req("DELETE", f"/api/v1/admin/seminars/{sem3}/registrations/{codes[0]}", token=admin_tok)
 check("unregister an attendee -> 200", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/seminars/{sem3}", token=admin_tok)

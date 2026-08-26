@@ -27,6 +27,11 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	if err := ensureDoor(ctx, pool, password); err != nil {
 		return err
 	}
+	// A second committee login with the same rights as admin, so the desk
+	// crew never has to borrow — or be told — the main admin password.
+	if err := ensureStaffAdmin(ctx, pool, "panitia@natcon.id", "Panitia Natcon", password); err != nil {
+		return err
+	}
 
 	// Migration 0023 writes the booths with a placeholder hash nobody can
 	// sign in with. Only untouched placeholders are rewritten, so a booth
@@ -191,6 +196,29 @@ func ensureAdmin(ctx context.Context, pool *pgxpool.Pool, password string) error
 		INSERT INTO users (name, email, password_hash, role, company)
 		VALUES ('Natcon Committee', 'admin@natcon.id', $1, 'admin', 'BNI Indonesia')`,
 		string(hash))
+	return err
+}
+
+// ensureStaffAdmin creates an extra committee account with full admin
+// rights. Created only if the address is absent, so a password the crew has
+// since changed is never overwritten.
+func ensureStaffAdmin(ctx context.Context, pool *pgxpool.Pool, email, name, password string) error {
+	var exists bool
+	if err := pool.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)`, email).Scan(&exists); err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO users (name, email, password_hash, role, company)
+		VALUES ($1, $2, $3, 'admin', 'BNI Indonesia')`,
+		name, email, string(hash))
 	return err
 }
 

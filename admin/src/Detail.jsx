@@ -94,9 +94,22 @@ export function MemberDetail({ id, onBack }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
 
+  const load = () => api.memberDetail(id).then(setData).catch((e) => setError(e.message))
   useEffect(() => {
-    api.memberDetail(id).then(setData).catch((e) => setError(e.message))
-  }, [id])
+    load()
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The desk searches the PERSON, not the class — so cancelling has to work
+  // from here, not only from the class detail page.
+  const cancelClass = async (r) => {
+    if (!confirm(`Cancel ${data.user.name}'s seat in ${r.room}?`)) return
+    try {
+      await api.unregisterSeminarMember(r.seminar_id, data.user.member_code)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   if (error) return <DetailShell title="Attendee Detail" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
   if (!data) return <DetailShell title="Attendee Detail" sub="Loading…" onBack={onBack} />
@@ -149,8 +162,16 @@ export function MemberDetail({ id, onBack }) {
         </h2>
         <p className="panel-sub">One class per parallel slot</p>
         <SimpleTable
-          columns={['Slot', 'Room', 'Title', 'Registered At']}
-          rows={registrations.map((r) => [`#${r.slot}`, <b key="r">{r.room}</b>, r.title, fmtTime(r.registered_at)])}
+          columns={['Slot', 'Room', 'Title', 'Registered At', '']}
+          rows={registrations.map((r) => [
+            `#${r.slot}`,
+            <b key="r">{r.room}</b>,
+            r.title,
+            fmtTime(r.registered_at),
+            <button key="x" className="row-remove" onClick={() => cancelClass(r)}>
+              Cancel
+            </button>,
+          ])}
           emptyText="No class registrations yet."
         />
       </div>

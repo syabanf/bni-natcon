@@ -43,7 +43,7 @@ func (r *AdminRepo) MemberDetail(ctx context.Context, id int64) (*domain.MemberD
 	}
 
 	regRows, err := r.pool.Query(ctx, `
-		SELECT s.slot, s.room, s.title, sr.created_at
+		SELECT s.id, s.slot, s.room, s.title, sr.created_at
 		FROM seminar_registrations sr JOIN seminars s ON s.id = sr.seminar_id
 		WHERE sr.member_id = $1
 		ORDER BY s.slot`, id)
@@ -53,7 +53,7 @@ func (r *AdminRepo) MemberDetail(ctx context.Context, id int64) (*domain.MemberD
 	defer regRows.Close()
 	for regRows.Next() {
 		var v domain.MemberRegRow
-		if err := regRows.Scan(&v.Slot, &v.Room, &v.Title, &v.RegisteredAt); err != nil {
+		if err := regRows.Scan(&v.SeminarID, &v.Slot, &v.Room, &v.Title, &v.RegisteredAt); err != nil {
 			return nil, err
 		}
 		d.Registrations = append(d.Registrations, v)

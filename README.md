@@ -385,6 +385,7 @@ A fresh database has exactly one login:
 | Role  | Email             | Password        | Notes                             |
 |-------|-------------------|-----------------|-----------------------------------|
 | Admin | `admin@natcon.id` | `SEED_PASSWORD` | Committee dashboard + master data |
+| Panitia | `panitia@natcon.id` | `SEED_PASSWORD` | Same rights as admin — a second committee login so the main one is never shared |
 
 Everyone else is created by that account:
 

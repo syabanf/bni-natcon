@@ -109,6 +109,7 @@ func (s *Server) handleAdminVisitReport(w http.ResponseWriter, r *http.Request) 
 			"company":     v.Company,
 			"tenant_name": v.TenantName,
 			"booth":       v.Booth,
+			"note":        v.Note,
 			"visited_at":  v.VisitedAt,
 		})
 	}

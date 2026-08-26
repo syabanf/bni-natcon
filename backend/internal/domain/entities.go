@@ -392,7 +392,10 @@ type VisitReportRow struct {
 	Company    string
 	TenantName string
 	Booth      string
-	VisitedAt  time.Time
+	// Note is the booth's own remark on this visitor. It rides into the
+	// per-tenant export, where each sheet only ever shows its own notes.
+	Note      string
+	VisitedAt time.Time
 }
 
 // RegistrationReportRow is one line of the seminar registration report.
@@ -416,6 +419,9 @@ type MemberVisitRow struct {
 }
 
 type MemberRegRow struct {
+	// SeminarID lets the committee cancel a registration from the
+	// attendee's own page — the desk searches the person, not the class.
+	SeminarID    int64
 	Slot         int
 	Room         string
 	Title        string

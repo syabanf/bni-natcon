@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
-import { exportSheet } from './excel'
+import { exportSheet, exportSheets } from './excel'
 import { BarChart, HBarChart } from './Charts'
 
 function fmtTime(iso) {
@@ -52,7 +52,7 @@ function ReportTable({ columns, rows }) {
   )
 }
 
-function ReportShell({ title, sub, onExport, exportDisabled, children }) {
+function ReportShell({ title, sub, onExport, exportDisabled, extraExport, children }) {
   return (
     <>
       <div className="content-head">
@@ -61,6 +61,11 @@ function ReportShell({ title, sub, onExport, exportDisabled, children }) {
           <p className="micro">{sub}</p>
         </div>
         <div className="head-right">
+          {extraExport && (
+            <button className="md-secondary" onClick={extraExport.onClick} disabled={exportDisabled}>
+              ⇓ {extraExport.label}
+            </button>
+          )}
           <button className="md-secondary" onClick={onExport} disabled={exportDisabled}>
             ⇓ Export Excel
           </button>
@@ -104,6 +109,30 @@ export function ReportLeads({ onUnauthorized }) {
       title="Report — Tenant Leads"
       sub="Every booth visit scan · tenant follow-up material"
       exportDisabled={visits.length === 0}
+      extraExport={{
+        label: 'Per tenant (no phone)',
+        // The handout for the tenants themselves: one sheet per booth,
+        // that booth's visitors and its own notes — and no phone numbers,
+        // because the attendees consented to a scan, not to a call list.
+        onClick: () => {
+          const byTenant = {}
+          for (const v of visits) {
+            const key = `${v.booth} ${v.tenant_name}`
+            byTenant[key] = byTenant[key] || []
+            byTenant[key].push({
+              Attendee: v.member_name, 'Member Code': v.member_code,
+              Chapter: v.chapter, Company: v.company,
+              Note: v.note || '', Time: v.visited_at,
+            })
+          }
+          exportSheets(
+            Object.entries(byTenant)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([name, rows]) => ({ name, rows })),
+            'natcon2026-leads-per-tenant.xlsx'
+          )
+        },
+      }}
       onExport={() =>
         exportSheet(
           visits.map((v) => ({

@@ -175,6 +175,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | MD-43 | P1 | Admin · Tenants | Find Alpha leaders in the list, then check GrasiaCare and Paper.id. | Alpha leaders is one row reading 'A47 & A48' — one company on two stands is one exhibitor, with one login and one QR for both signs. GrasiaCare sits on A18 alone and Paper.id on A20: the floor plan follows the committee's latest numbering, not the older sheet. |
 | MD-44 | P2 | Admin · Tenants, some booths have a logo | Look down the Name column, then open the Dashboard's Booth Ranking and one booth's detail page. | Every exhibitor except Bio Medika and ProSnap shows their own logo in all three; those two show their initials. That is how you spot who still owes the committee a logo. |
 | MD-45 | P1 | Admin · QR Prints, after a floor-plan update | Print the booth QRs and compare a few against the signs on the floor. | Every code matches the stand it is standing on. Old prints from before the renumbering are wrong and must be thrown away — the codes moved. |
+| MD-46 | P1 | Admin · an attendee holding a class | Open their detail page and press Cancel on the registration. | The seat frees immediately — the class detail and the attendee's app agree. The desk searches the person, not the class, so cancelling works from here too. |
 
 ## Admin operations
 
@@ -239,6 +240,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | RPT-10 | P1 | Tenants page | Press Download format and open the file. | natcon2026-template-import-booths.xlsx, headers matching the official Data Booth sheet. |
 | RPT-11 | P1 | Learning Classes page | Press Download format and open the file. | natcon2026-template-import-class-registrations.xlsx with Email / Member Code / Room. |
 | RPT-12 | P2 | A full event's worth of data | Press Export on Tenant Leads and time it. | The file arrives without the page freezing. Note the time and file size in Notes. |
+| RPT-13 | P1 | Reports · Tenant Leads, scans exist | Press 'Per tenant (no phone)'. | natcon2026-leads-per-tenant.xlsx downloads with one sheet per booth: that booth's visitors, chapters, companies and its own notes — and no phone column anywhere. This is the file handed to the tenants. |
 
 ## Cross-cutting
 
@@ -305,6 +307,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Unknown ticket number | 16C6C-NOSUCHTICKET | For the not-found cases at any scanner |
 | Rundown | 10 draft blocks: 9 on 3 Sep (07:00 → 18:00) + Gold Club Breakfast 4 Sep 08:00–11:00 | Seeded only when the schedule is empty; two of them are Learning Class blocks |
 | Door crew app | /door/login | Its own path, like /login and /tenant/login. The bare address redirects there. |
+| Second committee login | panitia@natcon.id / SEED_PASSWORD | Same rights as admin — for the desk crew, so the main admin password is never shared |
 
 ## Coverage
 
@@ -313,9 +316,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Auth | 22 | 13 |
 | Attendee | 35 | 23 |
 | Booth scanner | 19 | 13 |
-| Admin master data | 45 | 36 |
+| Admin master data | 46 | 37 |
 | Admin operations | 38 | 25 |
-| Reports & export | 12 | 9 |
+| Reports & export | 13 | 10 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **197** | **134** |
+| **Total** | **199** | **136** |

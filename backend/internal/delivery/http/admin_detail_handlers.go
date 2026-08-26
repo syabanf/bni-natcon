@@ -25,6 +25,7 @@ func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request)
 	regs := make([]map[string]any, 0, len(d.Registrations))
 	for _, v := range d.Registrations {
 		regs = append(regs, map[string]any{
+			"seminar_id": v.SeminarID,
 			"slot": v.Slot, "room": v.Room, "title": v.Title, "registered_at": v.RegisteredAt,
 		})
 	}

@@ -269,3 +269,23 @@ export function buildWorkbook(rows, sheetName) {
 export function exportSheet(rows, sheetName, fileName) {
   XLSX.writeFile(buildWorkbook(rows, sheetName), fileName)
 }
+
+// Excel limits a sheet name to 31 characters and forbids : \ / ? * [ ] —
+// tenant names hold most of those.
+function sheetName(raw, taken) {
+  let name = String(raw).replace(/[:\\/?*[\]]/g, ' ').trim().slice(0, 31) || 'Sheet'
+  let n = 2
+  while (taken.has(name)) name = `${name.slice(0, 28)} ${n++}`
+  taken.add(name)
+  return name
+}
+
+/** One workbook, one sheet per group — the per-tenant handout export. */
+export function exportSheets(groups, fileName) {
+  const wb = XLSX.utils.book_new()
+  const taken = new Set()
+  for (const g of groups) {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(g.rows), sheetName(g.name, taken))
+  }
+  XLSX.writeFile(wb, fileName)
+}

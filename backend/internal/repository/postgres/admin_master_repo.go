@@ -407,7 +407,7 @@ func lockSeminarQuota(ctx context.Context, tx pgx.Tx, id int64, quota int) (int,
 func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT u.name, COALESCE(u.member_code, ''), u.chapter, u.company,
-		       t.name, t.booth, v.created_at
+		       t.name, t.booth, COALESCE(v.note, ''), v.created_at
 		FROM visits v
 		JOIN users u ON u.id = v.member_id
 		JOIN tenants t ON t.id = v.tenant_id
@@ -421,7 +421,7 @@ func (r *AdminRepo) VisitReport(ctx context.Context) ([]domain.VisitReportRow, e
 	for rows.Next() {
 		var v domain.VisitReportRow
 		if err := rows.Scan(&v.MemberName, &v.MemberCode, &v.Chapter, &v.Company,
-			&v.TenantName, &v.Booth, &v.VisitedAt); err != nil {
+			&v.TenantName, &v.Booth, &v.Note, &v.VisitedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, v)
