@@ -259,8 +259,13 @@ check("second member login 200", status == 200)
 sinta_tok = body["token"]
 sinta_id = body["user"]["id"]
 
-status, body = login("booth-a1@natcon.id")
-check("tenant login 200", status == 200 and body["user"]["role"] == "tenant")
+# Booth first passwords are derived — company name + booth code, lowercase,
+# letters and digits only — so no two stands share one.
+def booth_password(name, booth):
+    return "".join(c for c in (name + booth).lower() if c.isalnum() and c.isascii())
+
+status, body = login("booth-a1@natcon.id", booth_password("SSCX International", "A1"))
+check("tenant login 200 on its derived password", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 check("a booth's first login demands a password of its own",
       body["user"]["must_set_password"] is True, f'{body["user"]}')
@@ -270,21 +275,22 @@ section("Booth crews replace the handed-out password")
 
 # Its three sign-ins ride a different source IP, or they would eat the
 # per-IP login budget the hardening section measures at the end.
-status, body = login("booth-a2@natcon.id", xff="10.77.0.9")
+a2_first = booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2")
+status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
-check("the shared password opens the door once",
+check("the derived password opens the door once",
       status == 200 and body["user"]["must_set_password"] is True)
 status, _, _ = req("POST", "/api/v1/auth/password", token=a2_tok,
                    body={"password": "rahasia-booth-a2"})
 check("the crew sets their own -> 200", status == 200)
-status, _ = login("booth-a2@natcon.id", xff="10.77.0.9")
-check("the shared password no longer works there", status == 401)
+status, _ = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
+check("the first password no longer works there", status == 401)
 status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
 # must_set_password is omitempty: gone from the JSON once it is false.
 check("their own password works, and the demand is gone",
       status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
 # Put it back the way the rest of the suite expects it.
-req("POST", "/api/v1/auth/password", token=body["token"], body={"password": PASSWORD})
+req("POST", "/api/v1/auth/password", token=body["token"], body={"password": a2_first})
 
 # ------------------------------------------------------- duplicate attendees
 section("Attendees who share a name, email and phone")
@@ -865,8 +871,8 @@ status, body, _ = req("POST", "/api/v1/admin/tenants", token=admin_tok,
                       body={"name": "E2E Booth", "category": "Uji", "booth": "Z-01"})
 check("create tenant 201 (auto initials)", status == 201 and body["tenant"]["initials"] == "EB")
 new_tenant_id = body["tenant"]["id"]
-status, _ = login("booth-z01@natcon.id")
-check("auto booth login works", status == 200)
+status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"))
+check("auto booth login works on its derived password", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
 check("tenant detail 200", status == 200 and body["tenant"]["owner_email"] == "booth-z01@natcon.id")
 
@@ -1378,10 +1384,12 @@ passport_booth = next(t for t in body["tenants"] if t["booth"] == "A1")
 check("the attendee passport shows who is at the booth",
       passport_booth["contact_name"] == "Nicolaas Andrew" and passport_booth["chapter"] == "Star")
 
-status, _ = login("booth-z01@natcon.id", xff="10.99.0.2")
-check("refreshed booth keeps its scanner login", status == 200)
-status, _ = login("booth-sp99@natcon.id", xff="10.99.0.3")
-check("imported booth gets an auto scanner login", status == 200)
+# A refresh keeps the login AND the password it was created with — derived
+# from the ORIGINAL name, because the crew's briefing sheet was printed then.
+status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"), xff="10.99.0.2")
+check("refreshed booth keeps its scanner login and original password", status == 200)
+status, _ = login("booth-sp99@natcon.id", booth_password("Bulk Sponsor", "SP-99"), xff="10.99.0.3")
+check("imported booth gets an auto scanner login on its derived password", status == 200)
 
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [{"name": "No Booth", "booth": ""}]})

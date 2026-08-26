@@ -54,8 +54,9 @@ const AUDIENCE = {
     sub: 'Sign in with the booth account to scan attendee QRs and see your visitors.',
     hint: (
       <>
-        Your login is <code>booth-&lt;booth code&gt;@natcon.id</code> — e.g. booth A1 →{' '}
-        <code>booth-a1@natcon.id</code>. The committee has the password.
+        Login = <code>booth-&lt;booth code&gt;@natcon.id</code>, first password ={' '}
+        <b>company name + booth code</b>, lowercase, letters &amp; digits only — WIT.id at A14 →{' '}
+        <code>witida14</code>. You&apos;ll set your own right after.
       </>
     ),
     showRecovery: false,

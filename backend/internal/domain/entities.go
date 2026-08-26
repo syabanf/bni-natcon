@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type Role string
 
@@ -302,6 +305,22 @@ type MemberUpdate struct {
 	// The number their QR carries. A typo here makes a pass unscannable, so
 	// the committee can correct it.
 	TicketNumber string
+}
+
+// TenantDefaultPassword is the password a booth account starts on: the
+// company name plus the booth code, lowercase, letters and digits only —
+// WIT.id on A14 signs in with "witida14". The same shape attendees follow
+// (chapter + first name), so one sentence on the briefing sheet explains
+// both, and no two stands share a password. It only opens the door once:
+// the crew replaces it on first sign-in.
+func TenantDefaultPassword(name, booth string) string {
+	out := make([]rune, 0, len(name)+len(booth))
+	for _, r := range strings.ToLower(name + booth) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			out = append(out, r)
+		}
+	}
+	return string(out)
 }
 
 // NewTenant creates a booth/sponsor plus its scanner login user.

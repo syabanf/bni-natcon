@@ -178,8 +178,10 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domai
 		return nil, invalid("invalid email format")
 	}
 	initials = tenantInitials(initials, name)
+	// Blank means the derived default — company name + booth code — never a
+	// password shared with other stands.
 	if password == "" {
-		password = u.defaultPassword
+		password = domain.TenantDefaultPassword(name, booth)
 	}
 	hash, err := u.hasher.Hash(password)
 	if err != nil {
@@ -438,11 +440,11 @@ type TenantImportRow struct {
 
 // BulkUpsertTenants imports rows create-or-update keyed by the booth code:
 // a new booth becomes a tenant plus its scanner account (email defaults to
-// booth-<code>@natcon.id, default password), while an existing booth gets
+// booth-<code>@natcon.id, password derived from name + booth code), while an
+// existing booth gets
 // name/category/initials/kind/description refreshed — its login and the
 // scans it already collected are kept.
 func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImportRow) (created, updated int, errs []domain.BulkRowError) {
-	hash := ""
 	for i, row := range rows {
 		name := strings.TrimSpace(row.Name)
 		booth := strings.TrimSpace(row.Booth)
@@ -458,22 +460,19 @@ func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImpor
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: "invalid email format"})
 			continue
 		}
-		// Every new booth account starts on the default password, so one
-		// bcrypt hash covers the whole batch.
-		if hash == "" {
-			h, err := u.hasher.Hash(u.defaultPassword)
-			if err != nil {
-				errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
-				continue
-			}
-			hash = h
+		// Every booth starts on its own derived password (name + booth code),
+		// so each row hashes its own — no two stands share one.
+		h, err := u.hasher.Hash(domain.TenantDefaultPassword(name, booth))
+		if err != nil {
+			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
+			continue
 		}
 		res, err := u.admin.UpsertTenant(ctx, domain.NewTenant{
 			Name: name, Category: strings.TrimSpace(row.Category), Booth: booth,
 			Initials: tenantInitials(row.Initials, name), Kind: normalizeTenantKind(row.Kind),
 			Description: strings.TrimSpace(row.Description),
 			ContactName: strings.TrimSpace(row.ContactName), Chapter: strings.TrimSpace(row.Chapter),
-			Email: email, PasswordHash: hash,
+			Email: email, PasswordHash: h,
 		})
 		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})

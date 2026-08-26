@@ -5,6 +5,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
+
+	"natcon2026/backend/internal/domain"
 )
 
 // SeedIfEmpty puts the committee's admin login into a fresh database, gives
@@ -29,17 +31,46 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	// Migration 0023 writes the booths with a placeholder hash nobody can
 	// sign in with. Only untouched placeholders are rewritten, so a booth
 	// whose password was changed since keeps it.
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	//
+	// Each booth starts on its own derived password — company name + booth
+	// code — never one shared string on a briefing sheet. It only opens the
+	// door once: the crew must replace it on first sign-in. Only placeholder
+	// hashes are rewritten, so this loop runs exactly once per booth, ever.
+	rows, err := pool.Query(ctx, `
+		SELECT u.id, t.name, t.booth
+		FROM users u JOIN tenants t ON t.owner_user_id = u.id
+		WHERE u.role = 'tenant' AND u.password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`)
 	if err != nil {
 		return err
 	}
-	// The seed password only opens the door once: the crew must replace it
-	// on first sign-in, so no booth stays on the shared password.
-	if _, err := pool.Exec(ctx, `
-		UPDATE users SET password_hash = $1, must_set_password = true
-		WHERE role = 'tenant' AND password_hash LIKE '$2a$10$SEEDPLACEHOLDER%'`,
-		string(hash)); err != nil {
+	type seedTenant struct {
+		id          int64
+		name, booth string
+	}
+	var pending []seedTenant
+	for rows.Next() {
+		var st seedTenant
+		if err := rows.Scan(&st.id, &st.name, &st.booth); err != nil {
+			rows.Close()
+			return err
+		}
+		pending = append(pending, st)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
 		return err
+	}
+	for _, st := range pending {
+		h, err := bcrypt.GenerateFromPassword(
+			[]byte(domain.TenantDefaultPassword(st.name, st.booth)), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		if _, err := pool.Exec(ctx, `
+			UPDATE users SET password_hash = $1, must_set_password = true WHERE id = $2`,
+			string(h), st.id); err != nil {
+			return err
+		}
 	}
 
 	// The programme is written once. A committee that has since edited a
