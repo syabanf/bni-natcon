@@ -286,8 +286,8 @@ export default function Seminars() {
       <div className="hero-greet">
         <h2>Learning Class</h2>
         <p>
-          All classes run at the same time — pick one, then show your class QR at the door to claim
-          your goodiebag.
+          Pick up to two classes in different hours, then show your class QR at the door to get
+          checked in.
         </p>
       </div>
 
