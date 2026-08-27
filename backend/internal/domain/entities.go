@@ -307,6 +307,22 @@ type MemberUpdate struct {
 	TicketNumber string
 }
 
+// TenantLoginEmail is the address a booth signs in with, derived from its
+// stand: booth-a14@natcon.id for A14. Lowercase, letters and digits only,
+// and a double stand ("A47 & A48") answers to its first code — the same
+// rule the seeded logins already follow, so a booth the committee adds by
+// hand gets the address its briefing sheet predicts.
+func TenantLoginEmail(booth string) string {
+	first, _, _ := strings.Cut(booth, "&")
+	out := make([]rune, 0, len(first))
+	for _, r := range strings.ToLower(first) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			out = append(out, r)
+		}
+	}
+	return "booth-" + string(out) + "@natcon.id"
+}
+
 // TenantDefaultPassword is the password a booth account starts on: the
 // company name plus the booth code, lowercase, letters and digits only —
 // WIT.id on A14 signs in with "witida14". The same shape attendees follow

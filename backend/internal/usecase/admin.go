@@ -172,8 +172,7 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domai
 	kind = normalizeTenantKind(kind)
 	email = strings.ToLower(strings.TrimSpace(email))
 	if email == "" {
-		email = fmt.Sprintf("booth-%s@natcon.id",
-			strings.ToLower(strings.ReplaceAll(booth, "-", "")))
+		email = domain.TenantLoginEmail(booth)
 	} else if !validEmail(email) {
 		return nil, invalid("invalid email format")
 	}
@@ -454,8 +453,7 @@ func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImpor
 		}
 		email := strings.ToLower(strings.TrimSpace(row.Email))
 		if email == "" {
-			email = fmt.Sprintf("booth-%s@natcon.id",
-				strings.ToLower(strings.ReplaceAll(booth, "-", "")))
+			email = domain.TenantLoginEmail(booth)
 		} else if !validEmail(email) {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: "invalid email format"})
 			continue

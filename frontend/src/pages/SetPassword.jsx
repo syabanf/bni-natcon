@@ -64,6 +64,9 @@ export default function SetPassword() {
                   placeholder="New password"
                   aria-label="New password"
                   autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   autoFocus
                 />
@@ -84,6 +87,9 @@ export default function SetPassword() {
                   placeholder="Repeat password"
                   aria-label="Repeat password"
                   autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                 />
               </div>

@@ -282,6 +282,15 @@ section("Booth crews replace the handed-out password")
 
 # Its three sign-ins ride a different source IP, or they would eat the
 # per-IP login budget the hardening section measures at the end.
+# A phone keyboard capitalises the first letter the moment somebody taps
+# "show password". While a booth is still on the password we generated —
+# always all-lowercase — that stray capital must not lock the crew out.
+status, body = login("BOOTH-A2@natcon.id",
+                     booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2").capitalize(),
+                     xff="10.77.0.7")
+check("a capitalised email and first password still sign the booth in",
+      status == 200 and body["user"]["role"] == "tenant", f"{status}")
+
 a2_first = booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2")
 status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
@@ -296,6 +305,10 @@ status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
 # must_set_password is omitempty: gone from the JSON once it is false.
 check("their own password works, and the demand is gone",
       status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
+# Once the crew picks their own password, case is matched exactly again.
+status, _ = login("booth-a2@natcon.id", "Rahasia-booth-a2", xff="10.77.0.9")
+check("a self-chosen password is case-sensitive", status == 401)
+
 # Put it back the way the rest of the suite expects it.
 req("POST", "/api/v1/auth/password", token=body["token"], body={"password": a2_first})
 

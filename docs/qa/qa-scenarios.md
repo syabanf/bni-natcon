@@ -121,8 +121,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-15 | P1 | Scanner, an attendee holding a ticket from the sheet | Scan their pass QR from the My QR screen. | Recorded, with their name — the QR carries the ticket number, not the member code. |
 | BTH-16 | P2 | Scanner, the same attendee | Type the member code printed under their QR instead. | Reported as a repeat visit of the same person — both keys reach one attendee, never two. |
 | BTH-17 | P2 | Scanner | Type a ticket number nobody holds (16C6C-NOSUCHTICKET). | A clear not-found message. Nothing is recorded. |
-| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login with the derived first password: company name + booth code, lowercase, letters & digits only (WIT.id at A14 → witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
+| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login. Both halves are all lowercase: booth-<code>@natcon.id, and the first password = company name + booth code, letters & digits only (WIT.id at A14 -> booth-a14@natcon.id / witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
 | BTH-19 | P1 | A booth that already set its own password | Sign in again with the new password. | Straight to the scanner — no password screen. The old committee-issued password is refused. |
+| BTH-20 | P1 | A booth still on the committee's password, signing in on a phone | Tap 'show password' so the keyboard capitalises, then type the email and first password with a capital first letter (BOOTH-A14@natcon.id / Witida14). | Still signs in. Generated passwords are all-lowercase, so the capital a phone keyboard adds is accepted while the booth is on that password. After the crew sets their own, case is matched exactly again. |
 
 ## Admin master data
 
@@ -315,10 +316,10 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Auth | 22 | 13 |
 | Attendee | 35 | 23 |
-| Booth scanner | 19 | 13 |
+| Booth scanner | 20 | 14 |
 | Admin master data | 46 | 37 |
 | Admin operations | 38 | 25 |
 | Reports & export | 13 | 10 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **199** | **136** |
+| **Total** | **200** | **137** |
