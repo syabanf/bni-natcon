@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +21,14 @@ type Config struct {
 	Env            string
 	AllowedOrigins []string
 	UploadDir      string
+	// Login attempts allowed per client IP per minute. Conference WiFi puts
+	// the whole hall behind one NAT address, so this ceiling is shared by
+	// everyone on that network — it has to clear a 1,000-person registration
+	// rush, not just one honest user.
+	LoginRatePerMin int
+	// Password recovery is guessable by design (chapter + phone), so it keeps
+	// a tighter ceiling than login.
+	RecoveryRatePerMin int
 }
 
 // loadDotEnv reads KEY=VALUE pairs from the given file into the process
@@ -73,6 +82,9 @@ func Load() Config {
 		Env:            getenv("APP_ENV", "development"),
 		AllowedOrigins: origins,
 		UploadDir:      getenv("UPLOAD_DIR", "uploads"),
+
+		LoginRatePerMin:    getenvInt("LOGIN_RATE_PER_MIN", 200),
+		RecoveryRatePerMin: getenvInt("RECOVERY_RATE_PER_MIN", 60),
 	}
 }
 
@@ -85,4 +97,18 @@ func getenv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// getenvInt reads a positive integer; anything unparseable or <= 0 falls back
+// rather than silently disabling a limiter.
+func getenvInt(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(v))
+	if err != nil || n <= 0 {
+		return fallback
+	}
+	return n
 }

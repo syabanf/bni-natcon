@@ -41,6 +41,13 @@ func limitBody(next http.Handler) http.Handler {
 	})
 }
 
+// RateLimits caps auth traffic per client IP per minute. The values come from
+// config so they can be raised on event day without a rebuild.
+type RateLimits struct {
+	LoginPerMin    int
+	RecoveryPerMin int
+}
+
 type Server struct {
 	jwt            *JWTIssuer
 	auth           *usecase.AuthUsecase
@@ -52,6 +59,7 @@ type Server struct {
 	networking     *usecase.NetworkingUsecase
 	allowedOrigins []string
 	uploadDir      string
+	limits         RateLimits
 }
 
 func NewServer(
@@ -65,11 +73,13 @@ func NewServer(
 	networking *usecase.NetworkingUsecase,
 	allowedOrigins []string,
 	uploadDir string,
+	limits RateLimits,
 ) *Server {
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
 		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
+		limits: limits,
 	}
 }
 
@@ -79,7 +89,10 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	// Bulk member imports bcrypt-hash every row (~55ms each; 769 rows ≈ 43s).
+	// The 30s default cancelled the request context mid-import, failing every
+	// row after the first ~540 with "context deadline exceeded".
+	r.Use(middleware.Timeout(120 * time.Second))
 	r.Use(metricsMiddleware)
 	r.Use(securityHeaders)
 	r.Use(limitBody)
@@ -96,13 +109,20 @@ func (s *Server) Router() http.Handler {
 	r.Handle("/uploads/*", s.uploadsHandler())
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Brute-force protection: 10 login attempts per IP per minute.
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login", s.handleLogin)
-		// Recovery is guessable by design (chapter + phone), so it gets the
-		// same brute-force ceiling as login.
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login/select", s.handleSelectAccount)
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/forgot", s.handleForgotPassword)
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/reset", s.handleResetPassword)
+		// Brute-force protection, keyed per client IP. The ceiling is shared
+		// by everyone behind one NAT address — a conference hall is a single
+		// public IP for hundreds of attendees — so it is sized for a
+		// registration rush, not for one person typing.
+		login := httprate.LimitByIP(s.limits.LoginPerMin, time.Minute)
+		recovery := httprate.LimitByIP(s.limits.RecoveryPerMin, time.Minute)
+		r.With(login).Post("/auth/login", s.handleLogin)
+		// Choosing between duplicate accounts is part of the same login the
+		// attendee already started, so it shares login's ceiling.
+		r.With(login).Post("/auth/login/select", s.handleSelectAccount)
+		// Recovery is guessable by design (chapter + phone) and far rarer than
+		// login, so it keeps a tighter ceiling.
+		r.With(recovery).Post("/auth/forgot", s.handleForgotPassword)
+		r.With(recovery).Post("/auth/reset", s.handleResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)

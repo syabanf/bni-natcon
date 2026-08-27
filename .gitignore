@@ -27,3 +27,21 @@ uploads/
 # a space in a resource file name.
 * [0-9].*
 core
+
+# Rehearsal session tokens — live credentials, never commit.
+perf/eventday/tokens.json
+
+# 106 MB of raw k6 output from the August perf run — regenerable, never commit.
+perf/raw-results.json
+
+# Android signing material. A leaked keystore + password lets anyone publish an
+# update signed as BNI Natcon, and this repo has a public remote. Never commit.
+apk/keystore-password.txt
+apk/twa/android.keystore
+*.jks
+*.keystore
+
+# Built APKs (~700 MB). Release artifacts, not source; frontend/public/apk/ is
+# populated at release time and copied into the image by the Vite build.
+*.apk
+*.idsig
