@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -12,8 +13,39 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.New(ctx, dsn)
+// NewPool opens the connection pool the whole API shares.
+//
+// The sizes are set here rather than left to pgx's defaults, which are
+// max(4, NumCPU) connections and none kept warm. On a two-core VPS — the
+// shape most of these events get deployed onto — that is four connections
+// for the entire hall, and every one of them paying TLS and startup on the
+// first request of a burst. Queries here are index lookups measured in tens
+// of microseconds, so a modest pool serves thousands a second; what hurts is
+// having too few to hand out, and handing them out cold.
+//
+// Both are overridable: a managed Postgres with a low connection allowance
+// (Supabase's pooler, a small Railway plan) needs a smaller ceiling, and
+// exceeding it fails at the worst moment.
+func NewPool(ctx context.Context, dsn string, maxConns, minConns int32) (*pgxpool.Pool, error) {
+	cfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("parse postgres dsn: %w", err)
+	}
+	if maxConns > 0 {
+		cfg.MaxConns = maxConns
+	}
+	if minConns > 0 {
+		// Kept open and warm, so the morning's first burst does not queue
+		// behind connection setup.
+		cfg.MinConns = minConns
+	}
+	cfg.MaxConnLifetime = time.Hour
+	cfg.MaxConnIdleTime = 30 * time.Minute
+	// A connection that died quietly (a database restart, a proxy timeout)
+	// is discovered before a request is handed it, not by that request.
+	cfg.HealthCheckPeriod = 30 * time.Second
+
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("connect postgres: %w", err)
 	}

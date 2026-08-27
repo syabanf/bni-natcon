@@ -44,6 +44,8 @@ Environment yang wajib diisi:
 | ----------------- | ---------------------------------------------------------- |
 | `APP_ENV`         | `production`                                                |
 | `JWT_SECRET`      | hasil `openssl rand -hex 32` — API menolak start dengan default |
+| `DB_MAX_CONNS`    | ukuran pool Postgres (default 25). Turunkan kalau database punya kuota koneksi kecil |
+| `DB_MIN_CONNS`    | koneksi yang dijaga tetap hangat (default 5), supaya burst pagi tidak antre buka koneksi |
 | `DATABASE_URL`    | connection string Postgres milik host                       |
 | `ADDR`            | `:8080`, atau `:$PORT` bila host menentukan port sendiri     |
 | `ALLOWED_ORIGINS` | domain Vercel, dipisah koma — lihat langkah 3                |

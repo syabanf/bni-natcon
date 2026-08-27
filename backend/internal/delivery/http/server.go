@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httprate"
 
 	"natcon2026/backend/internal/domain"
 	"natcon2026/backend/internal/usecase"
@@ -96,13 +95,24 @@ func (s *Server) Router() http.Handler {
 	r.Handle("/uploads/*", s.uploadsHandler())
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Brute-force protection: 10 login attempts per IP per minute.
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login", s.handleLogin)
-		// Recovery is guessable by design (chapter + phone), so it gets the
-		// same brute-force ceiling as login.
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/login/select", s.handleSelectAccount)
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/forgot", s.handleForgotPassword)
-		r.With(httprate.LimitByIP(10, time.Minute)).Post("/auth/reset", s.handleResetPassword)
+		// Brute-force protection follows the ACCOUNT, not the address —
+		// see ratelimit.go: a venue shares one public IP, so a per-IP login
+		// limit locks the hall out instead of the attacker.
+		venue := perAddress(addressAttemptsPerMinute, attemptWindow)
+		guesses := newFailureLimiter(failedAttemptsPerAccount, attemptWindow)
+		r.With(venue, guesses.middleware("email")).
+			Post("/auth/login", s.handleLogin)
+		// Recovery is guessable by design — a chapter and a phone number —
+		// so the pair being guessed is what gets counted.
+		r.With(venue, guesses.middleware("chapter", "phone")).
+			Post("/auth/forgot", s.handleForgotPassword)
+		// The other two carry an HMAC-signed token we issued. There is no
+		// account to protect: an attacker varies the TOKEN, so a per-token
+		// counter would see each guess as a first offence and never fire.
+		// Forging one needs the signing secret, which no number of attempts
+		// supplies, so the address ceiling is the whole defence here.
+		r.With(venue).Post("/auth/login/select", s.handleSelectAccount)
+		r.With(venue).Post("/auth/reset", s.handleResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)

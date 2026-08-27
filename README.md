@@ -492,7 +492,7 @@ BASE=http://localhost:8082 python3 scripts/e2e.py
 
 Stress & concurrency suite (read-heavy load with latency percentiles, plus
 correctness under contention: seminar seats, networking tables, scan bursts —
-worker tokens are minted locally so the login rate limit stays untouched):
+worker tokens are minted locally so the sign-in path is not the thing under test):
 
 ```bash
 createdb natcon_stress
@@ -512,7 +512,13 @@ concurrent scans of one member → exactly 1 counted.
 - HTTP server timeouts (read/write/idle/header) + graceful shutdown on SIGINT/SIGTERM
 - Per-request 30 s timeout, 2 MiB request-body cap
 - Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cache-Control: no-store`)
-- Login rate limit: 10 attempts/IP/minute (429 after)
+- Login rate limit: **10 failed attempts per account** per minute, counted
+  wherever they come from, plus a ceiling of 2000 requests/IP/minute. It is
+  keyed on the account and counts only failures on purpose: a venue is one
+  public IP behind a NAT, so a per-IP attempt limit locks the hall out on the
+  morning instead of the attacker — and it never stopped the attack anyway,
+  since rotating addresses walked straight past it. One email legitimately
+  belongs to 17 ticket holders here, and all 17 sign in fine.
 - CORS origins configurable via `ALLOWED_ORIGINS` (comma-separated)
 - Refuses to start with the default `JWT_SECRET` when `APP_ENV=production`
 - Email format validation on admin-created accounts

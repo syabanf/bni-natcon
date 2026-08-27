@@ -4,6 +4,10 @@ services:
   db:
     image: postgres:16-alpine
     container_name: natcon-db
+    # A container that dies mid-event must come back by itself; nobody is
+    # watching a terminal at 09:40. "unless-stopped" survives a host reboot
+    # but still respects a deliberate `docker compose stop`.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-natcon}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-natcon}
@@ -21,6 +25,7 @@ services:
   api:
     build: ./backend
     container_name: natcon-api
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${DB_USER:-natcon}:${DB_PASSWORD:-natcon}@db:5432/${DB_NAME:-natcon}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
@@ -28,11 +33,22 @@ services:
       SEED_PASSWORD: ${SEED_PASSWORD:-natcon2026}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8088,http://localhost:8089}
       UPLOAD_DIR: /data/uploads
+      # Sized for a hall rather than pgx's max(4, NumCPU) default, which on a
+      # two-core VPS is four connections for the whole venue.
+      DB_MAX_CONNS: ${DB_MAX_CONNS:-25}
+      DB_MIN_CONNS: ${DB_MIN_CONNS:-5}
     volumes:
       - natcon-uploads:/data/uploads
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # busybox wget, already in the alpine runtime image — no curl to add.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
     ports:
       - "${API_PORT:-8090}:8080"
 
@@ -42,6 +58,7 @@ services:
       args:
         VITE_ADMIN_URL: ${VITE_ADMIN_URL:-http://localhost:8089}
     container_name: natcon-frontend
+    restart: unless-stopped
     depends_on:
       - api
     ports:
@@ -50,6 +67,7 @@ services:
   admin:
     build: ./admin
     container_name: natcon-admin
+    restart: unless-stopped
     depends_on:
       - api
     ports:
@@ -58,6 +76,7 @@ services:
   door:
     build: ./door
     container_name: natcon-door
+    restart: unless-stopped
     depends_on:
       - api
     ports:

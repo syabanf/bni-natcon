@@ -17,6 +17,7 @@ Exits non-zero when any check fails. Stdlib only — no dependencies.
 """
 
 import json
+import re
 import os
 import sys
 import urllib.error
@@ -1671,11 +1672,27 @@ big = b'{"member_code": "' + b"A" * (3 * 1024 * 1024) + b'"}'
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, raw_body=big)
 check("3MB body rejected (400/413/conn-reset)", status in (400, 413, 0), f"got {status}")
 
-statuses = []
-for _ in range(12):
-    s, _ = login("reddie@natcon.id", "brute-force")
-    statuses.append(s)
-check("login rate limit kicks in (429 seen)", 429 in statuses, f"got {statuses}")
+# Brute force is an attack on ONE account, so that is what the limit counts —
+# and it counts wherever the attempts come from. A per-IP limit could be
+# walked straight past by rotating addresses; these twelve all do.
+statuses = [login("reddie@natcon.id", "brute-force", xff=f"198.51.100.{i}")[0]
+            for i in range(12)]
+check("guessing one account's password is stopped, even from a fresh IP each time",
+      429 in statuses, f"got {statuses}")
+
+# The other half of the same rule, and the reason it exists: a venue reaches
+# the API through ONE public address. Sixteen people signing in to their own
+# accounts from behind the hall's NAT must all get through — under the old
+# per-IP ceiling the eleventh was turned away, and to everyone behind them the
+# app simply looked broken.
+status, body, _ = req("GET", "/api/v1/admin/members?limit=16", token=admin_tok)
+hall = []
+for m in body["members"][:16]:
+    first = m["name"].split()[0] if m["name"].split() else ""
+    pw = re.sub(r"\s+", "", f'{m.get("chapter", "")}{first}').lower()
+    hall.append(login(m["email"], pw, xff="103.28.14.7")[0])
+check("a hall on one public IP all sign in, none rate-limited",
+      hall.count(429) == 0 and hall.count(200) >= 12, f"got {hall}")
 
 # ---------------------------------------------------------------- summary
 print(f"\n{'='*40}\n{passed} passed, {failed} failed")

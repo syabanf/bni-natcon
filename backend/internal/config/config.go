@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +21,8 @@ type Config struct {
 	Env            string
 	AllowedOrigins []string
 	UploadDir      string
+	DBMaxConns     int32
+	DBMinConns     int32
 }
 
 // loadDotEnv reads KEY=VALUE pairs from the given file into the process
@@ -73,7 +76,20 @@ func Load() Config {
 		Env:            getenv("APP_ENV", "development"),
 		AllowedOrigins: origins,
 		UploadDir:      getenv("UPLOAD_DIR", "uploads"),
+		// Sized for a hall, not a laptop — see postgres.NewPool. Lower
+		// DB_MAX_CONNS when the database has a small connection allowance.
+		DBMaxConns: int32(getenvInt("DB_MAX_CONNS", 25)),
+		DBMinConns: int32(getenvInt("DB_MIN_CONNS", 5)),
 	}
+}
+
+func getenvInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			return n
+		}
+	}
+	return fallback
 }
 
 func (c Config) IsProduction() bool {

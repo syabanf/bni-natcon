@@ -58,6 +58,8 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-40 | P1 | An attendee signing in for the very first time | Sign in with the password on the ticket. | Before anything else: 'Choose your password' AND a data notice with a checkbox — using the app means giving the committee name and email. Save stays disabled until the box is ticked. Nothing else in the app opens until both are done. |
 | ATT-41 | P1 | The same attendee signs in again | Log out, sign in with the new password. | Straight to the pass. Neither the password screen nor the notice appears again. |
 | ATT-42 | P2 | An attendee who set a password before the notice existed | Sign in. | The notice appears alone, headed 'Before you start', with the button reading 'Agree and continue'. No password fields. |
+| AUTH-24 | P1 | A hall of attendees behind one public IP (venue WiFi NAT) | Have 16+ different attendees sign in from the same network inside a minute. | All of them get in — none see 429. A venue is a single NAT, so a per-IP attempt limit would lock the hall out on the morning. One email here belongs to 17 ticket holders; all 17 work. |
+| AUTH-25 | P2 | An account that has just been rate-limited | After tripping AUTH-23, sign in to a DIFFERENT account from the same network. | The other account signs in normally. Only the account under attack is held, and only for a minute. |
 
 ## Attendee
 
@@ -319,7 +321,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 | Section | Cases | P1 |
 |---|---|---|
-| Auth | 25 | 15 |
+| Auth | 27 | 16 |
 | Attendee | 36 | 24 |
 | Booth scanner | 21 | 15 |
 | Admin master data | 46 | 37 |
@@ -327,4 +329,4 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Reports & export | 13 | 10 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **205** | **141** |
+| **Total** | **207** | **142** |

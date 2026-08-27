@@ -5,8 +5,9 @@
 day's four rushes against a FRESH database seeded with the real event data:
 
   1. The morning sign-in storm — real /auth/login calls, bcrypt and all,
-     each phone on its own IP (X-Forwarded-For), shared-email tickets
-     resolved through the account chooser.
+     every phone behind ONE public IP because that is what a venue is: the
+     hall's WiFi is a single NAT. Shared-email tickets are resolved through
+     the account chooser.
   2. The browse storm — every signed-in phone loads /me, /tenants,
      /seminars and /rundown at once.
   3. The class rush — everyone tries to grab a seat the moment
@@ -40,6 +41,8 @@ from urllib.parse import urlparse
 
 BASE = os.environ.get("BASE", "http://localhost:8099")
 N = int(os.environ.get("N", "700"))
+# The hall's public address: every attendee reaches the API through it.
+VENUE_IP = os.environ.get("VENUE_IP", "103.28.14.7")
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 parsed = urlparse(BASE)
 HOST, PORT = parsed.hostname, parsed.port or 80
@@ -157,13 +160,14 @@ def sign_in(im):
     c = Client()
     pw = first_password(m["chapter"], m["name"])
     t0 = time.time()
+    # One address for the whole hall — the rate limiter follows the account
+    # being signed in to, not the building it is signed in from.
     status, body = c.req("POST", "/api/v1/auth/login",
-                         body={"email": m["email"], "password": pw},
-                         xff=f"10.{i // 250}.{(i // 50) % 5}.{i % 50 + 1}")
+                         body={"email": m["email"], "password": pw}, xff=VENUE_IP)
     if status == 200 and body and "accounts" in body:
         status, body = c.req("POST", "/api/v1/auth/login/select",
                              body={"choice_token": body["choice_token"], "user_id": m["id"]},
-                             xff=f"10.{i // 250}.{(i // 50) % 5}.{i % 50 + 1}")
+                             xff=VENUE_IP)
     elapsed = time.time() - t0
     tok = body.get("token") if status == 200 and body else None
     return status, elapsed, (m, tok, c)
