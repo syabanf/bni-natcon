@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Event-scale load test: the whole venue on the API at once.
 
-769 attendees hold tickets; this drives N of them (default 700) through the
+856 attendees hold tickets; this drives N of them (default 700) through the
 day's four rushes against a FRESH database seeded with the real event data:
 
   1. The morning sign-in storm — real /auth/login calls, bcrypt and all,

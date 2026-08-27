@@ -95,9 +95,9 @@ away.
 
 **A fresh database holds the event's own master data and nothing invented:**
 
-- **The 769 attendees of the ticketing export** (migration `0028`), one per
+- **The 856 attendees of the ticketing export** (migration `0034`), one per
   ticket, with the chapters they carry and the password printed on their
-  ticket — chapter + first name, hashed at generation because 769 bcrypt
+  ticket — chapter + first name, hashed at generation because 856 bcrypt
   hashes would add a minute to every boot. `must_set_password` stays true, so
   each attendee still picks their own on first sign-in. Regenerate it from a
   newer export with
@@ -114,13 +114,11 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
-- **The floor plan the committee last drew, and 34 company logos**
-  (migration `0029`). Their logo pack names each file `<booth> - <company>`,
-  and those numbers are newer than the sheet's: GrasiaCare has given up its
-  second stand and everything from Paper.id on has moved down a slot. So the
-  booths are renumbered to match, keyed on the company name, and each
-  scanner login follows its stand — `booth-a20@natcon.id` is whoever stands
-  on A20. Scans and passwords are untouched. The images are prepared by
+- **34 company logos**, carried by migration `0033` from
+  [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
+  been redrawn twice, so the mapping is keyed on the **company name** and the
+  files are named after the company too — a stand number would go stale every
+  time the committee moves somebody. The images are prepared by
   [`scripts/booth_logos.py`](scripts/booth_logos.py) and ship with the app; a
   logo the committee uploads later wins, and the two exhibitors who sent none
   keep their initials.
@@ -137,19 +135,19 @@ away.
   From the Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
 - **The 32 booths and 4 sponsors of the committee's booth sheet** (migration
-  `0023`), each with its scanner login. The sheet's own *Sponsor* divider
-  decides which is which, and an exhibitor holding two positions is **one
-  exhibitor**: the booth is labelled `A18 & A20`, keeps one login and one QR
-  (printed once per sign), and counts once towards the draw's booth minimum.
-  Migration `0027` merges the pair on a database that split them. Generated
-  straight from the spreadsheet by
+  `0033`), each with its scanner login. Stand `A*` is the exhibition floor and
+  `B*`/`C*` are the sponsor stands, and an exhibitor holding two positions is
+  **one exhibitor**: the booth is labelled `A18 & A20`, keeps one login and
+  one QR (printed once per sign), and counts once towards the draw's booth
+  minimum. Generated straight from the spreadsheet by
   [`scripts/booths_migration.py`](scripts/booths_migration.py) — edit the
-  sheet, re-run the script, restart. It works in both directions: a booth
-  already there keeps its login and its scans, and a booth that has left the
-  sheet is removed *unless somebody has already scanned it*.
+  sheet, re-run the script, restart. An exhibitor is matched on its **company
+  name**, never its stand, so when the committee moves a company the migration
+  *moves* it — keeping its login, its scans and its identity — instead of
+  deleting one booth and creating another. A booth that has left the sheet is
+  removed *unless somebody has already scanned it*.
 
-**Attendees are the one import.** They change until the last minute, and 769
-people's names, emails and phone numbers do not belong in git. Their chapters
+**Attendees change until the last minute.** Their chapters
 come with them: every import registers the chapter names it meets, so the
 master list is exactly what the committee's sheet contains. **Networking
 tables** are generated on the Tables page for the hall they actually get.
@@ -446,7 +444,7 @@ go test ./...
 ```
 
 Event-scale load test — the whole venue at once (`scripts/load.py`): 700 of
-the 769 seeded attendees sign in simultaneously (real bcrypt logins, one IP
+the 856 seeded attendees sign in simultaneously (real bcrypt logins, one IP
 per phone), load every screen, rush the four 60-seat classes, get scanned by
 every booth and sit down at networking — correctness asserted (exactly 240
 seats won, zero oversells, zero duplicate scans), latency reported. On an

@@ -25,7 +25,7 @@ import urllib.request
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
 # The exhibitor floor of the committee's booth sheet arrives with migration
-# 0023 — booths and the four sponsors printed under its own "Sponsor" divider.
+# 0033 — booths, plus the four sponsors on the B and C stands.
 # A brand on two stands counts once: it is one exhibitor, not two.
 # The extra sponsors, the attendees and the tables are this suite's fixtures.
 SEEDED_BOOTHS = 32
@@ -108,7 +108,8 @@ section("Fixtures (the ticketing export and the sheet's booths arrive seeded)")
 # The attendees now arrive with a migration of their own, so a fresh database
 # is not empty. Everything downstream counts from this baseline rather than
 # from zero — the export changes whenever the committee re-exports it, and a
-# suite that hardcoded 769 would fail on the next sheet instead of on a bug.
+# suite that hardcoded the attendee count would fail on the next sheet
+# instead of on a bug.
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 SEEDED_MEMBERS = body.get("total_members", 0)
 check("a fresh database arrives with the ticketing export and the sheet's booths",
@@ -167,17 +168,18 @@ check("booth A1 arrived from the booth sheet",
 # the passport, one stamp, one login. The label names both stands so the
 # printed sign and the floor plan agree.
 check("a double-width stand is one booth labelled with both numbers",
-      by_booth.get("A47 & A48", {}).get("name") == "Alpha leaders"
+      by_booth.get("A47 & A48", {}).get("name") == "ALPHA LEADERS"
       and "A47" not in by_booth and "A48" not in by_booth,
       f'got {sorted(b for b in by_booth if b.startswith("A4"))}')
-# The logo pack carries the committee's newer floor plan: GrasiaCare gave up
-# its second stand and everyone from Paper.id on moved down a slot.
+# The floor plan has been redrawn twice. In the committee's latest sheet
+# GrasiaCare still holds two stands, and everyone from Paper.id onwards moved
+# down one more slot than the pack before it.
 check("the floor plan follows the committee's latest numbering",
-      by_booth.get("A18", {}).get("name") == "GrasiaCare"
-      and by_booth.get("A20", {}).get("name") == "Paper.id"
-      and by_booth.get("A22", {}).get("name") == "inHARMONY Preventive Clinic"
-      and by_booth.get("A27", {}).get("name") == "ICUBE (Invoice ke PT)",
-      f'got {[(c, by_booth.get(c, {}).get("name")) for c in ("A18", "A20", "A22", "A27")]}')
+      by_booth.get("A18 & A20", {}).get("name") == "GrasiaCare"
+      and by_booth.get("A22", {}).get("name") == "Paper.id"
+      and by_booth.get("A23", {}).get("name") == "inHARMONY Preventive Clinic"
+      and by_booth.get("A30", {}).get("name") == "ICUBE (Invoice ke PT)",
+      f'got {[(c, by_booth.get(c, {}).get("name")) for c in ("A18 & A20", "A22", "A23", "A30")]}')
 # One crew, one login — checked through the detail page rather than by
 # signing in, so this does not eat into the login rate limit the hardening
 # section measures at the end.
@@ -190,7 +192,7 @@ check("...and it has one scanner login, on the first stand's code",
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
 check("every exhibitor who sent a logo carries it",
-      len(logos) == 34 and logos.get("A20") == "/logos/paper-id.png"
+      len(logos) == 34 and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
 check("the double stand carries one logo, on one card",
@@ -631,8 +633,10 @@ check("tenants list complete, none visited",
       status == 200 and len(body["tenants"]) == FIXTURE_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
 # WIT.id is placed first, ahead of the sponsors, at the committee's request.
+# The sheet spells it "WIT.ID" and an older one spelled it "WIT.id", so the
+# placement is matched case-insensitively and must not depend on which.
 check("the passport opens with WIT.id",
-      body["tenants"][0]["name"] == "WIT.id", f'{body["tenants"][0]["name"]}')
+      body["tenants"][0]["name"].lower() == "wit.id", f'{body["tenants"][0]["name"]}')
 
 kinds = [t["kind"] for t in body["tenants"][1:]]
 xpora = next((t for t in body["tenants"] if t["name"] == "BNI Xpora"), None)
@@ -1391,7 +1395,7 @@ check("existing booth refreshed in place (single row, new details)",
 
 # The official booth sheet carries the person manning the booth and their
 # chapter alongside the company; both ride through the import onto the tenant.
-# Booth A1 already exists from migration 0023, so re-importing the sheet the
+# Booth A1 already exists from migration 0033, so re-importing the sheet the
 # committee already has must refresh it rather than create a second booth.
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [

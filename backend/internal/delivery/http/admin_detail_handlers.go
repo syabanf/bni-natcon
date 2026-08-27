@@ -26,7 +26,7 @@ func (s *Server) handleAdminMemberDetail(w http.ResponseWriter, r *http.Request)
 	for _, v := range d.Registrations {
 		regs = append(regs, map[string]any{
 			"seminar_id": v.SeminarID,
-			"slot": v.Slot, "room": v.Room, "title": v.Title, "registered_at": v.RegisteredAt,
+			"slot":       v.Slot, "room": v.Room, "title": v.Title, "registered_at": v.RegisteredAt,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
@@ -61,7 +61,7 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 		"tenant": map[string]any{
 			"id": d.ID, "name": d.Name, "category": d.Category, "booth": d.Booth,
 			"initials": d.Initials, "kind": d.Kind, "description": d.Description,
-			"logo_url": d.LogoURL,
+			"logo_url":    d.LogoURL,
 			"owner_email": d.OwnerEmail,
 		},
 		"total_scans": d.TotalScans,

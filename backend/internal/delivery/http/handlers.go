@@ -265,7 +265,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
 			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
 			PosterURL: sem.PosterURL,
-			StartsAt: mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
+			StartsAt:  mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
 			Speakers: people,
 		})
 	}
@@ -333,7 +333,7 @@ func (s *Server) handleBooth(w http.ResponseWriter, r *http.Request) {
 		"id": booth.ID, "name": booth.Name, "category": booth.Category,
 		"booth": booth.Booth, "initials": booth.Initials,
 		"kind": booth.Kind, "description": booth.Description,
-		"logo_url": booth.LogoURL,
+		"logo_url":     booth.LogoURL,
 		"contact_name": booth.ContactName, "chapter": booth.Chapter,
 	})
 }

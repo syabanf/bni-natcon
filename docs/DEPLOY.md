@@ -52,24 +52,29 @@ Environment yang wajib diisi:
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
-narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0023`,
+narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0033`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
 September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
 dihapus tidak muncul lagi saat restart.
 
-> **Setelah deploy migrasi `0029`**: nomor booth ikut denah terbaru dari
-> paket logo — GrasiaCare kini hanya A18, dan mulai Paper.id semuanya turun
-> satu slot. **Cetak ulang QR booth** dari halaman QR Prints, dan bagikan
-> login yang baru: pola `booth-<kode>@natcon.id` mengikuti stand, jadi
-> Paper.id kini masuk dengan `booth-a20@natcon.id`. Password tidak berubah,
-> scan yang sudah masuk tetap utuh.
+> **Setelah deploy migrasi `0033`**: denah mengikuti sheet terbaru panitia —
+> GrasiaCare kembali memegang dua stand (`A18 & A20`), dan **11 booth pindah
+> nomor**, mulai dari Paper.id yang kini di **A22**. Exhibitor dikenali lewat
+> nama perusahaan, jadi yang pindah tetap membawa login dan seluruh scan-nya.
+>
+> Dua hal yang **harus** dikerjakan panitia setelah deploy:
+> 1. **Cetak ulang QR booth** dari halaman QR Prints — nomor stand berubah.
+> 2. **Bagikan ulang login + password booth.** Keduanya mengikuti stand:
+>    Paper.id kini `booth-a22@natcon.id` dengan password awal `paperida22`.
+>    Kru yang belum pernah login otomatis dikembalikan ke password turunan
+>    yang baru; kru yang sudah membuat password sendiri tidak diusik.
 
-**Peserta** ikut sebagai migrasi `0028`: 769 orang dari export ticketing,
+**Peserta** ikut sebagai migrasi `0034`: 856 orang dari export ticketing,
 satu akun per tiket, password awal chapter + nama depan dan wajib diganti saat
 login pertama. Kalau panitia mengirim export baru, buat ulang dengan
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
-file itu berisi nama, email, dan nomor HP 769 orang dan repo ini publik. Tidak ada peserta
+file itu berisi nama, email, dan nomor HP 856 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 

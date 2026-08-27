@@ -22,6 +22,9 @@ func NewTenantRepo(pool *pgxpool.Pool) *TenantRepo {
 // order — the committee asked for that placement, the way sponsors already
 // had it. It is a listing order and nothing else: it does not touch the scan
 // leaderboard, which is a measurement rather than a placement.
+//
+// Matched case-insensitively: the committee's sheets have spelled it both
+// 'WIT.id' and 'WIT.ID', and where it sits must not depend on which.
 func (r *TenantRepo) ListWithVisits(ctx context.Context, memberID int64) ([]domain.TenantWithVisit, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT t.id, t.name, t.category, t.booth, t.initials, t.kind, t.description,
@@ -29,7 +32,7 @@ func (r *TenantRepo) ListWithVisits(ctx context.Context, memberID int64) ([]doma
 		       (v.id IS NOT NULL) AS visited
 		FROM tenants t
 		LEFT JOIN visits v ON v.tenant_id = t.id AND v.member_id = $1
-		ORDER BY (t.name <> 'WIT.id'), (t.kind <> 'sponsor'), t.booth`, memberID)
+		ORDER BY (lower(t.name) <> 'wit.id'), (t.kind <> 'sponsor'), t.booth`, memberID)
 	if err != nil {
 		return nil, err
 	}

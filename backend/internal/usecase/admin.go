@@ -188,7 +188,7 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domai
 	}
 	return u.admin.CreateTenant(ctx, domain.NewTenant{
 		Name: name, Category: strings.TrimSpace(category), Booth: booth,
-		LogoURL: strings.TrimSpace(in.LogoURL),
+		LogoURL:  strings.TrimSpace(in.LogoURL),
 		Initials: strings.ToUpper(strings.TrimSpace(initials)), Kind: kind,
 		Description: strings.TrimSpace(description),
 		ContactName: strings.TrimSpace(in.ContactName), Chapter: strings.TrimSpace(in.Chapter),

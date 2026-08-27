@@ -103,7 +103,7 @@ func (s *Server) handleAdminTableSeats(w http.ResponseWriter, r *http.Request) {
 			"table_no": x.TableNo, "table_name": x.TableName, "seat_no": x.SeatNo,
 			"member_id": x.MemberID, "member_code": x.MemberCode, "name": x.Name,
 			"chapter": x.Chapter, "company": x.Company, "classification": x.Classification,
-			"phone": x.Phone,
+			"phone":     x.Phone,
 			"joined_at": x.JoinedAt.In(eventZone).Format(time.RFC3339),
 		})
 	}

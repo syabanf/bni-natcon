@@ -192,7 +192,7 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 		Name: req.Name, Category: req.Category, Booth: req.Booth, Initials: req.Initials,
 		Kind: req.Kind, Description: req.Description, LogoURL: req.LogoURL,
 		ContactName: req.ContactName,
-		Chapter: req.Chapter, Email: req.Email, Password: req.Password,
+		Chapter:     req.Chapter, Email: req.Email, Password: req.Password,
 	})
 	if err != nil {
 		respondDomainError(w, err)
@@ -203,7 +203,7 @@ func (s *Server) handleAdminCreateTenant(w http.ResponseWriter, r *http.Request)
 			"id": tenant.ID, "name": tenant.Name, "category": tenant.Category,
 			"booth": tenant.Booth, "initials": tenant.Initials,
 			"kind": tenant.Kind, "description": tenant.Description,
-			"logo_url": tenant.LogoURL,
+			"logo_url":     tenant.LogoURL,
 			"contact_name": tenant.ContactName, "chapter": tenant.Chapter,
 		},
 	})
