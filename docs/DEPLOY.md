@@ -7,8 +7,54 @@ Dua bentuk deploy yang didukung. Pilih salah satu.
 ## A. Satu host, semua service (paling sederhana)
 
 `docker compose up -d --build` di sebuah VPS. Nginx di dalam image
-frontend/admin mem-proxy `/api` dan `/uploads` ke container API, jadi
+frontend/admin mem-proxy `/api` dan `/uploads` ke load balancer, jadi
 semuanya satu origin dan tidak ada CORS sama sekali.
+
+### Bentuk stack-nya
+
+```
+peserta / panitia
+        │
+        ▼
+   lb (nginx)  ← satu-satunya pintu ke API, port ${API_PORT:-8090}
+        │  round-robin, re-resolve tiap 10 detik
+        ├──► api  ┐
+        ├──► api  ├─ ${API_REPLICAS:-2} container, tanpa port host sendiri
+        └──► ...  ┘
+                  └──► db (Postgres)  + volume upload bersama
+```
+
+**Replika tidak membuat mesin jadi lebih cepat.** Satu proses Go sudah
+memakai semua core; diukur di host 4 CPU, 3 replika justru **lebih lambat**
+daripada 1 (browse 691 rps vs 1271 rps) karena CPU yang sama dibagi tiga
+plus satu lompatan nginx. Yang dibeli replika adalah **ketahanan**: satu
+container mati di tengah acara tidak menjatuhkan hari itu. Diuji dengan
+mematikan satu replika saat trafik berjalan — 120 dari 120 request tetap
+200. Naikkan `API_REPLICAS` hanya kalau CPU-nya memang ditambah.
+
+### Aritmetika koneksi database
+
+Setiap replika punya pool sendiri, jadi anggarannya:
+
+```
+API_REPLICAS × DB_MAX_CONNS  <  max_connections Postgres
+        2     ×      10      =  20   (default, dari 200)
+```
+
+Kehabisan koneksi terlihat sebagai API gagal start — pada saat paling tidak
+diinginkan. Kalau menaikkan `API_REPLICAS`, periksa perkalian ini dulu.
+
+### Kalau API di-scale ke beberapa host
+
+Dua syarat yang di satu host sudah otomatis terpenuhi:
+
+1. **Folder upload harus dibagi.** Di compose ini semua replika memakai satu
+   named volume. Lintas host, `/data/uploads` perlu object storage atau NFS,
+   kalau tidak logo yang diunggah panitia hanya ada di satu instance.
+2. **Migrasi sudah aman.** Instance yang start bersamaan berebut satu
+   advisory lock Postgres; satu mengerjakan migrasi + seeding, sisanya
+   menunggu lalu melewatinya. Tanpa itu, tiga instance akan menyemai acara
+   yang sama tiga kali.
 
 ```bash
 cp .env.example .env      # ganti JWT_SECRET, SEED_PASSWORD, DB_PASSWORD
@@ -20,8 +66,11 @@ docker compose up -d --build
 | Frontend | 8088                |
 | Admin    | 8089                |
 | Door     | 8087 (di `/door`, login `/door/login`) |
-| API      | 8090                |
+| API (lewat `lb`) | 8090        |
 | Postgres | 5432                |
+
+Container `api` sendiri **tidak punya port host** — hanya `lb` yang
+mengeksposnya, supaya jumlah replika bisa diubah tanpa bentrok port.
 
 ---
 

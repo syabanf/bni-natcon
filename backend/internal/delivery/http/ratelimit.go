@@ -2,12 +2,13 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -36,73 +37,51 @@ import (
 //
 // The second is a ceiling per address, high enough that a venue on one NAT
 // never notices it and low enough that a single machine cannot sweep every
-// account at once.
+// account at once. That one stays in memory on purpose: it is a rough
+// ceiling, it is allowed to be per-instance, and putting it in the database
+// would mean a write for every request rather than every failure.
 const (
 	failedAttemptsPerAccount = 10
 	addressAttemptsPerMinute = 2000
 	attemptWindow            = time.Minute
 )
 
-// failureLimiter is a sliding window over failed attempts, keyed by whatever
-// identifies the account under attack.
+// AuthAttempts is where failed attempts are counted. It is the database
+// rather than this process's memory: behind a load balancer the API is
+// several processes, and three in-memory counters are three times the limit
+// anybody intended.
+type AuthAttempts interface {
+	RecentFailures(ctx context.Context, key string, window time.Duration) (int, error)
+	RecordFailure(ctx context.Context, key string) error
+}
+
+// failureLimiter holds one account to a budget of wrong answers per window.
 type failureLimiter struct {
-	mu        sync.Mutex
-	limit     int
-	window    time.Duration
-	failures  map[string][]time.Time
-	lastSweep time.Time
+	attempts AuthAttempts
+	limit    int
+	window   time.Duration
 }
 
-func newFailureLimiter(limit int, window time.Duration) *failureLimiter {
-	return &failureLimiter{
-		limit:    limit,
-		window:   window,
-		failures: make(map[string][]time.Time),
-	}
+func newFailureLimiter(attempts AuthAttempts, limit int, window time.Duration) *failureLimiter {
+	return &failureLimiter{attempts: attempts, limit: limit, window: window}
 }
 
-// prune drops attempts that have aged out of the window. Callers hold the lock.
-func (f *failureLimiter) prune(key string, now time.Time) {
-	cut := now.Add(-f.window)
-	kept := f.failures[key][:0]
-	for _, t := range f.failures[key] {
-		if t.After(cut) {
-			kept = append(kept, t)
-		}
+func (f *failureLimiter) blocked(ctx context.Context, key string) bool {
+	n, err := f.attempts.RecentFailures(ctx, key, f.window)
+	if err != nil {
+		// Fail open. A database the limiter cannot read is a database the
+		// sign-in behind it cannot use either, and turning the whole hall
+		// away on a blip helps nobody.
+		slog.Error("reading auth failure count", "err", err)
+		return false
 	}
-	if len(kept) == 0 {
-		delete(f.failures, key)
-		return
-	}
-	f.failures[key] = kept
+	return n >= f.limit
 }
 
-// sweep keeps the map from growing for every address that ever guessed wrong.
-// Callers hold the lock.
-func (f *failureLimiter) sweep(now time.Time) {
-	if now.Sub(f.lastSweep) < f.window {
-		return
+func (f *failureLimiter) recordFailure(ctx context.Context, key string) {
+	if err := f.attempts.RecordFailure(ctx, key); err != nil {
+		slog.Error("recording auth failure", "err", err)
 	}
-	f.lastSweep = now
-	for key := range f.failures {
-		f.prune(key, now)
-	}
-}
-
-func (f *failureLimiter) blocked(key string) bool {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.prune(key, time.Now())
-	return len(f.failures[key]) >= f.limit
-}
-
-func (f *failureLimiter) recordFailure(key string) {
-	now := time.Now()
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.prune(key, now)
-	f.failures[key] = append(f.failures[key], now)
-	f.sweep(now)
 }
 
 // middleware buckets by the identifier being attacked, lifted out of the JSON
@@ -125,7 +104,7 @@ func (f *failureLimiter) middleware(fields ...string) func(http.Handler) http.Ha
 				next.ServeHTTP(w, r)
 				return
 			}
-			if f.blocked(key) {
+			if f.blocked(r.Context(), key) {
 				w.Header().Set("Retry-After", strconv.Itoa(int(f.window.Seconds())))
 				respondError(w, http.StatusTooManyRequests,
 					"too many failed attempts for this account — wait a minute and try again")
@@ -137,7 +116,7 @@ func (f *failureLimiter) middleware(fields ...string) func(http.Handler) http.Ha
 			// 404 is not counted: it is the same answer for everyone and
 			// carries no secret.
 			if ww.Status() == http.StatusUnauthorized {
-				f.recordFailure(key)
+				f.recordFailure(r.Context(), key)
 			}
 		})
 	}

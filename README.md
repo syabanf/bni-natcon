@@ -160,6 +160,17 @@ asked of attendees only: a booth's login belongs to the company, and the
 consent a crew gives is a different question from the one an attendee answers
 about their own name and email.
 
+**The API runs behind a load balancer** (`deploy/api-lb.conf`): nginx in front
+of `API_REPLICAS` identical containers, which have no host port of their own.
+Replicas are for redundancy, not speed — one Go process already uses every
+core, and on a 4-CPU host three replicas measured *slower* than one. What they
+buy is that killing a container mid-traffic cost 0 of 120 requests. Two things
+make more than one instance safe: migrations and seeding run under a Postgres
+advisory lock, so a fleet starting together seeds the event once rather than
+once each; and failed sign-ins are counted in the database, so three instances
+do not mean three times the guesses. The connection budget is
+`API_REPLICAS × DB_MAX_CONNS` and must stay under Postgres's `max_connections`.
+
 **Attendees change until the last minute.** Their chapters
 come with them: every import registers the chapter names it meets, so the
 master list is exactly what the committee's sheet contains. **Networking
@@ -512,8 +523,9 @@ concurrent scans of one member → exactly 1 counted.
 - HTTP server timeouts (read/write/idle/header) + graceful shutdown on SIGINT/SIGTERM
 - Per-request 30 s timeout, 2 MiB request-body cap
 - Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cache-Control: no-store`)
-- Login rate limit: **10 failed attempts per account** per minute, counted
-  wherever they come from, plus a ceiling of 2000 requests/IP/minute. It is
+- Login rate limit: **10 failed attempts per account** per minute, counted in
+  the database so the limit belongs to the fleet rather than to one container,
+  plus a ceiling of 2000 requests/IP/minute per instance. It is
   keyed on the account and counts only failures on purpose: a venue is one
   public IP behind a NAT, so a per-IP attempt limit locks the hall out on the
   morning instead of the attacker — and it never stopped the attack anyway,

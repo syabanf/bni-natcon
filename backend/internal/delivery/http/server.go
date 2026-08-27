@@ -49,6 +49,7 @@ type Server struct {
 	booth          *usecase.BoothUsecase
 	admin          *usecase.AdminUsecase
 	networking     *usecase.NetworkingUsecase
+	attempts       AuthAttempts
 	allowedOrigins []string
 	uploadDir      string
 }
@@ -62,12 +63,14 @@ func NewServer(
 	booth *usecase.BoothUsecase,
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
+	attempts AuthAttempts,
 	allowedOrigins []string,
 	uploadDir string,
 ) *Server {
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
+		attempts:       attempts,
 		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
 	}
 }
@@ -99,7 +102,7 @@ func (s *Server) Router() http.Handler {
 		// see ratelimit.go: a venue shares one public IP, so a per-IP login
 		// limit locks the hall out instead of the attacker.
 		venue := perAddress(addressAttemptsPerMinute, attemptWindow)
-		guesses := newFailureLimiter(failedAttemptsPerAccount, attemptWindow)
+		guesses := newFailureLimiter(s.attempts, failedAttemptsPerAccount, attemptWindow)
 		r.With(venue, guesses.middleware("email")).
 			Post("/auth/login", s.handleLogin)
 		// Recovery is guessable by design — a chapter and a phone number —

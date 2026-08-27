@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"log/slog"
 	"sort"
 	"time"
 
@@ -54,6 +55,44 @@ func NewPool(ctx context.Context, dsn string, maxConns, minConns int32) (*pgxpoo
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 	return pool, nil
+}
+
+// bootLockID is the advisory lock the whole fleet agrees on. Any constant
+// works as long as every instance uses the same one; this is the event date.
+const bootLockID int64 = 20260903
+
+// WithBootLock runs fn while holding a Postgres advisory lock.
+//
+// Behind a load balancer the API is several containers, and they start
+// together. Without this they would each read schema_migrations, each find
+// the same migration unapplied, and each run it — seeding the event twice,
+// or failing halfway and taking the deploy with them. The lock makes exactly
+// one instance do the work; the others block here, then find everything
+// already applied and skip straight past it.
+//
+// The lock is session-scoped, so it has to be taken and released on ONE
+// connection rather than anywhere in the pool.
+func WithBootLock(ctx context.Context, pool *pgxpool.Pool, fn func(context.Context) error) error {
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("acquire boot lock connection: %w", err)
+	}
+	defer conn.Release()
+
+	if _, err := conn.Exec(ctx, `SELECT pg_advisory_lock($1)`, bootLockID); err != nil {
+		return fmt.Errorf("take boot lock: %w", err)
+	}
+	// Released on its own connection, and with a context of its own: if fn
+	// failed because ctx expired, the unlock still has to go out or the next
+	// deploy waits on a lock nobody holds.
+	defer func() {
+		unlockCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if _, err := conn.Exec(unlockCtx, `SELECT pg_advisory_unlock($1)`, bootLockID); err != nil {
+			slog.Error("releasing boot lock failed", "err", err)
+		}
+	}()
+	return fn(ctx)
 }
 
 // Migrate applies embedded SQL migrations in filename order, tracking them in

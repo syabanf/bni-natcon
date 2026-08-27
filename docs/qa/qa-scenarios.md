@@ -272,6 +272,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-14 | P1 | Attendee app open on a phone, then a new version is deployed | Close and reopen the app (or reload twice). | It comes up on the new version. The cache is per build, so a deploy cannot leave a phone on the old one — or worse, on a shell whose files the deploy deleted. |
 | CRS-15 | P1 | A phone (or a 375px window) | Open all four sign-ins: /login, /tenant/login, the admin panel, the door app. | Each one is a single column — brand on top, form below it at full width, fields and the Sign in button big enough to tap. Nothing scrolls sideways and the brand appears once, not twice. |
 | CRS-16 | P2 | The door app on a phone | Look at the sign-in fields and the Show button. | They are styled like the other apps — rounded fields with an icon, a Show/Hide toggle on the password. Plain browser boxes mean the stylesheet is not matching the markup. |
+| CC-31 | P1 | Deploy · API behind the load balancer, one replica killed mid-traffic | With the stack up, send steady traffic and kill one api container (crash it from inside, e.g. kill -9 1). | No request fails — the balancer retries on a neighbour. The container comes back on its own via the restart policy. Note: `docker kill` from outside is treated by Docker as an operator stop and will NOT restart; that is expected, not a fault. |
+| CC-32 | P1 | Deploy · several API instances starting together | docker compose down -v, then up with API_REPLICAS=3, and count the seeded data. | 856 attendees, 36 exhibitors, 95 chapters — seeded ONCE, not once per instance. Migrations run under a Postgres advisory lock; the other instances wait, then skip. |
+| CC-33 | P1 | Deploy · rate limit with more than one instance | Send 16 wrong passwords for one account through the balancer, so they spread across replicas. | Blocked from the 11th. Failures are counted in the database, so the limit is the fleet's — not 10 per container. |
 
 ## Door crew app
 
@@ -327,6 +330,6 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Admin master data | 46 | 37 |
 | Admin operations | 38 | 25 |
 | Reports & export | 13 | 10 |
-| Cross-cutting | 16 | 6 |
+| Cross-cutting | 19 | 9 |
 | Door crew app | 10 | 9 |
-| **Total** | **207** | **142** |
+| **Total** | **210** | **145** |

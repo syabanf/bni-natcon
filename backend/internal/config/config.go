@@ -76,10 +76,11 @@ func Load() Config {
 		Env:            getenv("APP_ENV", "development"),
 		AllowedOrigins: origins,
 		UploadDir:      getenv("UPLOAD_DIR", "uploads"),
-		// Sized for a hall, not a laptop — see postgres.NewPool. Lower
-		// DB_MAX_CONNS when the database has a small connection allowance.
-		DBMaxConns: int32(getenvInt("DB_MAX_CONNS", 25)),
-		DBMinConns: int32(getenvInt("DB_MIN_CONNS", 5)),
+		// Per instance — see postgres.NewPool. Behind a load balancer the
+		// budget is replicas x DB_MAX_CONNS, and it has to stay under the
+		// database's own max_connections.
+		DBMaxConns: int32(getenvInt("DB_MAX_CONNS", 10)),
+		DBMinConns: int32(getenvInt("DB_MIN_CONNS", 2)),
 	}
 }
 
