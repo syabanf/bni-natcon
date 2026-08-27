@@ -61,6 +61,11 @@ func (u *AuthUsecase) SetPassword(ctx context.Context, userID int64, newPassword
 	return u.users.SetPassword(ctx, userID, hash)
 }
 
+// RecordConsent is what the consent checkbox on the first-run screen calls.
+func (u *AuthUsecase) RecordConsent(ctx context.Context, userID int64) error {
+	return u.users.RecordConsent(ctx, userID)
+}
+
 // ForgotPassword checks an attendee's chapter against the phone number on
 // their ticket and hands back a short-lived reset token plus enough of their
 // identity for the UI to confirm it found the right person.

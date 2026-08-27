@@ -108,6 +108,7 @@ func (s *Server) Router() http.Handler {
 			r.Use(s.authMiddleware)
 			r.Get("/me", s.handleMe)
 			r.Post("/auth/password", s.handleSetPassword)
+			r.Post("/auth/consent", s.handleConsent)
 
 			// The schedule is the same for everyone in the building — the
 			// attendee agenda, the booth crew wondering when networking

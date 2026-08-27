@@ -28,6 +28,10 @@ type userDTO struct {
 	// The app routes straight to "choose your password" when this is true.
 	MustSetPassword bool   `json:"must_set_password,omitempty"`
 	TicketNumber    string `json:"ticket_number,omitempty"`
+	// MustConsent is true for an attendee who has not yet agreed to the data
+	// notice. The app shows it on the same first-run screen as the password
+	// and will not go past it until the box is ticked.
+	MustConsent bool `json:"must_consent,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
@@ -36,6 +40,10 @@ func toUserDTO(u *domain.User) userDTO {
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
 		Phone: u.Phone, Classification: u.Classification,
 		MustSetPassword: u.MustSetPassword, TicketNumber: u.TicketNumber,
+		// Asked of attendees only: a booth's scanner login belongs to the
+		// company, and the crew consent the committee needs from them is not
+		// the one an attendee gives about their own name and email.
+		MustConsent: u.Role == domain.RoleMember && u.ConsentedAt == nil,
 	}
 }
 
@@ -120,6 +128,16 @@ func (s *Server) handleSetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"status": "password set"})
+}
+
+// handleConsent records that an attendee agreed to the data notice on the
+// first-run screen.
+func (s *Server) handleConsent(w http.ResponseWriter, r *http.Request) {
+	if err := s.auth.RecordConsent(r.Context(), userIDFrom(r.Context())); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "consent recorded"})
 }
 
 // handleForgotPassword checks chapter + the phone number on the ticket and,

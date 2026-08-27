@@ -81,6 +81,8 @@ export const api = {
   me: () => request('/me'),
   setPassword: (password) =>
     request('/auth/password', { method: 'POST', body: { password } }),
+  // The consent checkbox on the first-run screen.
+  recordConsent: () => request('/auth/consent', { method: 'POST' }),
   forgotPassword: (chapter, phone) =>
     request('/auth/forgot', { method: 'POST', body: { chapter, phone } }),
   resetPassword: (resetToken, password) =>

@@ -55,6 +55,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | AUTH-20 | P1 | Signed out | Open /login and read the page. | Headed 'Welcome to' with attendee wording, a 'Forgot your password?' link, and a link across to the booth sign-in. |
 | AUTH-21 | P2 | Signed out | Open /tenant/login and sign in with an ATTENDEE account. | Still works — you land on the attendee home. The wrong door must never lock someone out. |
 | AUTH-22 | P2 | Signed in as a booth | Press Log out. | Returns to the BOOTH sign-in (/tenant/login), not the attendee one. |
+| ATT-40 | P1 | An attendee signing in for the very first time | Sign in with the password on the ticket. | Before anything else: 'Choose your password' AND a data notice with a checkbox — using the app means giving the committee name and email. Save stays disabled until the box is ticked. Nothing else in the app opens until both are done. |
+| ATT-41 | P1 | The same attendee signs in again | Log out, sign in with the new password. | Straight to the pass. Neither the password screen nor the notice appears again. |
+| ATT-42 | P2 | An attendee who set a password before the notice existed | Sign in. | The notice appears alone, headed 'Before you start', with the button reading 'Agree and continue'. No password fields. |
 
 ## Attendee
 
@@ -314,7 +317,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 | Section | Cases | P1 |
 |---|---|---|
-| Auth | 22 | 13 |
+| Auth | 25 | 15 |
 | Attendee | 35 | 23 |
 | Booth scanner | 20 | 14 |
 | Admin master data | 46 | 37 |
@@ -322,4 +325,4 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Reports & export | 13 | 10 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **200** | **137** |
+| **Total** | **203** | **139** |

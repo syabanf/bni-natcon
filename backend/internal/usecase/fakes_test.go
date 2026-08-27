@@ -44,6 +44,20 @@ func (f *fakeUserRepo) SetPassword(_ context.Context, userID int64, hash string)
 	return domain.ErrNotFound
 }
 
+func (f *fakeUserRepo) RecordConsent(_ context.Context, userID int64) error {
+	for _, u := range f.users {
+		if u.ID == userID {
+			// First answer wins, the way COALESCE does in the real repo.
+			if u.ConsentedAt == nil {
+				now := time.Now()
+				u.ConsentedAt = &now
+			}
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
 func (f *fakeUserRepo) FindMembersByChapterPhone(_ context.Context, chapter, phone string) ([]*domain.User, error) {
 	norm := func(s string) string {
 		return strings.ToLower(strings.ReplaceAll(s, " ", ""))

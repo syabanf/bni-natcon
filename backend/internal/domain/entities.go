@@ -33,7 +33,12 @@ type User struct {
 	// TicketNumber identifies the ticket this account was imported from. One
 	// buyer can hold several, which is why members may share an email.
 	TicketNumber string
-	CreatedAt    time.Time
+	// ConsentedAt is when this attendee agreed, in the app, that using it
+	// means handing over their name and email. Nil until they tick the box:
+	// being imported from a ticket sheet is not agreement, so the app asks
+	// before it shows them anything.
+	ConsentedAt *time.Time
+	CreatedAt   time.Time
 }
 
 // Tenant kinds: sponsors are listed above booths on the passport.

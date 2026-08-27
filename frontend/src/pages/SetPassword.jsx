@@ -3,9 +3,16 @@ import { api } from '../api/client'
 import { useAuthStore } from '../store/auth'
 
 /*
- * First sign-in. The account still carries the password generated from the
- * chapter and first name at import time, so nothing else in the app opens
- * until the attendee picks one of their own.
+ * First sign-in — two things the app will not go past.
+ *
+ * The account still carries the password generated from the chapter and first
+ * name at import time, so the attendee picks one of their own here. And an
+ * attendee who has not yet agreed to the data notice agrees here too: being
+ * imported from the committee's ticket sheet is not the same as that person
+ * agreeing to it, so we ask before showing them anything.
+ *
+ * Both can be outstanding, or only one — somebody who set a password before
+ * the notice existed sees the notice alone.
  */
 export default function SetPassword() {
   const user = useAuthStore((s) => s.user)
@@ -13,27 +20,40 @@ export default function SetPassword() {
   const token = useAuthStore((s) => s.token)
   const logout = useAuthStore((s) => s.logout)
 
+  const needsPassword = !!user?.must_set_password
+  const needsConsent = !!user?.must_consent
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [show, setShow] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
     setError('')
-    if (password !== confirm) {
-      setError('The two passwords do not match.')
+    if (needsConsent && !agreed) {
+      setError('Please tick the box to agree before continuing.')
       return
     }
-    if (password.length < 8) {
-      setError('Use at least 8 characters.')
-      return
+    if (needsPassword) {
+      if (password !== confirm) {
+        setError('The two passwords do not match.')
+        return
+      }
+      if (password.length < 8) {
+        setError('Use at least 8 characters.')
+        return
+      }
     }
     setBusy(true)
     try {
-      await api.setPassword(password)
-      setAuth(token, { ...user, must_set_password: false })
+      // Consent first: if the password call fails, the agreement they just
+      // gave is still on record and they are not asked for it again.
+      if (needsConsent) await api.recordConsent()
+      if (needsPassword) await api.setPassword(password)
+      setAuth(token, { ...user, must_set_password: false, must_consent: false })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -47,15 +67,21 @@ export default function SetPassword() {
         <section className="auth-pane form">
           <div className="auth-form-inner">
             <p className="auth-eyebrow">One last step</p>
-            <h2 className="auth-title">Choose your password</h2>
+            <h2 className="auth-title">
+              {needsPassword ? 'Choose your password' : 'Before you start'}
+            </h2>
             <p className="auth-sub">
-              Hi {user?.name?.split(' ')[0]} — you signed in with the password we generated for you.
-              Pick your own now; you&apos;ll use it for the rest of Natcon.
+              Hi {user?.name?.split(' ')[0]} —{' '}
+              {needsPassword
+                ? "you signed in with the password we generated for you. Pick your own now; you'll use it for the rest of Natcon."
+                : 'one short notice to agree to before we open the app.'}
             </p>
 
             {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={submit}>
+              {needsPassword && (
+              <>
               <div className="auth-input">
                 <input
                   type={show ? 'text' : 'password'}
@@ -93,8 +119,31 @@ export default function SetPassword() {
                   required
                 />
               </div>
-              <button className="auth-submit" type="submit" disabled={busy}>
-                {busy ? 'Saving…' : 'Save and continue'}
+              </>
+              )}
+
+              {needsConsent && (
+                <label className="consent">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                  />
+                  <span>
+                    I agree that by using the Natcon 2026 app I give the committee my{' '}
+                    <b>name and email address</b>, so that the booths I choose to visit can
+                    follow up with me and the committee can run the event. Scanning a booth
+                    is my choice; a booth only receives my details once I let it scan my QR.
+                  </span>
+                </label>
+              )}
+
+              <button
+                className="auth-submit"
+                type="submit"
+                disabled={busy || (needsConsent && !agreed)}
+              >
+                {busy ? 'Saving…' : needsPassword ? 'Save and continue' : 'Agree and continue'}
               </button>
             </form>
 

@@ -147,6 +147,17 @@ away.
   deleting one booth and creating another. A booth that has left the sheet is
   removed *unless somebody has already scanned it*.
 
+**Attendees agree before the app opens.** Being imported from the committee's
+ticket sheet is not the same as that person agreeing to it, so the first-run
+screen carries a short notice — using the app means giving the committee their
+name and email — with a checkbox that has to be ticked. The moment they agree
+is stamped on the account (`consented_at`, migration `0035`); nobody is
+marked as having agreed to something they never saw, so an attendee seeded
+before the notice existed is simply asked the next time they sign in. It is
+asked of attendees only: a booth's login belongs to the company, and the
+consent a crew gives is a different question from the one an attendee answers
+about their own name and email.
+
 **Attendees change until the last minute.** Their chapters
 come with them: every import registers the chapter names it meets, so the
 master list is exactly what the committee's sheet contains. **Networking

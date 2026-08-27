@@ -43,7 +43,9 @@ function RequireRole({ role, children }) {
   if (!user) return <Navigate to={loginFor(role)} replace />
   // Still on the password generated at import time: nothing else opens until
   // they pick their own.
-  if (user.must_set_password) return <SetPassword />
+  // Both first-run gates live on one screen: a password of their own, and
+  // agreement to the data notice. Either one outstanding keeps the app shut.
+  if (user.must_set_password || user.must_consent) return <SetPassword />
   if (user.role !== role) {
     const home = homeFor(user)
     return home ? <Navigate to={home} replace /> : <WrongApp />

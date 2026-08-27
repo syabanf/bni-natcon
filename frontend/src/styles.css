@@ -319,6 +319,41 @@ input {
   border-radius: 999px;
   padding: 7px 12px;
 }
+/* The data notice on the first-run screen. A tap target big enough for a
+   thumb on a phone, and the text stays readable rather than fine print —
+   somebody agreeing to hand over their details should be able to read what
+   they are agreeing to. */
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #e2e5ea);
+  border-radius: 12px;
+  background: #fafbfc;
+  font-size: 12.5px;
+  line-height: 1.55;
+  /* The pane centres its copy; a paragraph somebody has to actually read
+     belongs ragged-right. */
+  text-align: left;
+  color: #3a3f47;
+  cursor: pointer;
+}
+
+.consent input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--red, #cf2030);
+  cursor: pointer;
+}
+
+.consent b {
+  color: #14161a;
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 8px;

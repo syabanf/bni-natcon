@@ -250,6 +250,21 @@ check("chapters register themselves from the attendees, nothing pre-loaded",
 
 # The second committee login mirrors admin, so the desk crew never has to
 # borrow the main admin password.
+# ------------------------------------------------- attendee data consent
+section("The data notice every attendee agrees to")
+
+status, body = login("sinta@natcon.id", xff="10.77.0.6")
+check("a seeded attendee is asked for consent on first sign-in",
+      status == 200 and body["user"]["must_consent"] is True, f'{body.get("user")}')
+consent_tok = body["token"]
+status, _, _ = req("POST", "/api/v1/auth/consent", token=consent_tok)
+check("ticking the box is recorded -> 200", status == 200)
+status, body, _ = req("GET", "/api/v1/me", token=consent_tok)
+check("...and they are never asked again",
+      status == 200 and not body["user"].get("must_consent"), f'{body.get("user")}')
+# Agreeing twice must not rewrite when they actually agreed.
+status, _, _ = req("POST", "/api/v1/auth/consent", token=consent_tok)
+check("agreeing again is harmless", status == 200)
 status, body = login("panitia@natcon.id", xff="10.77.0.8")
 check("panitia signs in with admin rights", status == 200 and body["user"]["role"] == "admin")
 status, _, _ = req("GET", "/api/v1/admin/overview", token=body["token"])
@@ -276,6 +291,10 @@ def booth_password(name, booth):
 status, body = login("booth-a1@natcon.id", booth_password("SSCX International", "A1"))
 check("tenant login 200 on its derived password", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
+# A booth's login belongs to the company, not to a person handing over their
+# own name and email, so the attendee's data notice is not asked of it.
+check("a booth scanner is not asked the attendee's question",
+      not body["user"].get("must_consent"), f'{body["user"]}')
 check("a booth's first login demands a password of its own",
       body["user"]["must_set_password"] is True, f'{body["user"]}')
 
