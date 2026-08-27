@@ -693,9 +693,13 @@ status, _, _ = req("PUT", f"/api/v1/booth/visitors/{sinta_member_id}/note", toke
                    body={"note": "interested in bulk order"})
 check("set visitor note -> 200", status == 200)
 status, body, _ = req("GET", f"/api/v1/booth/visitors/{sinta_member_id}", token=tenant_tok)
-check("visitor detail carries note + phone", status == 200
-      and body["visitor"]["note"] == "interested in bulk order"
-      and body["visitor"]["phone"] == "+62811000201")
+check("visitor detail carries the note", status == 200
+      and body["visitor"]["note"] == "interested in bulk order")
+# A scan is somebody agreeing to be counted at a stand, not handing over their
+# WhatsApp. The number is withheld from the payload, not merely hidden in the
+# app, so it never reaches the booth's device.
+check("a booth never receives a visitor's phone number",
+      "phone" not in body["visitor"], f'{body["visitor"]}')
 status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
 check("visitor list shows the note",
       any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
@@ -830,9 +834,11 @@ check("status shows table 12 with 2 mates", body["checked_in"] is True
 # Business classification + WhatsApp number are what people ask each other for
 # across a table, so every mate row carries both.
 sinta_mate = next(m for m in body["mates"] if not m["is_me"])
-check("table mates carry classification + phone for the WhatsApp link",
-      sinta_mate["classification"] == "Trade & Distribution"
-      and sinta_mate["phone"] == "+62811000201")
+check("table mates carry classification",
+      sinta_mate["classification"] == "Trade & Distribution")
+# Sitting down at a table used to put everyone's number on everyone's screen.
+check("a tablemate's phone number is not handed round the table",
+      not any("phone" in m for m in body["mates"]), f'{body["mates"]}')
 
 status, _, _ = req("POST", "/api/v1/networking/contacts", token=member_tok, body={"member_id": sinta_id})
 check("save contact", status == 200)
@@ -854,8 +860,9 @@ check("table detail unknown -> 404", status == 404)
 status, body, _ = req("GET", f"/api/v1/networking/contacts/{sinta_id}", token=member_tok)
 check("contact detail shows current table 12",
       status == 200 and body["current_table_no"] == 12)
-check("contact detail carries email + phone",
-      body["email"] == "sinta@natcon.id" and body["phone"] == "+62811000201")
+check("contact detail carries the email",
+      body["email"] == "sinta@natcon.id")
+check("...but not the phone number", "phone" not in body, f"{body}")
 check("contact detail carries classification",
       body["classification"] == "Trade & Distribution")
 

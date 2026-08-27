@@ -382,6 +382,11 @@ func (s *Server) handleBoothVisitors(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"visitors": out})
 }
 
+// The phone number is deliberately absent. A scan is somebody agreeing to be
+// counted at a stand, not handing over their WhatsApp; the committee's own
+// export is where a booth's follow-up list comes from, and the per-tenant one
+// leaves the number out too. Withheld here rather than merely hidden in the
+// app, so it never reaches the device at all.
 func visitorToDTO(v *domain.Visitor) map[string]any {
 	return map[string]any{
 		"member_id":   v.MemberID,
@@ -389,7 +394,6 @@ func visitorToDTO(v *domain.Visitor) map[string]any {
 		"chapter":     v.Chapter,
 		"company":     v.Company,
 		"member_code": v.MemberCode,
-		"phone":       v.Phone,
 		"note":        v.Note,
 		"visited_at":  v.VisitedAt,
 	}

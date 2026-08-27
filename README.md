@@ -19,10 +19,12 @@ it explains them and **reads each step out loud** (the browser's own speech,
 so there is nothing to download); the speaker button silences it for good. It
 never opens by itself: somebody at a registration desk is trying to do one
 thing, and a sheet across the screen is in the way of it.
-straight into the table's network, where every person shows their **chapter**,
-**business classification** and a **WhatsApp link**, takes a **private note**
-straight from the seat, and whose contact details carry **email & phone** that
-open the mail/phone app on tap. Tenants
+straight into the table's network, where every person shows their **chapter**
+and **business classification**, takes a **private note** straight from the
+seat, and whose contact details carry their **email**. No phone numbers are
+shown anywhere in the attendee or booth apps, and none are sent to those
+devices — sitting down at a table used to put everybody's WhatsApp on
+everybody's screen. The committee's export is where numbers live. Tenants
 scan member QRs — which carry the attendee's **ticket number**, the one
 printed on their ticket — with the camera, or take **manual input by ticket
 number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open

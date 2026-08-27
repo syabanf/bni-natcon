@@ -1589,7 +1589,7 @@ input {
   text-overflow: ellipsis;
   margin-top: 1px;
 }
-/* Chapter, business classification and WhatsApp under each person. */
+/* Chapter and business classification under each person. */
 .net-person p.np-chapter {
   font-size: 10.5px;
   color: #9a9aa0;
@@ -1622,16 +1622,6 @@ input {
   background: #f1f2f4;
   border-radius: 5px;
   padding: 2px 7px;
-  white-space: nowrap;
-}
-.np-wa {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #0f8a4a;
-  background: #e8f7ef;
-  border-radius: 5px;
-  padding: 2px 7px;
-  text-decoration: none;
   white-space: nowrap;
 }
 .np-save {

@@ -80,7 +80,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-13 | P1 | Learning class tab, networking | Look for a way to type a table number. | There is none — scanning the table QR is the only way in. The note says so, and the camera-failure message points at the committee. |
 | ATT-14 | P1 | Network tab | Scan the printed table QR with the camera (real phone). | Same result as typing the number — checked in at that table. |
 | ATT-15 | P1 | Network tab | Scan your own member QR at the table screen. | Refused as 'not a networking table code'. It must NOT seat you at table 1. |
-| ATT-16 | P1 | At a table with other people | Read another person's row. | Shows their company, BNI chapter, business classification and a WhatsApp link with their number. |
+| ATT-16 | P1 | At a table with other people | Read another person's row. | Shows their company, BNI chapter and business classification. NO phone number and no WhatsApp link — not on screen and not in the response the app receives. |
 | ATT-17 | P1 | At a table | Press '+ Note' on someone you have NOT saved yet, write a note and save. | The note is stored and shown on their row; the contact is saved automatically (the row now offers 'Edit note'). |
 | ATT-18 | P2 | At a table | Press '+ Save' on someone. | They are added to your saved contacts. |
 | ATT-19 | P2 | Saved at least one contact | Open 'Table History & Saved Contacts'. | Lists the tables you joined and the contacts you saved, each with its note. |
@@ -100,6 +100,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-33 | P1 | An attendee who has already run the tour | Press 'Quick tour' again, this time from the Passport screen. | It starts again at step 1 on Home, from wherever it was pressed. Back, Next and Skip all work, and it stays closed until asked for again. |
 | ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
 | ATT-35 | P2 | Attendee passport | Look at the order of the cards. | WIT.id is first, then the sponsors, then the booths by number. Placement only — the dashboard's Booth Ranking still counts scans honestly. |
+| ATT-43 | P1 | Attendee app · anywhere another person is shown | Open a networking tablemate, a saved contact's detail, and the class attendee list. | No phone or WhatsApp number appears on any of them. Checking the network response shows the field is absent, not merely hidden. |
 
 ## Booth scanner
 
@@ -127,6 +128,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login. Both halves are all lowercase: booth-<code>@natcon.id, and the first password = company name + booth code, letters & digits only (WIT.id at A14 -> booth-a14@natcon.id / witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
 | BTH-19 | P1 | A booth that already set its own password | Sign in again with the new password. | Straight to the scanner — no password screen. The old committee-issued password is refused. |
 | BTH-20 | P1 | A booth still on the committee's password, signing in on a phone | Tap 'show password' so the keyboard capitalises, then type the email and first password with a capital first letter (BOOTH-A14@natcon.id / Witida14). | Still signs in. Generated passwords are all-lowercase, so the capital a phone keyboard adds is accepted while the booth is on that password. After the crew sets their own, case is matched exactly again. |
+| BTH-21 | P1 | Booth · a visitor already scanned | Open Dashboard, tap the visitor, look at the detail card. | Name, company, chapter, member code and the note — and no phone number, no Call button. A scan means being counted at the stand, not handing over a WhatsApp; follow-up comes from the committee's leads export. |
 
 ## Admin master data
 
@@ -318,11 +320,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | Section | Cases | P1 |
 |---|---|---|
 | Auth | 25 | 15 |
-| Attendee | 35 | 23 |
-| Booth scanner | 20 | 14 |
+| Attendee | 36 | 24 |
+| Booth scanner | 21 | 15 |
 | Admin master data | 46 | 37 |
 | Admin operations | 38 | 25 |
 | Reports & export | 13 | 10 |
 | Cross-cutting | 16 | 6 |
 | Door crew app | 10 | 9 |
-| **Total** | **203** | **139** |
+| **Total** | **205** | **141** |
