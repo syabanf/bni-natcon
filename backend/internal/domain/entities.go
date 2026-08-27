@@ -33,7 +33,12 @@ type User struct {
 	// TicketNumber identifies the ticket this account was imported from. One
 	// buyer can hold several, which is why members may share an email.
 	TicketNumber string
-	CreatedAt    time.Time
+	// ConsentedAt is when this attendee agreed, in the app, that using it
+	// means handing over their name and email. Nil until they tick the box:
+	// being imported from a ticket sheet is not agreement, so the app asks
+	// before it shows them anything.
+	ConsentedAt *time.Time
+	CreatedAt   time.Time
 }
 
 // Tenant kinds: sponsors are listed above booths on the passport.
@@ -305,6 +310,22 @@ type MemberUpdate struct {
 	// The number their QR carries. A typo here makes a pass unscannable, so
 	// the committee can correct it.
 	TicketNumber string
+}
+
+// TenantLoginEmail is the address a booth signs in with, derived from its
+// stand: booth-a14@natcon.id for A14. Lowercase, letters and digits only,
+// and a double stand ("A47 & A48") answers to its first code — the same
+// rule the seeded logins already follow, so a booth the committee adds by
+// hand gets the address its briefing sheet predicts.
+func TenantLoginEmail(booth string) string {
+	first, _, _ := strings.Cut(booth, "&")
+	out := make([]rune, 0, len(first))
+	for _, r := range strings.ToLower(first) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			out = append(out, r)
+		}
+	}
+	return "booth-" + string(out) + "@natcon.id"
 }
 
 // TenantDefaultPassword is the password a booth account starts on: the

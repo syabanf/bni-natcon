@@ -21,14 +21,8 @@ type Config struct {
 	Env            string
 	AllowedOrigins []string
 	UploadDir      string
-	// Login attempts allowed per client IP per minute. Conference WiFi puts
-	// the whole hall behind one NAT address, so this ceiling is shared by
-	// everyone on that network — it has to clear a 1,000-person registration
-	// rush, not just one honest user.
-	LoginRatePerMin int
-	// Password recovery is guessable by design (chapter + phone), so it keeps
-	// a tighter ceiling than login.
-	RecoveryRatePerMin int
+	DBMaxConns     int32
+	DBMinConns     int32
 }
 
 // loadDotEnv reads KEY=VALUE pairs from the given file into the process
@@ -82,9 +76,11 @@ func Load() Config {
 		Env:            getenv("APP_ENV", "development"),
 		AllowedOrigins: origins,
 		UploadDir:      getenv("UPLOAD_DIR", "uploads"),
-
-		LoginRatePerMin:    getenvInt("LOGIN_RATE_PER_MIN", 200),
-		RecoveryRatePerMin: getenvInt("RECOVERY_RATE_PER_MIN", 60),
+		// Per instance — see postgres.NewPool. Behind a load balancer the
+		// budget is replicas x DB_MAX_CONNS, and it has to stay under the
+		// database's own max_connections.
+		DBMaxConns: int32(getenvInt("DB_MAX_CONNS", 10)),
+		DBMinConns: int32(getenvInt("DB_MIN_CONNS", 2)),
 	}
 }
 

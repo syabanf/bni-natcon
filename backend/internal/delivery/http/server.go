@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httprate"
 
 	"natcon2026/backend/internal/domain"
 	"natcon2026/backend/internal/usecase"
@@ -41,13 +40,6 @@ func limitBody(next http.Handler) http.Handler {
 	})
 }
 
-// RateLimits caps auth traffic per client IP per minute. The values come from
-// config so they can be raised on event day without a rebuild.
-type RateLimits struct {
-	LoginPerMin    int
-	RecoveryPerMin int
-}
-
 type Server struct {
 	jwt            *JWTIssuer
 	auth           *usecase.AuthUsecase
@@ -57,9 +49,9 @@ type Server struct {
 	booth          *usecase.BoothUsecase
 	admin          *usecase.AdminUsecase
 	networking     *usecase.NetworkingUsecase
+	attempts       AuthAttempts
 	allowedOrigins []string
 	uploadDir      string
-	limits         RateLimits
 }
 
 func NewServer(
@@ -71,15 +63,15 @@ func NewServer(
 	booth *usecase.BoothUsecase,
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
+	attempts AuthAttempts,
 	allowedOrigins []string,
 	uploadDir string,
-	limits RateLimits,
 ) *Server {
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
+		attempts:       attempts,
 		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
-		limits: limits,
 	}
 }
 
@@ -109,25 +101,30 @@ func (s *Server) Router() http.Handler {
 	r.Handle("/uploads/*", s.uploadsHandler())
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Brute-force protection, keyed per client IP. The ceiling is shared
-		// by everyone behind one NAT address — a conference hall is a single
-		// public IP for hundreds of attendees — so it is sized for a
-		// registration rush, not for one person typing.
-		login := httprate.LimitByIP(s.limits.LoginPerMin, time.Minute)
-		recovery := httprate.LimitByIP(s.limits.RecoveryPerMin, time.Minute)
-		r.With(login).Post("/auth/login", s.handleLogin)
-		// Choosing between duplicate accounts is part of the same login the
-		// attendee already started, so it shares login's ceiling.
-		r.With(login).Post("/auth/login/select", s.handleSelectAccount)
-		// Recovery is guessable by design (chapter + phone) and far rarer than
-		// login, so it keeps a tighter ceiling.
-		r.With(recovery).Post("/auth/forgot", s.handleForgotPassword)
-		r.With(recovery).Post("/auth/reset", s.handleResetPassword)
+		// Brute-force protection follows the ACCOUNT, not the address —
+		// see ratelimit.go: a venue shares one public IP, so a per-IP login
+		// limit locks the hall out instead of the attacker.
+		venue := perAddress(addressAttemptsPerMinute, attemptWindow)
+		guesses := newFailureLimiter(s.attempts, failedAttemptsPerAccount, attemptWindow)
+		r.With(venue, guesses.middleware("email")).
+			Post("/auth/login", s.handleLogin)
+		// Recovery is guessable by design — a chapter and a phone number —
+		// so the pair being guessed is what gets counted.
+		r.With(venue, guesses.middleware("chapter", "phone")).
+			Post("/auth/forgot", s.handleForgotPassword)
+		// The other two carry an HMAC-signed token we issued. There is no
+		// account to protect: an attacker varies the TOKEN, so a per-token
+		// counter would see each guess as a first offence and never fire.
+		// Forging one needs the signing secret, which no number of attempts
+		// supplies, so the address ceiling is the whole defence here.
+		r.With(venue).Post("/auth/login/select", s.handleSelectAccount)
+		r.With(venue).Post("/auth/reset", s.handleResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)
 			r.Get("/me", s.handleMe)
 			r.Post("/auth/password", s.handleSetPassword)
+			r.Post("/auth/consent", s.handleConsent)
 
 			// The schedule is the same for everyone in the building — the
 			// attendee agenda, the booth crew wondering when networking

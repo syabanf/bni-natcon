@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -27,22 +28,26 @@ func main() {
 		slog.Warn("using default JWT secret — set JWT_SECRET before deploying")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL)
+	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL, cfg.DBMaxConns, cfg.DBMinConns)
 	if err != nil {
 		slog.Error("database connection failed", "err", err)
 		os.Exit(1)
 	}
 	defer pool.Close()
 
-	if err := postgres.Migrate(ctx, pool); err != nil {
-		slog.Error("migration failed", "err", err)
-		os.Exit(1)
-	}
-	if err := postgres.SeedIfEmpty(ctx, pool, cfg.SeedPassword); err != nil {
-		slog.Error("seed failed", "err", err)
+	// One instance migrates and seeds; the rest wait here and then find the
+	// work already done. Without the lock, a fleet starting together would
+	// each try to seed the same event.
+	if err := postgres.WithBootLock(ctx, pool, func(ctx context.Context) error {
+		if err := postgres.Migrate(ctx, pool); err != nil {
+			return fmt.Errorf("migration failed: %w", err)
+		}
+		return postgres.SeedIfEmpty(ctx, pool, cfg.SeedPassword)
+	}); err != nil {
+		slog.Error("database bootstrap failed", "err", err)
 		os.Exit(1)
 	}
 
@@ -66,12 +71,9 @@ func main() {
 		usecase.NewBoothUsecase(tenantRepo, visitRepo),
 		usecase.NewAdminUsecase(postgres.NewAdminRepo(pool), httpdelivery.BcryptVerifier{}, cfg.SeedPassword),
 		usecase.NewNetworkingUsecase(postgres.NewNetworkingRepo(pool)),
+		postgres.NewAuthFailureRepo(pool),
 		cfg.AllowedOrigins,
 		cfg.UploadDir,
-		httpdelivery.RateLimits{
-			LoginPerMin:    cfg.LoginRatePerMin,
-			RecoveryPerMin: cfg.RecoveryRatePerMin,
-		},
 	)
 
 	srv := &http.Server{

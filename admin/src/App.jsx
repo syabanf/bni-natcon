@@ -82,6 +82,9 @@ function Login({ onLogin }) {
                 placeholder="Email"
                 aria-label="Email"
                 autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
               />
             </div>
@@ -100,6 +103,9 @@ function Login({ onLogin }) {
                 placeholder="Password"
                 aria-label="Password"
                 autoComplete="current-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
                 autoFocus
               />

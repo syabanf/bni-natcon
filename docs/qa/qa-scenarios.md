@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 769 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 856 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -55,6 +55,11 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | AUTH-20 | P1 | Signed out | Open /login and read the page. | Headed 'Welcome to' with attendee wording, a 'Forgot your password?' link, and a link across to the booth sign-in. |
 | AUTH-21 | P2 | Signed out | Open /tenant/login and sign in with an ATTENDEE account. | Still works — you land on the attendee home. The wrong door must never lock someone out. |
 | AUTH-22 | P2 | Signed in as a booth | Press Log out. | Returns to the BOOTH sign-in (/tenant/login), not the attendee one. |
+| ATT-40 | P1 | An attendee signing in for the very first time | Sign in with the password on the ticket. | Before anything else: 'Choose your password' AND a data notice with a checkbox — using the app means giving the committee name and email. Save stays disabled until the box is ticked. Nothing else in the app opens until both are done. |
+| ATT-41 | P1 | The same attendee signs in again | Log out, sign in with the new password. | Straight to the pass. Neither the password screen nor the notice appears again. |
+| ATT-42 | P2 | An attendee who set a password before the notice existed | Sign in. | The notice appears alone, headed 'Before you start', with the button reading 'Agree and continue'. No password fields. |
+| AUTH-24 | P1 | A hall of attendees behind one public IP (venue WiFi NAT) | Have 16+ different attendees sign in from the same network inside a minute. | All of them get in — none see 429. A venue is a single NAT, so a per-IP attempt limit would lock the hall out on the morning. One email here belongs to 17 ticket holders; all 17 work. |
+| AUTH-25 | P2 | An account that has just been rate-limited | After tripping AUTH-23, sign in to a DIFFERENT account from the same network. | The other account signs in normally. Only the account under attack is held, and only for a minute. |
 
 ## Attendee
 
@@ -77,7 +82,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-13 | P1 | Learning class tab, networking | Look for a way to type a table number. | There is none — scanning the table QR is the only way in. The note says so, and the camera-failure message points at the committee. |
 | ATT-14 | P1 | Network tab | Scan the printed table QR with the camera (real phone). | Same result as typing the number — checked in at that table. |
 | ATT-15 | P1 | Network tab | Scan your own member QR at the table screen. | Refused as 'not a networking table code'. It must NOT seat you at table 1. |
-| ATT-16 | P1 | At a table with other people | Read another person's row. | Shows their company, BNI chapter, business classification and a WhatsApp link with their number. |
+| ATT-16 | P1 | At a table with other people | Read another person's row. | Shows their company, BNI chapter and business classification. NO phone number and no WhatsApp link — not on screen and not in the response the app receives. |
 | ATT-17 | P1 | At a table | Press '+ Note' on someone you have NOT saved yet, write a note and save. | The note is stored and shown on their row; the contact is saved automatically (the row now offers 'Edit note'). |
 | ATT-18 | P2 | At a table | Press '+ Save' on someone. | They are added to your saved contacts. |
 | ATT-19 | P2 | Saved at least one contact | Open 'Table History & Saved Contacts'. | Lists the tables you joined and the contacts you saved, each with its note. |
@@ -97,6 +102,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ATT-33 | P1 | An attendee who has already run the tour | Press 'Quick tour' again, this time from the Passport screen. | It starts again at step 1 on Home, from wherever it was pressed. Back, Next and Skip all work, and it stays closed until asked for again. |
 | ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
 | ATT-35 | P2 | Attendee passport | Look at the order of the cards. | WIT.id is first, then the sponsors, then the booths by number. Placement only — the dashboard's Booth Ranking still counts scans honestly. |
+| ATT-43 | P1 | Attendee app · anywhere another person is shown | Open a networking tablemate, a saved contact's detail, and the class attendee list. | No phone or WhatsApp number appears on any of them. Checking the network response shows the field is absent, not merely hidden. |
 
 ## Booth scanner
 
@@ -121,8 +127,10 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-15 | P1 | Scanner, an attendee holding a ticket from the sheet | Scan their pass QR from the My QR screen. | Recorded, with their name — the QR carries the ticket number, not the member code. |
 | BTH-16 | P2 | Scanner, the same attendee | Type the member code printed under their QR instead. | Reported as a repeat visit of the same person — both keys reach one attendee, never two. |
 | BTH-17 | P2 | Scanner | Type a ticket number nobody holds (16C6C-NOSUCHTICKET). | A clear not-found message. Nothing is recorded. |
-| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login with the derived first password: company name + booth code, lowercase, letters & digits only (WIT.id at A14 → witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
+| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login. Both halves are all lowercase: booth-<code>@natcon.id, and the first password = company name + booth code, letters & digits only (WIT.id at A14 -> booth-a14@natcon.id / witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
 | BTH-19 | P1 | A booth that already set its own password | Sign in again with the new password. | Straight to the scanner — no password screen. The old committee-issued password is refused. |
+| BTH-20 | P1 | A booth still on the committee's password, signing in on a phone | Tap 'show password' so the keyboard capitalises, then type the email and first password with a capital first letter (BOOTH-A14@natcon.id / Witida14). | Still signs in. Generated passwords are all-lowercase, so the capital a phone keyboard adds is accepted while the booth is on that password. After the crew sets their own, case is matched exactly again. |
+| BTH-21 | P1 | Booth · a visitor already scanned | Open Dashboard, tap the visitor, look at the detail card. | Name, company, chapter, member code and the note — and no phone number, no Call button. A scan means being counted at the stand, not handing over a WhatsApp; follow-up comes from the committee's leads export. |
 
 ## Admin master data
 
@@ -264,6 +272,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-14 | P1 | Attendee app open on a phone, then a new version is deployed | Close and reopen the app (or reload twice). | It comes up on the new version. The cache is per build, so a deploy cannot leave a phone on the old one — or worse, on a shell whose files the deploy deleted. |
 | CRS-15 | P1 | A phone (or a 375px window) | Open all four sign-ins: /login, /tenant/login, the admin panel, the door app. | Each one is a single column — brand on top, form below it at full width, fields and the Sign in button big enough to tap. Nothing scrolls sideways and the brand appears once, not twice. |
 | CRS-16 | P2 | The door app on a phone | Look at the sign-in fields and the Show button. | They are styled like the other apps — rounded fields with an icon, a Show/Hide toggle on the password. Plain browser boxes mean the stylesheet is not matching the markup. |
+| CC-31 | P1 | Deploy · API behind the load balancer, one replica killed mid-traffic | With the stack up, send steady traffic and kill one api container (crash it from inside, e.g. kill -9 1). | No request fails — the balancer retries on a neighbour. The container comes back on its own via the restart policy. Note: `docker kill` from outside is treated by Docker as an operator stop and will NOT restart; that is expected, not a fault. |
+| CC-32 | P1 | Deploy · several API instances starting together | docker compose down -v, then up with API_REPLICAS=3, and count the seeded data. | 856 attendees, 36 exhibitors, 95 chapters — seeded ONCE, not once per instance. Migrations run under a Postgres advisory lock; the other instances wait, then skip. |
+| CC-33 | P1 | Deploy · rate limit with more than one instance | Send 16 wrong passwords for one account through the balancer, so they spread across replicas. | Blocked from the 11th. Failures are counted in the database, so the limit is the fleet's — not 10 per container. |
 
 ## Door crew app
 
@@ -288,10 +299,10 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
-| Attendees | already there — 769 from the ticketing export | Seeded by migration 0028. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. |
-| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id; first password = company name + booth code, lowercase alphanumerics (SSCX International at A1 → sscxinternationala1). It opens the door once — each crew sets their own on first sign-in. Alpha leaders holds two stands as one booth, 'A47 & A48', logging in as booth-a47@natcon.id / alphaleadersa47a48. |
+| Attendees | already there — 856 from the ticketing export | Seeded by migration 0034. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. 146 of them have no company on file — the committee's newer export dropped that column. |
+| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id; first password = company name + booth code, lowercase alphanumerics (SSCX International at A1 -> sscxinternationala1). It opens the door once — each crew sets their own on first sign-in. GrasiaCare holds two stands as one booth, 'A18 & A20' (login booth-a18@natcon.id); ALPHA LEADERS likewise on 'A47 & A48' (booth-a47@natcon.id). Paper.id is on A22. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
-| Sponsor scanner | booth-b1@natcon.id / biomedikab1 | Bio Medika · booth B1 — first password follows the same name+booth rule |
+| Sponsor scanner | booth-b1@natcon.id / biomedikab1 | Bio Medika - booth B1. The four sponsors are the B and C stands: B1, B2, B3, C1. |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
 | Imported attendee password | chapter + first name, lowercase, no spaces | Heritage + Fahmi → heritagefahmi |
 | Unknown member code | NATCON-2026-99999 | For the not-found cases |
@@ -313,12 +324,12 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 
 | Section | Cases | P1 |
 |---|---|---|
-| Auth | 22 | 13 |
-| Attendee | 35 | 23 |
-| Booth scanner | 19 | 13 |
+| Auth | 27 | 16 |
+| Attendee | 36 | 24 |
+| Booth scanner | 21 | 15 |
 | Admin master data | 46 | 37 |
 | Admin operations | 38 | 25 |
 | Reports & export | 13 | 10 |
-| Cross-cutting | 16 | 6 |
+| Cross-cutting | 19 | 9 |
 | Door crew app | 10 | 9 |
-| **Total** | **199** | **136** |
+| **Total** | **210** | **145** |

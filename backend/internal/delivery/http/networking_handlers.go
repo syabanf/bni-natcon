@@ -29,7 +29,7 @@ func (s *Server) handleNetworkingStatus(w http.ResponseWriter, r *http.Request) 
 		for _, m := range status.Mates {
 			mates = append(mates, map[string]any{
 				"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
-				"company": m.Company, "classification": m.Classification, "phone": m.Phone,
+				"company": m.Company, "classification": m.Classification,
 				"seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved, "note": m.Note,
 			})
 		}
@@ -112,7 +112,7 @@ func (s *Server) handleNetworkingTableDetail(w http.ResponseWriter, r *http.Requ
 	for _, m := range d.Members {
 		members = append(members, map[string]any{
 			"member_id": m.MemberID, "name": m.Name, "chapter": m.Chapter,
-			"company": m.Company, "classification": m.Classification, "phone": m.Phone,
+			"company": m.Company, "classification": m.Classification,
 			"seat_no": m.SeatNo, "is_me": m.IsMe, "saved": m.Saved, "note": m.Note,
 		})
 	}
@@ -140,7 +140,7 @@ func (s *Server) handleNetworkingContactDetail(w http.ResponseWriter, r *http.Re
 		"member_id": d.MemberID, "name": d.Name, "chapter": d.Chapter,
 		"company": d.Company, "classification": d.Classification,
 		"member_code": d.MemberCode, "email": d.Email,
-		"phone": d.Phone, "note": d.Note, "saved_at": d.SavedAt,
+		"note": d.Note, "saved_at": d.SavedAt,
 		"current_table_no": d.CurrentTableNo,
 	})
 }

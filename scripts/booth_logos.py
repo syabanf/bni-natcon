@@ -38,7 +38,7 @@ MIRROR = ROOT / "admin/public/logos"
 # looks half the size of a wordmark sitting next to it. 320x128 is 2.5:1 —
 # wide enough for a wordmark, tall enough that a square logo still fills the
 # height — and already four times the pixels a retina phone shows in a 38px
-# tile. Every kilobyte here is downloaded by 769 people on a venue WiFi.
+# tile. Every kilobyte here is downloaded by 856 people on a venue WiFi.
 CANVAS = (320, 128)
 MARGIN = 0.06
 PLATE = (17, 19, 23, 255)

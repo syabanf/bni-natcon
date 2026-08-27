@@ -19,10 +19,12 @@ it explains them and **reads each step out loud** (the browser's own speech,
 so there is nothing to download); the speaker button silences it for good. It
 never opens by itself: somebody at a registration desk is trying to do one
 thing, and a sheet across the screen is in the way of it.
-straight into the table's network, where every person shows their **chapter**,
-**business classification** and a **WhatsApp link**, takes a **private note**
-straight from the seat, and whose contact details carry **email & phone** that
-open the mail/phone app on tap. Tenants
+straight into the table's network, where every person shows their **chapter**
+and **business classification**, takes a **private note** straight from the
+seat, and whose contact details carry their **email**. No phone numbers are
+shown anywhere in the attendee or booth apps, and none are sent to those
+devices — sitting down at a table used to put everybody's WhatsApp on
+everybody's screen. The committee's export is where numbers live. Tenants
 scan member QRs — which carry the attendee's **ticket number**, the one
 printed on their ticket — with the camera, or take **manual input by ticket
 number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open
@@ -95,9 +97,9 @@ away.
 
 **A fresh database holds the event's own master data and nothing invented:**
 
-- **The 769 attendees of the ticketing export** (migration `0028`), one per
+- **The 856 attendees of the ticketing export** (migration `0034`), one per
   ticket, with the chapters they carry and the password printed on their
-  ticket — chapter + first name, hashed at generation because 769 bcrypt
+  ticket — chapter + first name, hashed at generation because 856 bcrypt
   hashes would add a minute to every boot. `must_set_password` stays true, so
   each attendee still picks their own on first sign-in. Regenerate it from a
   newer export with
@@ -114,13 +116,11 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
-- **The floor plan the committee last drew, and 34 company logos**
-  (migration `0029`). Their logo pack names each file `<booth> - <company>`,
-  and those numbers are newer than the sheet's: GrasiaCare has given up its
-  second stand and everything from Paper.id on has moved down a slot. So the
-  booths are renumbered to match, keyed on the company name, and each
-  scanner login follows its stand — `booth-a20@natcon.id` is whoever stands
-  on A20. Scans and passwords are untouched. The images are prepared by
+- **34 company logos**, carried by migration `0033` from
+  [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
+  been redrawn twice, so the mapping is keyed on the **company name** and the
+  files are named after the company too — a stand number would go stale every
+  time the committee moves somebody. The images are prepared by
   [`scripts/booth_logos.py`](scripts/booth_logos.py) and ship with the app; a
   logo the committee uploads later wins, and the two exhibitors who sent none
   keep their initials.
@@ -137,19 +137,41 @@ away.
   From the Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
 - **The 32 booths and 4 sponsors of the committee's booth sheet** (migration
-  `0023`), each with its scanner login. The sheet's own *Sponsor* divider
-  decides which is which, and an exhibitor holding two positions is **one
-  exhibitor**: the booth is labelled `A18 & A20`, keeps one login and one QR
-  (printed once per sign), and counts once towards the draw's booth minimum.
-  Migration `0027` merges the pair on a database that split them. Generated
-  straight from the spreadsheet by
+  `0033`), each with its scanner login. Stand `A*` is the exhibition floor and
+  `B*`/`C*` are the sponsor stands, and an exhibitor holding two positions is
+  **one exhibitor**: the booth is labelled `A18 & A20`, keeps one login and
+  one QR (printed once per sign), and counts once towards the draw's booth
+  minimum. Generated straight from the spreadsheet by
   [`scripts/booths_migration.py`](scripts/booths_migration.py) — edit the
-  sheet, re-run the script, restart. It works in both directions: a booth
-  already there keeps its login and its scans, and a booth that has left the
-  sheet is removed *unless somebody has already scanned it*.
+  sheet, re-run the script, restart. An exhibitor is matched on its **company
+  name**, never its stand, so when the committee moves a company the migration
+  *moves* it — keeping its login, its scans and its identity — instead of
+  deleting one booth and creating another. A booth that has left the sheet is
+  removed *unless somebody has already scanned it*.
 
-**Attendees are the one import.** They change until the last minute, and 769
-people's names, emails and phone numbers do not belong in git. Their chapters
+**Attendees agree before the app opens.** Being imported from the committee's
+ticket sheet is not the same as that person agreeing to it, so the first-run
+screen carries a short notice — using the app means giving the committee their
+name and email — with a checkbox that has to be ticked. The moment they agree
+is stamped on the account (`consented_at`, migration `0035`); nobody is
+marked as having agreed to something they never saw, so an attendee seeded
+before the notice existed is simply asked the next time they sign in. It is
+asked of attendees only: a booth's login belongs to the company, and the
+consent a crew gives is a different question from the one an attendee answers
+about their own name and email.
+
+**The API runs behind a load balancer** (`deploy/api-lb.conf`): nginx in front
+of `API_REPLICAS` identical containers, which have no host port of their own.
+Replicas are for redundancy, not speed — one Go process already uses every
+core, and on a 4-CPU host three replicas measured *slower* than one. What they
+buy is that killing a container mid-traffic cost 0 of 120 requests. Two things
+make more than one instance safe: migrations and seeding run under a Postgres
+advisory lock, so a fleet starting together seeds the event once rather than
+once each; and failed sign-ins are counted in the database, so three instances
+do not mean three times the guesses. The connection budget is
+`API_REPLICAS × DB_MAX_CONNS` and must stay under Postgres's `max_connections`.
+
+**Attendees change until the last minute.** Their chapters
 come with them: every import registers the chapter names it meets, so the
 master list is exactly what the committee's sheet contains. **Networking
 tables** are generated on the Tables page for the hall they actually get.
@@ -392,7 +414,7 @@ Everyone else is created by that account:
 | Role     | Login                        | Password                                   |
 |----------|------------------------------|--------------------------------------------|
 | Attendee | the email on their ticket    | chapter + first name, then they choose their own · signs in at `/login` |
-| Booth    | `booth-<code>@natcon.id`     | first password = **company name + booth code**, lowercase, letters & digits only (WIT.id at A14 → `witida14`) — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
+| Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = **company name + booth code**, letters & digits only (WIT.id at A14 → `witida14`) — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so
 importing the booth sheet also hands out one scanner account per booth.
@@ -445,6 +467,21 @@ cd backend
 go test ./...
 ```
 
+Event-scale load test — the whole venue at once (`scripts/load.py`): 700 of
+the 856 seeded attendees sign in simultaneously (real bcrypt logins, one IP
+per phone), load every screen, rush the four 60-seat classes, get scanned by
+every booth and sit down at networking — correctness asserted (exactly 240
+seats won, zero oversells, zero duplicate scans), latency reported. On an
+M-series laptop: sign-in storm p95 6.4s (bcrypt-bound — the one intentionally
+expensive moment), everything after it p99 under 45ms at 3–9k rps. Run it
+before the event on production-shaped hardware:
+
+```bash
+createdb natcon_load
+ADDR=:8099 DATABASE_URL=postgres://user@localhost:5432/natcon_load?sslmode=disable go run ./backend/cmd/api &
+ulimit -n 4096 && BASE=http://localhost:8099 N=700 python3 scripts/load.py
+```
+
 Frontend tests (Vitest):
 
 ```bash
@@ -466,7 +503,7 @@ BASE=http://localhost:8082 python3 scripts/e2e.py
 
 Stress & concurrency suite (read-heavy load with latency percentiles, plus
 correctness under contention: seminar seats, networking tables, scan bursts —
-worker tokens are minted locally so the login rate limit stays untouched):
+worker tokens are minted locally so the sign-in path is not the thing under test):
 
 ```bash
 createdb natcon_stress
@@ -486,7 +523,14 @@ concurrent scans of one member → exactly 1 counted.
 - HTTP server timeouts (read/write/idle/header) + graceful shutdown on SIGINT/SIGTERM
 - Per-request 30 s timeout, 2 MiB request-body cap
 - Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cache-Control: no-store`)
-- Login rate limit: 10 attempts/IP/minute (429 after)
+- Login rate limit: **10 failed attempts per account** per minute, counted in
+  the database so the limit belongs to the fleet rather than to one container,
+  plus a ceiling of 2000 requests/IP/minute per instance. It is
+  keyed on the account and counts only failures on purpose: a venue is one
+  public IP behind a NAT, so a per-IP attempt limit locks the hall out on the
+  morning instead of the attacker — and it never stopped the attack anyway,
+  since rotating addresses walked straight past it. One email legitimately
+  belongs to 17 ticket holders here, and all 17 sign in fine.
 - CORS origins configurable via `ALLOWED_ORIGINS` (comma-separated)
 - Refuses to start with the default `JWT_SECRET` when `APP_ENV=production`
 - Email format validation on admin-created accounts

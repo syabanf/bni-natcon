@@ -28,6 +28,10 @@ type userDTO struct {
 	// The app routes straight to "choose your password" when this is true.
 	MustSetPassword bool   `json:"must_set_password,omitempty"`
 	TicketNumber    string `json:"ticket_number,omitempty"`
+	// MustConsent is true for an attendee who has not yet agreed to the data
+	// notice. The app shows it on the same first-run screen as the password
+	// and will not go past it until the box is ticked.
+	MustConsent bool `json:"must_consent,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
@@ -36,6 +40,10 @@ func toUserDTO(u *domain.User) userDTO {
 		MemberCode: u.MemberCode, Chapter: u.Chapter, Company: u.Company,
 		Phone: u.Phone, Classification: u.Classification,
 		MustSetPassword: u.MustSetPassword, TicketNumber: u.TicketNumber,
+		// Asked of attendees only: a booth's scanner login belongs to the
+		// company, and the crew consent the committee needs from them is not
+		// the one an attendee gives about their own name and email.
+		MustConsent: u.Role == domain.RoleMember && u.ConsentedAt == nil,
 	}
 }
 
@@ -120,6 +128,16 @@ func (s *Server) handleSetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"status": "password set"})
+}
+
+// handleConsent records that an attendee agreed to the data notice on the
+// first-run screen.
+func (s *Server) handleConsent(w http.ResponseWriter, r *http.Request) {
+	if err := s.auth.RecordConsent(r.Context(), userIDFrom(r.Context())); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "consent recorded"})
 }
 
 // handleForgotPassword checks chapter + the phone number on the ticket and,
@@ -265,7 +283,7 @@ func (s *Server) handleListSeminars(w http.ResponseWriter, r *http.Request) {
 			SeatsLeft: sem.Capacity - sem.SeatsTaken, Registered: sem.Registered,
 			Attended: sem.Attended, Description: sem.Description, CoverURL: sem.CoverURL,
 			PosterURL: sem.PosterURL,
-			StartsAt: mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
+			StartsAt:  mustStart(sem.StartsAt, sem.EndsAt), EndsAt: mustEnd(sem.StartsAt, sem.EndsAt),
 			Speakers: people,
 		})
 	}
@@ -333,7 +351,7 @@ func (s *Server) handleBooth(w http.ResponseWriter, r *http.Request) {
 		"id": booth.ID, "name": booth.Name, "category": booth.Category,
 		"booth": booth.Booth, "initials": booth.Initials,
 		"kind": booth.Kind, "description": booth.Description,
-		"logo_url": booth.LogoURL,
+		"logo_url":     booth.LogoURL,
 		"contact_name": booth.ContactName, "chapter": booth.Chapter,
 	})
 }
@@ -364,6 +382,11 @@ func (s *Server) handleBoothVisitors(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"visitors": out})
 }
 
+// The phone number is deliberately absent. A scan is somebody agreeing to be
+// counted at a stand, not handing over their WhatsApp; the committee's own
+// export is where a booth's follow-up list comes from, and the per-tenant one
+// leaves the number out too. Withheld here rather than merely hidden in the
+// app, so it never reaches the device at all.
 func visitorToDTO(v *domain.Visitor) map[string]any {
 	return map[string]any{
 		"member_id":   v.MemberID,
@@ -371,7 +394,6 @@ func visitorToDTO(v *domain.Visitor) map[string]any {
 		"chapter":     v.Chapter,
 		"company":     v.Company,
 		"member_code": v.MemberCode,
-		"phone":       v.Phone,
 		"note":        v.Note,
 		"visited_at":  v.VisitedAt,
 	}

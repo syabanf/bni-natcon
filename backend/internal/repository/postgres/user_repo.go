@@ -20,12 +20,12 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 	return &UserRepo{pool: pool}
 }
 
-const userColumns = `id, name, email, password_hash, role, COALESCE(member_code, ''), chapter, company, phone, classification, must_set_password, ticket_number, created_at`
+const userColumns = `id, name, email, password_hash, role, COALESCE(member_code, ''), chapter, company, phone, classification, must_set_password, ticket_number, consented_at, created_at`
 
 func (r *UserRepo) scanUser(row pgx.Row) (*domain.User, error) {
 	var u domain.User
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-		&u.TicketNumber, &u.CreatedAt)
+		&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -49,7 +49,7 @@ func (r *UserRepo) ListByEmail(ctx context.Context, email string) ([]*domain.Use
 		var u domain.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode,
 			&u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-			&u.TicketNumber, &u.CreatedAt); err != nil {
+			&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, &u)
@@ -89,6 +89,21 @@ func (r *UserRepo) GetByScanCode(ctx context.Context, key string) (*domain.User,
 
 // SetPassword stores a new hash and clears the "still on the generated
 // password" flag.
+// RecordConsent stamps when an attendee agreed to the data notice. COALESCE
+// keeps the first answer: a second tick must not rewrite history about when
+// they actually agreed.
+func (r *UserRepo) RecordConsent(ctx context.Context, userID int64) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE users SET consented_at = COALESCE(consented_at, now()) WHERE id = $1`, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
 func (r *UserRepo) SetPassword(ctx context.Context, userID int64, hash string) error {
 	tag, err := r.pool.Exec(ctx,
 		`UPDATE users SET password_hash = $1, must_set_password = false WHERE id = $2`,
@@ -129,7 +144,7 @@ func (r *UserRepo) FindMembersByChapterPhone(ctx context.Context, chapter, phone
 		var u domain.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode,
 			&u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-			&u.TicketNumber, &u.CreatedAt); err != nil {
+			&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, &u)

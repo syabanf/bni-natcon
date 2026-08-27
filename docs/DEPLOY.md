@@ -7,8 +7,54 @@ Dua bentuk deploy yang didukung. Pilih salah satu.
 ## A. Satu host, semua service (paling sederhana)
 
 `docker compose up -d --build` di sebuah VPS. Nginx di dalam image
-frontend/admin mem-proxy `/api` dan `/uploads` ke container API, jadi
+frontend/admin mem-proxy `/api` dan `/uploads` ke load balancer, jadi
 semuanya satu origin dan tidak ada CORS sama sekali.
+
+### Bentuk stack-nya
+
+```
+peserta / panitia
+        │
+        ▼
+   lb (nginx)  ← satu-satunya pintu ke API, port ${API_PORT:-8090}
+        │  round-robin, re-resolve tiap 10 detik
+        ├──► api  ┐
+        ├──► api  ├─ ${API_REPLICAS:-2} container, tanpa port host sendiri
+        └──► ...  ┘
+                  └──► db (Postgres)  + volume upload bersama
+```
+
+**Replika tidak membuat mesin jadi lebih cepat.** Satu proses Go sudah
+memakai semua core; diukur di host 4 CPU, 3 replika justru **lebih lambat**
+daripada 1 (browse 691 rps vs 1271 rps) karena CPU yang sama dibagi tiga
+plus satu lompatan nginx. Yang dibeli replika adalah **ketahanan**: satu
+container mati di tengah acara tidak menjatuhkan hari itu. Diuji dengan
+mematikan satu replika saat trafik berjalan — 120 dari 120 request tetap
+200. Naikkan `API_REPLICAS` hanya kalau CPU-nya memang ditambah.
+
+### Aritmetika koneksi database
+
+Setiap replika punya pool sendiri, jadi anggarannya:
+
+```
+API_REPLICAS × DB_MAX_CONNS  <  max_connections Postgres
+        2     ×      10      =  20   (default, dari 200)
+```
+
+Kehabisan koneksi terlihat sebagai API gagal start — pada saat paling tidak
+diinginkan. Kalau menaikkan `API_REPLICAS`, periksa perkalian ini dulu.
+
+### Kalau API di-scale ke beberapa host
+
+Dua syarat yang di satu host sudah otomatis terpenuhi:
+
+1. **Folder upload harus dibagi.** Di compose ini semua replika memakai satu
+   named volume. Lintas host, `/data/uploads` perlu object storage atau NFS,
+   kalau tidak logo yang diunggah panitia hanya ada di satu instance.
+2. **Migrasi sudah aman.** Instance yang start bersamaan berebut satu
+   advisory lock Postgres; satu mengerjakan migrasi + seeding, sisanya
+   menunggu lalu melewatinya. Tanpa itu, tiga instance akan menyemai acara
+   yang sama tiga kali.
 
 ```bash
 cp .env.example .env      # ganti JWT_SECRET, SEED_PASSWORD, DB_PASSWORD
@@ -20,8 +66,11 @@ docker compose up -d --build
 | Frontend | 8088                |
 | Admin    | 8089                |
 | Door     | 8087 (di `/door`, login `/door/login`) |
-| API      | 8090                |
+| API (lewat `lb`) | 8090        |
 | Postgres | 5432                |
+
+Container `api` sendiri **tidak punya port host** — hanya `lb` yang
+mengeksposnya, supaya jumlah replika bisa diubah tanpa bentrok port.
 
 ---
 
@@ -44,6 +93,8 @@ Environment yang wajib diisi:
 | ----------------- | ---------------------------------------------------------- |
 | `APP_ENV`         | `production`                                                |
 | `JWT_SECRET`      | hasil `openssl rand -hex 32` — API menolak start dengan default |
+| `DB_MAX_CONNS`    | ukuran pool Postgres (default 25). Turunkan kalau database punya kuota koneksi kecil |
+| `DB_MIN_CONNS`    | koneksi yang dijaga tetap hangat (default 5), supaya burst pagi tidak antre buka koneksi |
 | `DATABASE_URL`    | connection string Postgres milik host                       |
 | `ADDR`            | `:8080`, atau `:$PORT` bila host menentukan port sendiri     |
 | `ALLOWED_ORIGINS` | domain Vercel, dipisah koma — lihat langkah 3                |
@@ -52,24 +103,29 @@ Environment yang wajib diisi:
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
-narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0023`,
+narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0033`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
 September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
 dihapus tidak muncul lagi saat restart.
 
-> **Setelah deploy migrasi `0029`**: nomor booth ikut denah terbaru dari
-> paket logo — GrasiaCare kini hanya A18, dan mulai Paper.id semuanya turun
-> satu slot. **Cetak ulang QR booth** dari halaman QR Prints, dan bagikan
-> login yang baru: pola `booth-<kode>@natcon.id` mengikuti stand, jadi
-> Paper.id kini masuk dengan `booth-a20@natcon.id`. Password tidak berubah,
-> scan yang sudah masuk tetap utuh.
+> **Setelah deploy migrasi `0033`**: denah mengikuti sheet terbaru panitia —
+> GrasiaCare kembali memegang dua stand (`A18 & A20`), dan **11 booth pindah
+> nomor**, mulai dari Paper.id yang kini di **A22**. Exhibitor dikenali lewat
+> nama perusahaan, jadi yang pindah tetap membawa login dan seluruh scan-nya.
+>
+> Dua hal yang **harus** dikerjakan panitia setelah deploy:
+> 1. **Cetak ulang QR booth** dari halaman QR Prints — nomor stand berubah.
+> 2. **Bagikan ulang login + password booth.** Keduanya mengikuti stand:
+>    Paper.id kini `booth-a22@natcon.id` dengan password awal `paperida22`.
+>    Kru yang belum pernah login otomatis dikembalikan ke password turunan
+>    yang baru; kru yang sudah membuat password sendiri tidak diusik.
 
-**Peserta** ikut sebagai migrasi `0028`: 769 orang dari export ticketing,
+**Peserta** ikut sebagai migrasi `0034`: 856 orang dari export ticketing,
 satu akun per tiket, password awal chapter + nama depan dan wajib diganti saat
 login pertama. Kalau panitia mengirim export baru, buat ulang dengan
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
-file itu berisi nama, email, dan nomor HP 769 orang dan repo ini publik. Tidak ada peserta
+file itu berisi nama, email, dan nomor HP 856 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 

@@ -70,13 +70,9 @@ function VisitorDetail({ memberId, onBack }) {
             <h3>{visitor.name}</h3>
             <p className="cc-biz">{visitor.company || '—'}</p>
             {visitor.chapter && <span className="pill red">{visitor.chapter}</span>}
-            {visitor.phone && (
-              <div className="contact-actions">
-                <a className="btn" href={`tel:${visitor.phone}`}>
-                  <Icon name="mic" size={15} /> Call {visitor.phone}
-                </a>
-              </div>
-            )}
+            {/* No phone number here on purpose. A scan means somebody agreed
+                to be counted at this stand, not to hand over their WhatsApp;
+                the committee's leads export is where follow-up comes from. */}
           </div>
           <div className="net-list" style={{ marginTop: 14 }}>
             {visitor.member_code && (

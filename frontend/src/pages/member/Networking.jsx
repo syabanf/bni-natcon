@@ -12,31 +12,22 @@ function initials(name = '') {
     .toUpperCase()
 }
 
-// wa.me wants digits only with the country code — Indonesian numbers arrive as
-// "+628…" or "08…" depending on how the ticketing sheet was filled in.
-function waLink(phone) {
-  const digits = String(phone || '').replace(/\D/g, '')
-  if (!digits) return ''
-  const intl = digits.startsWith('0') ? `62${digits.slice(1)}` : digits
-  return `https://wa.me/${intl}`
-}
-
-// Company, chapter, business classification and WhatsApp — what people
-// actually ask each other for across a networking table.
+// Company, chapter and business classification — who somebody is across a
+// networking table.
+//
+// No phone number. This used to carry a WhatsApp link, which meant every
+// tablemate's number was on everyone else's screen the moment they sat down.
+// Saving a contact still records the meeting for both of them, and the
+// committee's export is where numbers live; here, people swap them the way
+// they would at any other table — by choosing to.
 function MateMeta({ m }) {
-  const wa = m.is_me ? '' : waLink(m.phone)
   return (
     <>
       {m.company && <p>{m.company}</p>}
       {m.chapter && <p className="np-chapter">{m.chapter}</p>}
-      {(m.classification || wa) && (
+      {m.classification && (
         <div className="np-meta">
-          {m.classification && <span className="np-class">{m.classification}</span>}
-          {wa && (
-            <a className="np-wa" href={wa} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-              WhatsApp {m.phone}
-            </a>
-          )}
+          <span className="np-class">{m.classification}</span>
         </div>
       )}
     </>

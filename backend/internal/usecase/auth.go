@@ -61,6 +61,11 @@ func (u *AuthUsecase) SetPassword(ctx context.Context, userID int64, newPassword
 	return u.users.SetPassword(ctx, userID, hash)
 }
 
+// RecordConsent is what the consent checkbox on the first-run screen calls.
+func (u *AuthUsecase) RecordConsent(ctx context.Context, userID int64) error {
+	return u.users.RecordConsent(ctx, userID)
+}
+
 // ForgotPassword checks an attendee's chapter against the phone number on
 // their ticket and hands back a short-lived reset token plus enough of their
 // identity for the UI to confirm it found the right person.
@@ -133,9 +138,24 @@ func (u *AuthUsecase) Login(ctx context.Context, email, password string) (*Login
 	}
 	// Each account carries its own password, so only the ones the typed
 	// password actually opens are offered.
+	//
+	// While an account is still on the password we generated for it, the
+	// lowercase spelling is accepted too: every generated password is
+	// all-lowercase by construction (a booth's name + stand, an attendee's
+	// chapter + first name), and a phone keyboard capitalises the first
+	// letter the moment somebody taps "show password". Nothing is weakened —
+	// the real secret is lowercase either way — and it saves a crew from
+	// being locked out at the door on the busiest morning. Once they choose
+	// their own password, it is matched exactly.
+	lowered := strings.ToLower(password)
 	var matched []*domain.User
 	for _, candidate := range users {
 		if u.verifier.Verify(candidate.PasswordHash, password) {
+			matched = append(matched, candidate)
+			continue
+		}
+		if candidate.MustSetPassword && lowered != password &&
+			u.verifier.Verify(candidate.PasswordHash, lowered) {
 			matched = append(matched, candidate)
 		}
 	}

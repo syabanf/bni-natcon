@@ -74,6 +74,9 @@ function Login({ onSignedIn }) {
                 placeholder="Email"
                 aria-label="Email"
                 autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
               />
             </div>
@@ -92,6 +95,9 @@ function Login({ onSignedIn }) {
                 placeholder="Password"
                 aria-label="Password"
                 autoComplete="current-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
               />
               {/* A door crew types this on a phone, standing up, in a hurry. */}

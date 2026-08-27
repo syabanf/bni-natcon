@@ -16,6 +16,10 @@ type UserRepository interface {
 	// phone number typed by hand when a screen will not scan.
 	GetByScanCode(ctx context.Context, key string) (*User, error)
 	SetPassword(ctx context.Context, userID int64, hash string) error
+	// RecordConsent stamps the moment an attendee agreed to the data notice.
+	// Called once; agreeing again does not move the timestamp, so the record
+	// keeps saying when they actually said yes.
+	RecordConsent(ctx context.Context, userID int64) error
 	// FindMembersByChapterPhone backs password recovery — chapter plus the
 	// phone number on the ticket is what an attendee has to prove. Two tickets
 	// bought together share both, so this can return more than one account.

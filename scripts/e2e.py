@@ -17,6 +17,7 @@ Exits non-zero when any check fails. Stdlib only — no dependencies.
 """
 
 import json
+import re
 import os
 import sys
 import urllib.error
@@ -25,7 +26,7 @@ import urllib.request
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
 # The exhibitor floor of the committee's booth sheet arrives with migration
-# 0023 — booths and the four sponsors printed under its own "Sponsor" divider.
+# 0033 — booths, plus the four sponsors on the B and C stands.
 # A brand on two stands counts once: it is one exhibitor, not two.
 # The extra sponsors, the attendees and the tables are this suite's fixtures.
 SEEDED_BOOTHS = 32
@@ -108,7 +109,8 @@ section("Fixtures (the ticketing export and the sheet's booths arrive seeded)")
 # The attendees now arrive with a migration of their own, so a fresh database
 # is not empty. Everything downstream counts from this baseline rather than
 # from zero — the export changes whenever the committee re-exports it, and a
-# suite that hardcoded 769 would fail on the next sheet instead of on a bug.
+# suite that hardcoded the attendee count would fail on the next sheet
+# instead of on a bug.
 status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
 SEEDED_MEMBERS = body.get("total_members", 0)
 check("a fresh database arrives with the ticketing export and the sheet's booths",
@@ -167,17 +169,18 @@ check("booth A1 arrived from the booth sheet",
 # the passport, one stamp, one login. The label names both stands so the
 # printed sign and the floor plan agree.
 check("a double-width stand is one booth labelled with both numbers",
-      by_booth.get("A47 & A48", {}).get("name") == "Alpha leaders"
+      by_booth.get("A47 & A48", {}).get("name") == "ALPHA LEADERS"
       and "A47" not in by_booth and "A48" not in by_booth,
       f'got {sorted(b for b in by_booth if b.startswith("A4"))}')
-# The logo pack carries the committee's newer floor plan: GrasiaCare gave up
-# its second stand and everyone from Paper.id on moved down a slot.
+# The floor plan has been redrawn twice. In the committee's latest sheet
+# GrasiaCare still holds two stands, and everyone from Paper.id onwards moved
+# down one more slot than the pack before it.
 check("the floor plan follows the committee's latest numbering",
-      by_booth.get("A18", {}).get("name") == "GrasiaCare"
-      and by_booth.get("A20", {}).get("name") == "Paper.id"
-      and by_booth.get("A22", {}).get("name") == "inHARMONY Preventive Clinic"
-      and by_booth.get("A27", {}).get("name") == "ICUBE (Invoice ke PT)",
-      f'got {[(c, by_booth.get(c, {}).get("name")) for c in ("A18", "A20", "A22", "A27")]}')
+      by_booth.get("A18 & A20", {}).get("name") == "GrasiaCare"
+      and by_booth.get("A22", {}).get("name") == "Paper.id"
+      and by_booth.get("A23", {}).get("name") == "inHARMONY Preventive Clinic"
+      and by_booth.get("A30", {}).get("name") == "ICUBE (Invoice ke PT)",
+      f'got {[(c, by_booth.get(c, {}).get("name")) for c in ("A18 & A20", "A22", "A23", "A30")]}')
 # One crew, one login — checked through the detail page rather than by
 # signing in, so this does not eat into the login rate limit the hardening
 # section measures at the end.
@@ -190,7 +193,7 @@ check("...and it has one scanner login, on the first stand's code",
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
 check("every exhibitor who sent a logo carries it",
-      len(logos) == 34 and logos.get("A20") == "/logos/paper-id.png"
+      len(logos) == 34 and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
 check("the double stand carries one logo, on one card",
@@ -248,6 +251,21 @@ check("chapters register themselves from the attendees, nothing pre-loaded",
 
 # The second committee login mirrors admin, so the desk crew never has to
 # borrow the main admin password.
+# ------------------------------------------------- attendee data consent
+section("The data notice every attendee agrees to")
+
+status, body = login("sinta@natcon.id", xff="10.77.0.6")
+check("a seeded attendee is asked for consent on first sign-in",
+      status == 200 and body["user"]["must_consent"] is True, f'{body.get("user")}')
+consent_tok = body["token"]
+status, _, _ = req("POST", "/api/v1/auth/consent", token=consent_tok)
+check("ticking the box is recorded -> 200", status == 200)
+status, body, _ = req("GET", "/api/v1/me", token=consent_tok)
+check("...and they are never asked again",
+      status == 200 and not body["user"].get("must_consent"), f'{body.get("user")}')
+# Agreeing twice must not rewrite when they actually agreed.
+status, _, _ = req("POST", "/api/v1/auth/consent", token=consent_tok)
+check("agreeing again is harmless", status == 200)
 status, body = login("panitia@natcon.id", xff="10.77.0.8")
 check("panitia signs in with admin rights", status == 200 and body["user"]["role"] == "admin")
 status, _, _ = req("GET", "/api/v1/admin/overview", token=body["token"])
@@ -274,6 +292,10 @@ def booth_password(name, booth):
 status, body = login("booth-a1@natcon.id", booth_password("SSCX International", "A1"))
 check("tenant login 200 on its derived password", status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
+# A booth's login belongs to the company, not to a person handing over their
+# own name and email, so the attendee's data notice is not asked of it.
+check("a booth scanner is not asked the attendee's question",
+      not body["user"].get("must_consent"), f'{body["user"]}')
 check("a booth's first login demands a password of its own",
       body["user"]["must_set_password"] is True, f'{body["user"]}')
 
@@ -282,6 +304,15 @@ section("Booth crews replace the handed-out password")
 
 # Its three sign-ins ride a different source IP, or they would eat the
 # per-IP login budget the hardening section measures at the end.
+# A phone keyboard capitalises the first letter the moment somebody taps
+# "show password". While a booth is still on the password we generated —
+# always all-lowercase — that stray capital must not lock the crew out.
+status, body = login("BOOTH-A2@natcon.id",
+                     booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2").capitalize(),
+                     xff="10.77.0.7")
+check("a capitalised email and first password still sign the booth in",
+      status == 200 and body["user"]["role"] == "tenant", f"{status}")
+
 a2_first = booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2")
 status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
@@ -296,6 +327,10 @@ status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
 # must_set_password is omitempty: gone from the JSON once it is false.
 check("their own password works, and the demand is gone",
       status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
+# Once the crew picks their own password, case is matched exactly again.
+status, _ = login("booth-a2@natcon.id", "Rahasia-booth-a2", xff="10.77.0.9")
+check("a self-chosen password is case-sensitive", status == 401)
+
 # Put it back the way the rest of the suite expects it.
 req("POST", "/api/v1/auth/password", token=body["token"], body={"password": a2_first})
 
@@ -618,8 +653,10 @@ check("tenants list complete, none visited",
       status == 200 and len(body["tenants"]) == FIXTURE_TENANTS
       and not any(t["visited"] for t in body["tenants"]))
 # WIT.id is placed first, ahead of the sponsors, at the committee's request.
+# The sheet spells it "WIT.ID" and an older one spelled it "WIT.id", so the
+# placement is matched case-insensitively and must not depend on which.
 check("the passport opens with WIT.id",
-      body["tenants"][0]["name"] == "WIT.id", f'{body["tenants"][0]["name"]}')
+      body["tenants"][0]["name"].lower() == "wit.id", f'{body["tenants"][0]["name"]}')
 
 kinds = [t["kind"] for t in body["tenants"][1:]]
 xpora = next((t for t in body["tenants"] if t["name"] == "BNI Xpora"), None)
@@ -657,9 +694,13 @@ status, _, _ = req("PUT", f"/api/v1/booth/visitors/{sinta_member_id}/note", toke
                    body={"note": "interested in bulk order"})
 check("set visitor note -> 200", status == 200)
 status, body, _ = req("GET", f"/api/v1/booth/visitors/{sinta_member_id}", token=tenant_tok)
-check("visitor detail carries note + phone", status == 200
-      and body["visitor"]["note"] == "interested in bulk order"
-      and body["visitor"]["phone"] == "+62811000201")
+check("visitor detail carries the note", status == 200
+      and body["visitor"]["note"] == "interested in bulk order")
+# A scan is somebody agreeing to be counted at a stand, not handing over their
+# WhatsApp. The number is withheld from the payload, not merely hidden in the
+# app, so it never reaches the booth's device.
+check("a booth never receives a visitor's phone number",
+      "phone" not in body["visitor"], f'{body["visitor"]}')
 status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
 check("visitor list shows the note",
       any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
@@ -794,9 +835,11 @@ check("status shows table 12 with 2 mates", body["checked_in"] is True
 # Business classification + WhatsApp number are what people ask each other for
 # across a table, so every mate row carries both.
 sinta_mate = next(m for m in body["mates"] if not m["is_me"])
-check("table mates carry classification + phone for the WhatsApp link",
-      sinta_mate["classification"] == "Trade & Distribution"
-      and sinta_mate["phone"] == "+62811000201")
+check("table mates carry classification",
+      sinta_mate["classification"] == "Trade & Distribution")
+# Sitting down at a table used to put everyone's number on everyone's screen.
+check("a tablemate's phone number is not handed round the table",
+      not any("phone" in m for m in body["mates"]), f'{body["mates"]}')
 
 status, _, _ = req("POST", "/api/v1/networking/contacts", token=member_tok, body={"member_id": sinta_id})
 check("save contact", status == 200)
@@ -818,8 +861,9 @@ check("table detail unknown -> 404", status == 404)
 status, body, _ = req("GET", f"/api/v1/networking/contacts/{sinta_id}", token=member_tok)
 check("contact detail shows current table 12",
       status == 200 and body["current_table_no"] == 12)
-check("contact detail carries email + phone",
-      body["email"] == "sinta@natcon.id" and body["phone"] == "+62811000201")
+check("contact detail carries the email",
+      body["email"] == "sinta@natcon.id")
+check("...but not the phone number", "phone" not in body, f"{body}")
 check("contact detail carries classification",
       body["classification"] == "Trade & Distribution")
 
@@ -1378,7 +1422,7 @@ check("existing booth refreshed in place (single row, new details)",
 
 # The official booth sheet carries the person manning the booth and their
 # chapter alongside the company; both ride through the import onto the tenant.
-# Booth A1 already exists from migration 0023, so re-importing the sheet the
+# Booth A1 already exists from migration 0033, so re-importing the sheet the
 # committee already has must refresh it rather than create a second booth.
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
                       body={"tenants": [
@@ -1628,11 +1672,27 @@ big = b'{"member_code": "' + b"A" * (3 * 1024 * 1024) + b'"}'
 status, _, _ = req("POST", "/api/v1/scans", token=tenant_tok, raw_body=big)
 check("3MB body rejected (400/413/conn-reset)", status in (400, 413, 0), f"got {status}")
 
-statuses = []
-for _ in range(12):
-    s, _ = login("reddie@natcon.id", "brute-force")
-    statuses.append(s)
-check("login rate limit kicks in (429 seen)", 429 in statuses, f"got {statuses}")
+# Brute force is an attack on ONE account, so that is what the limit counts —
+# and it counts wherever the attempts come from. A per-IP limit could be
+# walked straight past by rotating addresses; these twelve all do.
+statuses = [login("reddie@natcon.id", "brute-force", xff=f"198.51.100.{i}")[0]
+            for i in range(12)]
+check("guessing one account's password is stopped, even from a fresh IP each time",
+      429 in statuses, f"got {statuses}")
+
+# The other half of the same rule, and the reason it exists: a venue reaches
+# the API through ONE public address. Sixteen people signing in to their own
+# accounts from behind the hall's NAT must all get through — under the old
+# per-IP ceiling the eleventh was turned away, and to everyone behind them the
+# app simply looked broken.
+status, body, _ = req("GET", "/api/v1/admin/members?limit=16", token=admin_tok)
+hall = []
+for m in body["members"][:16]:
+    first = m["name"].split()[0] if m["name"].split() else ""
+    pw = re.sub(r"\s+", "", f'{m.get("chapter", "")}{first}').lower()
+    hall.append(login(m["email"], pw, xff="103.28.14.7")[0])
+check("a hall on one public IP all sign in, none rate-limited",
+      hall.count(429) == 0 and hall.count(200) >= 12, f"got {hall}")
 
 # ---------------------------------------------------------------- summary
 print(f"\n{'='*40}\n{passed} passed, {failed} failed")

@@ -54,9 +54,9 @@ const AUDIENCE = {
     sub: 'Sign in with the booth account to scan attendee QRs and see your visitors.',
     hint: (
       <>
-        Login = <code>booth-&lt;booth code&gt;@natcon.id</code>, first password ={' '}
-        <b>company name + booth code</b>, lowercase, letters &amp; digits only — WIT.id at A14 →{' '}
-        <code>witida14</code>. You&apos;ll set your own right after.
+        All lowercase. Login = <code>booth-&lt;booth code&gt;@natcon.id</code>, first password ={' '}
+        <b>company name + booth code</b>, letters &amp; digits only — WIT.id at A14 →{' '}
+        <code>booth-a14@natcon.id</code> / <code>witida14</code>. You&apos;ll set your own right after.
       </>
     ),
     showRecovery: false,
@@ -193,6 +193,9 @@ export default function Login({ audience = 'attendee' }) {
                   placeholder="Email"
                   aria-label="Email"
                   autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   autoFocus
                 />
@@ -212,6 +215,9 @@ export default function Login({ audience = 'attendee' }) {
                   placeholder="Password"
                   aria-label="Password"
                   autoComplete="current-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                 />
                 <button
