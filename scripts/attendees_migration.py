@@ -4,7 +4,7 @@
     pip install openpyxl bcrypt
     python3 scripts/attendees_migration.py "~/Downloads/Data Peserta & Booth ... .xlsx"
 
-Writes backend/internal/repository/postgres/migrations/0034_attendees.sql.
+Writes backend/internal/repository/postgres/migrations/0038_attendees.sql.
 
 WHAT IT WRITES
 --------------
@@ -46,7 +46,7 @@ import bcrypt
 import openpyxl
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "backend/internal/repository/postgres/migrations/0034_attendees.sql"
+OUT = ROOT / "backend/internal/repository/postgres/migrations/0038_attendees.sql"
 COMPANIES = ROOT / "scripts/attendee-companies.json"
 
 COLUMNS = {

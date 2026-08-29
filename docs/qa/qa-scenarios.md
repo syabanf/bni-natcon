@@ -20,7 +20,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 ## Accounts — a fresh database has ONE login
 
-Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 856 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
+Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 866 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
 Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
 
@@ -273,7 +273,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | CRS-15 | P1 | A phone (or a 375px window) | Open all four sign-ins: /login, /tenant/login, the admin panel, the door app. | Each one is a single column — brand on top, form below it at full width, fields and the Sign in button big enough to tap. Nothing scrolls sideways and the brand appears once, not twice. |
 | CRS-16 | P2 | The door app on a phone | Look at the sign-in fields and the Show button. | They are styled like the other apps — rounded fields with an icon, a Show/Hide toggle on the password. Plain browser boxes mean the stylesheet is not matching the markup. |
 | CC-31 | P1 | Deploy · API behind the load balancer, one replica killed mid-traffic | With the stack up, send steady traffic and kill one api container (crash it from inside, e.g. kill -9 1). | No request fails — the balancer retries on a neighbour. The container comes back on its own via the restart policy. Note: `docker kill` from outside is treated by Docker as an operator stop and will NOT restart; that is expected, not a fault. |
-| CC-32 | P1 | Deploy · several API instances starting together | docker compose down -v, then up with API_REPLICAS=3, and count the seeded data. | 856 attendees, 36 exhibitors, 95 chapters — seeded ONCE, not once per instance. Migrations run under a Postgres advisory lock; the other instances wait, then skip. |
+| CC-32 | P1 | Deploy · several API instances starting together | docker compose down -v, then up with API_REPLICAS=3, and count the seeded data. | 866 attendees, 36 exhibitors, 95 chapters — seeded ONCE, not once per instance. Migrations run under a Postgres advisory lock; the other instances wait, then skip. |
 | CC-33 | P1 | Deploy · rate limit with more than one instance | Send 16 wrong passwords for one account through the balancer, so they spread across replicas. | Blocked from the 11th. Failures are counted in the database, so the limit is the fleet's — not 10 per container. |
 
 ## Door crew app
@@ -299,7 +299,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
-| Attendees | already there — 856 from the ticketing export | Seeded by migration 0034. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. 146 of them have no company on file — the committee's newer export dropped that column. |
+| Attendees | already there — 866 from the ticketing export | Seeded by migration 0038. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. 156 of them have no company on file — the committee's newer export dropped that column. |
 | Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id; first password = company name + booth code, lowercase alphanumerics (SSCX International at A1 -> sscxinternationala1). It opens the door once — each crew sets their own on first sign-in. GrasiaCare holds two stands as one booth, 'A18 & A20' (login booth-a18@natcon.id); ALPHA LEADERS likewise on 'A47 & A48' (booth-a47@natcon.id). Paper.id is on A22. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
 | Sponsor scanner | booth-b1@natcon.id / biomedikab1 | Bio Medika - booth B1. The four sponsors are the B and C stands: B1, B2, B3, C1. |

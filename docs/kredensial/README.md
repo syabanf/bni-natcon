@@ -1,14 +1,14 @@
 # Kredensial awal
 
 `username-password-awal-natcon2026.xlsx` — login dan password awal untuk 36
-booth/sponsor dan 856 peserta, untuk sosialisasi sebelum acara. Setiap baris
-sudah diuji login ke API: 892 dari 892 berhasil.
+booth/sponsor dan 866 peserta, untuk sosialisasi sebelum acara. Setiap baris
+sudah diuji login ke API: 902 dari 902 berhasil.
 
 **Berkas ini ada di repositori publik atas keputusan panitia.** Yang perlu
 dipahami saat membacanya:
 
 - Password di dalamnya **bisa diturunkan** dari data yang memang sudah ada di
-  repo ini — migrasi `0034` memuat chapter dan nama setiap peserta, `0033`
+  repo ini — migrasi `0038` memuat chapter dan nama setiap peserta, `0037`
   memuat nama perusahaan dan kode booth, dan aturannya (chapter + nama depan;
   nama perusahaan + kode booth) tertulis di README utama. Jadi berkas ini
   menambah kemudahan, bukan paparan baru.

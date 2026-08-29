@@ -8,7 +8,7 @@ remembering to import a spreadsheet.
     pip install openpyxl
     python3 scripts/booths_migration.py "~/Downloads/Data Peserta & Booth ... .xlsx"
 
-Rewrites backend/internal/repository/postgres/migrations/0033_booths.sql.
+Rewrites backend/internal/repository/postgres/migrations/0037_booths.sql.
 Re-run it whenever the sheet changes, then restart the API.
 
 Expected columns on the "Booth" sheet: Booth Number · Company Name ·
@@ -48,7 +48,7 @@ import sys
 import openpyxl
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "backend/internal/repository/postgres/migrations/0033_booths.sql"
+OUT = ROOT / "backend/internal/repository/postgres/migrations/0037_booths.sql"
 LOGOS = ROOT / "scripts/booth-logos.json"
 
 PLACEHOLDER_HASH = "$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH"

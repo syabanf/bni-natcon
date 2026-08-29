@@ -97,9 +97,9 @@ away.
 
 **A fresh database holds the event's own master data and nothing invented:**
 
-- **The 856 attendees of the ticketing export** (migration `0034`), one per
+- **The 866 attendees of the ticketing export** (migration `0038`), one per
   ticket, with the chapters they carry and the password printed on their
-  ticket — chapter + first name, hashed at generation because 856 bcrypt
+  ticket — chapter + first name, hashed at generation because 866 bcrypt
   hashes would add a minute to every boot. `must_set_password` stays true, so
   each attendee still picks their own on first sign-in. Regenerate it from a
   newer export with
@@ -116,7 +116,7 @@ away.
   has typed their own day keeps it and a deleted block never returns. The
   hours come from the ticket window and the shape of the programme; the
   Rundown page is where they get corrected.
-- **34 company logos**, carried by migration `0033` from
+- **34 company logos**, carried by migration `0037` from
   [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
   been redrawn twice, so the mapping is keyed on the **company name** and the
   files are named after the company too — a stand number would go stale every
@@ -137,7 +137,7 @@ away.
   From the Term of Reference documents — written once and never rewritten, so a class
   edited in the admin panel survives a restart.
 - **The 32 booths and 4 sponsors of the committee's booth sheet** (migration
-  `0033`), each with its scanner login. Stand `A*` is the exhibition floor and
+  `0037`), each with its scanner login. Stand `A*` is the exhibition floor and
   `B*`/`C*` are the sponsor stands, and an exhibitor holding two positions is
   **one exhibitor**: the booth is labelled `A18 & A20`, keeps one login and
   one QR (printed once per sign), and counts once towards the draw's booth
@@ -468,7 +468,7 @@ go test ./...
 ```
 
 Event-scale load test — the whole venue at once (`scripts/load.py`): 700 of
-the 856 seeded attendees sign in simultaneously (real bcrypt logins, one IP
+the 866 seeded attendees sign in simultaneously (real bcrypt logins, one IP
 per phone), load every screen, rush the four 60-seat classes, get scanned by
 every booth and sit down at networking — correctness asserted (exactly 240
 seats won, zero oversells, zero duplicate scans), latency reported. On an

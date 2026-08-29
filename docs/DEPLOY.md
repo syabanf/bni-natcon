@@ -103,13 +103,13 @@ Environment yang wajib diisi:
 
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
-narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0033`,
+narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0037`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
 September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
 4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
 dihapus tidak muncul lagi saat restart.
 
-> **Setelah deploy migrasi `0033`**: denah mengikuti sheet terbaru panitia —
+> **Setelah deploy migrasi `0037`**: denah mengikuti sheet terbaru panitia —
 > GrasiaCare kembali memegang dua stand (`A18 & A20`), dan **11 booth pindah
 > nomor**, mulai dari Paper.id yang kini di **A22**. Exhibitor dikenali lewat
 > nama perusahaan, jadi yang pindah tetap membawa login dan seluruh scan-nya.
@@ -121,11 +121,11 @@ dihapus tidak muncul lagi saat restart.
 >    Kru yang belum pernah login otomatis dikembalikan ke password turunan
 >    yang baru; kru yang sudah membuat password sendiri tidak diusik.
 
-**Peserta** ikut sebagai migrasi `0034`: 856 orang dari export ticketing,
+**Peserta** ikut sebagai migrasi `0038`: 866 orang dari export ticketing,
 satu akun per tiket, password awal chapter + nama depan dan wajib diganti saat
 login pertama. Kalau panitia mengirim export baru, buat ulang dengan
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
-file itu berisi nama, email, dan nomor HP 856 orang dan repo ini publik. Tidak ada peserta
+file itu berisi nama, email, dan nomor HP 866 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
 import export ticketing, meja dibuat di halaman Tables.
 
