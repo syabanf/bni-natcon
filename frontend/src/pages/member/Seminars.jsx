@@ -341,7 +341,10 @@ export default function Seminars() {
                         : undefined
                     }
                   >
-                    <div className="sc-tag">{s.room}</div>
+                    {/* The cover badge names the sesi, not the room — which
+                        room a class sits in matters at the door, which sesi
+                        it sits in decides what you can still pick. */}
+                    <div className="sc-tag">Sesi {i + 1}</div>
                     <span className="pill" style={{ color: few ? 'var(--red)' : 'var(--ink)' }}>
                       {s.seats_left} seats left{few && !full ? ' · almost full' : ''}
                     </span>
