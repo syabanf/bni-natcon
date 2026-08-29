@@ -150,11 +150,21 @@ export default function Home() {
                 every attendee reads a date they already know. */}
             {days.length > 1 && <div className="agenda-day">{dayLabel(day.date)}</div>}
             {day.blocks.map((a) => (
-              <div className="agenda-item" key={a.id}>
+              <div
+                className={`agenda-item${a.kind === 'break' ? ' agenda-item--break' : ''}`}
+                key={a.id}
+              >
                 <div className="agenda-time">{timeOf(a.starts_at)}</div>
                 <div>
                   <h5>{a.title}</h5>
-                  <p>{a.place}</p>
+                  {/* The subtitle packs several sub-items into one field,
+                      separated by " · " — one line each, like the poster. */}
+                  {(a.place || '')
+                    .split(' · ')
+                    .filter(Boolean)
+                    .map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
                 </div>
               </div>
             ))}

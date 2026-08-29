@@ -978,6 +978,11 @@ input {
   font-size: 11px;
   color: var(--gray);
 }
+/* Breaks read as pauses, not programme — the poster greys them out. */
+.agenda-item--break h5 {
+  font-weight: 400;
+  color: var(--gray);
+}
 
 /* ===== Member: QR ===== */
 .qr-page {

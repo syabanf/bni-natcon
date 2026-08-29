@@ -195,7 +195,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
               </>
             ) : locked ? (
               <button className="btn" disabled>
-                You already picked another learning class
+                You already picked a class in this sesi
               </button>
             ) : full ? (
               <button className="btn" disabled>
@@ -262,9 +262,17 @@ export default function Seminars() {
     return <div className="loading-note">Loading learning classes…</div>
   }
 
+  // A "Sesi" is the rundown hour a class runs in: classes sharing a start
+  // time are alternatives, and the attendee picks one of them. A class the
+  // committee has not placed yet falls back to its legacy slot number —
+  // mirroring the registration rule on the server.
+  const sessionKeyOf = (s) => s.starts_at || `slot-${s.slot}`
+
   const detail = seminars.find((s) => s.id === detailID)
   if (detail) {
-    const lockedDetail = seminars.some((s) => s.slot === detail.slot && s.registered && s.id !== detail.id)
+    const lockedDetail = seminars.some(
+      (s) => sessionKeyOf(s) === sessionKeyOf(detail) && s.registered && s.id !== detail.id,
+    )
     return (
       <SeminarDetail
         seminar={detail}
@@ -278,7 +286,9 @@ export default function Seminars() {
     )
   }
 
-  const slots = [...new Set(seminars.map((s) => s.slot))].sort()
+  // The list arrives ordered by hour, so the keys come out in day order and
+  // "Sesi 1" is simply the first hour with classes in it.
+  const sessionKeys = [...new Set(seminars.map(sessionKeyOf))]
   const registered = seminars.find((s) => s.registered)
 
   return (
@@ -286,8 +296,8 @@ export default function Seminars() {
       <div className="hero-greet">
         <h2>Learning Class</h2>
         <p>
-          Pick up to two classes in different hours, then show your class QR at the door to get
-          checked in.
+          Two sesi, one class each — pick one class per sesi, then show your class QR at the
+          door to get checked in.
         </p>
       </div>
 
@@ -307,18 +317,19 @@ export default function Seminars() {
         </div>
       )}
 
-      {slots.map((slot) => {
-        const inSlot = seminars.filter((s) => s.slot === slot)
-        const pickedInSlot = inSlot.some((s) => s.registered)
-        const hours = classHours(inSlot[0])
+      {sessionKeys.map((key, i) => {
+        const inSession = seminars.filter((s) => sessionKeyOf(s) === key)
+        const pickedInSession = inSession.some((s) => s.registered)
+        const hours = classHours(inSession[0])
         return (
-          <div key={slot}>
+          <div key={key}>
             <div className="slot-label">
-              Parallel learning classes{hours ? ` · ${hours}` : ''}
+              Sesi {i + 1}
+              {hours ? ` · ${hours}` : ''} · pick one class
             </div>
-            {inSlot.map((s) => {
+            {inSession.map((s) => {
               const few = s.seats_left <= 10
-              const locked = pickedInSlot && !s.registered
+              const locked = pickedInSession && !s.registered
               const full = s.seats_left <= 0
               return (
                 <div className="card seminar-card" key={s.id}>
@@ -352,7 +363,7 @@ export default function Seminars() {
                         </button>
                       ) : locked ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>
-                          You already picked another class
+                          You already picked a class in this sesi
                         </button>
                       ) : full ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>
