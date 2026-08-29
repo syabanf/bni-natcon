@@ -26,6 +26,8 @@ export default function Home() {
   const [user, setUser] = useState(cachedUser)
   const [stats, setStats] = useState(null)
   const [agenda, setAgenda] = useState(null)
+  // Which redeem dialog is open: 'pin', 'goodiebag', or null.
+  const [redeemInfo, setRedeemInfo] = useState(null)
 
   useEffect(() => {
     api
@@ -90,17 +92,59 @@ export default function Home() {
           </div>
           <div className="st-label">Booths visited</div>
         </div>
-        <div className="stat">
-          <div className="st-num">{stats?.coupons ?? '–'}</div>
-          <div className="st-label">Pins collected</div>
-        </div>
-        <div className="stat">
-          <div className="st-num">
-            <span className="accent">{stats?.seminars_picked ?? '–'}</span>/{stats?.seminars_total ?? '–'}
+        {/* Pin and goodiebag are handed over at the registration desk, where
+            the committee scans the attendee's QR — not tied to any class.
+            Tapping a card opens the how-to dialog with that QR. */}
+        <button type="button" className="stat stat-redeem" onClick={() => setRedeemInfo('pin')}>
+          <div className={`st-status${user?.pin_redeemed ? ' ok' : ''}`}>
+            <Icon name={user?.pin_redeemed ? 'check' : 'x'} size={16} />
           </div>
-          <div className="st-label">Goodiebag</div>
-        </div>
+          <div className="st-label">Pin{user?.pin_redeemed ? ' · redeemed' : ''}</div>
+        </button>
+        <button
+          type="button"
+          className="stat stat-redeem"
+          onClick={() => setRedeemInfo('goodiebag')}
+        >
+          <div className={`st-status${user?.goodiebag_redeemed ? ' ok' : ''}`}>
+            <Icon name={user?.goodiebag_redeemed ? 'check' : 'x'} size={16} />
+          </div>
+          <div className="st-label">Goodiebag{user?.goodiebag_redeemed ? ' · redeemed' : ''}</div>
+        </button>
       </div>
+
+      {redeemInfo && (
+        <div className="redeem-overlay" onClick={() => setRedeemInfo(null)}>
+          <div
+            className="redeem-dialog"
+            role="dialog"
+            aria-label={`${redeemInfo === 'pin' ? 'Pin' : 'Goodiebag'} redemption`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4>{redeemInfo === 'pin' ? 'Your pin' : 'Your goodiebag'}</h4>
+            {(redeemInfo === 'pin' ? user?.pin_redeemed : user?.goodiebag_redeemed) ? (
+              <p>
+                Redeemed ✓ — the committee has scanned your QR and handed over your{' '}
+                {redeemInfo === 'pin' ? 'pin' : 'goodiebag'}.
+              </p>
+            ) : (
+              <p>
+                Redeem your {redeemInfo === 'pin' ? 'pin' : 'goodiebag'} at the{' '}
+                <b>registration desk</b> — show this QR code and the committee will scan it to
+                mark it as redeemed.
+              </p>
+            )}
+            {scanCode(user) && (
+              <div className="redeem-qr">
+                <QRCodeSVG value={scanCode(user)} size={148} />
+              </div>
+            )}
+            <button type="button" className="btn" onClick={() => setRedeemInfo(null)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="section-title" style={{ marginLeft: 20 }}>
         Quick menu

@@ -20,12 +20,12 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 	return &UserRepo{pool: pool}
 }
 
-const userColumns = `id, name, email, password_hash, role, COALESCE(member_code, ''), chapter, company, phone, classification, must_set_password, ticket_number, consented_at, created_at`
+const userColumns = `id, name, email, password_hash, role, COALESCE(member_code, ''), chapter, company, phone, classification, must_set_password, ticket_number, consented_at, pin_redeemed_at, goodiebag_redeemed_at, created_at`
 
 func (r *UserRepo) scanUser(row pgx.Row) (*domain.User, error) {
 	var u domain.User
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode, &u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-		&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt)
+		&u.TicketNumber, &u.ConsentedAt, &u.PinRedeemedAt, &u.GoodiebagRedeemedAt, &u.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrNotFound
@@ -49,7 +49,7 @@ func (r *UserRepo) ListByEmail(ctx context.Context, email string) ([]*domain.Use
 		var u domain.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode,
 			&u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-			&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt); err != nil {
+			&u.TicketNumber, &u.ConsentedAt, &u.PinRedeemedAt, &u.GoodiebagRedeemedAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, &u)
@@ -144,7 +144,7 @@ func (r *UserRepo) FindMembersByChapterPhone(ctx context.Context, chapter, phone
 		var u domain.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.MemberCode,
 			&u.Chapter, &u.Company, &u.Phone, &u.Classification, &u.MustSetPassword,
-			&u.TicketNumber, &u.ConsentedAt, &u.CreatedAt); err != nil {
+			&u.TicketNumber, &u.ConsentedAt, &u.PinRedeemedAt, &u.GoodiebagRedeemedAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, &u)
