@@ -1,5 +1,16 @@
 # Kredensial awal
 
+**Update 29 Agu 2026 — password awal peserta sekarang `Natcon2026`.** Banyak
+peserta kesulitan dengan password unik per orang, jadi atas keputusan panitia
+semua peserta yang belum mengganti password (773 akun saat itu) di-reset ke
+satu password bersama: `Natcon2026` — huruf besar/kecil bebas (`natcon2026`
+juga diterima, seperti semua password generate-an). Kolom password peserta di
+xlsx di bawah **tidak berlaku lagi**; kolom username/email tetap dipakai.
+Password booth/sponsor tidak berubah. Akun yang sudah sempat membuat password
+sendiri tidak disentuh. Risiko yang diterima sadar: sebelum login pertama,
+siapa pun yang tahu email peserta bisa masuk lebih dulu — pemulihan lewat
+Lupa Password (chapter + nomor HP) atau reset dari panel admin.
+
 `username-password-awal-natcon2026.xlsx` — login dan password awal untuk 36
 booth/sponsor dan 856 peserta, untuk sosialisasi sebelum acara. Setiap baris
 sudah diuji login ke API: 892 dari 892 berhasil.
