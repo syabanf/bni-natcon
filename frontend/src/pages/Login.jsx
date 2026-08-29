@@ -40,7 +40,7 @@ const AUDIENCE = {
     sub: 'Sign in for your digital pass, learning classes, and speed networking.',
     hint: (
       <>
-        First time here? Sign in with the default password <code>Natcon2026</code> — you&apos;ll
+        First time here? Sign in with the default password <code>natcon2026</code> — you&apos;ll
         be asked to set your own password right after.
       </>
     ),
