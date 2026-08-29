@@ -101,7 +101,10 @@ away.
   ticket, with the chapters they carry and the password printed on their
   ticket — chapter + first name, hashed at generation because 856 bcrypt
   hashes would add a minute to every boot. `must_set_password` stays true, so
-  each attendee still picks their own on first sign-in. Regenerate it from a
+  each attendee still picks their own on first sign-in. (**On the live event
+  database this was overridden on 29 Aug 2026**: every attendee still on a
+  generated password was reset to the shared default `Natcon2026` — see
+  [`docs/kredensial/README.md`](docs/kredensial/README.md).) Regenerate it from a
   newer export with
   [`scripts/attendees_migration.py`](scripts/attendees_migration.py). **This
   file carries personal data and this repository is public — the committee
@@ -218,8 +221,9 @@ ready-to-fill template (headers + example rows).
   back to email), so **one buyer holding two tickets becomes two attendees**
   on the same address — signing in then asks **which pass you are**, and each
   pass keeps its own QR, pins and learning class. New accounts sign in with
-  username = email and password = chapter + first name (lowercase, no
-  spaces), then
+  username = email and the default password — `Natcon2026` on the live event
+  database since 29 Aug 2026 (a fresh seed generates chapter + first name,
+  lowercase, no spaces), then
   **choose their own password on that first sign-in** — nothing else in the
   app opens until they do. Forgot it? Recovery matches **chapter + the phone
   number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
@@ -413,7 +417,7 @@ Everyone else is created by that account:
 
 | Role     | Login                        | Password                                   |
 |----------|------------------------------|--------------------------------------------|
-| Attendee | the email on their ticket    | chapter + first name, then they choose their own · signs in at `/login` |
+| Attendee | the email on their ticket    | `Natcon2026` (shared default on the live DB since 29 Aug 2026; a fresh seed generates chapter + first name), then they choose their own · signs in at `/login` |
 | Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = **company name + booth code**, letters & digits only (WIT.id at A14 → `witida14`) — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so

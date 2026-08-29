@@ -40,8 +40,8 @@ const AUDIENCE = {
     sub: 'Sign in for your digital pass, learning classes, and speed networking.',
     hint: (
       <>
-        Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
-        Abraham → <code>heritageabraham</code>
+        First time here? Sign in with the default password <code>Natcon2026</code> — you&apos;ll
+        be asked to set your own password right after.
       </>
     ),
     showRecovery: true,
