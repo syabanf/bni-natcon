@@ -45,9 +45,9 @@ const AUDIENCE = {
       </>
     ),
     showRecovery: true,
-    showAdminLink: true,
-    otherHref: '/tenant/login',
-    otherLabel: 'Manning a booth? Open the booth scanner sign-in →',
+    // No booth or admin links here — attendees found them confusing, and
+    // booth crews and the committee get their addresses from the handout.
+    showAdminLink: false,
   },
   tenant: {
     eyebrow: 'Booth Scanner',
@@ -244,9 +244,11 @@ export default function Login({ audience = 'attendee' }) {
             <p className="auth-hint">{copy.hint}</p>
 
             <div className="auth-foot">
-              <a className="auth-admin-link" href={copy.otherHref}>
-                {copy.otherLabel}
-              </a>
+              {copy.otherLabel && (
+                <a className="auth-admin-link" href={copy.otherHref}>
+                  {copy.otherLabel}
+                </a>
+              )}
               {copy.showAdminLink && (
                 <a className="auth-admin-link" href={ADMIN_URL} target="_blank" rel="noreferrer">
                   Committee? Open the admin panel ↗
