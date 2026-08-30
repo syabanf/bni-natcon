@@ -92,24 +92,24 @@ export default function Home() {
           </div>
           <div className="st-label">Booths visited</div>
         </div>
-        {/* Pin and goodiebag are handed over at the registration desk, where
-            the committee scans the attendee's QR — not tied to any class.
-            Tapping a card opens the how-to dialog with that QR. */}
+        {/* Every attendee gets a free pin and goodiebag. The cards are a
+            reminder, not a tracker — tapping one just says where to pick it
+            up. */}
         <button type="button" className="stat stat-redeem" onClick={() => setRedeemInfo('pin')}>
-          <div className={`st-status${user?.pin_redeemed ? ' ok' : ''}`}>
-            <Icon name={user?.pin_redeemed ? 'check' : 'x'} size={16} />
+          <div className="st-status free">
+            <Icon name="pin" size={16} />
           </div>
-          <div className="st-label">Pin{user?.pin_redeemed ? ' · redeemed' : ''}</div>
+          <div className="st-label">Free Pin</div>
         </button>
         <button
           type="button"
           className="stat stat-redeem"
           onClick={() => setRedeemInfo('goodiebag')}
         >
-          <div className={`st-status${user?.goodiebag_redeemed ? ' ok' : ''}`}>
-            <Icon name={user?.goodiebag_redeemed ? 'check' : 'x'} size={16} />
+          <div className="st-status free">
+            <Icon name="award" size={16} />
           </div>
-          <div className="st-label">Goodiebag{user?.goodiebag_redeemed ? ' · redeemed' : ''}</div>
+          <div className="st-label">Free Goodiebag</div>
         </button>
       </div>
 
@@ -118,29 +118,16 @@ export default function Home() {
           <div
             className="redeem-dialog"
             role="dialog"
-            aria-label={`${redeemInfo === 'pin' ? 'Pin' : 'Goodiebag'} redemption`}
+            aria-label={`Free ${redeemInfo === 'pin' ? 'pin' : 'goodiebag'}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h4>{redeemInfo === 'pin' ? 'Your pin' : 'Your goodiebag'}</h4>
-            {(redeemInfo === 'pin' ? user?.pin_redeemed : user?.goodiebag_redeemed) ? (
-              <p>
-                Redeemed ✓ — the committee has scanned your QR and handed over your{' '}
-                {redeemInfo === 'pin' ? 'pin' : 'goodiebag'}.
-              </p>
-            ) : (
-              <p>
-                Redeem your {redeemInfo === 'pin' ? 'pin' : 'goodiebag'} at the{' '}
-                <b>registration desk</b> — show this QR code and the committee will scan it to
-                mark it as redeemed.
-              </p>
-            )}
-            {scanCode(user) && (
-              <div className="redeem-qr">
-                <QRCodeSVG value={scanCode(user)} size={148} />
-              </div>
-            )}
+            <h4>{redeemInfo === 'pin' ? 'Free pin' : 'Free goodiebag'}</h4>
+            <p>
+              This event comes with a free {redeemInfo === 'pin' ? 'pin' : 'goodiebag'} for
+              every attendee — don&apos;t forget to redeem yours before you head home!
+            </p>
             <button type="button" className="btn" onClick={() => setRedeemInfo(null)}>
-              Close
+              Got it
             </button>
           </div>
         </div>

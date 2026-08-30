@@ -747,6 +747,7 @@ button.stat-redeem {
 }
 .redeem-dialog .btn {
   width: 100%;
+  margin-top: 16px;
 }
 .quick-grid {
   display: grid;
