@@ -3056,3 +3056,45 @@ button.stat-redeem {
   color: #3f444b;
   white-space: pre-line;
 }
+
+/* The chapter picker: a searchable dropdown over the chapters table. */
+.chapter-combo {
+  position: relative;
+}
+.chapter-combo-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e7e9ec;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(23, 25, 29, 0.14);
+  max-height: 216px;
+  overflow-y: auto;
+  z-index: 30;
+}
+.chapter-combo-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 13px;
+  border: none;
+  background: none;
+  font-size: 13.5px;
+  color: #24272c;
+}
+.chapter-combo-list button.is-active,
+.chapter-combo-list button:hover {
+  background: #f5f6f8;
+}
+.chapter-combo-list button.is-current {
+  font-weight: 700;
+  color: var(--red);
+}
+.chapter-combo-empty {
+  padding: 11px 13px;
+  font-size: 12.5px;
+  color: #8b919b;
+}

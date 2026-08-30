@@ -17,6 +17,9 @@ export default function Profile() {
   const [chapter, setChapter] = useState(user?.chapter || '')
   const [chapters, setChapters] = useState([])
   const [saving, setSaving] = useState(false)
+  // The chapter picker: the input searches, the list below it answers.
+  const [chapterOpen, setChapterOpen] = useState(false)
+  const [chapterActive, setChapterActive] = useState(-1)
 
   const [current, setCurrent] = useState('')
   const [pw, setPw] = useState('')
@@ -27,6 +30,35 @@ export default function Profile() {
   useEffect(() => {
     api.chapters().then((d) => setChapters(d.chapters || [])).catch(() => {})
   }, [])
+
+  const chapterMatches = chapters.filter((c) =>
+    c.toLowerCase().includes(chapter.trim().toLowerCase()),
+  )
+
+  const pickChapter = (c) => {
+    setChapter(c)
+    setChapterOpen(false)
+    setChapterActive(-1)
+  }
+
+  const onChapterKey = (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!chapterOpen) {
+        setChapterOpen(true)
+        return
+      }
+      setChapterActive((i) =>
+        e.key === 'ArrowDown' ? Math.min(i + 1, chapterMatches.length - 1) : Math.max(i - 1, 0),
+      )
+    } else if (e.key === 'Enter' && chapterOpen && chapterActive >= 0) {
+      e.preventDefault()
+      pickChapter(chapterMatches[chapterActive])
+    } else if (e.key === 'Escape') {
+      setChapterOpen(false)
+      setChapterActive(-1)
+    }
+  }
 
   const saveProfile = async (e) => {
     e.preventDefault()
@@ -82,19 +114,52 @@ export default function Profile() {
           <span>Name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} required />
         </label>
-        <label className="profile-field">
+        <label className="profile-field chapter-combo">
           <span>Chapter</span>
           <input
-            list="chapter-options"
+            role="combobox"
+            aria-expanded={chapterOpen}
+            aria-controls="chapter-options"
             value={chapter}
-            onChange={(e) => setChapter(e.target.value)}
-            placeholder="Your BNI chapter"
+            onChange={(e) => {
+              setChapter(e.target.value)
+              setChapterOpen(true)
+              setChapterActive(-1)
+            }}
+            onFocus={() => setChapterOpen(true)}
+            onBlur={() => setChapterOpen(false)}
+            onKeyDown={onChapterKey}
+            placeholder="Search your BNI chapter"
+            autoComplete="off"
           />
-          <datalist id="chapter-options">
-            {chapters.map((c) => (
-              <option value={c} key={c} />
-            ))}
-          </datalist>
+          {chapterOpen && (
+            <div className="chapter-combo-list" id="chapter-options" role="listbox">
+              {chapterMatches.map((c, i) => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={c === chapter}
+                  className={
+                    (i === chapterActive ? 'is-active' : '') + (c === chapter ? ' is-current' : '')
+                  }
+                  key={c}
+                  // Mousedown, and preventDefault: the pick has to land before
+                  // the input's blur closes the list under the finger.
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    pickChapter(c)
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+              {chapterMatches.length === 0 && (
+                <p className="chapter-combo-empty">
+                  No chapter matches — saving registers it as typed.
+                </p>
+              )}
+            </div>
+          )}
         </label>
         <p className="profile-note">
           Email and phone stay as registered — they are your sign-in and recovery. The desk can
