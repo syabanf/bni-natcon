@@ -45,10 +45,7 @@ export default function MyQR() {
           </div>
           <div>
             <h5>Class Entry</h5>
-            <p>
-              Two sessions — pick the class you like, seats are limited. Your class entry QR lives on
-              the Learning Class page
-            </p>
+            <p>Your class entry QR lives on the Learning Session page — separate from this one</p>
           </div>
         </div>
       </div>

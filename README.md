@@ -29,7 +29,14 @@ scan member QRs — which carry the attendee's **ticket number**, the one
 printed on their ticket — with the camera, or take **manual input by ticket
 number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
-gives the committee live monitoring (**Sponsors** and **Booths** are counted
+gives the committee two pages this event needed: a **Sponsors** page showing
+the wall in tier order — which company is Diamond, which is Platinum, which
+supported — and a **Password Setup** page listing, account by account, who
+has replaced the password we handed out and who has not, filterable and
+exportable. Plus live monitoring — including **who is still on the password
+we handed out**, which is the number that matters on the morning: everybody
+starts on the same one, so an account nobody has signed into yet is an account
+anybody holding the briefing sheet can sign into. (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
 sponsor rows; learning classes carry a **speaker list with uploadable
@@ -99,12 +106,9 @@ away.
 
 - **The 866 attendees of the ticketing export** (migration `0038`), one per
   ticket, with the chapters they carry and the password printed on their
-  ticket — chapter + first name, hashed at generation because 866 bcrypt
-  hashes would add a minute to every boot. `must_set_password` stays true, so
-  each attendee still picks their own on first sign-in. (**On the live event
-  database this was overridden on 29 Aug 2026**: every attendee still on a
-  generated password was reset to the shared default `Natcon2026` — see
-  [`docs/kredensial/README.md`](docs/kredensial/README.md).) Regenerate it from a
+  ticket — `SEED_PASSWORD`, the same for everyone, written as the seeder's
+  placeholder so the password lives in the environment rather than in the file. `must_set_password` stays true, so
+  each attendee still picks their own on first sign-in. Regenerate it from a
   newer export with
   [`scripts/attendees_migration.py`](scripts/attendees_migration.py). **This
   file carries personal data and this repository is public — the committee
@@ -112,14 +116,16 @@ away.
 
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
-- **A draft rundown for 3 September** (migration `0024`): nine one-hour
-  blocks from registration to the closing draw, including **two learning
-  blocks** — an attendee may hold two classes only if the day has two hours
-  to hold them in. Written only into an empty schedule, so a committee that
-  has typed their own day keeps it and a deleted block never returns. The
-  hours come from the ticket window and the shape of the programme; the
-  Rundown page is where they get corrected.
-- **34 company logos**, carried by migration `0037` from
+- **The committee's run of show for 3 September** (migration `0041`), from
+  registration at 07:00 to the Opening Ceremony — the day as their published
+  artwork prints it, replacing the draft `0024` had guessed. It carries **two
+  learning blocks**, and each of the four classes is **placed** in one of
+  them: the "two classes, as long as they do not overlap" rule reads a
+  block's hours, so a class with no block is one an attendee can take
+  alongside anything. The one hour the artwork does not give is where the
+  ceremony ends; the Rundown page is where the committee corrects that
+  without a redeploy.
+- **36 company logos** — every exhibitor on the floor — carried by migration `0037` from
   [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
   been redrawn twice, so the mapping is keyed on the **company name** and the
   files are named after the company too — a stand number would go stale every
@@ -162,6 +168,19 @@ before the notice existed is simply asked the next time they sign in. It is
 asked of attendees only: a booth's login belongs to the company, and the
 consent a crew gives is a different question from the one an attendee answers
 about their own name and email.
+
+**The sponsor wall is not the passport.** 27 sponsors across three tiers —
+Diamond, Platinum, and the supporters — live in their own `sponsors` table
+(migration `0042`) and render on the attendee home screen in that order,
+biggest first. Twenty-five of them have no stand, no scanner and nothing to
+stamp; had they been rows in `tenants` every attendee would have been told
+they had visited 0 of 61 booths, and the draw's booth minimum would have
+moved out of reach. Two of them exhibit as well and appear in both places,
+which is what sponsoring and exhibiting at the same event looks like. The
+artwork is prepared by
+[`scripts/sponsor_logos.py`](scripts/sponsor_logos.py) onto the same canvas
+the booth logos use, so a square mark and a wordmark sit in boxes of the same
+size. The ranking is decided by the API, not by each app.
 
 **The API runs behind a load balancer** (`deploy/api-lb.conf`): nginx in front
 of `API_REPLICAS` identical containers, which have no host port of their own.
@@ -221,9 +240,8 @@ ready-to-fill template (headers + example rows).
   back to email), so **one buyer holding two tickets becomes two attendees**
   on the same address — signing in then asks **which pass you are**, and each
   pass keeps its own QR, pins and learning class. New accounts sign in with
-  username = email and the default password — `Natcon2026` on the live event
-  database since 29 Aug 2026 (a fresh seed generates chapter + first name,
-  lowercase, no spaces), then
+  username = email and password = `SEED_PASSWORD` — the same one for
+  everybody, so the desk explains sign-in in one sentence — then
   **choose their own password on that first sign-in** — nothing else in the
   app opens until they do. Forgot it? Recovery matches **chapter + the phone
   number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
@@ -411,14 +429,15 @@ A fresh database has exactly one login:
 | Role  | Email             | Password        | Notes                             |
 |-------|-------------------|-----------------|-----------------------------------|
 | Admin | `admin@natcon.id` | `SEED_PASSWORD` | Committee dashboard + master data |
-| Panitia | `panitia@natcon.id` | `SEED_PASSWORD` | Same rights as admin — a second committee login so the main one is never shared |
+| Panitia | `panitia@natcon.id` | `SEED_PASSWORD` | Same rights as admin — a shared committee login so the main one is never passed around |
+| Committee | `f.lovitasari@gmail.com` | `SEED_PASSWORD` | Same rights as admin, on a named account so the activity log says who did a thing |
 
 Everyone else is created by that account:
 
 | Role     | Login                        | Password                                   |
 |----------|------------------------------|--------------------------------------------|
-| Attendee | the email on their ticket    | `Natcon2026` (shared default on the live DB since 29 Aug 2026; a fresh seed generates chapter + first name), then they choose their own · signs in at `/login` |
-| Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = **company name + booth code**, letters & digits only (WIT.id at A14 → `witida14`) — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
+| Attendee | the email on their ticket    | `SEED_PASSWORD`, then they choose their own · signs in at `/login` |
+| Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = `SEED_PASSWORD`, the same one every account starts on — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so
 importing the booth sheet also hands out one scanner account per booth.

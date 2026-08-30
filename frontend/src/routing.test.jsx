@@ -11,6 +11,7 @@ vi.mock('./api/client', () => ({
   api: {
     me: () => Promise.resolve({ user: null, stats: null }),
     rundown: () => Promise.resolve({ rundown: [] }),
+    sponsors: () => Promise.resolve({ groups: [] }),
     tenants: () => Promise.resolve({ tenants: [] }),
   },
   API_ORIGIN: '',

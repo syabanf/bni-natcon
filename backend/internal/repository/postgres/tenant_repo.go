@@ -47,7 +47,20 @@ func (r *TenantRepo) ListWithVisits(ctx context.Context, memberID int64) ([]doma
 		}
 		out = append(out, t)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// One query for every stand's companies rather than one per card: the
+	// passport draws 36 of them at once.
+	byTenant, err := loadTenantCompanies(ctx, r.pool)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		out[i].Companies = byTenant[out[i].ID]
+	}
+	return out, nil
 }
 
 func (r *TenantRepo) GetByOwnerUserID(ctx context.Context, ownerUserID int64) (*domain.Tenant, error) {
@@ -71,4 +84,31 @@ func (r *TenantRepo) Count(ctx context.Context) (int, error) {
 	var n int
 	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM tenants`).Scan(&n)
 	return n, err
+}
+
+// loadTenantCompanies reads every stand's exhibitors in display order.
+//
+// A stand almost always has exactly one, mirroring the tenant itself; C1 is
+// shared by two companies. Returned as a map so a list of stands can be
+// filled in without a query per card.
+func loadTenantCompanies(ctx context.Context, pool *pgxpool.Pool) (map[int64][]domain.TenantCompany, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT tenant_id, name, logo_url
+		FROM tenant_companies
+		ORDER BY tenant_id, sort, id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make(map[int64][]domain.TenantCompany)
+	for rows.Next() {
+		var id int64
+		var c domain.TenantCompany
+		if err := rows.Scan(&id, &c.Name, &c.LogoURL); err != nil {
+			return nil, err
+		}
+		out[id] = append(out[id], c)
+	}
+	return out, rows.Err()
 }

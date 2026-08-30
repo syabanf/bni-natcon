@@ -394,7 +394,9 @@ function TableHistoryDetail({ tableNo, onBack }) {
         <h2>Table {tableNo} Detail</h2>
         <p>
           {data
-            ? `${data.table.hall ? `${data.table.hall} · ` : ''}${data.table.occupied}/${data.table.capacity} seats taken right now`
+            ? [data.table.hall, `${data.table.occupied}/${data.table.capacity} seats taken right now`]
+                .filter(Boolean)
+                .join(' · ')
             : 'Loading…'}
         </p>
       </div>
@@ -484,7 +486,7 @@ function HistoryView({ onBack }) {
             <div className="np-av history">{t.table_no}</div>
             <div className="np-info">
               <h5>Table {t.table_no}</h5>
-              <p>{t.hall}</p>
+              {t.hall && <p>{t.hall}</p>}
             </div>
             <span className="np-time">{fmtTime(t.joined_at)}</span>
             <span className="np-arrow">→</span>

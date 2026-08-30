@@ -30,6 +30,37 @@ function StatCard({ value, label, accent }) {
   )
 }
 
+// Who is still signing in with the password on the briefing sheet.
+//
+// Every account starts on the same one, so this is the number to watch on the
+// morning: an account that has not been signed into yet can be signed into by
+// anybody who has that sheet. It only goes one way — once somebody picks their
+// own password there is no going back — so the bar filling up is the day
+// getting safer.
+function PasswordProgress({ label, total, pending }) {
+  const known = Number.isFinite(total) && Number.isFinite(pending)
+  const done = known ? total - pending : 0
+  const pct = known && total > 0 ? Math.round((done / total) * 100) : 0
+  return (
+    <div className="seminar-row">
+      <div className="seminar-top">
+        <b>{label}</b>
+        <span>{known ? `${done}/${total} · ${pct}%` : '–'}</span>
+      </div>
+      <div className="seminar-title">
+        {known
+          ? pending === 0
+            ? 'Everyone has chosen their own password'
+            : `${pending} still signing in with the password we handed out`
+          : 'Loading…'}
+      </div>
+      <div className="bar-track">
+        <div className={`bar-fill${known && pct < 50 ? ' warn' : ''}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard({ onUnauthorized }) {
   const [overview, setOverview] = useState(null)
   const [tenants, setTenants] = useState([])
@@ -76,10 +107,30 @@ export default function Dashboard({ onUnauthorized }) {
         <StatCard value={overview?.seminar_registrations} label="Class registrations" />
       </section>
 
+      <section className="panel">
+        <h2>
+          <span className="sec-no">01</span>Password Setup
+        </h2>
+        <p className="panel-sub">
+          Who has replaced the password we handed out — everybody starts on the same one, so an
+          account nobody has signed into yet is an account anybody with the sheet can sign into
+        </p>
+        <PasswordProgress
+          label="Attendees"
+          total={overview?.total_members}
+          pending={overview?.members_password_pending}
+        />
+        <PasswordProgress
+          label="Booths &amp; sponsors"
+          total={overview?.total_tenants}
+          pending={overview?.tenants_password_pending}
+        />
+      </section>
+
       <section className="columns">
         <div className="panel">
           <h2>
-            <span className="sec-no">01</span>Booth Ranking
+            <span className="sec-no">02</span>Booth Ranking
           </h2>
           <p className="panel-sub">Scans per tenant — best-booth candidates</p>
           <div className="rank-list">
@@ -105,7 +156,7 @@ export default function Dashboard({ onUnauthorized }) {
         <div className="col-right">
           <div className="panel">
             <h2>
-              <span className="sec-no">02</span>Learning Class Quota
+              <span className="sec-no">03</span>Learning Session Quota
             </h2>
             <p className="panel-sub">Parallel learning classes</p>
             {seminars.map((s) => {
@@ -129,7 +180,7 @@ export default function Dashboard({ onUnauthorized }) {
 
           <div className="panel">
             <h2>
-              <span className="sec-no">03</span>Latest Activity
+              <span className="sec-no">04</span>Latest Activity
             </h2>
             <p className="panel-sub">Visit scans across all booths</p>
             <div className="feed">

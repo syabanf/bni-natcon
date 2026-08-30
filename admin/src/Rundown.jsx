@@ -23,7 +23,7 @@ export const EVENT_DATES = ['2026-09-03', '2026-09-04']
 export const KINDS = [
   { key: 'registration', label: 'Registration' },
   { key: 'plenary', label: 'Plenary' },
-  { key: 'learning', label: 'Learning Class' },
+  { key: 'learning', label: 'Learning Session' },
   { key: 'networking', label: 'Networking' },
   { key: 'break', label: 'Break' },
   { key: 'doorprize', label: 'Doorprize' },

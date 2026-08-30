@@ -21,6 +21,9 @@ func (s *Server) handleAdminOverview(w http.ResponseWriter, r *http.Request) {
 		"visits_today":          o.VisitsToday,
 		"seminar_registrations": o.SeminarRegistrations,
 		"members_with_visit":    o.MembersWithVisit,
+		// Still on the handed-out password — see AdminOverview.
+		"members_password_pending": o.MembersPasswordPending,
+		"tenants_password_pending": o.TenantsPasswordPending,
 	})
 }
 

@@ -118,6 +118,16 @@ check("a fresh database arrives with the ticketing export and the sheet's booths
       and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == SEEDED_SPONSORS,
       f"got {body}")
 
+# Everybody starts on the password the committee hands out, so the dashboard
+# has to say who is still on it: an account nobody has signed into yet is one
+# anybody holding the briefing sheet can sign into. On a fresh database that
+# is everybody, and the count only ever falls.
+check("the dashboard counts who is still on the handed-out password",
+      body["members_password_pending"] == body["total_members"]
+      and body["tenants_password_pending"] == body["total_tenants"],
+      f'{body.get("members_password_pending")}/{body.get("total_members")} · '
+      f'{body.get("tenants_password_pending")}/{body.get("total_tenants")}')
+
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 SEEDED_CHAPTERS = {c["name"] for c in body["chapters"]}
 check("...and with the chapters those attendees carry",
@@ -192,16 +202,19 @@ check("...and it has one scanner login, on the first stand's code",
 # The committee's logo pack numbers its booths differently from the sheet, so
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
-check("every exhibitor who sent a logo carries it",
-      len(logos) == 34 and logos.get("A22") == "/logos/paper-id.png"
+check("every exhibitor on the floor carries its logo",
+      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS
+      and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
 check("the double stand carries one logo, on one card",
       logos.get("A47 & A48") == "/logos/alpha-leaders.png", f'{logos.get("A47 & A48")}')
-# SP-01 and SP-02 are this suite's own sponsors, not the committee's.
-check("the two who sent nothing keep their initials",
-      {t["booth"] for t in body["tenants"] if not t.get("logo_url")}
-      - {"SP-01", "SP-02"} == {"B1", "B3"},
+# Bio Medika and ProSnap were the last two on initials; their artwork arrived
+# before the event, so nothing seeded falls back any more. SP-01 and SP-02 are
+# this suite's own sponsors, invented here and never given a logo — they are
+# what proves the fallback still works.
+check("only the suite's own fixtures fall back to initials",
+      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"SP-01", "SP-02"},
       f'{[t["booth"] for t in body["tenants"] if not t.get("logo_url")]}')
 check("a booth still carries initials for the lists that have no room for a logo",
       by_booth["A1"]["initials"] == "SI", f'{by_booth["A1"]}')
@@ -284,13 +297,14 @@ check("second member login 200", status == 200)
 sinta_tok = body["token"]
 sinta_id = body["user"]["id"]
 
-# Booth first passwords are derived — company name + booth code, lowercase,
-# letters and digits only — so no two stands share one.
-def booth_password(name, booth):
-    return "".join(c for c in (name + booth).lower() if c.isalnum() and c.isascii())
+# Every account — attendee, booth, committee — starts on the same password.
+# It opens the door once; must_set_password does the rest.
+def booth_password(_name=None, _booth=None):
+    return PASSWORD
 
-status, body = login("booth-a1@natcon.id", booth_password("SSCX International", "A1"))
-check("tenant login 200 on its derived password", status == 200 and body["user"]["role"] == "tenant")
+status, body = login("booth-a1@natcon.id")
+check("tenant login 200 on the committee's password",
+      status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 # A booth's login belongs to the company, not to a person handing over their
 # own name and email, so the attendee's data notice is not asked of it.
@@ -307,13 +321,16 @@ section("Booth crews replace the handed-out password")
 # A phone keyboard capitalises the first letter the moment somebody taps
 # "show password". While a booth is still on the password we generated —
 # always all-lowercase — that stray capital must not lock the crew out.
-status, body = login("BOOTH-A2@natcon.id",
-                     booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2").capitalize(),
-                     xff="10.77.0.7")
+status, body = login("BOOTH-A2@natcon.id", PASSWORD.capitalize(), xff="10.77.0.7")
 check("a capitalised email and first password still sign the booth in",
       status == 200 and body["user"]["role"] == "tenant", f"{status}")
 
-a2_first = booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2")
+# Measured either side of the change rather than against a constant, so the
+# check still means something when the seeded booth count moves again.
+_, before, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+pending_before = before["tenants_password_pending"]
+
+a2_first = PASSWORD
 status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
 check("the derived password opens the door once",
@@ -324,15 +341,23 @@ check("the crew sets their own -> 200", status == 200)
 status, _ = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 check("the first password no longer works there", status == 401)
 status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
+# Held on to now: the checks below overwrite `body`, and putting the password
+# back at the end needs this session.
+a2_own_tok = body["token"]
 # must_set_password is omitempty: gone from the JSON once it is false.
 check("their own password works, and the demand is gone",
       status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("...and the dashboard's count falls as soon as a booth picks its own",
+      body["tenants_password_pending"] == pending_before - 1,
+      f'{body["tenants_password_pending"]} vs {pending_before} before')
+
 # Once the crew picks their own password, case is matched exactly again.
 status, _ = login("booth-a2@natcon.id", "Rahasia-booth-a2", xff="10.77.0.9")
 check("a self-chosen password is case-sensitive", status == 401)
 
 # Put it back the way the rest of the suite expects it.
-req("POST", "/api/v1/auth/password", token=body["token"], body={"password": a2_first})
+req("POST", "/api/v1/auth/password", token=a2_own_tok, body={"password": a2_first})
 
 # ------------------------------------------------------- duplicate attendees
 section("Attendees who share a name, email and phone")
@@ -403,23 +428,86 @@ status, _, _ = req("POST", "/api/v1/admin/redeem", token=member_tok,
                    body={"member_code": member_code, "item": "pin"})
 check("an attendee cannot hand themselves a pin", status == 403)
 
+# ------------------------------------------------- who is still on our password
+section("Password Setup page")
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?limit=5", token=admin_tok)
+sm = body.get("summary", {})
+check("the summary counts attendees and booths separately",
+      status == 200 and sm["members_total"] > 0 and sm["tenants_total"] > 0
+      and sm["members_done"] <= sm["members_total"], f"{sm}")
+# Pending first: the accounts still open are the ones worth a phone call.
+check("the list leads with the accounts still on our password",
+      body["rows"] and body["rows"][0]["changed"] is False, f'{body["rows"][:1]}')
+check("a booth's row is labelled with its stand, an attendee's with their chapter",
+      all(r["role"] in ("member", "tenant") for r in body["rows"]))
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=done", token=admin_tok)
+done_before = body["total"]
+check("filtering to 'chose their own' returns only those",
+      status == 200 and all(r["changed"] for r in body["rows"]), f'{body["total"]}')
+
+# Booth A2 chose its own password earlier in this run, so it has to be here.
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=done&q=booth-a2", token=admin_tok)
+check("...and searching finds a booth that has already changed",
+      status == 200 and body["total"] == 1 and body["rows"][0]["role"] == "tenant",
+      f'{body["total"]} {[r.get("email") for r in body["rows"]]}')
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=pending", token=admin_tok)
+check("the two filters account for everybody",
+      status == 200 and body["total"] + done_before
+      == sm["members_total"] + sm["tenants_total"],
+      f'{body["total"]} + {done_before} vs {sm["members_total"] + sm["tenants_total"]}')
+
+# --------------------------------------------------------------- sponsors
+section("Sponsor wall")
+
+status, body, _ = req("GET", "/api/v1/sponsors", token=member_tok)
+groups = body.get("groups", [])
+# Ranked by the API, not by each app: three front ends deciding for themselves
+# who outranks whom is three chances to put a Diamond sponsor under a
+# supporter.
+check("the wall arrives grouped, Diamond first",
+      status == 200 and [g["tier"] for g in groups] == ["diamond", "platinum", "supported"],
+      f'{[g.get("tier") for g in groups]}')
+check("every tier is labelled for display",
+      [g["label"] for g in groups] == ["Diamond Sponsor", "Platinum Sponsor", "Supported by"],
+      f'{[g.get("label") for g in groups]}')
+wall = [s for g in groups for s in g["sponsors"]]
+check("every sponsor carries artwork — a wall of images cannot show a gap",
+      len(wall) > 0 and all(s["logo_url"].startswith("/sponsors/") for s in wall),
+      f'{[s["name"] for s in wall if not s.get("logo_url")]}')
+# Sponsors are not exhibitors: putting them in `tenants` would have told
+# every attendee they had visited 0 of 61 booths.
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("...and none of them landed in the booth count",
+      body["total_tenants"] == FIXTURE_TENANTS,
+      f'{body["total_tenants"]} exhibitors (expected {FIXTURE_TENANTS}), wall holds {len(wall)}')
+
 # ---------------------------------------------------------------- rundown
 section("Rundown — the day in one-hour blocks")
 
 D, TZ = "2026-09-03", "+07:00"
 status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
 draft = body["rundown"]
-check("a fresh database opens on a draft day, not an empty page",
-      status == 200 and len(draft) == 10
-      and draft[0]["kind"] == "registration"
-      and draft[0]["starts_at"] == f"{D}T07:00:00{TZ}"
-      and [b for b in draft if b["starts_at"].startswith(D)][-1]["kind"] == "doorprize",
+day = [b for b in draft if b["starts_at"].startswith(D)]
+check("a fresh database opens on the committee's day, not an empty page",
+      status == 200 and len(day) == 7
+      and day[0]["kind"] == "registration"
+      and day[0]["starts_at"] == f"{D}T07:00:00{TZ}"
+      and day[-1]["title"] == "Opening Ceremony",
       f"{status} {[b.get('title') for b in draft]}")
 # Two learning blocks, or "two classes that do not clash" can never happen.
-check("the draft leaves room for two learning classes",
-      sum(1 for b in draft if b["kind"] == "learning") == 2)
-check("...and every block sits on the hour grid",
-      all(b["starts_at"][14:19] == "00:00" and b["ends_at"][14:19] == "00:00" for b in draft))
+check("the day leaves room for two learning sessions",
+      sum(1 for b in day if b["kind"] == "learning") == 2)
+# The published rundown is not on a tidy hour grid — the coffee break starts at
+# 08.30 and the ceremony at 12.15 — so the old grid check would now be checking
+# that we had ignored the committee.
+check("...and the blocks are the ones on the committee's artwork",
+      [b["title"] for b in day] == [
+          "Registration Open + Networking", "Chapter Photo Session", "Learning Session 1",
+          "Coffee Break 1", "Learning Session 2", "Lunch Break", "Opening Ceremony"],
+      f'{[b["title"] for b in day]}')
 
 # 66 tickets are for the morning after, not the conference day. A schedule
 # that could only hold one date had nowhere to put them.
@@ -777,10 +865,12 @@ status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
 check("4 learning classes listed", status == 200 and len(body["seminars"]) == 4)
 check("class carries description + attended flag",
       body["seminars"][0]["description"] != "" and body["seminars"][0]["attended"] is False)
-# All four share slot 1, so picking one locks the rest — that single pick is
-# what the goodiebag is claimed against.
-check("all classes share one parallel slot",
-      len({s["slot"] for s in body["seminars"]}) == 1)
+# The committee's rundown splits the four classes across two sessions, two in
+# each. That split is the whole reason an attendee may hold two: with all four
+# in one slot, the first pick locked the other three.
+check("the four classes are split across two sessions, two in each",
+      sorted(s["slot"] for s in body["seminars"]) == [1, 1, 2, 2],
+      f'{[(s["room"], s["slot"]) for s in body["seminars"]]}')
 check("classes carry speakers and at least one moderator",
       all(s["speaker"] for s in body["seminars"])
       and any(s.get("moderator") for s in body["seminars"]))
@@ -799,13 +889,25 @@ check("class carries speaker rows with photos",
       len(people) >= 2
       and all(p["name"] and p["photo_url"].startswith("/speakers/") for p in people)
       and any(p["role"] == "moderator" for p in people))
-sem1, sem2 = body["seminars"][0]["id"], body["seminars"][1]["id"]
-sem3, sem4 = body["seminars"][2]["id"], body["seminars"][3]["id"]
+# Picked by SESSION rather than by position in the list: the committee's
+# rundown puts two classes in each session, and which one the API happens to
+# list first is not what any of these checks are about. sem1/sem2 share a
+# session (so the second is refused); sem3/sem4 are the other session's pair.
+_s1 = [x["id"] for x in body["seminars"] if x["slot"] == 1]
+_s2 = [x["id"] for x in body["seminars"] if x["slot"] == 2]
+check("two classes in each session, so a pair exists on both sides",
+      len(_s1) == 2 and len(_s2) == 2,
+      f'{[(x["room"], x["slot"]) for x in body["seminars"]]}')
+sem1, sem2 = _s1
+sem3, sem4 = _s2
+# The bulk-import fixture below names a ROOM, and it has to be sem3's room or
+# it would be registering a second class in the same session by accident.
+sem3_room = next(x["room"] for x in body["seminars"] if x["id"] == sem3)
 
 status, _, _ = req("POST", f"/api/v1/seminars/{sem1}/register", token=member_tok)
 check("register seminar 1 -> 201", status == 201)
 status, _, _ = req("POST", f"/api/v1/seminars/{sem2}/register", token=member_tok)
-check("same-slot second register -> 409", status == 409)
+check("second class in the same session -> 409", status == 409)
 status, _, _ = req("DELETE", f"/api/v1/seminars/{sem1}/register", token=member_tok)
 check("cancel -> 200", status == 200)
 status, _, _ = req("DELETE", f"/api/v1/seminars/{sem1}/register", token=member_tok)
@@ -930,7 +1032,7 @@ status, body, _ = req("POST", "/api/v1/admin/tenants", token=admin_tok,
                       body={"name": "E2E Booth", "category": "Uji", "booth": "Z-01"})
 check("create tenant 201 (auto initials)", status == 201 and body["tenant"]["initials"] == "EB")
 new_tenant_id = body["tenant"]["id"]
-status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"))
+status, _ = login("booth-z01@natcon.id", PASSWORD)
 check("auto booth login works on its derived password", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
 check("tenant detail 200", status == 200 and body["tenant"]["owner_email"] == "booth-z01@natcon.id")
@@ -1445,9 +1547,9 @@ check("the attendee passport shows who is at the booth",
 
 # A refresh keeps the login AND the password it was created with — derived
 # from the ORIGINAL name, because the crew's briefing sheet was printed then.
-status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"), xff="10.99.0.2")
+status, _ = login("booth-z01@natcon.id", PASSWORD, xff="10.99.0.2")
 check("refreshed booth keeps its scanner login and original password", status == 200)
-status, _ = login("booth-sp99@natcon.id", booth_password("Bulk Sponsor", "SP-99"), xff="10.99.0.3")
+status, _ = login("booth-sp99@natcon.id", PASSWORD, xff="10.99.0.3")
 check("imported booth gets an auto scanner login on its derived password", status == 200)
 
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
@@ -1604,15 +1706,15 @@ check("registering twice reports duplicate, not an error",
       status == 201 and body["duplicate"] is True)
 status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem4}/registrations", token=admin_tok,
                    body={"member": "sinta@natcon.id"})
-check("second class in the same slot -> 409", status == 409)
+check("second class in the same session -> 409", status == 409)
 status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem3}/registrations", token=admin_tok,
                    body={"member": "nobody@example.com"})
 check("unknown attendee -> 404", status == 404)
 
 status, body, _ = req("POST", "/api/v1/admin/seminars/registrations/bulk", token=admin_tok,
                       body={"registrations": [
-                          {"member": "agus@natcon.id", "room": "Learning Class 3"},
-                          {"member": "sinta@natcon.id", "room": "Learning Class 3"},
+                          {"member": "agus@natcon.id", "room": sem3_room},
+                          {"member": "sinta@natcon.id", "room": sem3_room},
                           {"member": "agus@natcon.id", "room": "No Such Room"},
                       ]})
 check("bulk registration: 1 created, 1 already there, 1 unknown room",
@@ -1686,11 +1788,8 @@ check("guessing one account's password is stopped, even from a fresh IP each tim
 # per-IP ceiling the eleventh was turned away, and to everyone behind them the
 # app simply looked broken.
 status, body, _ = req("GET", "/api/v1/admin/members?limit=16", token=admin_tok)
-hall = []
-for m in body["members"][:16]:
-    first = m["name"].split()[0] if m["name"].split() else ""
-    pw = re.sub(r"\s+", "", f'{m.get("chapter", "")}{first}').lower()
-    hall.append(login(m["email"], pw, xff="103.28.14.7")[0])
+hall = [login(m["email"], PASSWORD, xff="103.28.14.7")[0]
+        for m in body["members"][:16]]
 check("a hall on one public IP all sign in, none rate-limited",
       hall.count(429) == 0 and hall.count(200) >= 12, f"got {hall}")
 

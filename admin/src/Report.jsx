@@ -190,7 +190,7 @@ export function ReportSeminars({ onUnauthorized }) {
 
   return (
     <ReportShell
-      title="Report — Learning Class Registrations"
+      title="Report — Learning Session Registrations"
       sub="Attendance sheet per room for the door crew"
       exportDisabled={registrations.length === 0}
       onExport={() =>

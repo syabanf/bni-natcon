@@ -208,7 +208,7 @@ export default function DoorCheckin({ onUnauthorized }) {
       {mode === 'attendance' && (
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Choose Learning Class
+          <span className="sec-no">02</span>Choose Learning Session
         </h2>
         <p className="panel-sub">Each door crew covers one room</p>
         <select

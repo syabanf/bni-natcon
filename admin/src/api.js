@@ -286,6 +286,13 @@ export const api = {
     request(`/admin/chapters/${id}`, { method: 'PUT', body: { name } }),
   deleteChapter: (id) =>
     request(`/admin/chapters/${id}`, { method: 'DELETE' }),
+  sponsors: (opts) => request('/sponsors', opts),
+  passwordStatus: ({ status = 'all', q = '', page = 1, limit = 100 } = {}, opts) =>
+    request(
+      `/admin/password-status?status=${status}&q=${encodeURIComponent(q)}` +
+        `&page=${page}&limit=${limit}`,
+      opts,
+    ),
   visitReport: () => request('/admin/report/visits'),
   registrationReport: () => request('/admin/report/registrations'),
 }

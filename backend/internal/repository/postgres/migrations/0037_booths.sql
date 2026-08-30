@@ -55,9 +55,9 @@ FROM tenants t, (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
@@ -99,9 +99,9 @@ FROM (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE lower(regexp_replace(t.name, '[^a-zA-Z0-9]', '', 'g')) = v.key
@@ -142,9 +142,9 @@ FROM tenants t, (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
@@ -188,9 +188,9 @@ FROM (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = v.email)
@@ -233,9 +233,9 @@ FROM (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 JOIN users u ON u.email = v.email
@@ -282,9 +282,9 @@ FROM (VALUES
     ('ketapangindahhotel', 'A44', 'KETAPANG INDAH HOTEL', 'HOTEL', 'KI', 'booth', 'booth-a44@natcon.id', '/logos/ketapang-indah-hotel.png', 'VERONICA IMELDA PARTOWIDJOJO', 'CHAMPION'),
     ('ptbelanjasegarindonesia', 'A46', 'PT Belanja Segar Indonesia', 'Food Supplier', 'PB', 'booth', 'booth-a46@natcon.id', '/logos/belanja-segar-indonesia.png', 'Meilina Witan', 'Altitude'),
     ('alphaleaders', 'A47 & A48', 'ALPHA LEADERS', '', 'AL', 'booth', 'booth-a47@natcon.id', '/logos/alpha-leaders.png', 'Ferly F. Raya', ''),
-    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '', 'Agus Subroto', 'Champion'),
+    ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
-    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '', 'Leonard Rosandy', 'Star'),
+    ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.booth = v.booth;

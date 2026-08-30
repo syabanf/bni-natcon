@@ -89,6 +89,7 @@ export const api = {
     request('/auth/reset', { method: 'POST', body: { reset_token: resetToken, password } }),
   // The day's schedule, edited by the committee (MoM 19 Aug 2026).
   rundown: () => request('/rundown'),
+  sponsors: () => request('/sponsors'),
   // The round everyone in the hall counts down to (MoM 19 Aug 2026).
   networkingSession: () => request('/networking/session'),
   tenants: () => request('/tenants'),

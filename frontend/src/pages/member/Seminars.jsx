@@ -235,7 +235,7 @@ export default function Seminars() {
     setBusyID(id)
     try {
       await api.registerSeminar(id)
-      toast('Registered — show your class QR at the room door to check in')
+      toast('Registered — show your class QR at the room door to get in')
     } catch (err) {
       toast(err.message)
     } finally {
@@ -293,7 +293,7 @@ export default function Seminars() {
   return (
     <>
       <div className="hero-greet">
-        <h2>Learning Class</h2>
+        <h2>Learning Session</h2>
         <p>
           Two sessions, one class each — pick one class per session, then show your class QR at the
           door to get checked in.
@@ -309,8 +309,8 @@ export default function Seminars() {
             <h5>{registered.attended ? 'Attendance recorded ✓' : 'Your class ticket is ready'}</h5>
             <p>
               {registered.attended
-                ? `Enjoy ${registered.room} — see you in class`
-                : `Open ${registered.room} below and show the entry QR at the door to check in`}
+                ? `Enjoy ${registered.room} — your goodiebag is waiting at the desk`
+                : `Open ${registered.room} below and show the entry QR at the door`}
             </p>
           </div>
         </div>

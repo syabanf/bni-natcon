@@ -4,8 +4,12 @@ import { exportSheet } from './excel'
 import Modal from './Modal'
 
 // Networking tables master data: generate a block of tables before the
-// event, then fine-tune hall/capacity per table. Occupancy is live, so a
-// table that still has someone seated cannot be deleted.
+// event, then fine-tune the name/capacity per table. There is no hall field:
+// this conference runs its networking in one room, so asking for a hall on
+// every table was a column of "Hall B" that told nobody anything.
+//
+// Occupancy is live, so a table that still has someone seated cannot be
+// deleted.
 export default function Tables({ onUnauthorized }) {
   const [rows, setRows] = useState(null)
   const [form, setForm] = useState(null) // null | { id, table_no, hall, capacity }
@@ -139,8 +143,8 @@ export default function Tables({ onUnauthorized }) {
         <div>
           <h1>Speed Networking — Tables</h1>
           <p className="micro">
-            Generate the tables for the hall, then print their QR codes — attendees scan the QR on
-            their table to join its network
+            Generate the tables, then print their QR codes — attendees scan the QR on their table
+            to join its network
           </p>
         </div>
         <div className="head-right">
@@ -235,14 +239,6 @@ export default function Tables({ onUnauthorized }) {
               value={gen.count}
               onChange={(e) => setGen({ ...gen, count: e.target.value })}
               required
-            />
-          </label>
-          <label className="md-field">
-            <span>Hall</span>
-            <input
-              value={gen.hall}
-              onChange={(e) => setGen({ ...gen, hall: e.target.value })}
-              placeholder="optional — e.g. Hall B"
             />
           </label>
           <label className="md-field">
@@ -348,7 +344,6 @@ export default function Tables({ onUnauthorized }) {
               <tr>
                 <th>Table</th>
                 <th>Name</th>
-                <th>Hall</th>
                 <th className="num">Seated</th>
                 <th className="num">Capacity</th>
                 <th />
@@ -359,7 +354,6 @@ export default function Tables({ onUnauthorized }) {
                 <tr key={t.id}>
                   <td className="mono">#{t.table_no}</td>
                   <td>{t.name || <span className="muted">— unnamed</span>}</td>
-                  <td>{t.hall}</td>
                   <td className="num">{t.occupied}</td>
                   <td className="num">{t.capacity}</td>
                   <td className="md-actions">
@@ -404,10 +398,6 @@ export default function Tables({ onUnauthorized }) {
                 placeholder="Startup Corner"
                 autoFocus
               />
-            </label>
-            <label className="md-field">
-              <span>Hall</span>
-              <input value={form.hall} onChange={(e) => setForm({ ...form, hall: e.target.value })} />
             </label>
             <label className="md-field">
               <span>

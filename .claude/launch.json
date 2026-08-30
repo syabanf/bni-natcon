@@ -82,6 +82,60 @@
       ],
       "runtimeExecutable": "npm",
       "port": 4182
+    },
+    {
+      "name": "natcon-attendee",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "frontend",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180,
+      "env": {
+        "VITE_API_PROXY": "http://localhost:8086"
+      }
+    },
+    {
+      "name": "natcon-admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "admin",
+        "--",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181,
+      "env": {
+        "VITE_API_PROXY": "http://localhost:8086"
+      }
+    },
+    {
+      "name": "natcon-door",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "door",
+        "--",
+        "--port",
+        "5182",
+        "--strictPort"
+      ],
+      "port": 5182,
+      "env": {
+        "VITE_API_PROXY": "http://localhost:8086"
+      }
     }
   ]
 }

@@ -66,6 +66,9 @@ type Tenant struct {
 	ContactName string
 	Chapter     string
 	OwnerUserID int64
+	// Everyone exhibiting on this stand, in display order. One entry for
+	// almost every stand; two where a stand is shared.
+	Companies []TenantCompany
 }
 
 // TenantWithVisit is a tenant plus whether a given member has visited it.
@@ -236,6 +239,68 @@ type AdminOverview struct {
 	VisitsToday          int
 	SeminarRegistrations int
 	MembersWithVisit     int
+	// Accounts still on the password the committee handed out. Every account
+	// now starts on the same one, so this is the number that matters on the
+	// morning: until somebody signs in and picks their own, anybody holding
+	// the briefing sheet can sign in as them.
+	MembersPasswordPending int
+	TenantsPasswordPending int
+}
+
+// PasswordStatusSummary counts who has replaced the password the committee
+// handed out. Everybody starts on the same one, so the pending figure is the
+// size of the window in which somebody else could sign in as them.
+type PasswordStatusSummary struct {
+	MembersTotal int
+	MembersDone  int
+	TenantsTotal int
+	TenantsDone  int
+}
+
+// PasswordStatusRow is one account on that list.
+type PasswordStatusRow struct {
+	ID    int64
+	Name  string
+	Email string
+	Role  string // "member" | "tenant"
+	// The stand for a booth, the chapter for an attendee — whichever the
+	// committee would use to find them in the hall.
+	Label      string
+	MemberCode string
+	Changed    bool
+}
+
+// Sponsor is a company on the sponsor wall. Separate from Tenant on purpose:
+// most sponsors have no stand, nothing to scan and nothing to stamp, so they
+// are not part of the passport — see migration 0042.
+type Sponsor struct {
+	ID   int64
+	Tier string // "diamond" | "platinum" | "supported"
+	Name string
+	// The company's own artwork. Empty shows the name as text, which is
+	// better than a broken image on a wall that is entirely images.
+	LogoURL string
+}
+
+// SponsorTierLabel is what the wall prints above each group.
+func SponsorTierLabel(tier string) string {
+	switch tier {
+	case "diamond":
+		return "Diamond Sponsor"
+	case "platinum":
+		return "Platinum Sponsor"
+	default:
+		return "Supported by"
+	}
+}
+
+// TenantCompany is one of the companies on a stand. Usually there is exactly
+// one and it mirrors the tenant; C1 is shared by two. A stand is still one
+// tenant — one login, one QR, one stamp — so this is what the card shows,
+// never what the scan counts.
+type TenantCompany struct {
+	Name    string
+	LogoURL string
 }
 
 // TenantScanCount ranks a booth by collected scans.
@@ -330,22 +395,6 @@ func TenantLoginEmail(booth string) string {
 		}
 	}
 	return "booth-" + string(out) + "@natcon.id"
-}
-
-// TenantDefaultPassword is the password a booth account starts on: the
-// company name plus the booth code, lowercase, letters and digits only —
-// WIT.id on A14 signs in with "witida14". The same shape attendees follow
-// (chapter + first name), so one sentence on the briefing sheet explains
-// both, and no two stands share a password. It only opens the door once:
-// the crew replaces it on first sign-in.
-func TenantDefaultPassword(name, booth string) string {
-	out := make([]rune, 0, len(name)+len(booth))
-	for _, r := range strings.ToLower(name + booth) {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			out = append(out, r)
-		}
-	}
-	return string(out)
 }
 
 // NewTenant creates a booth/sponsor plus its scanner login user.

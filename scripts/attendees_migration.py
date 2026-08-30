@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turn the ticketing export into the attendee seed migration.
 
-    pip install openpyxl bcrypt
+    pip install openpyxl
     python3 scripts/attendees_migration.py "~/Downloads/Data Peserta & Booth ... .xlsx"
 
 Writes backend/internal/repository/postgres/migrations/0038_attendees.sql.
@@ -14,10 +14,10 @@ WHAT IT WRITES
   attendees, which is the point: a booth owner buying four crew passes is
   four people through the door, and the sheet never collected the crew's
   names;
-· the password each attendee is told on their ticket — chapter + first name,
-  lowercase, no spaces — hashed here rather than at startup, because a
-  thousand bcrypt hashes would add a minute to every boot. must_set_password
-  stays true, so the app still makes them choose their own on first sign-in.
+· the committee's single first password for everyone, written as the
+  seeder's placeholder rather than hashed here — the API turns it into
+  SEED_PASSWORD on the next start. must_set_password stays true, so the app
+  still makes each attendee choose their own on first sign-in.
 
 THE COMPANY COLUMN
 ------------------
@@ -42,10 +42,13 @@ import re
 import sys
 import unicodedata
 
-import bcrypt
 import openpyxl
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+# The hash nobody can sign in with. The API's seeder rewrites it with
+# SEED_PASSWORD on the next start — see SeedIfEmpty.
+PLACEHOLDER_HASH = "$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH"
 OUT = ROOT / "backend/internal/repository/postgres/migrations/0038_attendees.sql"
 COMPANIES = ROOT / "scripts/attendee-companies.json"
 
@@ -57,6 +60,21 @@ COLUMNS = {
     "phone": "Phone",
     "chapter": "Bni Chapter",
     "classification": "Business Classification",
+}
+
+
+# Chapters the committee has told us are wrong in their own export.
+#
+# Keyed on the TICKET NUMBER, not the name: a ticket is one person, and two
+# attendees can share a name. Correcting here rather than in the database
+# means a re-import keeps the fix; and the day the committee fixes their own
+# sheet, the entry simply stops matching anything.
+#
+# Every line needs somebody to have said so — this is not a place to guess a
+# chapter from a name.
+CHAPTER_CORRECTIONS = {
+    # Stephanie Safitri Jusuf — sheet says Amplify, committee says Prestige.
+    "16798-2556D8630": "Prestige",
 }
 
 
@@ -84,13 +102,6 @@ def normalize_phone(raw: str) -> str:
     return p
 
 
-def first_password(chapter: str, name: str) -> str:
-    """chapter + first name, lowercase, no spaces — what the ticket says."""
-    first = name.split()[0] if name.split() else ""
-    raw = unicodedata.normalize("NFKD", f"{chapter}{first}")
-    return re.sub(r"\s+", "", raw).lower()
-
-
 def read_rows(path: pathlib.Path, sheet_name: str):
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.worksheets[0]
@@ -116,7 +127,7 @@ def read_rows(path: pathlib.Path, sheet_name: str):
             continue
         seen.add(ticket)
         name = " ".join(x for x in (cell("first"), cell("last")) if x)
-        chapter = cell("chapter")
+        chapter = CHAPTER_CORRECTIONS.get(ticket, cell("chapter"))
         company = by_ticket.get(ticket, "")
         if company:
             carried[0] += 1
@@ -132,7 +143,6 @@ def read_rows(path: pathlib.Path, sheet_name: str):
             "company": company,
             "chapter": chapter,
             "classification": cell("classification"),
-            "password": first_password(chapter, name),
         })
     return out, carried
 
@@ -142,18 +152,18 @@ def main() -> None:
     ap.add_argument("sheet")
     ap.add_argument("--sheet-name", default="Data Peserta",
                     help="worksheet holding the attendee list (default: Data Peserta)")
-    ap.add_argument("--cost", type=int, default=10, help="bcrypt cost (default 10, same as the API)")
     args = ap.parse_args()
 
     people, carried = read_rows(pathlib.Path(args.sheet).expanduser(), args.sheet_name)
     if not people:
         sys.exit("no attendee rows found")
 
-    print(f"hashing {len(people)} passwords at cost {args.cost} — this takes a minute…")
-    for i, p in enumerate(people, 1):
-        p["hash"] = bcrypt.hashpw(p["password"].encode(), bcrypt.gensalt(args.cost)).decode()
-        if i % 200 == 0:
-            print(f"  {i}/{len(people)}")
+    # No hashing here any more. Every attendee starts on the committee's
+    # single password, so the rows carry the seeder's placeholder and the API
+    # turns it into a real hash — from SEED_PASSWORD — on the next start. One
+    # bcrypt call at boot instead of nearly nine hundred at generation.
+    for p in people:
+        p["hash"] = PLACEHOLDER_HASH
 
     chapters = sorted({p["chapter"] for p in people if p["chapter"]})
     chapter_values = ",\n".join(f"    ({q(c)})" for c in chapters)
@@ -178,11 +188,11 @@ def main() -> None:
 -- attendees, because a booth owner buying four crew passes is four people
 -- through the door and the sheet never collected the crew's names.
 --
--- Passwords are the ones printed on the ticket — chapter + first name,
--- lowercase without spaces — hashed here rather than at boot, because {len(people)}
--- bcrypt hashes would add a minute to every start. must_set_password stays
--- true, so the app still makes each attendee choose their own on first
--- sign-in.
+-- Every attendee starts on the committee's single password (SEED_PASSWORD).
+-- The rows below carry a placeholder hash nobody can sign in with; the API's
+-- seeder rewrites it on the next start, so the password lives in the
+-- environment rather than in this file. must_set_password stays true, so the
+-- app still makes each attendee choose their own on first sign-in.
 --
 -- {len(people) - no_company} of these carry a company, brought across by ticket number from the
 -- export that had a Company Name column; the newer one dropped it. The
