@@ -224,10 +224,11 @@ booths = [t for t in body["tenants"] if t["kind"] == "booth"]
 
 def booth_token(t):
     c = Client()
-    from_name = "".join(ch for ch in (t["name"] + t["booth"]).lower() if ch.isalnum() and ch.isascii())
+    # Same password as everybody else: the committee hands out one, and the
+    # app makes each crew replace it on first sign-in.
     s, b = c.req("POST", "/api/v1/auth/login",
                  body={"email": f"booth-{t['booth'].split(' ')[0].replace('-', '').lower()}@natcon.id",
-                       "password": from_name},
+                       "password": PASSWORD},
                  xff=f"10.9.{booths.index(t) // 50}.{booths.index(t) % 50 + 1}")
     return (s, b.get("token") if b else None, c)
 
