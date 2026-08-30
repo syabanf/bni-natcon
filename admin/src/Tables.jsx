@@ -143,8 +143,8 @@ export default function Tables({ onUnauthorized }) {
         <div>
           <h1>Speed Networking — Tables</h1>
           <p className="micro">
-            Generate the tables for the hall, then print their QR codes — attendees scan the QR on
-            their table to join its network
+            Generate the tables, then print their QR codes — attendees scan the QR on their table
+            to join its network
           </p>
         </div>
         <div className="head-right">
