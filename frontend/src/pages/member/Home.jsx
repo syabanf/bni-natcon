@@ -156,7 +156,7 @@ export default function Home() {
             <Icon name="mic" size={18} />
           </span>
           <h4>Learning Class</h4>
-          <p>Pick a class, claim your goodiebag</p>
+          <p>Two sesi — pick the class you like, seats are limited</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/network')}>
           <span className="q-ic">
