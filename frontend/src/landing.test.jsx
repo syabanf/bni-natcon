@@ -31,9 +31,10 @@ describe('the landing page', () => {
     expect(document.querySelector('.cd-num')).toBeNull()
   })
 
-  it('offers the booth door only — no attendee sign-in until credentials go out', () => {
+  it('advertises no sign-in at all — a poster until credentials go out', () => {
     render(<MemoryRouter><Landing /></MemoryRouter>)
     expect(screen.queryByText('Attendee sign-in')).toBeNull()
-    expect(screen.getByText(/Booth scanner/).getAttribute('href')).toBe('/tenant/login')
+    expect(screen.queryByText(/Booth scanner/)).toBeNull()
+    expect(document.querySelector('a')).toBeNull()
   })
 })
