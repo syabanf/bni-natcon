@@ -36,7 +36,7 @@ export default function MyQR() {
           </div>
           <div>
             <h5>Booth Visits</h5>
-            <p>Scanned by sponsors &amp; booths — collect pins for every visit</p>
+            <p>Scanned by sponsors &amp; booths — collect stamps, win the grand prize</p>
           </div>
         </div>
         <div className="qr-use">
@@ -45,7 +45,10 @@ export default function MyQR() {
           </div>
           <div>
             <h5>Class Entry</h5>
-            <p>Your class entry QR lives on the Learning Class page — separate from this one</p>
+            <p>
+              Two sesi — pick the class you like, seats are limited. Your class entry QR lives on
+              the Learning Class page
+            </p>
           </div>
         </div>
       </div>
