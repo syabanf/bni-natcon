@@ -105,8 +105,8 @@ Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
 narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0037`,
 lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **rundown resmi 3
-September** (migrasi `0041`, sesuai artwork panitia: registrasi 07.00 sampai
-Opening Ceremony) plus **Gold Club Breakfast 4 September** (migrasi `0025`) —
+September** (migrasi `0048`, sesuai PDF run of show panitia: 16 blok, registrasi
+07.00 sampai Closing 18.30) —
 rapikan di halaman Rundown; blok yang dihapus tidak muncul lagi saat restart.
 Keempat kelas sudah ditempatkan ke dua blok Learning Session, yang membuat
 aturan "dua kelas asal jamnya tidak bentrok" benar-benar berlaku.

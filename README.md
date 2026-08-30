@@ -116,9 +116,11 @@ away.
 
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
-- **The committee's run of show for 3 September** (migration `0041`), from
-  registration at 07:00 to the Opening Ceremony — the day as their published
-  artwork prints it, replacing the draft `0024` had guessed. It carries **two
+- **The committee's run of show for 3 September** (migration `0048`), all
+  sixteen blocks from registration at 07:00 to Closing at 18:30 — the day as
+  their run-of-show PDF prints it, replacing the half-day `0041` had taken
+  from a screenshot and the breakfast `0025` had guessed for the morning
+  after. It carries **two
   learning blocks**, and each of the four classes is **placed** in one of
   them: the "two classes, as long as they do not overlap" rule reads a
   block's hours, so a class with no block is one an attendee can take

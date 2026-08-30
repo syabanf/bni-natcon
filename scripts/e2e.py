@@ -492,10 +492,10 @@ status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
 draft = body["rundown"]
 day = [b for b in draft if b["starts_at"].startswith(D)]
 check("a fresh database opens on the committee's day, not an empty page",
-      status == 200 and len(day) == 7
+      status == 200 and len(day) == 16
       and day[0]["kind"] == "registration"
       and day[0]["starts_at"] == f"{D}T07:00:00{TZ}"
-      and day[-1]["title"] == "Opening Ceremony",
+      and day[-1]["title"] == "Closing",
       f"{status} {[b.get('title') for b in draft]}")
 # Two learning blocks, or "two classes that do not clash" can never happen.
 check("the day leaves room for two learning sessions",
@@ -505,18 +505,24 @@ check("the day leaves room for two learning sessions",
 # that we had ignored the committee.
 check("...and the blocks are the ones on the committee's artwork",
       [b["title"] for b in day] == [
-          "Registration Open + Networking", "Chapter Photo Session", "Learning Session 1",
-          "Coffee Break 1", "Learning Session 2", "Lunch Break", "Opening Ceremony"],
+          "Registration & Open Networking", "Chapter Photo Session", "Learning Session 1",
+          "Coffee Break 1", "Learning Session 2", "Lunch Break", "Opening Ceremony",
+          "Keynote Speaker Session: Phil Berg", "Coffee Break 2",
+          "Speed Networking Session 1", "Chapter Awards", "Door Prize 1",
+          "Speed Networking Session 2", "Referral Partner Awards", "Door Prize 2",
+          "Closing"],
       f'{[b["title"] for b in day]}')
+# The day the committee published runs to 18.30, not to lunch.
+check("...and it runs the whole day, not half of it",
+      day[-1]["starts_at"] == f"{D}T18:30:00{TZ}", f'{day[-1]["starts_at"]}')
 
-# 66 tickets are for the morning after, not the conference day. A schedule
-# that could only hold one date had nowhere to put them.
-breakfast = [b for b in draft if b["starts_at"].startswith("2026-09-04")]
-check("the Gold Club breakfast sits on its own day",
-      len(breakfast) == 1 and breakfast[0]["starts_at"] == f"2026-09-04T08:00:00{TZ}"
-      and breakfast[0]["ends_at"] == f"2026-09-04T11:00:00{TZ}", f"{breakfast}")
-check("...and says who it is for, because the agenda is one list for everybody",
-      "Gold Club" in breakfast[0]["title"] and "Gold Club" in breakfast[0]["place"])
+# The schedule is the committee's artwork and nothing else. A breakfast block
+# for the day after used to be seeded from the Gold Club ticket count, with
+# hours nobody had signed off; it is gone, and the Rundown page is where a
+# real one would be added.
+check("nothing is seeded for any day but the conference itself",
+      [b for b in draft if not b["starts_at"].startswith(D)] == [],
+      f'{[b["title"] for b in draft if not b["starts_at"].startswith(D)]}')
 check("the draft runs in the order the days do",
       [b["starts_at"] for b in draft] == sorted(b["starts_at"] for b in draft))
 
