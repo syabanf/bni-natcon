@@ -184,8 +184,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
                     <b>Class entry pass — {seminar.room}</b>
                     <p>
                       This QR is for the learning class door only (separate from your booth QR). The
-                      door crew scans it to record your attendance — then claim your{' '}
-                      <b>goodiebag</b>.
+                      door crew scans it to record your attendance.
                     </p>
                   </div>
                 )}
@@ -236,7 +235,7 @@ export default function Seminars() {
     setBusyID(id)
     try {
       await api.registerSeminar(id)
-      toast('Registered — show your class QR at the room door to claim your goodiebag')
+      toast('Registered — show your class QR at the room door to check in')
     } catch (err) {
       toast(err.message)
     } finally {
@@ -310,8 +309,8 @@ export default function Seminars() {
             <h5>{registered.attended ? 'Attendance recorded ✓' : 'Your class ticket is ready'}</h5>
             <p>
               {registered.attended
-                ? `Enjoy ${registered.room} — don't forget to claim your goodiebag`
-                : `Open ${registered.room} below and show the entry QR at the door to claim your goodiebag`}
+                ? `Enjoy ${registered.room} — see you in class`
+                : `Open ${registered.room} below and show the entry QR at the door to check in`}
             </p>
           </div>
         </div>
@@ -362,7 +361,7 @@ export default function Seminars() {
                       {s.registered ? (
                         <button className="btn done" style={{ marginTop: 10 }}>
                           <Icon name="check" size={15} />
-                          Registered{s.attended ? ' · attended ✓' : ' — goodiebag on check-in'}
+                          Registered{s.attended ? ' · attended ✓' : ' — see you in class'}
                         </button>
                       ) : locked ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>
