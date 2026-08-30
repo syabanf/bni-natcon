@@ -392,7 +392,11 @@ function TableHistoryDetail({ tableNo, onBack }) {
           ← Back to history
         </button>
         <h2>Table {tableNo} Detail</h2>
-        <p>{data ? `${data.table.hall} · ${data.table.occupied}/${data.table.capacity} seats taken right now` : 'Loading…'}</p>
+        <p>
+          {data
+            ? `${data.table.hall ? `${data.table.hall} · ` : ''}${data.table.occupied}/${data.table.capacity} seats taken right now`
+            : 'Loading…'}
+        </p>
       </div>
       {error && <div className="empty-note">{error}</div>}
       {data && (
@@ -725,8 +729,7 @@ export default function Networking() {
               Table {data.table.table_no} · Seat {data.seat_no}
             </h3>
             <p>
-              {data.table.name ? `${data.table.name} · ` : ''}
-              {data.table.hall}
+              {[data.table.name, data.table.hall].filter(Boolean).join(' · ')}
             </p>
           </div>
           <RoundTimer session={session} />
