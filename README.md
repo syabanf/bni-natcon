@@ -407,7 +407,8 @@ A fresh database has exactly one login:
 | Role  | Email             | Password        | Notes                             |
 |-------|-------------------|-----------------|-----------------------------------|
 | Admin | `admin@natcon.id` | `SEED_PASSWORD` | Committee dashboard + master data |
-| Panitia | `panitia@natcon.id` | `SEED_PASSWORD` | Same rights as admin — a second committee login so the main one is never shared |
+| Panitia | `panitia@natcon.id` | `SEED_PASSWORD` | Same rights as admin — a shared committee login so the main one is never passed around |
+| Committee | `f.lovitasari@gmail.com` | `SEED_PASSWORD` | Same rights as admin, on a named account so the activity log says who did a thing |
 
 Everyone else is created by that account:
 

@@ -73,12 +73,12 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | ATT-04 | P1 | Passport tab | Look at the top of the passport. | An 'Official Sponsors' band appears ABOVE the booths, with the count of sponsor stands visited. Sponsor cards are red-framed and carry a SPONSOR ribbon. |
 | ATT-05 | P1 | Passport | Read a booth card imported from the booth sheet. | Shows the company name, its category, the booth code, and underneath the booth contact and their chapter. |
 | ATT-06 | P1 | A booth has just scanned this attendee | Reopen the Passport. | That booth's card is marked Scanned and has moved to the bottom of its group. Pins collected went up by one. |
-| ATT-07 | P1 | Learning Class tab | Look at the class list. | Four classes, each with a poster image, the room, seats left, and the speakers and moderator with their photos. |
+| ATT-07 | P1 | Learning Session tab | Look at the class list. | Four classes, each with a poster image, the room, seats left, and the speakers and moderator with their photos. |
 | ATT-08 | P1 | Class list | Register for one class. | The banner says the class ticket is ready. The other three classes become unavailable with 'You already picked another class'. |
 | ATT-09 | P1 | Registered | Open the class and show the entry QR. | A QR appears captioned 'Class entry pass — <room>' and explains it is for the class door, separate from the booth QR. |
 | ATT-10 | P2 | Registered | Open the class detail and scroll to 'In this room'. | Lists the people registered for that room with their chapter. Your own name is there. |
 | ATT-11 | P2 | Registered | Cancel the registration, then register for a different class. | Cancelling frees the choice; the other classes become available again and the new one registers. |
-| ATT-12 | P1 | The door crew has just checked this attendee in | Reopen Learning Class. | Banner reads 'Attendance recorded ✓' and the class button reads 'Registered · attended ✓'. |
+| ATT-12 | P1 | The door crew has just checked this attendee in | Reopen Learning Session. | Banner reads 'Attendance recorded ✓' and the class button reads 'Registered · attended ✓'. |
 | ATT-13 | P1 | Learning class tab, networking | Look for a way to type a table number. | There is none — scanning the table QR is the only way in. The note says so, and the camera-failure message points at the committee. |
 | ATT-14 | P1 | Network tab | Scan the printed table QR with the camera (real phone). | Same result as typing the number — checked in at that table. |
 | ATT-15 | P1 | Network tab | Scan your own member QR at the table screen. | Refused as 'not a networking table code'. It must NOT seat you at table 1. |
@@ -88,7 +88,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | ATT-19 | P2 | Saved at least one contact | Open 'Table History & Saved Contacts'. | Lists the tables you joined and the contacts you saved, each with its note. |
 | ATT-20 | P2 | Saved contacts list | Open one contact. | Shows their profile with email and phone. Tapping the phone opens the dialer; tapping the email opens the mail app. |
 | ATT-21 | P3 | Any attendee screen | Scroll to the bottom. | 'System by WIT' is shown and links to wit.id. |
-| ATT-22 | P2 | Attendee app | Look at the top bar. | Logo only — no venue line. The bottom nav reads Home, My QR, Passport, Learning Class, Network, all on one level. |
+| ATT-22 | P2 | Attendee app | Look at the top bar. | Logo only — no venue line. The bottom nav reads Home, My QR, Passport, Learning Session, Network, all on one level. |
 | ATT-23 | P1 | Attendee holding one learning class | Register for a second class at the SAME hour. | Refused: 'that class runs at the same time as one you already picked'. |
 | ATT-24 | P1 | Attendee holding one learning class | Register for a class at a DIFFERENT hour. | Accepted — two classes is the allowance. |
 | ATT-25 | P1 | Attendee holding two learning classes | Register for a third. | Refused: two is the limit. Cancelling one frees the place immediately. |
@@ -97,7 +97,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | ATT-28 | P1 | Attendee home screen, rundown covering both days | Read the agenda card top to bottom. | It is headed 'Agenda', 3 September first, then a 'Friday 4 September' heading before the Gold Club Breakfast — which says on it that it is for Gold Club tickets. |
 | ATT-29 | P1 | Attendee passport | Scroll the booth list. | The exhibitors who sent a logo show it; the rest show their two-letter initials. No empty grey squares. |
 | ATT-30 | P1 | Attendee scanned at both stands of a double-width booth | Open the passport and count the stamps. | That company gives one stamp and appears once. Two stands are one exhibitor, so it counts once towards the lucky draw's booth minimum too. |
-| ATT-31 | P2 | Attendee · Learning Class tab | Look at the four class cards. | Each carries the committee's banner with its own speakers on it — not a plain gradient, and not the same picture on two classes. |
+| ATT-31 | P2 | Attendee · Learning Session tab | Look at the four class cards. | Each carries the committee's banner with its own speakers on it — not a plain gradient, and not the same picture on two classes. |
 | ATT-32 | P1 | An attendee signing in for the very first time | Sign in and watch the Home screen, then press 'Quick tour' in the top bar. | Nothing opens by itself. Pressing the button starts a six-step tour that explains the pass, the QR, the passport, the classes and networking — each step on top of the screen it is describing. |
 | ATT-33 | P1 | An attendee who has already run the tour | Press 'Quick tour' again, this time from the Passport screen. | It starts again at step 1 on Home, from wherever it was pressed. Back, Next and Skip all work, and it stays closed until asked for again. |
 | ATT-34 | P2 | The tour open on a phone with the volume up | Listen, then press the speaker button. | Each step is read out loud; the speaker button silences it, stops what is being said mid-sentence, and it stays silent the next time the tour is opened. |
@@ -152,26 +152,26 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | MD-12 | P1 | After MD-11 | Open a booth's Detail. | Shows kind, booth code, category, booth contact, BNI chapter and the scanner login (booth-<code>@natcon.id). |
 | MD-13 | P1 | Tenants page | Edit a booth, change only the category, save, then reopen Edit. | The description and contact are still there — editing must not blank the fields it did not touch. |
 | MD-14 | P2 | Tenants page | Add a tenant with Kind = Sponsor. | It appears under Sponsors, the count goes up, and it shows above booths on the attendee passport. |
-| MD-15 | P1 | Learning Classes page | Press Edit on a class. | Slot, room, title, speakers, moderator, capacity, description, the speaker list with photos, and the cover are all filled in — nothing blank. |
+| MD-15 | P1 | Learning Sessions page | Press Edit on a class. | Slot, room, title, speakers, moderator, capacity, description, the speaker list with photos, and the cover are all filled in — nothing blank. |
 | MD-16 | P1 | Class edit modal | Add a person, set the role to Moderator, upload a photo, save. Reopen. | The person and photo persisted and appear on the attendee class card. |
 | MD-17 | P2 | Class edit modal | Upload a cover image and save. | The cover shows on the attendee class card and detail. |
 | MD-18 | P1 | Class detail page | Register an attendee by member code, then by email, then by phone. | Each is added to the attendee list of that class. |
 | MD-19 | P1 | Class detail | Register the same attendee twice. | Reported as already registered — not added twice. |
 | MD-20 | P1 | Class detail | Register an attendee who is already in a DIFFERENT class in the same slot. | Refused, saying they already hold another class in that slot. |
 | MD-21 | P1 | Class detail | Press Remove on a registered attendee. | They disappear from the list and the seat is freed. |
-| MD-22 | P1 | Learning Classes page | Press Download format, fill a couple of rows (attendee + room), then Import Registrations. | Reports created / updated / failed; the attendees show on the class detail. |
+| MD-22 | P1 | Learning Sessions page | Press Download format, fill a couple of rows (attendee + room), then Import Registrations. | Reports created / updated / failed; the attendees show on the class detail. |
 | MD-23 | P2 | Chapters page | Look at the list; add a chapter, rename one used by attendees. | Chapters list with member counts. A rename cascades to the attendees in that chapter. |
 | MD-24 | P2 | Any master-data page | Import a file with a bad row (no email, or a malformed email). | The good rows still import; the bad row is reported with its row number and reason. |
-| MD-25 | P1 | Admin · Learning Classes | Read the Quota column for a class nobody has registered for. | Shows taken/quota (e.g. 0/60), an empty fill bar and 'N seats left'. |
-| MD-26 | P1 | Admin · Learning Classes | Click the quota number, type 45, press Enter. | Saves without opening the edit form; the row shows 0/45 and '45 seats left'. Re-open the class in Edit: description, cover and speaker photos are untouched. |
-| MD-27 | P1 | Admin · Learning Classes | Click the quota number, change it, press Esc. | The editor closes and the old quota stays — nothing was saved. |
+| MD-25 | P1 | Admin · Learning Sessions | Read the Quota column for a class nobody has registered for. | Shows taken/quota (e.g. 0/60), an empty fill bar and 'N seats left'. |
+| MD-26 | P1 | Admin · Learning Sessions | Click the quota number, type 45, press Enter. | Saves without opening the edit form; the row shows 0/45 and '45 seats left'. Re-open the class in Edit: description, cover and speaker photos are untouched. |
+| MD-27 | P1 | Admin · Learning Sessions | Click the quota number, change it, press Esc. | The editor closes and the old quota stays — nothing was saved. |
 | MD-28 | P1 | A class with 3 attendees registered | Set its quota to 2. | Refused, with '3 already registered — cancel registrations first'. The old quota is still in place after a page reload. |
 | MD-29 | P1 | Same class, 3 registered | Set its quota to exactly 3. | Accepted. The row reads 3/3 with a full bar and FULL in red. |
 | MD-30 | P1 | A class showing FULL | Register one more attendee into it (Detail → register by code/email/phone). | Refused: 'this seminar is fully booked'. An attendee picking it in the app is turned away too. |
-| MD-31 | P2 | Admin · Learning Classes | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
-| MD-32 | P2 | Admin · Learning Classes | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
-| MD-33 | P1 | Admin · Learning Classes, rundown has learning blocks | Edit a class and pick a Time block. | The list shows the class's hour instead of 'not scheduled'; the attendee's class card shows the same hour. |
-| MD-34 | P1 | Admin · Learning Classes | Upload a landscape Banner image and a portrait Poster on the same class. | The class list shows the banner; the attendee's class detail shows the poster whole, not cropped. |
+| MD-31 | P2 | Admin · Learning Sessions | Open Edit on a class with registrations and set Quota below that count. | The full edit form refuses it exactly like the quota cell does. |
+| MD-32 | P2 | Admin · Learning Sessions | Set a quota of 0 or a negative number. | Refused — the quota must be at least 1. |
+| MD-33 | P1 | Admin · Learning Sessions, rundown has learning blocks | Edit a class and pick a Time block. | The list shows the class's hour instead of 'not scheduled'; the attendee's class card shows the same hour. |
+| MD-34 | P1 | Admin · Learning Sessions | Upload a landscape Banner image and a portrait Poster on the same class. | The class list shows the banner; the attendee's class detail shows the poster whole, not cropped. |
 | MD-35 | P1 | A class with both pictures | Edit only its description and save. | Both pictures survive. Losing one on an unrelated save is the bug this case exists for. |
 | MD-36 | P1 | Admin · Tenants | Upload a Company logo on a booth. | The attendee passport shows the logo in place of the two-letter initials; booths without a logo still show initials. |
 | MD-37 | P1 | Attendees imported from a sheet where several share a name, email and phone | Search for that email in Master Data → Attendees. | Each row carries #1 of 3, #2 of 3 … so identical-looking rows can be told apart. |
@@ -208,7 +208,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | OPS-15 | P2 | After OPS-14 | Draw again. | The previous winner is not drawn a second time. |
 | OPS-16 | P2 | Admin | Delete an attendee who has scans and a class registration. | Deleted after the confirmation, and their scans and registration go with them; counts on the dashboard drop accordingly. |
 | OPS-24 | P2 | Lucky Draw | Press Stage mode, then Space, then Esc. | Space draws one winner (never two, however fast you press). Esc returns to the panel and the page is where you left it. |
-| OPS-25 | P1 | Admin · Rundown, fresh database | Open the page before touching anything, then add a block: 09:00, 1 hour, Plenary, 'Opening Ceremony', Grand Ballroom. | The day already carries ten draft blocks — nine on 3 September, registration first and the draw last, two of them Learning Class, plus the Gold Club Breakfast under its own 'Friday 4 September' heading. The new block appears as 09:00 – 10:00 · 1 hour · Plenary, and the attendee agenda shows it without a redeploy. |
+| OPS-25 | P1 | Admin · Rundown, fresh database | Open the page before touching anything, then add a block: 09:00, 1 hour, Plenary, 'Opening Ceremony', Grand Ballroom. | The day already carries ten draft blocks — nine on 3 September, registration first and the draw last, two of them Learning Session, plus the Gold Club Breakfast under its own 'Friday 4 September' heading. The new block appears as 09:00 – 10:00 · 1 hour · Plenary, and the attendee agenda shows it without a redeploy. |
 | OPS-26 | P1 | Admin · Rundown | Try to add a block starting at 13:30, and one that is 90 minutes long. | Both refused: blocks start on the hour and run in whole hours. |
 | OPS-27 | P2 | Admin · Rundown with two blocks at the same time | Look at the table. | Both overlapping rows are tinted and marked 'overlaps another block'. |
 | OPS-28 | P1 | Admin · Rundown | Delete a block that has a learning class in it. | The block goes, the class stays — it simply has no time until you give it a new block. |
@@ -226,7 +226,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | OPS-40 | P2 | Admin · a draw whose pool is empty | Press draw. | Refused with 'nobody left to draw — everyone eligible has already won', not a silent failure. |
 | OPS-41 | P2 | Admin · Lucky Draw with winners | Press Clear winners and confirm. | The list empties and everyone returns to the pool — for a rehearsal, or a ceremony that restarts. |
 | OPS-42 | P1 | Admin · Rundown, draft blocks untouched | Delete a draft block, then restart the API (or ask for a redeploy). | It stays deleted. The draft is only ever written into an empty schedule. |
-| OPS-43 | P1 | Admin · Rundown with two learning blocks | Put two classes in the 13:00 block and two in the 14:00 block, from the Learning Classes page. | Each class shows its hour. An attendee can then hold one from each block, but never two from the same one. |
+| OPS-43 | P1 | Admin · Rundown with two learning blocks | Put two classes in the 13:00 block and two in the 14:00 block, from the Learning Sessions page. | Each class shows its hour. An attendee can then hold one from each block, but never two from the same one. |
 | OPS-44 | P1 | Admin · Rundown | Add a block and pick 'Friday 4 September' in the Day field. | It lands under the 4 September heading, below every 3 September block — not mixed into the conference day. |
 | OPS-45 | P2 | Admin · Rundown, two days on screen | Compare a 3 September block with a 4 September block at the same hour. | Neither is flagged as overlapping. Same hour on different days is not a clash. |
 
@@ -246,7 +246,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | RPT-08 | P2 | Any export | Sort by the time column. | Rows sort in true chronological order. |
 | RPT-09 | P1 | Attendees page | Press Download format and open the file. | natcon2026-template-import-attendees.xlsx with the documented headers and example rows. |
 | RPT-10 | P1 | Tenants page | Press Download format and open the file. | natcon2026-template-import-booths.xlsx, headers matching the official Data Booth sheet. |
-| RPT-11 | P1 | Learning Classes page | Press Download format and open the file. | natcon2026-template-import-class-registrations.xlsx with Email / Member Code / Room. |
+| RPT-11 | P1 | Learning Sessions page | Press Download format and open the file. | natcon2026-template-import-class-registrations.xlsx with Email / Member Code / Room. |
 | RPT-12 | P2 | A full event's worth of data | Press Export on Tenant Leads and time it. | The file arrives without the page freezing. Note the time and file size in Notes. |
 | RPT-13 | P1 | Reports · Tenant Leads, scans exist | Press 'Per tenant (no phone)'. | natcon2026-leads-per-tenant.xlsx downloads with one sheet per booth: that booth's visitors, chapters, companies and its own notes — and no phone column anywhere. This is the file handed to the tenants. |
 
@@ -256,7 +256,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
-| CRS-01 | P1 | A phone (or a 375px window) | Walk the attendee app: Home, My QR, Passport, Learning Class, Network. | Nothing is cut off and the page never slides sideways. The bottom nav stays level. |
+| CRS-01 | P1 | A phone (or a 375px window) | Walk the attendee app: Home, My QR, Passport, Learning Session, Network. | Nothing is cut off and the page never slides sideways. The bottom nav stays level. |
 | CRS-02 | P1 | A phone or 375px window | Walk every admin page. | No page scrolls sideways. Wide tables scroll inside their own card, not the whole page. |
 | CRS-03 | P2 | A tablet (768px) | Open the admin panel. | The sidebar becomes a top strip that scrolls; the last item is reachable. |
 | CRS-04 | P2 | A laptop (1280px+) | Open the admin panel. | Sidebar on the left, dashboard in two columns. |
@@ -316,7 +316,7 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | Booth sign-in | http://localhost:5173/tenant/login | The door given to booth and sponsor crews |
 | Attendee QR payload | their ticket number, e.g. 16C6C-23BBA1745 | What the pass QR carries. The member code under it still scans. |
 | Unknown ticket number | 16C6C-NOSUCHTICKET | For the not-found cases at any scanner |
-| Rundown | 10 draft blocks: 9 on 3 Sep (07:00 → 18:00) + Gold Club Breakfast 4 Sep 08:00–11:00 | Seeded only when the schedule is empty; two of them are Learning Class blocks |
+| Rundown | 10 draft blocks: 9 on 3 Sep (07:00 → 18:00) + Gold Club Breakfast 4 Sep 08:00–11:00 | Seeded only when the schedule is empty; two of them are Learning Session blocks |
 | Door crew app | /door/login | Its own path, like /login and /tenant/login. The bare address redirects there. |
 | Second committee login | panitia@natcon.id / SEED_PASSWORD | Same rights as admin — for the desk crew, so the main admin password is never shared |
 

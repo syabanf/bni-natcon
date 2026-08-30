@@ -25,10 +25,19 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	if err := ensureDoor(ctx, pool, password); err != nil {
 		return err
 	}
-	// A second committee login with the same rights as admin, so the desk
-	// crew never has to borrow — or be told — the main admin password.
-	if err := ensureStaffAdmin(ctx, pool, "panitia@natcon.id", "Panitia Natcon", password); err != nil {
-		return err
+	// Committee logins with the same rights as admin, so nobody has to borrow
+	// — or be told — the main admin password. Each is created only if the
+	// address is absent, so a password its owner has since changed survives
+	// every restart.
+	for _, staff := range []struct{ email, name string }{
+		{"panitia@natcon.id", "Panitia Natcon"},
+		// Named committee member, on her own account rather than a shared one:
+		// the activity log then says who did a thing, not that "panitia" did.
+		{"f.lovitasari@gmail.com", "F. Lovitasari"},
+	} {
+		if err := ensureStaffAdmin(ctx, pool, staff.email, staff.name, password); err != nil {
+			return err
+		}
 	}
 
 	// The booth and attendee migrations write a placeholder hash nobody can
@@ -81,16 +90,16 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		capacity                   int
 		desc                       string
 	}{
-		{1, "Learning Class 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
+		{1, "Learning Session 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
 			"Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai", "Roby Oktober", 60,
 			"Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team."},
-		{1, "Learning Class 2", "Work-Life Balance & AI: The New Agency Equation",
+		{1, "Learning Session 2", "Work-Life Balance & AI: The New Agency Equation",
 			"Viktor Iwan; Irfan Arsandi — WIT Indonesia", "Ryan Kristomulyono", 60,
 			"AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity."},
-		{1, "Learning Class 3", "How to Win in Retail: The 2026 Economic Reality",
+		{1, "Learning Session 3", "How to Win in Retail: The 2026 Economic Reality",
 			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
 			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
-		{1, "Learning Class 4", "Your Face Tells a Story",
+		{1, "Learning Session 4", "Your Face Tells a Story",
 			"Suntoro Suciatmaja", "", 60,
 			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
@@ -99,21 +108,21 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	people := map[string][]struct {
 		name, role, title, photo string
 	}{
-		"Learning Class 1": {
+		"Learning Session 1": {
 			{"Flavia N. Sungkit, M.Psi., Psikolog", "speaker", "HR Consultant · Ikigai", "/speakers/flavia-sungkit.jpg"},
 			{"Roby Oktober", "moderator", "", "/speakers/roby-oktober.jpg"},
 		},
-		"Learning Class 2": {
+		"Learning Session 2": {
 			{"Viktor Iwan", "speaker", "", "/speakers/viktor-iwan.jpg"},
 			{"Irfan Arsandi", "speaker", "IT & Digital Transformation Consultant · WIT Indonesia", "/speakers/irfan-arsandi.jpg"},
 			{"Ryan Kristomulyono", "moderator", "", "/speakers/ryan-kristomulyono.jpg"},
 		},
-		"Learning Class 3": {
+		"Learning Session 3": {
 			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan.jpg"},
 			{"Selina Nicole", "speaker", "Founder · LEKA", "/speakers/selina-nicole.jpg"},
 			{"David Gan", "moderator", "CEO & Founder · Arkova Training & Consulting", "/speakers/david-gan.jpg"},
 		},
-		"Learning Class 4": {
+		"Learning Session 4": {
 			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
 		},
 	}
@@ -140,18 +149,20 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	return tx.Commit(ctx)
 }
 
-// coverFor maps a learning class to the banner shipped in each app's
+// coverFor maps a learning session to the banner shipped in each app's
 // public/covers/ — the committee's own artwork, with the speakers on it.
-// Classes added later simply fall back to the gradient cover.
+// Sessions added later simply fall back to the gradient cover. The files
+// themselves keep their original names: they are artwork on disk, not a
+// label anybody reads.
 func coverFor(room string) string {
 	switch room {
-	case "Learning Class 1":
+	case "Learning Session 1":
 		return "/covers/learning-class-1.jpg"
-	case "Learning Class 2":
+	case "Learning Session 2":
 		return "/covers/learning-class-2.jpg"
-	case "Learning Class 3":
+	case "Learning Session 3":
 		return "/covers/learning-class-3.jpg"
-	case "Learning Class 4":
+	case "Learning Session 4":
 		return "/covers/learning-class-4.jpg"
 	}
 	return ""

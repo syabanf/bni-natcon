@@ -60,7 +60,7 @@ describe('Tenant Leads export', () => {
 describe('Class Registrations export', () => {
   const rows = [
     { Attendee: 'Fahmi Syaban', 'Member Code': 'NATCON-2026-09001', Chapter: 'Heritage',
-      Slot: 1, Room: 'Learning Class 2', Class: 'Work-Life Balance & AI',
+      Slot: 1, Room: 'Learning Session 2', Class: 'Work-Life Balance & AI',
       Attended: 'Yes', 'Registered At': '2026-09-03T11:00:00Z' },
     { Attendee: 'Sinta Dewi', 'Member Code': 'NATCON-2026-08201', Chapter: 'Jakarta Elite',
       Slot: 1, Room: 'Learning Class 1', Class: 'Mid-Market HR Squeeze',

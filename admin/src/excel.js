@@ -160,8 +160,8 @@ export const REGISTRATION_IMPORT_ALIASES = {
 export const REGISTRATION_TEMPLATE = {
   columns: ['Email', 'Member Code', 'Room'],
   examples: [
-    { Email: 'reddie@natcon.id', 'Member Code': '', Room: 'Learning Class 1' },
-    { Email: '', 'Member Code': 'NATCON-2026-08201', Room: 'Learning Class 3' },
+    { Email: 'reddie@natcon.id', 'Member Code': '', Room: 'Learning Session 1' },
+    { Email: '', 'Member Code': 'NATCON-2026-08201', Room: 'Learning Session 3' },
   ],
   fileName: 'natcon2026-template-import-class-registrations.xlsx',
   sheetName: 'Registrations',

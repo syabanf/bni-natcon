@@ -1610,8 +1610,8 @@ check("unknown attendee -> 404", status == 404)
 
 status, body, _ = req("POST", "/api/v1/admin/seminars/registrations/bulk", token=admin_tok,
                       body={"registrations": [
-                          {"member": "agus@natcon.id", "room": "Learning Class 3"},
-                          {"member": "sinta@natcon.id", "room": "Learning Class 3"},
+                          {"member": "agus@natcon.id", "room": "Learning Session 3"},
+                          {"member": "sinta@natcon.id", "room": "Learning Session 3"},
                           {"member": "agus@natcon.id", "room": "No Such Room"},
                       ]})
 check("bulk registration: 1 created, 1 already there, 1 unknown room",
