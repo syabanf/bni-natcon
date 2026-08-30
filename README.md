@@ -121,7 +121,7 @@ away.
   alongside anything. The one hour the artwork does not give is where the
   ceremony ends; the Rundown page is where the committee corrects that
   without a redeploy.
-- **34 company logos**, carried by migration `0037` from
+- **36 company logos** — every exhibitor on the floor — carried by migration `0037` from
   [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
   been redrawn twice, so the mapping is keyed on the **company name** and the
   files are named after the company too — a stand number would go stale every

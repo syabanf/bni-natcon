@@ -202,16 +202,19 @@ check("...and it has one scanner login, on the first stand's code",
 # The committee's logo pack numbers its booths differently from the sheet, so
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
-check("every exhibitor who sent a logo carries it",
-      len(logos) == 34 and logos.get("A22") == "/logos/paper-id.png"
+check("every exhibitor on the floor carries its logo",
+      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS
+      and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
 check("the double stand carries one logo, on one card",
       logos.get("A47 & A48") == "/logos/alpha-leaders.png", f'{logos.get("A47 & A48")}')
-# SP-01 and SP-02 are this suite's own sponsors, not the committee's.
-check("the two who sent nothing keep their initials",
-      {t["booth"] for t in body["tenants"] if not t.get("logo_url")}
-      - {"SP-01", "SP-02"} == {"B1", "B3"},
+# Bio Medika and ProSnap were the last two on initials; their artwork arrived
+# before the event, so nothing seeded falls back any more. SP-01 and SP-02 are
+# this suite's own sponsors, invented here and never given a logo — they are
+# what proves the fallback still works.
+check("only the suite's own fixtures fall back to initials",
+      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"SP-01", "SP-02"},
       f'{[t["booth"] for t in body["tenants"] if not t.get("logo_url")]}')
 check("a booth still carries initials for the lists that have no room for a logo",
       by_booth["A1"]["initials"] == "SI", f'{by_booth["A1"]}')
