@@ -115,6 +115,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
 
         {/* Pre-split URLs (bookmarks, installed PWAs) keep working. */}
+        <Route path="/countdown" element={<Navigate to="/" replace />} />
         <Route path="/qr" element={<Navigate to="/attendee/qr" replace />} />
         <Route path="/passport" element={<Navigate to="/attendee/passport" replace />} />
         <Route path="/seminar" element={<Navigate to="/attendee/seminar" replace />} />
