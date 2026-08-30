@@ -4,6 +4,10 @@
 booth/sponsor dan 866 peserta, untuk sosialisasi sebelum acara. Setiap baris
 sudah diuji login ke API: 902 dari 902 berhasil.
 
+22 peserta tidak punya chapter BNI — mayoritas Spouse/Partner, tiket
+bundling, dan tamu overseas. Itu bukan data yang hilang, jadi kolom Chapter
+menuliskan jenis tiketnya dalam kurung: `— (Spouse / Partner)`.
+
 **Berkas ini ada di repositori publik atas keputusan panitia.** Yang perlu
 dipahami saat membacanya:
 
