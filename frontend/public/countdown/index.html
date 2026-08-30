@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Countdown — BNI Natcon 2026</title>
+    <meta name="description" content="Counting down to BNI Indonesia National Conference 2026 — 3 September 2026, Pullman Central Park Jakarta." />
+    <link rel="icon" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+    />
+    <style>
+      :root {
+        --red: #cf2030;
+        --red-dark: #a31621;
+        --red-deep: #7e0f1c;
+        --red-tint: #fdecee;
+        --ink: #222222;
+        --gray: #717171;
+        --line: #ebebeb;
+        --white: #ffffff;
+        --radius: 16px;
+        --shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        background: #ffffff;
+      }
+      /* The invitation card's red, kept to the top band only: bright at the
+         top-left, deepening toward the edge, with the diagonal light streak. */
+      .hero {
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        color: var(--white);
+        padding: clamp(34px, 6vh, 56px) 20px clamp(64px, 9vh, 96px);
+        background:
+          radial-gradient(120% 130% at 20% 0%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 48%),
+          linear-gradient(148deg, var(--red) 0%, var(--red-dark) 60%, var(--red-deep) 100%);
+        clip-path: polygon(0 0, 100% 0, 100% 86%, 0 100%);
+      }
+      .hero::before,
+      .hero::after {
+        content: '';
+        position: absolute;
+        left: -20%;
+        width: 140%;
+        height: 1.5px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+        transform: rotate(-10deg);
+        pointer-events: none;
+      }
+      .hero::before {
+        top: 30%;
+      }
+      .hero::after {
+        top: 72%;
+        opacity: 0.6;
+      }
+      .logo {
+        width: min(180px, 44vw);
+        height: auto;
+        position: relative;
+      }
+      .eyebrow {
+        margin-top: 22px;
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: var(--white);
+        font-size: 11.5px;
+        font-weight: 800;
+        letter-spacing: 2.2px;
+        text-transform: uppercase;
+        padding: 7px 15px;
+        border-radius: 999px;
+        position: relative;
+      }
+      h1 {
+        margin-top: 12px;
+        font-size: clamp(26px, 5.4vw, 42px);
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        position: relative;
+      }
+      .main {
+        flex: 1;
+        width: 100%;
+        max-width: 980px;
+        padding: clamp(26px, 5vh, 44px) 20px 28px;
+      }
+      .where {
+        font-size: clamp(14px, 2.6vw, 17px);
+        color: var(--gray);
+        font-weight: 600;
+      }
+      .where b {
+        color: var(--ink);
+      }
+      .count {
+        margin-top: 30px;
+        display: flex;
+        gap: clamp(8px, 2.4vw, 16px);
+        align-items: flex-start;
+        justify-content: center;
+      }
+      .cell {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: clamp(14px, 3vw, 22px) clamp(10px, 3vw, 26px);
+        min-width: clamp(70px, 19vw, 118px);
+      }
+      .cell b {
+        display: block;
+        font-size: clamp(34px, 8.4vw, 58px);
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--red);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.05;
+      }
+      .cell span {
+        display: block;
+        margin-top: 6px;
+        font-size: clamp(10px, 2vw, 12px);
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--gray);
+      }
+      .sep {
+        font-size: clamp(28px, 6vw, 44px);
+        font-weight: 800;
+        color: var(--red);
+        opacity: 0.4;
+        line-height: 2.1;
+      }
+      .live {
+        display: none;
+        margin-top: 30px;
+        background: var(--red);
+        color: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 26px 30px;
+        font-size: clamp(18px, 4vw, 26px);
+        font-weight: 800;
+      }
+      .doors {
+        margin-top: 18px;
+        font-size: 13px;
+        color: var(--gray);
+        font-weight: 600;
+      }
+      .foot {
+        margin-top: 30px;
+        font-size: 12px;
+        color: var(--gray);
+      }
+      .foot a {
+        color: var(--red);
+        font-weight: 800;
+        text-decoration: none;
+      }
+      /* A slim echo of the red at the very bottom, so the page closes the way
+         it opens — without flooding the middle. */
+      .base {
+        width: 100%;
+        height: 10px;
+        background: linear-gradient(90deg, var(--red) 0%, var(--red-dark) 60%, var(--red-deep) 100%);
+      }
+      @media (max-width: 520px) {
+        .count {
+          width: 100%;
+          gap: 8px;
+        }
+        .sep {
+          display: none;
+        }
+        .cell {
+          flex: 1;
+          min-width: 0;
+          padding: 14px 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <img class="logo" src="/brand/logo-stacked-white.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
+      <div>
+        <span class="eyebrow">National Conference 2026</span>
+      </div>
+      <h1>See you in Jakarta</h1>
+    </header>
+
+    <main class="main">
+      <p class="where">
+        Thursday, <b>3 September 2026</b> · <b>Pullman Central Park Jakarta</b><br />
+        Registration &amp; Open Networking from 07.00 WIB
+      </p>
+
+      <div class="count" id="count" aria-live="polite">
+        <div class="cell"><b id="d">–</b><span>Days</span></div>
+        <div class="sep">:</div>
+        <div class="cell"><b id="h">–</b><span>Hours</span></div>
+        <div class="sep">:</div>
+        <div class="cell"><b id="m">–</b><span>Minutes</span></div>
+        <div class="sep">:</div>
+        <div class="cell"><b id="s">–</b><span>Seconds</span></div>
+      </div>
+      <div class="live" id="live">🎉 It’s conference day — see you at the Pullman!</div>
+      <p class="doors" id="doors"></p>
+
+      <p class="foot">
+        Already registered? Your attendee pass, learning sessions &amp; speed networking are
+        ready — <a href="/login">open the attendee app →</a>
+      </p>
+    </main>
+
+    <div class="base"></div>
+
+    <script>
+      // Doors open 07.00 WIB on 3 September 2026 — a fixed +07:00 instant,
+      // so a phone in any timezone counts to the same moment.
+      var TARGET = new Date('2026-09-03T07:00:00+07:00').getTime();
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      function tick() {
+        var left = TARGET - Date.now();
+        if (left <= 0) {
+          document.getElementById('count').style.display = 'none';
+          document.getElementById('live').style.display = 'inline-block';
+          document.getElementById('doors').textContent = '';
+          return;
+        }
+        var sec = Math.floor(left / 1000);
+        document.getElementById('d').textContent = Math.floor(sec / 86400);
+        document.getElementById('h').textContent = pad(Math.floor((sec % 86400) / 3600));
+        document.getElementById('m').textContent = pad(Math.floor((sec % 3600) / 60));
+        document.getElementById('s').textContent = pad(sec % 60);
+        document.getElementById('doors').textContent = 'Counting down to doors open — 07.00 WIB';
+        setTimeout(tick, 1000 - (Date.now() % 1000));
+      }
+      tick();
+    </script>
+  </body>
+</html>
