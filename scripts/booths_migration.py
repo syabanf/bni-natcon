@@ -54,6 +54,19 @@ LOGOS = ROOT / "scripts/booth-logos.json"
 PLACEHOLDER_HASH = "$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH"
 
 
+# Typos in the committee's own sheet that we correct on the way through.
+#
+# The sheet is the source of truth for WHO is on the floor and WHERE, and this
+# is deliberately not a place to restyle names — only to fix a company's name
+# being wrong. Keyed on what the sheet says, so re-running after the committee
+# fixes their own copy simply stops matching.
+CORRECTIONS = {
+    # Missing the P of PT, and it is a stand shared by two companies.
+    "T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia":
+        "PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia",
+}
+
+
 def initials(name: str) -> str:
     """Mirror of tenantInitials in the Go usecase, so a booth created here and
     one created through the admin panel look the same."""
@@ -115,6 +128,7 @@ def read_booths(path: pathlib.Path, sheet_name: str):
             return str(r[i]).strip() if i is not None and r[i] is not None else ""
 
         number, company = cell("Booth Number"), cell("Company Name")
+        company = CORRECTIONS.get(company, company)
         if not number or not company:
             # The sheet ends with a row naming the organiser and no stand.
             continue

@@ -58,7 +58,7 @@ FROM tenants t, (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
   AND lower(regexp_replace(t.name, '[^a-zA-Z0-9]', '', 'g')) = v.key
@@ -102,7 +102,7 @@ FROM (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE lower(regexp_replace(t.name, '[^a-zA-Z0-9]', '', 'g')) = v.key
   AND t.booth <> v.booth;
@@ -145,7 +145,7 @@ FROM tenants t, (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
   AND u.email LIKE 'moving-%'
@@ -191,7 +191,7 @@ FROM (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = v.email)
   AND NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
@@ -236,7 +236,7 @@ FROM (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 JOIN users u ON u.email = v.email
 WHERE NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
@@ -285,7 +285,7 @@ FROM (VALUES
     ('biomedika', 'B1', 'Bio Medika', 'Medical Services', 'BM', 'sponsor', 'booth-b1@natcon.id', '/logos/bio-medika.png', 'Agus Subroto', 'Champion'),
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
-    ('troyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'T Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'TR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
+    ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.booth = v.booth;
 
