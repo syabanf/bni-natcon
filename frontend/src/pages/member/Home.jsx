@@ -68,11 +68,24 @@ function HomeSponsorWall({ headline, partners, showPartners, setShowPartners }) 
             {partners.map((g) => (
               <div className="sponsor-group" key={g.tier}>
                 <div className={`sponsor-tier tier-${g.tier}`}>{g.label}</div>
-                <div className="sponsor-grid grid-supported">
-                  {g.sponsors.map((sp) => (
-                    <SponsorCell sp={sp} key={sp.id} />
-                  ))}
-                </div>
+                {/* The committee's composite artwork arrives as one image
+                    carrying every supporter; it renders full-width, arranged
+                    exactly as they laid it out. A tier listed logo-by-logo
+                    still gets the grid. */}
+                {g.sponsors.length === 1 && g.sponsors[0].logo_url ? (
+                  <img
+                    className="sponsor-sheet-full"
+                    src={g.sponsors[0].logo_url}
+                    alt={g.label}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="sponsor-grid grid-supported">
+                    {g.sponsors.map((sp) => (
+                      <SponsorCell sp={sp} key={sp.id} />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

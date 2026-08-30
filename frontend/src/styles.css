@@ -2674,3 +2674,9 @@ button.stat-redeem {
   font-weight: 700;
   color: #3a3f47;
 }
+.sponsor-sheet-full {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
