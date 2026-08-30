@@ -246,7 +246,7 @@ export function TenantDetail({ id, onBack }) {
   )
 }
 
-/* ===== Learning class detail ===== */
+/* ===== Learning session detail ===== */
 
 // The committee registers walk-ups and phone-ins straight into a class.
 // Accepts a member code, email, or phone number — whatever they have to hand.
@@ -321,7 +321,7 @@ export function SeminarDetail({ id, onBack }) {
   const { seminar, attendees } = data
   const pct = Math.round((seminar.seats_taken / seminar.capacity) * 100)
   return (
-    <DetailShell title={seminar.title} sub={`Learning class · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
+    <DetailShell title={seminar.title} sub={`Learning session · ${seminar.room} · Slot #${seminar.slot}`} onBack={onBack}>
       <div className="detail-hero">
         <div className="dh-avatar tenant">{seminar.room.replace('R. ', '').slice(0, 2).toUpperCase()}</div>
         <InfoGrid

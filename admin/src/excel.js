@@ -154,7 +154,7 @@ export const REGISTRATION_IMPORT_ALIASES = {
   member: ['member', 'attendee', 'peserta'],
   email: ['email', 'e-mail'],
   member_code: ['member code', 'member_code', 'kode peserta', 'id'],
-  room: ['room', 'ruangan', 'class', 'kelas', 'learning class', 'learning class'],
+  room: ['room', 'ruangan', 'class', 'kelas', 'learning class', 'learning session'],
 }
 
 export const REGISTRATION_TEMPLATE = {

@@ -2369,7 +2369,7 @@ button:disabled {
   }
 }
 
-/* ----- Speaker editor (learning class modal) ----- */
+/* ----- Speaker editor (learning session modal) ----- */
 .speaker-rows {
   display: flex;
   flex-direction: column;
@@ -2453,7 +2453,7 @@ button:disabled {
   cursor: pointer;
 }
 
-/* ===== Learning class quota, set straight from the list ===== */
+/* ===== Learning session quota, set straight from the list ===== */
 .md-table th.quota-head {
   width: 168px;
 }

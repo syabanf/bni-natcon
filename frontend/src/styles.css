@@ -2360,7 +2360,7 @@ button.stat-redeem {
   }
 }
 
-/* ----- Who else is in this learning class ----- */
+/* ----- Who else is in this learning session ----- */
 .room-attendees {
   margin-top: 18px;
   border-top: 1px solid var(--line);

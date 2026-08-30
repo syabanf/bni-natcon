@@ -11,7 +11,7 @@ function fmtClock(d) {
  * The door crew's screen. One place, three jobs, because it is the same crew
  * with the same scanner at the same door (MoM 19 Aug 2026):
  *
- *   Attendance — scan into a learning class; anyone not registered for that
+ *   Attendance — scan into a learning session; anyone not registered for that
  *                room is rejected clearly.
  *   Goodiebag  — hand one over, once per attendee.
  *   Pin        — same, for the collectible pin.
@@ -153,7 +153,7 @@ export default function DoorCheckin({ onUnauthorized }) {
         <div>
           <h1>Door Check-in</h1>
           <p className="micro">
-            One scanner for the door: class attendance, goodiebags and pins — each handed over once
+            One scanner for the door: session attendance, goodiebags and pins — each handed over once
             per attendee
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function DoorCheckin({ onUnauthorized }) {
         <p className="panel-sub">Switch before the queue starts — the scanner does what this says</p>
         <div className="door-modes">
           {[
-            { key: 'attendance', label: 'Class attendance', hint: 'into a learning class' },
+            { key: 'attendance', label: 'Session attendance', hint: 'into a learning session' },
             { key: 'goodiebag', label: 'Goodiebag', hint: 'one per attendee' },
             { key: 'pin', label: 'Pin', hint: 'one per attendee' },
           ].map((m) => (

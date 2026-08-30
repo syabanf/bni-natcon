@@ -63,7 +63,7 @@ describe('Class Registrations export', () => {
       Slot: 1, Room: 'Learning Session 2', Class: 'Work-Life Balance & AI',
       Attended: 'Yes', 'Registered At': '2026-09-03T11:00:00Z' },
     { Attendee: 'Sinta Dewi', 'Member Code': 'NATCON-2026-08201', Chapter: 'Jakarta Elite',
-      Slot: 1, Room: 'Learning Class 1', Class: 'Mid-Market HR Squeeze',
+      Slot: 1, Room: 'Learning Session 1', Class: 'Mid-Market HR Squeeze',
       Attended: 'Not yet', 'Registered At': '2026-09-03T11:04:00Z' },
   ]
 

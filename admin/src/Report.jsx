@@ -176,7 +176,7 @@ export function ReportLeads({ onUnauthorized }) {
   )
 }
 
-/* ===== 02 — Learning class registrations ===== */
+/* ===== 02 — Learning session registrations ===== */
 
 export function ReportSeminars({ onUnauthorized }) {
   const [registrations, setRegistrations] = useState([])

@@ -131,7 +131,7 @@ function RoomAttendees({ seminarId }) {
   )
 }
 
-// Full-page learning class detail: cover, description, speakers/moderator,
+// Full-page learning session detail: cover, description, speakers/moderator,
 // and the member's class entry QR (distinct payload from the general QR).
 function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, locked }) {
   const [showQR, setShowQR] = useState(false)
@@ -157,7 +157,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
         <div className="seminar-body">
           <span className="pill red">
             {seminar.room}
-            {classHours(seminar) ? ` · ${classHours(seminar)}` : ' · Learning class'}
+            {classHours(seminar) ? ` · ${classHours(seminar)}` : ' · Learning session'}
           </span>
           <h4 style={{ marginTop: 10, fontSize: 17 }}>{seminar.title}</h4>
           <SpeakerLines seminar={seminar} />
@@ -183,7 +183,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
                     <QRCodeSVG value={passCode || ''} size={148} />
                     <b>Class entry pass — {seminar.room}</b>
                     <p>
-                      This QR is for the learning class door only (separate from your booth QR). The
+                      This QR is for the learning session door only (separate from your booth QR). The
                       door crew scans it to record your attendance.
                     </p>
                   </div>
@@ -258,7 +258,7 @@ export default function Seminars() {
   }
 
   if (seminars === null) {
-    return <div className="loading-note">Loading learning classes…</div>
+    return <div className="loading-note">Loading learning sessions…</div>
   }
 
   // A "Session" is the rundown hour a class runs in: classes sharing a start

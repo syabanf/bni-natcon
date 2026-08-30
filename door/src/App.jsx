@@ -55,7 +55,7 @@ function Login({ onSignedIn }) {
             <p className="auth-eyebrow">Door Crew</p>
             <img className="auth-logo" src={asset('brand/logo-horizontal.png')} alt="BNI Natcon 2026" />
             <p className="auth-sub">
-              Sign in to scan attendees into a learning class, and to hand over goodiebags and pins.
+              Sign in to scan attendees into a learning session, and to hand over goodiebags and pins.
             </p>
 
             {error && <div className="auth-error">{error}</div>}

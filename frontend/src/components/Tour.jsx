@@ -25,7 +25,7 @@ export const STEPS = [
     path: '/attendee/qr',
     icon: 'qr',
     title: 'Show this QR all day',
-    body: 'It carries your ticket number. Booths scan it for a stamp, the registration desk scans it when they hand you your free pin and goodiebag, and the door crew scans it at your learning class.',
+    body: 'It carries your ticket number. Booths scan it for a stamp, the registration desk scans it when they hand you your free pin and goodiebag, and the door crew scans it at your learning session.',
   },
   {
     path: '/attendee/passport',
@@ -36,7 +36,7 @@ export const STEPS = [
   {
     path: '/attendee/seminar',
     icon: 'mic',
-    title: 'Pick your learning classes',
+    title: 'Pick your learning sessions',
     body: 'Two sessions, one class each — pick the class you like, seats are limited. Open the class you picked to find its entry QR, and cancel it to free the seat if you change your mind.',
   },
   {

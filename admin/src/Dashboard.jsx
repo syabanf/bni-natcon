@@ -158,7 +158,7 @@ export default function Dashboard({ onUnauthorized }) {
             <h2>
               <span className="sec-no">03</span>Learning Session Quota
             </h2>
-            <p className="panel-sub">Parallel learning classes</p>
+            <p className="panel-sub">Parallel learning sessions</p>
             {seminars.map((s) => {
               const pct = Math.round((s.seats_taken / s.capacity) * 100)
               return (

@@ -6,7 +6,7 @@ import Modal from './Modal'
  * The event schedule, in one-hour blocks (MoM 19 Aug 2026).
  *
  * This is the only place the day's timing is written down. The attendee
- * agenda reads it, learning classes sit inside its blocks, and "two sessions
+ * agenda reads it, learning sessions sit inside its blocks, and "two sessions
  * that do not clash" is answered by comparing them — so the committee edits
  * hours here rather than in three different screens.
  */
@@ -152,7 +152,7 @@ export default function Rundown({ onUnauthorized }) {
           <h1>Rundown</h1>
           <p className="micro">
             The day in one-hour blocks — this is what attendees see as the agenda, and where
-            learning classes get their time
+            learning sessions get their time
           </p>
         </div>
         <div className="head-right">

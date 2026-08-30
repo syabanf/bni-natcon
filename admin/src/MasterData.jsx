@@ -731,7 +731,7 @@ export function TenantsPage() {
 
 /* ================= Seminar ================= */
 
-// Every learning class has a seat quota, and the committee re-sizes rooms
+// Every learning session has a seat quota, and the committee re-sizes rooms
 // right up to the morning of the event. The quota therefore lives in the
 // class list as a number you can set in place — not only inside the full
 // edit form behind the speaker photos and the cover picker.
@@ -949,7 +949,7 @@ export function SeminarsPage() {
             <Field label="Title" value={crud.form.title} onChange={(e) => crud.setForm({ ...crud.form, title: e.target.value })} required />
             <Field label="Speaker(s)" hint="separate multiple speakers with a semicolon" value={crud.form.speaker} onChange={(e) => crud.setForm({ ...crud.form, speaker: e.target.value })} />
             <Field label="Moderator" value={crud.form.moderator || ''} onChange={(e) => crud.setForm({ ...crud.form, moderator: e.target.value })} />
-            <Field label="Quota" hint="seats this learning class can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
+            <Field label="Quota" hint="seats this learning session can take" type="number" min="1" value={crud.form.capacity} onChange={(e) => crud.setForm({ ...crud.form, capacity: e.target.value })} required />
             <label className="md-field">
               <span>
                 Time block

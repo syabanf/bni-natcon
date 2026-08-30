@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
  *
  * No links anywhere, at the committee's request: this is a poster until
  * credentials go out. /login and /tenant/login still answer for anyone who
- * has the address. The programme — rundown and learning classes — opens as
+ * has the address. The programme — rundown and learning sessions — opens as
  * a popup on request, so the poster itself stays a poster.
  */
 
@@ -123,7 +123,7 @@ export default function Landing() {
             Event Rundown
           </button>
           <button type="button" onClick={() => setSheet('classes')}>
-            Learning Classes
+            Learning Sessions
           </button>
         </div>
 
@@ -134,7 +134,7 @@ export default function Landing() {
         <div className="sponsor-sheet-backdrop agenda-backdrop" onClick={close}>
           <div className="sponsor-sheet agenda-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sponsor-sheet-head">
-              <h3>{sheet === 'rundown' ? 'Event Rundown' : 'Learning Classes'}</h3>
+              <h3>{sheet === 'rundown' ? 'Event Rundown' : 'Learning Sessions'}</h3>
               <button type="button" className="sponsor-sheet-close" onClick={close}>
                 Close
               </button>
@@ -160,7 +160,7 @@ export default function Landing() {
               (classDetail ? (
                 <div className="lc-detail">
                   <button type="button" className="lc-back" onClick={() => setClassDetail(null)}>
-                    ‹ All classes
+                    ‹ All sessions
                   </button>
                   {classDetail.cover_url && <img src={classDetail.cover_url} alt="" />}
                   <span className="lc-room">{classDetail.room}</span>
@@ -182,8 +182,8 @@ export default function Landing() {
               ) : (
                 <>
                   <p className="landing-section-sub">
-                    Two sessions, two classes in each — attendees pick one from every session.
-                    Tap a class for its details.
+                    Four sessions across two time slots — attendees pick one from each slot.
+                    Tap a session for its details.
                   </p>
                   <div className="landing-classes">
                     {agenda.classes.map((c) => (
