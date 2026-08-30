@@ -2800,12 +2800,51 @@ button.stat-redeem {
   .cd-sep { font-size: 18px; }
   .countdown { gap: 6px; }
 }
-/* Laptop and up: hall-screen digits. */
+/* Tablet and up: the poster grows into the width instead of stretching a
+   phone layout thin, and what the fold shows is centered vertically. */
+@media (min-width: 700px) {
+  .landing { display: flex; flex-direction: column; }
+  .landing-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .landing-logo { width: 210px; }
+  .landing-when { font-size: 17px; }
+  .landing-doors { font-size: 15px; }
+  .countdown { gap: 14px; }
+  .cd-card { min-width: 106px; padding: 20px 14px 16px; }
+  .cd-num { font-size: 50px; }
+  .cd-label { font-size: 11px; }
+  .landing-caption { font-size: 14px; }
+  .landing .landing-actions { gap: 16px; }
+  .landing .landing-actions button { font-size: 16px; padding: 15px 40px; }
+
+  /* The programme opens as a centered dialog, not a phone's bottom sheet. */
+  .agenda-backdrop { align-items: center; padding: 28px; }
+  .agenda-backdrop .agenda-sheet {
+    width: min(760px, 100%);
+    max-height: 84vh;
+    border-radius: 16px;
+    padding: 0 20px 24px;
+  }
+  .agenda-backdrop .sponsor-sheet-head { margin: 0 -20px 4px; padding: 16px 20px 10px; }
+  .agenda-sheet .landing-classes { grid-template-columns: 1fr 1fr; }
+  .agenda-sheet .lc-detail img { max-height: 320px; object-fit: cover; }
+}
+/* Laptop and up: hall-screen digits, and the whole poster near one fold —
+   the hero sheds padding so the clock is never below it. */
 @media (min-width: 1200px) {
-  .landing-hero { padding-top: 60px; }
-  .landing-logo { width: 220px; }
-  .cd-card { min-width: 116px; padding: 22px 16px 17px; }
+  .landing-hero { padding: 24px 20px 88px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 68px), 0 100%); }
+  .landing-hero h1 { margin-top: 12px; }
+  .landing-logo { width: clamp(120px, 22vh, 160px); margin-bottom: 12px; }
+  .landing-body { padding-bottom: 16px; }
+  .countdown { margin: 14px 0 10px; }
+  .cd-card { min-width: 116px; padding: 20px 14px 15px; }
   .cd-num { font-size: 58px; }
+  .landing-actions { margin-top: 16px; }
+  .landing-foot { margin-top: 12px; }
 }
 
 /* ===== Profile ===== */

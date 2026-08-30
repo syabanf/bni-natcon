@@ -131,7 +131,7 @@ export default function Landing() {
       </main>
 
       {sheet && (
-        <div className="sponsor-sheet-backdrop" onClick={close}>
+        <div className="sponsor-sheet-backdrop agenda-backdrop" onClick={close}>
           <div className="sponsor-sheet agenda-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sponsor-sheet-head">
               <h3>{sheet === 'rundown' ? 'Event Rundown' : 'Learning Classes'}</h3>
