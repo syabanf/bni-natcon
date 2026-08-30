@@ -83,8 +83,11 @@ func main() {
 		Handler:           server.Router(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		// Bulk imports hash bcrypt per row (769 rows took ~42s); 30s cut the
+		// connection before the response was sent and cancelled the request
+		// context, failing every row past the first ~550.
+		WriteTimeout: 120 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	shutdownCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

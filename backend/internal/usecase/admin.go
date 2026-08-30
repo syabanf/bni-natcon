@@ -371,11 +371,9 @@ func (u *AdminUsecase) GenerateTables(ctx context.Context, count int, hall strin
 	if capacity <= 0 {
 		return nil, invalid("capacity must be greater than 0")
 	}
-	hall = strings.TrimSpace(hall)
-	if hall == "" {
-		hall = "Hall B"
-	}
-	return u.admin.GenerateTables(ctx, count, hall, capacity)
+	// Hall is optional: one-hall events (this one) print cleaner table QR
+	// cards with no hall line at all.
+	return u.admin.GenerateTables(ctx, count, strings.TrimSpace(hall), capacity)
 }
 
 func (u *AdminUsecase) TableSeats(ctx context.Context) ([]domain.TableSeat, error) {
@@ -386,11 +384,7 @@ func (u *AdminUsecase) UpdateTable(ctx context.Context, id int64, name, hall str
 	if capacity <= 0 {
 		return invalid("capacity must be greater than 0")
 	}
-	hall = strings.TrimSpace(hall)
-	if hall == "" {
-		hall = "Hall B"
-	}
-	return u.admin.UpdateTable(ctx, id, strings.TrimSpace(name), hall, capacity)
+	return u.admin.UpdateTable(ctx, id, strings.TrimSpace(name), strings.TrimSpace(hall), capacity)
 }
 
 func (u *AdminUsecase) DeleteTable(ctx context.Context, id int64) error {

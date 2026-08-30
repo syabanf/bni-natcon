@@ -1,0 +1,131 @@
+{
+  "generated_at": "2026-08-05T02:51:46.124840+00:00",
+  "base_url": "https://bni-natcon.reddie.id",
+  "scenario": "ramping-vus 0\u219210\u219230\u219230\u21920 (total 105s)",
+  "total_requests": 30737,
+  "aggregates": {
+    "count": 30739,
+    "avg_ms": 49.28200801825043,
+    "min_ms": 36.383455,
+    "med_ms": 42.433752,
+    "max_ms": 3409.947031,
+    "p90_ms": 48.109488,
+    "p95_ms": 88.191237,
+    "p99_ms": 205.499714,
+    "failed_rate": 0.0
+  },
+  "thresholds": {
+    "http_req_duration": [
+      {
+        "ok": true,
+        "source": "p(95)<1000"
+      }
+    ],
+    "http_req_failed": [
+      {
+        "ok": true,
+        "source": "rate<0.01"
+      }
+    ]
+  },
+  "endpoints": {
+    "landing": {
+      "method": "GET",
+      "path": "/",
+      "count": 4391,
+      "avg_ms": 49.172696411068095,
+      "min_ms": 36.656777,
+      "med_ms": 41.99045,
+      "max_ms": 2392.758145,
+      "p90_ms": 48.449581,
+      "p95_ms": 90.952674,
+      "p99_ms": 191.82596,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "me": {
+      "method": "GET",
+      "path": "/api/v1/me",
+      "count": 4391,
+      "avg_ms": 49.52064950762924,
+      "min_ms": 36.775688,
+      "med_ms": 42.799495,
+      "max_ms": 937.728974,
+      "p90_ms": 48.004118,
+      "p95_ms": 88.71849,
+      "p99_ms": 201.63688,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "tenants": {
+      "method": "GET",
+      "path": "/api/v1/tenants",
+      "count": 4391,
+      "avg_ms": 49.38643994169893,
+      "min_ms": 36.383455,
+      "med_ms": 42.418623,
+      "max_ms": 534.226233,
+      "p90_ms": 48.38429,
+      "p95_ms": 82.909714,
+      "p99_ms": 218.604155,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "seminars": {
+      "method": "GET",
+      "path": "/api/v1/seminars",
+      "count": 4391,
+      "avg_ms": 49.64568404987474,
+      "min_ms": 36.675747,
+      "med_ms": 42.440063,
+      "max_ms": 3409.947031,
+      "p90_ms": 47.922827,
+      "p95_ms": 87.12263,
+      "p99_ms": 202.110663,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "networking": {
+      "method": "GET",
+      "path": "/api/v1/networking",
+      "count": 4391,
+      "avg_ms": 49.235694188339785,
+      "min_ms": 37.11958,
+      "med_ms": 42.517913,
+      "max_ms": 435.54838,
+      "p90_ms": 47.914647,
+      "p95_ms": 87.184631,
+      "p99_ms": 205.383054,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "networking_history": {
+      "method": "GET",
+      "path": "/api/v1/networking/history",
+      "count": 4391,
+      "avg_ms": 48.892238724436346,
+      "min_ms": 36.646248,
+      "med_ms": 42.415893,
+      "max_ms": 445.638064,
+      "p90_ms": 48.125959,
+      "p95_ms": 84.783086,
+      "p99_ms": 211.13588,
+      "fails": 0,
+      "fail_rate": 0.0
+    },
+    "booth_stats": {
+      "method": "GET",
+      "path": "/api/v1/booth/stats",
+      "count": 4391,
+      "avg_ms": 49.05445017854703,
+      "min_ms": 36.725448,
+      "med_ms": 42.359123,
+      "max_ms": 443.797293,
+      "p90_ms": 48.137189,
+      "p95_ms": 89.816727,
+      "p99_ms": 214.14429,
+      "fails": 0,
+      "fail_rate": 0.0
+    }
+  }
+}

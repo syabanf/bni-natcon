@@ -36,7 +36,7 @@ export default function MyQR() {
           </div>
           <div>
             <h5>Booth Visits</h5>
-            <p>Scanned by sponsors &amp; booths — collect pins for every visit</p>
+            <p>Scanned by sponsors &amp; booths — collect stamps, win the grand prize</p>
           </div>
         </div>
         <div className="qr-use">

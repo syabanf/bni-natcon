@@ -27,3 +27,35 @@ uploads/
 # a space in a resource file name.
 * [0-9].*
 core
+
+# Rehearsal session tokens — live credentials, never commit.
+perf/eventday/tokens.json
+
+# 106 MB of raw k6 output from the August perf run — regenerable, never commit.
+perf/raw-results.json
+
+# Android signing material. A leaked keystore + password lets anyone publish an
+# update signed as BNI Natcon, and this repo has a public remote. Never commit.
+# The real key now lives outside the repo, in ~/secure-keys/bni-natcon/ — these
+# patterns also cover it being copied back in temporarily for a rebuild.
+apk/keystore-password.txt
+apk/twa/android.keystore
+*.jks
+*.keystore
+
+# The rest of apk/ is a local build environment, not source: 672 MB of Gradle
+# cache plus Bubblewrap's generated Android project. Ignoring the directory
+# wholesale means a stray `git add -A` cannot sweep any of it — or the signing
+# key — into a commit. The two files that genuinely are source are re-included.
+# (Written as apk/* rather than apk/ — git will not descend into an excluded
+# directory, so a bare apk/ would make the re-includes below unreachable.)
+apk/*
+!apk/Dockerfile
+!apk/twa/
+apk/twa/*
+!apk/twa/twa-manifest.json
+
+# Built APKs (~700 MB). Release artifacts, not source; frontend/public/apk/ is
+# populated at release time and copied into the image by the Vite build.
+*.apk
+*.idsig

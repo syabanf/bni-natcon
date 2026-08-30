@@ -38,7 +38,11 @@ type User struct {
 	// being imported from a ticket sheet is not agreement, so the app asks
 	// before it shows them anything.
 	ConsentedAt *time.Time
-	CreatedAt   time.Time
+	// PinRedeemedAt / GoodiebagRedeemedAt are when the registration desk
+	// scanned this attendee's QR and handed the thing over. Nil = not yet.
+	PinRedeemedAt       *time.Time
+	GoodiebagRedeemedAt *time.Time
+	CreatedAt           time.Time
 }
 
 // Tenant kinds: sponsors are listed above booths on the passport.

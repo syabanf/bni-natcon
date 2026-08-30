@@ -691,6 +691,64 @@ input {
   margin-top: 3px;
   line-height: 1.4;
 }
+/* Pin & goodiebag cards: a redeemed/not-yet status you can tap for the
+   how-to dialog, sized to sit level with the numeric card beside them. */
+button.stat-redeem {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.st-status {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red-tint);
+  color: var(--red);
+}
+.st-status.ok {
+  background: var(--green-tint);
+  color: var(--green);
+}
+.redeem-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 14, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+.redeem-dialog {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 20px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+}
+.redeem-dialog h4 {
+  font-size: 16px;
+}
+.redeem-dialog p {
+  font-size: 13px;
+  color: var(--gray);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.redeem-qr {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+.redeem-dialog .btn {
+  width: 100%;
+  margin-top: 16px;
+}
 .quick-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -855,25 +913,8 @@ input {
   text-transform: uppercase;
   color: var(--gray);
 }
-.tour-voice {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--red-tint);
-  color: var(--red);
-  cursor: pointer;
-}
-.tour-voice.off {
-  background: var(--chip);
-  color: var(--gray);
-}
 .tour-skip {
-  margin-left: 10px;
+  margin-left: auto;
   border: 0;
   background: none;
   color: var(--gray);
@@ -976,6 +1017,11 @@ input {
 }
 .agenda-item p {
   font-size: 11px;
+  color: var(--gray);
+}
+/* Breaks read as pauses, not programme — the poster greys them out. */
+.agenda-item--break h5 {
+  font-weight: 400;
   color: var(--gray);
 }
 

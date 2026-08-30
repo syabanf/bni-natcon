@@ -17,22 +17,6 @@ vi.mock('./api/client', () => ({
   assetUrl: (p) => p,
 }))
 
-// jsdom has no speech synthesis; this stands in for it so the tests can say
-// what the tour asked to be read, and when it stopped.
-const spoken = []
-let cancelled = 0
-window.speechSynthesis = {
-  speak: (u) => spoken.push(u.text),
-  cancel: () => {
-    cancelled += 1
-  },
-}
-window.SpeechSynthesisUtterance = class {
-  constructor(text) {
-    this.text = text
-  }
-}
-
 const { useAuthStore } = await import('./store/auth')
 const { useTourStore } = await import('./store/tour')
 const { STEPS } = await import('./components/Tour')
@@ -59,8 +43,6 @@ const next = async () => {
 
 beforeEach(() => {
   localStorage.clear()
-  spoken.length = 0
-  cancelled = 0
   useTourStore.setState({ open: false })
 })
 afterEach(cleanup)
@@ -111,41 +93,6 @@ describe('the guided tour', () => {
       fireEvent.click(screen.getByRole('button', { name: /skip/i }))
     })
     expect(screen.queryByText(STEPS[0].title)).toBeNull()
-  })
-
-  it('reads each step out loud', async () => {
-    await openApp()
-    await openTour()
-    expect(spoken[0]).toContain(STEPS[0].title)
-    await next()
-    expect(spoken[spoken.length - 1]).toContain(STEPS[1].title)
-  })
-
-  it('stops talking the moment it is closed', async () => {
-    await openApp()
-    await openTour()
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /skip/i }))
-    })
-    expect(cancelled).toBeGreaterThan(0)
-  })
-
-  it('can be silenced, and stays silent next time', async () => {
-    await openApp()
-    await openTour()
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /stop reading out loud/i }))
-    })
-    const said = spoken.length
-    await next()
-    expect(spoken.length).toBe(said) // nothing more was read
-
-    cleanup()
-    spoken.length = 0
-    await openApp()
-    await openTour()
-    expect(spoken).toHaveLength(0)
-    expect(screen.getByRole('button', { name: /read the tour out loud/i })).toBeTruthy()
   })
 
   it('is one button away from any attendee screen', async () => {

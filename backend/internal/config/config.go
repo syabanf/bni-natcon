@@ -84,15 +84,6 @@ func Load() Config {
 	}
 }
 
-func getenvInt(key string, fallback int) int {
-	if v := os.Getenv(key); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
-			return n
-		}
-	}
-	return fallback
-}
-
 func (c Config) IsProduction() bool {
 	return strings.EqualFold(c.Env, "production")
 }
@@ -102,4 +93,18 @@ func getenv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// getenvInt reads a positive integer; anything unparseable or <= 0 falls back
+// rather than silently disabling a limiter.
+func getenvInt(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(v))
+	if err != nil || n <= 0 {
+		return fallback
+	}
+	return n
 }
