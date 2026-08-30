@@ -391,3 +391,19 @@ func TestMemberPageSizeClamping(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeChapter(t *testing.T) {
+	cases := map[string]string{
+		"BNI Amplify":               "Amplify",
+		"bni amplify":               "amplify",
+		"BNI Chapter Jakarta Elite": "Chapter Jakarta Elite",
+		"  Amplify  ":               "Amplify",
+		"Balionaire":                "Balionaire",
+		"BNI":                       "BNI", // a bare acronym is a name, not a prefix
+	}
+	for in, want := range cases {
+		if got := domain.NormalizeChapter(in); got != want {
+			t.Fatalf("NormalizeChapter(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

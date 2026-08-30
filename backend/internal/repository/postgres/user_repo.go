@@ -180,8 +180,18 @@ func (r *UserRepo) UpdateProfile(ctx context.Context, userID int64, name, chapte
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	if chapter != "" {
-		if _, err := tx.Exec(ctx,
-			`INSERT INTO chapters (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, chapter); err != nil {
+		// Register case-insensitively and take the master list's spelling,
+		// so "amplify" typed on a phone lands on the existing "Amplify".
+		if err := tx.QueryRow(ctx, `
+			WITH ins AS (
+				INSERT INTO chapters (name) VALUES ($1)
+				ON CONFLICT ((lower(name))) DO NOTHING
+				RETURNING name
+			)
+			SELECT name FROM ins
+			UNION ALL
+			SELECT name FROM chapters WHERE lower(name) = lower($1)
+			LIMIT 1`, chapter).Scan(&chapter); err != nil {
 			return err
 		}
 	}

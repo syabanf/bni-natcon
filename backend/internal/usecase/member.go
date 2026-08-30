@@ -67,7 +67,7 @@ func (u *MemberUsecase) ListTenants(ctx context.Context, memberID int64) ([]doma
 // are trimmed the way the imports trim them.
 func (u *MemberUsecase) UpdateProfile(ctx context.Context, userID int64, name, chapter string) error {
 	name = strings.TrimSpace(name)
-	chapter = strings.TrimSpace(chapter)
+	chapter = domain.NormalizeChapter(chapter)
 	if name == "" {
 		return invalid("name is required")
 	}

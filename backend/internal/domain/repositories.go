@@ -105,7 +105,7 @@ type AdminRepository interface {
 	// idempotently; RenameChapter also moves every member carrying the old
 	// name; DeleteChapter refuses (ErrInvalidInput) while members still use it.
 	ListChapters(ctx context.Context) ([]Chapter, error)
-	EnsureChapter(ctx context.Context, name string) error
+	EnsureChapter(ctx context.Context, name string) (string, error)
 	CreateChapter(ctx context.Context, name string) (*Chapter, error)
 	RenameChapter(ctx context.Context, id int64, name string) error
 	DeleteChapter(ctx context.Context, id int64) error

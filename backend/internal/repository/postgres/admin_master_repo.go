@@ -564,13 +564,25 @@ func (r *AdminRepo) ListChapters(ctx context.Context) ([]domain.Chapter, error) 
 	return out, rows.Err()
 }
 
-func (r *AdminRepo) EnsureChapter(ctx context.Context, name string) error {
+// EnsureChapter registers a chapter and answers with the spelling the master
+// list keeps: "AMPLIFY" from a hurried import lands on an existing "Amplify"
+// instead of standing next to it.
+func (r *AdminRepo) EnsureChapter(ctx context.Context, name string) (string, error) {
 	if name == "" {
-		return nil
+		return "", nil
 	}
-	_, err := r.pool.Exec(ctx,
-		`INSERT INTO chapters (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, name)
-	return err
+	var canonical string
+	err := r.pool.QueryRow(ctx, `
+		WITH ins AS (
+			INSERT INTO chapters (name) VALUES ($1)
+			ON CONFLICT ((lower(name))) DO NOTHING
+			RETURNING name
+		)
+		SELECT name FROM ins
+		UNION ALL
+		SELECT name FROM chapters WHERE lower(name) = lower($1)
+		LIMIT 1`, name).Scan(&canonical)
+	return canonical, err
 }
 
 func (r *AdminRepo) CreateChapter(ctx context.Context, name string) (*domain.Chapter, error) {
@@ -579,7 +591,7 @@ func (r *AdminRepo) CreateChapter(ctx context.Context, name string) (*domain.Cha
 		`INSERT INTO chapters (name) VALUES ($1) RETURNING id, name`, name).
 		Scan(&c.ID, &c.Name)
 	if err != nil {
-		if isUniqueViolation(err, "chapters_name_key") {
+		if isUniqueViolation(err, "chapters_name_key") || isUniqueViolation(err, "chapters_name_lower_key") {
 			return nil, domain.ErrNameTaken
 		}
 		return nil, err
@@ -605,7 +617,7 @@ func (r *AdminRepo) RenameChapter(ctx context.Context, id int64, name string) er
 	}
 	if _, err := tx.Exec(ctx,
 		`UPDATE chapters SET name = $1 WHERE id = $2`, name, id); err != nil {
-		if isUniqueViolation(err, "chapters_name_key") {
+		if isUniqueViolation(err, "chapters_name_key") || isUniqueViolation(err, "chapters_name_lower_key") {
 			return domain.ErrNameTaken
 		}
 		return err

@@ -115,12 +115,13 @@ func (u *AdminUsecase) CreateMember(ctx context.Context, in MemberInput) (*domai
 	if err != nil {
 		return nil, err
 	}
-	if err := u.admin.EnsureChapter(ctx, strings.TrimSpace(chapter)); err != nil {
+	chapter, err = u.admin.EnsureChapter(ctx, domain.NormalizeChapter(chapter))
+	if err != nil {
 		return nil, err
 	}
 	return u.admin.CreateMember(ctx, domain.NewMember{
 		Name: name, Email: email, PasswordHash: hash,
-		Chapter: strings.TrimSpace(chapter), Company: strings.TrimSpace(in.Company),
+		Chapter: chapter, Company: strings.TrimSpace(in.Company),
 		Phone: strings.TrimSpace(in.Phone), Classification: strings.TrimSpace(in.Classification),
 		TicketNumber: strings.TrimSpace(in.TicketNumber),
 	})
@@ -136,10 +137,11 @@ func (u *AdminUsecase) UpdateMember(ctx context.Context, id int64, m domain.Memb
 	}
 	m.Phone = strings.TrimSpace(m.Phone)
 	m.TicketNumber = strings.TrimSpace(m.TicketNumber)
-	m.Chapter = strings.TrimSpace(m.Chapter)
-	if err := u.admin.EnsureChapter(ctx, m.Chapter); err != nil {
+	chapter, err := u.admin.EnsureChapter(ctx, domain.NormalizeChapter(m.Chapter))
+	if err != nil {
 		return err
 	}
+	m.Chapter = chapter
 	return u.admin.UpdateMember(ctx, id, m)
 }
 
@@ -320,7 +322,8 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Email, Err: "invalid email format"})
 			continue
 		}
-		password := importPassword(row.Chapter, name)
+		chapter := domain.NormalizeChapter(row.Chapter)
+		password := importPassword(chapter, name)
 		if password == "" {
 			password = u.defaultPassword
 		}
@@ -329,8 +332,8 @@ func (u *AdminUsecase) BulkUpsertMembers(ctx context.Context, rows []MemberImpor
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
 			continue
 		}
-		chapter := strings.TrimSpace(row.Chapter)
-		if err := u.admin.EnsureChapter(ctx, chapter); err != nil {
+		chapter, err = u.admin.EnsureChapter(ctx, chapter)
+		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: email, Err: err.Error()})
 			continue
 		}
@@ -398,7 +401,7 @@ func (u *AdminUsecase) ListChapters(ctx context.Context) ([]domain.Chapter, erro
 }
 
 func (u *AdminUsecase) CreateChapter(ctx context.Context, name string) (*domain.Chapter, error) {
-	name = strings.TrimSpace(name)
+	name = domain.NormalizeChapter(name)
 	if name == "" {
 		return nil, invalid("chapter name is required")
 	}
@@ -406,7 +409,7 @@ func (u *AdminUsecase) CreateChapter(ctx context.Context, name string) (*domain.
 }
 
 func (u *AdminUsecase) RenameChapter(ctx context.Context, id int64, name string) error {
-	name = strings.TrimSpace(name)
+	name = domain.NormalizeChapter(name)
 	if name == "" {
 		return invalid("chapter name is required")
 	}

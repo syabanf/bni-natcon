@@ -91,7 +91,7 @@ type RecoverableAccount struct {
 // their ticket. Two tickets bought together share both, so this can hand back
 // more than one account for the attendee to choose from.
 func (u *AuthUsecase) ForgotPassword(ctx context.Context, chapter, phone string) ([]RecoverableAccount, error) {
-	chapter, phone = strings.TrimSpace(chapter), strings.TrimSpace(phone)
+	chapter, phone = domain.NormalizeChapter(chapter), strings.TrimSpace(phone)
 	if chapter == "" || phone == "" {
 		return nil, invalid("chapter and phone number are required")
 	}

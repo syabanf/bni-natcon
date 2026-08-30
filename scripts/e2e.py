@@ -39,6 +39,15 @@ SEEDED_TABLES = 90
 FIXTURE_TABLES = 12
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
+# Chapter names store bare: a leading "BNI " is dropped on every write
+# (domain.NormalizeChapter), and migration 0055 folded the seeded data the
+# same way. The fixtures deliberately send prefixed names to prove it.
+SEEDED_CHAPTER_COUNT = 86
+
+
+def norm_chapter(name):
+    return re.sub(r"^\s*BNI\s+", "", name.strip(), flags=re.I).strip()
+
 passed = 0
 failed = 0
 
@@ -134,7 +143,14 @@ check("the dashboard counts who is still on the handed-out password",
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 SEEDED_CHAPTERS = {c["name"] for c in body["chapters"]}
 check("...and with the chapters those attendees carry",
-      status == 200 and len(SEEDED_CHAPTERS) > 1, f"{len(SEEDED_CHAPTERS)} chapters")
+      status == 200 and len(SEEDED_CHAPTERS) == SEEDED_CHAPTER_COUNT,
+      f"{len(SEEDED_CHAPTERS)} chapters")
+# Migration 0055: "BNI Achievers" and "Achievers" were one chapter twice, and
+# nothing here is not BNI, so no name keeps the prefix.
+check("the seeded chapters carry no BNI prefix and no case twins",
+      not any(c.lower().startswith("bni ") for c in SEEDED_CHAPTERS)
+      and len({c.lower() for c in SEEDED_CHAPTERS}) == len(SEEDED_CHAPTERS)
+      and "Achievers" in SEEDED_CHAPTERS and "Souq Arabia" in SEEDED_CHAPTERS)
 
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
 check("...but the four learning classes are already there, with their speakers",
@@ -264,8 +280,8 @@ status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 now_chapters = {c["name"] for c in body["chapters"]}
 check("chapters register themselves from the attendees, nothing pre-loaded",
       status == 200
-      and now_chapters == SEEDED_CHAPTERS | {m["chapter"] for m in FIXTURE_MEMBERS},
-      f"unexpected: {sorted(now_chapters - SEEDED_CHAPTERS - {m['chapter'] for m in FIXTURE_MEMBERS})}")
+      and now_chapters == SEEDED_CHAPTERS | {norm_chapter(m["chapter"]) for m in FIXTURE_MEMBERS},
+      f"unexpected: {sorted(now_chapters - SEEDED_CHAPTERS - {norm_chapter(m['chapter']) for m in FIXTURE_MEMBERS})}")
 
 # The second committee login mirrors admin, so the desk crew never has to
 # borrow the main admin password.
@@ -686,11 +702,19 @@ check("profile update returns the corrected pass",
 status, body, _ = req("GET", "/api/v1/chapters", token=member_tok)
 check("a new chapter registers itself, the rule imports follow",
       "Chapter Baru E2E" in body["chapters"])
+status, body, _ = req("PUT", "/api/v1/me/profile", token=member_tok,
+                      body={"name": "Reddie Wijaya Jr.", "chapter": "BNI Chapter Baru E2E"})
+check("a typed BNI prefix folds onto the bare chapter, no double registers",
+      status == 200 and body["user"]["chapter"] == "Chapter Baru E2E")
+status, body, _ = req("PUT", "/api/v1/me/profile", token=member_tok,
+                      body={"name": "Reddie Wijaya Jr.", "chapter": "chapter baru e2e"})
+check("...and a case twin lands on the master list's spelling",
+      status == 200 and body["user"]["chapter"] == "Chapter Baru E2E")
 status, _, _ = req("PUT", "/api/v1/me/profile", token=member_tok, body={"name": "  "})
 check("a blank name is refused — a pass with no name identifies nobody", status == 400)
 # Put the name back so the rest of the suite reads what it seeded.
 req("PUT", "/api/v1/me/profile", token=member_tok,
-    body={"name": "Reddie Wijaya", "chapter": "BNI Chapter Jakarta Elite"})
+    body={"name": "Reddie Wijaya", "chapter": "Chapter Jakarta Elite"})
 
 # Recovery: chapter + the phone on the ticket, in any of its shapes.
 status, body, _ = req("POST", "/api/v1/auth/forgot",
@@ -699,6 +723,9 @@ check("forgot password resolves on chapter + phone",
       status == 200 and len(body["accounts"]) == 1
       and body["accounts"][0]["email"] == "passtest@natcon.id")
 reset_token = body["accounts"][0]["reset_token"]
+status, body, _ = req("POST", "/api/v1/auth/forgot",
+                      body={"chapter": "BNI Chapter Sandi", "phone": "08119876543"})
+check("forgot password forgives a typed BNI prefix", status == 200)
 status, _, _ = req("POST", "/api/v1/auth/forgot",
                    body={"chapter": "Chapter Salah", "phone": "+628119876543"})
 check("right phone, wrong chapter -> 401", status == 401)
@@ -1728,6 +1755,15 @@ imp_chapter_id = chapter_names["Chapter Import"]["id"]
 
 status, _, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok, body={"name": "Chapter Import"})
 check("duplicate chapter name -> 409", status == 409)
+status, _, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok, body={"name": "CHAPTER IMPORT"})
+check("a case twin is the same chapter -> 409", status == 409)
+status, _, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok, body={"name": "BNI Chapter Import"})
+check("a BNI-prefixed twin is the same chapter -> 409", status == 409)
+status, body, _ = req("POST", "/api/v1/admin/chapters", token=admin_tok,
+                      body={"name": "BNI Chapter Prefiks"})
+check("a created chapter stores its bare name",
+      status == 201 and body["chapter"]["name"] == "Chapter Prefiks")
+req("DELETE", f"/api/v1/admin/chapters/{body['chapter']['id']}", token=admin_tok)
 status, _, _ = req("DELETE", f"/api/v1/admin/chapters/{imp_chapter_id}", token=admin_tok)
 check("delete chapter in use -> 409", status == 409)
 status, _, _ = req("PUT", f"/api/v1/admin/chapters/{imp_chapter_id}", token=admin_tok,
