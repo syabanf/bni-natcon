@@ -534,7 +534,7 @@ check("...and the blocks are the ones on the committee's artwork",
       [b["title"] for b in day] == [
           "Registration & Open Networking", "Chapter Photo Session", "Learning Session 1",
           "Coffee Break 1", "Learning Session 2", "Lunch Break", "Opening Ceremony",
-          "Keynote Speaker Session : Phil Berg", "Coffee Break 2",
+          "Keynote Speaker Session", "Coffee Break 2",
           "Speed Networking Session 1",
           "Chapter Awards · Director & Ambassador Awards", "Door Prize 1",
           "Speed Networking Session 2", "Referral Partner Awards", "Door Prize 2",
