@@ -19,8 +19,10 @@ describe('the landing page', () => {
     render(<MemoryRouter><Landing /></MemoryRouter>)
     expect(screen.getByAltText(/BNI Indonesia National Conference 2026/)).toBeTruthy()
     expect(screen.getByText('3 September 2026 · Pullman Central Park Jakarta')).toBeTruthy()
+    expect(screen.getByText('See you in Jakarta')).toBeTruthy()
     const units = [...document.querySelectorAll('.cd-num')].map((n) => n.textContent)
-    expect(units).toEqual(['02', '03', '00', '00'])
+    // Days print unpadded like the reference; the clock units keep two digits.
+    expect(units).toEqual(['2', '03', '00', '00'])
   })
 
   it('turns into a doorway once the day arrives', () => {

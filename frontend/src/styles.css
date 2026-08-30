@@ -2682,114 +2682,178 @@ button.stat-redeem {
 }
 
 /* ===== Landing =====
-   The event poster as a page: the mark, the date, and a clock. Same gradient
-   the sign-in hero uses, so the front door and the doorstep match. */
+   The committee's countdown design: a red hero sliced on the diagonal, then
+   a white page where the clock runs in red digits on floating cards. */
 .landing {
   min-height: 100dvh;
+  background: #fff;
+  color: #1c1e22;
+  text-align: center;
+}
+.landing-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 32px 20px;
-  background: linear-gradient(155deg, #e5232f, #a31621 55%, #6d0f18);
+  padding: 44px 20px 150px;
   color: #fff;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.08) 0.5px, transparent 1px) 0 0 / 190px 100%,
+    linear-gradient(150deg, #e5232f 0%, #b91a24 55%, #8f141d 100%);
+  /* The diagonal eats only the padding zone below the content, so no screen
+     shape can ever slice the headline. */
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 130px), 0 100%);
 }
 .landing-logo {
-  width: min(300px, 70vw);
-  margin-bottom: 18px;
+  width: min(190px, 48vw);
+  margin-bottom: 20px;
 }
-.landing-where {
-  font-size: 13px;
-  letter-spacing: 1.6px;
+.landing-pill {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
   text-transform: uppercase;
-  opacity: 0.9;
+}
+.landing-hero h1 {
+  margin-top: 18px;
+  font-size: clamp(30px, 6vw, 44px);
+  font-weight: 800;
+}
+.landing-body {
+  padding: 16px 20px 48px;
+}
+.landing-when {
+  font-size: 15px;
+}
+.landing-doors {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #5a5f66;
 }
 .countdown {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin: 30px 0 6px;
+  margin: 30px 0 14px;
 }
-.cd-unit {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 14px;
-  padding: 14px 10px 10px;
-  min-width: 74px;
+.cd-card {
+  background: #fff;
+  border: 1px solid #eef0f2;
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(23, 25, 29, 0.09);
+  min-width: 88px;
+  padding: 18px 12px 14px;
 }
 .cd-num {
-  font-size: 34px;
+  font-size: 44px;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
   line-height: 1;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
 }
 .cd-label {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 10px;
-  letter-spacing: 1.4px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: #8b919b;
 }
 .cd-sep {
-  font-size: 30px;
-  font-weight: 700;
-  opacity: 0.5;
-  margin-top: 14px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--red);
+  opacity: 0.65;
+}
+.landing-caption {
+  font-size: 13px;
+  font-weight: 600;
 }
 .landing-live {
-  margin: 28px 0 6px;
-  font-size: 20px;
+  margin: 34px 0 10px;
+  font-size: 22px;
   font-weight: 800;
-}
-.landing-actions {
-  margin-top: 34px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-.landing-cta {
-  background: #fff;
   color: var(--red);
-  font-weight: 800;
-  font-size: 15px;
-  padding: 14px 42px;
-  border-radius: 999px;
-  text-decoration: none;
-}
-.landing-alt {
-  color: #fff;
-  font-size: 12.5px;
-  opacity: 0.9;
-  text-decoration: underline;
 }
 .landing-foot {
-  margin-top: 40px;
-  font-size: 11px;
-  opacity: 0.6;
+  margin-top: 26px;
+  font-size: 11.5px;
+  color: #9aa0a8;
 }
-/* Phone: the units shrink before they wrap — four boxes stay one row. */
-@media (max-width: 420px) {
-  .cd-unit { min-width: 62px; padding: 12px 6px 9px; }
-  .cd-num { font-size: 27px; }
-  .cd-sep { font-size: 24px; }
+/* Phone: the four cards shrink before they wrap. */
+@media (max-width: 430px) {
+  .cd-card { min-width: 0; flex: 1; padding: 14px 4px 11px; }
+  .cd-num { font-size: 30px; }
+  .cd-sep { font-size: 18px; }
+  .countdown { gap: 6px; }
 }
-/* Tablet: the poster grows into the room it has. */
-@media (min-width: 768px) {
-  .landing-logo { width: 360px; }
-  .landing-where { font-size: 15px; }
-  .cd-unit { min-width: 96px; padding: 18px 14px 13px; border-radius: 18px; }
-  .cd-num { font-size: 46px; }
-  .cd-label { font-size: 11px; }
-  .cd-sep { font-size: 40px; margin-top: 18px; }
-}
-/* Laptop and up: a hall screen, readable from the back row. */
+/* Laptop and up: hall-screen digits. */
 @media (min-width: 1200px) {
-  .landing-logo { width: 430px; }
-  .countdown { gap: 16px; margin-top: 44px; }
-  .cd-unit { min-width: 122px; padding: 22px 18px 16px; }
-  .cd-num { font-size: 60px; }
-  .cd-sep { font-size: 52px; margin-top: 24px; }
-  .landing-live { font-size: 26px; }
+  .landing-hero { padding-top: 60px; }
+  .landing-logo { width: 220px; }
+  .cd-card { min-width: 116px; padding: 22px 16px 17px; }
+  .cd-num { font-size: 58px; }
 }
+
+/* ===== "More partners" sheet =====
+   The tiers below Platinum open as a bottom sheet: present when asked for,
+   absent from the first screen. */
+.sponsor-more {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed #d9dce1;
+  border-radius: 10px;
+  background: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+.sponsor-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 19, 23, 0.5);
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sponsor-sheet {
+  background: #fff;
+  width: min(480px, 100%);
+  max-height: 75vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 14px 24px;
+}
+.sponsor-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.sponsor-sheet-head h3 {
+  font-size: 15px;
+}
+.sponsor-sheet-close {
+  border: none;
+  background: #f2f3f5;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3f47;
+}
+.sponsor-sheet-full {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
