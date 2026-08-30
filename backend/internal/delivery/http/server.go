@@ -50,6 +50,7 @@ type Server struct {
 	admin          *usecase.AdminUsecase
 	networking     *usecase.NetworkingUsecase
 	sponsors       SponsorLister
+	passwords      PasswordStatusReader
 	attempts       AuthAttempts
 	allowedOrigins []string
 	uploadDir      string
@@ -65,6 +66,7 @@ func NewServer(
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
 	sponsors SponsorLister,
+	passwords PasswordStatusReader,
 	attempts AuthAttempts,
 	allowedOrigins []string,
 	uploadDir string,
@@ -73,6 +75,7 @@ func NewServer(
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
 		sponsors:       sponsors,
+		passwords:      passwords,
 		attempts:       attempts,
 		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
 	}
@@ -232,6 +235,8 @@ func (s *Server) Router() http.Handler {
 
 				r.Post("/admin/members/bulk", s.handleAdminBulkMembers)
 				r.Post("/admin/tenants/bulk", s.handleAdminBulkTenants)
+				// Who is still on the password the committee handed out.
+				r.Get("/admin/password-status", s.handleAdminPasswordStatus)
 				r.Get("/admin/report/visits", s.handleAdminVisitReport)
 				r.Get("/admin/report/registrations", s.handleAdminRegistrationReport)
 			})

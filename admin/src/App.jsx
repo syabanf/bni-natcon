@@ -8,17 +8,21 @@ import Rundown from './Rundown'
 import Chapters from './Chapters'
 import Tables from './Tables'
 import QRPrints from './QRPrints'
+import PasswordStatus from './PasswordStatus'
+import Sponsors from './Sponsors'
 
 const MENU = [
   { key: 'dash', label: 'Dashboard', icon: '▦' },
   { key: 'members', label: 'Attendees', icon: '◉' },
   { key: 'tenants', label: 'Tenants', icon: '▤' },
+  { key: 'sponsors', label: 'Sponsors', icon: '◆' },
   { key: 'chapters', label: 'Chapters', icon: '⬡' },
   { key: 'seminars', label: 'Learning Session', icon: '◈' },
   { key: 'tables', label: 'Tables', icon: '◍' },
   { key: 'qr', label: 'QR Prints', icon: '⧉' },
   { key: 'rundown', label: 'Rundown', icon: '◷' },
   { key: 'draw', label: 'Lucky Draw', icon: '✦' },
+  { key: 'passwords', label: 'Password Setup', icon: '⚿' },
 ]
 
 const REPORT_MENU = [
@@ -183,12 +187,14 @@ function Shell({ onLogout }) {
         {view === 'dash' && <Dashboard onUnauthorized={onLogout} />}
         {view === 'members' && <MembersPage />}
         {view === 'tenants' && <TenantsPage />}
+        {view === 'sponsors' && <Sponsors onUnauthorized={onLogout} />}
         {view === 'chapters' && <Chapters onUnauthorized={onLogout} />}
         {view === 'seminars' && <SeminarsPage />}
         {view === 'tables' && <Tables onUnauthorized={onLogout} />}
         {view === 'qr' && <QRPrints onUnauthorized={onLogout} />}
         {view === 'rundown' && <Rundown onUnauthorized={onLogout} />}
         {view === 'draw' && <LuckyDraw onUnauthorized={onLogout} />}
+        {view === 'passwords' && <PasswordStatus onUnauthorized={onLogout} />}
         {view === 'report-leads' && <ReportLeads onUnauthorized={onLogout} />}
         {view === 'report-seminars' && <ReportSeminars onUnauthorized={onLogout} />}
         {view === 'report-coupons' && <ReportCoupons onUnauthorized={onLogout} />}

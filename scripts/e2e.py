@@ -428,6 +428,37 @@ status, _, _ = req("POST", "/api/v1/admin/redeem", token=member_tok,
                    body={"member_code": member_code, "item": "pin"})
 check("an attendee cannot hand themselves a pin", status == 403)
 
+# ------------------------------------------------- who is still on our password
+section("Password Setup page")
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?limit=5", token=admin_tok)
+sm = body.get("summary", {})
+check("the summary counts attendees and booths separately",
+      status == 200 and sm["members_total"] > 0 and sm["tenants_total"] > 0
+      and sm["members_done"] <= sm["members_total"], f"{sm}")
+# Pending first: the accounts still open are the ones worth a phone call.
+check("the list leads with the accounts still on our password",
+      body["rows"] and body["rows"][0]["changed"] is False, f'{body["rows"][:1]}')
+check("a booth's row is labelled with its stand, an attendee's with their chapter",
+      all(r["role"] in ("member", "tenant") for r in body["rows"]))
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=done", token=admin_tok)
+done_before = body["total"]
+check("filtering to 'chose their own' returns only those",
+      status == 200 and all(r["changed"] for r in body["rows"]), f'{body["total"]}')
+
+# Booth A2 chose its own password earlier in this run, so it has to be here.
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=done&q=booth-a2", token=admin_tok)
+check("...and searching finds a booth that has already changed",
+      status == 200 and body["total"] == 1 and body["rows"][0]["role"] == "tenant",
+      f'{body["total"]} {[r.get("email") for r in body["rows"]]}')
+
+status, body, _ = req("GET", "/api/v1/admin/password-status?status=pending", token=admin_tok)
+check("the two filters account for everybody",
+      status == 200 and body["total"] + done_before
+      == sm["members_total"] + sm["tenants_total"],
+      f'{body["total"]} + {done_before} vs {sm["members_total"] + sm["tenants_total"]}')
+
 # --------------------------------------------------------------- sponsors
 section("Sponsor wall")
 

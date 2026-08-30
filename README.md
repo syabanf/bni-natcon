@@ -29,7 +29,11 @@ scan member QRs — which carry the attendee's **ticket number**, the one
 printed on their ticket — with the camera, or take **manual input by ticket
 number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
-gives the committee live monitoring — including **who is still on the password
+gives the committee two pages this event needed: a **Sponsors** page showing
+the wall in tier order — which company is Diamond, which is Platinum, which
+supported — and a **Password Setup** page listing, account by account, who
+has replaced the password we handed out and who has not, filterable and
+exportable. Plus live monitoring — including **who is still on the password
 we handed out**, which is the number that matters on the morning: everybody
 starts on the same one, so an account nobody has signed into yet is an account
 anybody holding the briefing sheet can sign into. (**Sponsors** and **Booths** are counted

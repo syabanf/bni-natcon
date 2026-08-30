@@ -240,6 +240,29 @@ type AdminOverview struct {
 	TenantsPasswordPending int
 }
 
+// PasswordStatusSummary counts who has replaced the password the committee
+// handed out. Everybody starts on the same one, so the pending figure is the
+// size of the window in which somebody else could sign in as them.
+type PasswordStatusSummary struct {
+	MembersTotal int
+	MembersDone  int
+	TenantsTotal int
+	TenantsDone  int
+}
+
+// PasswordStatusRow is one account on that list.
+type PasswordStatusRow struct {
+	ID    int64
+	Name  string
+	Email string
+	Role  string // "member" | "tenant"
+	// The stand for a booth, the chapter for an attendee — whichever the
+	// committee would use to find them in the hall.
+	Label      string
+	MemberCode string
+	Changed    bool
+}
+
 // Sponsor is a company on the sponsor wall. Separate from Tenant on purpose:
 // most sponsors have no stand, nothing to scan and nothing to stamp, so they
 // are not part of the passport — see migration 0042.
