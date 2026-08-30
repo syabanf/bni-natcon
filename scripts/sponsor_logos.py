@@ -63,7 +63,8 @@ def company_of(path: pathlib.Path) -> str:
     # "LOGO_GLO_4_transp" hides every word from a \b pattern until it is split.
     name = re.sub(r"[_]+", " ", name)
     name = re.sub(r"^\d+[.\-]?\s*", "", name)                      # "6. "
-    name = re.sub(r"^(Diamond|Platinum)\s+Sponsor\s*\d*\s*-\s*", "", name, flags=re.I)
+    # "Diamond Sponsor 2 - X", "diamond 1 - X", "PLATINUM - X" all mean X.
+    name = re.sub(r"^(Diamond|Platinum)(\s+Sponsor)?\s*\d*\s*-\s*", "", name, flags=re.I)
     name = re.sub(r"\s*[-–]\s*Logo\s+(Pak|Bu|Ibu|Mas|Mbak)\b.*$", "", name, flags=re.I)
     name = re.sub(r"\s*\((?:\d+|bu [^)]*|pak [^)]*)\)\s*", " ", name, flags=re.I)
     name = re.sub(r"\b(logo|transp|colour|color|black)\b", " ", name, flags=re.I)

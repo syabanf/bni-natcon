@@ -30,6 +30,12 @@ import unicodedata
 
 from PIL import Image
 
+# The committee's packs include print-resolution artwork — one logo arrived at
+# 181 megapixels. PIL's default cap treats that as a decompression bomb;
+# these files come from the committee, not the internet, and everything is
+# shrunk to a 320x128 canvas immediately after opening.
+Image.MAX_IMAGE_PIXELS = 400_000_000
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "frontend/public/logos"
 MIRROR = ROOT / "admin/public/logos"

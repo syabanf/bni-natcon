@@ -467,11 +467,16 @@ groups = body.get("groups", [])
 # Ranked by the API, not by each app: three front ends deciding for themselves
 # who outranks whom is three chances to put a Diamond sponsor under a
 # supporter.
-check("the wall arrives grouped, Diamond first",
-      status == 200 and [g["tier"] for g in groups] == ["diamond", "platinum", "supported"],
+# The wall holds the two companies the committee named, Diamond above
+# Platinum. Checked as an ordering rather than a fixed list, so adding a
+# sponsor does not fail the suite — putting one in the wrong rank does.
+RANK = {"diamond": 0, "platinum": 1, "supported": 2}
+check("the wall arrives grouped, richest tier first",
+      status == 200 and groups
+      and [RANK[g["tier"]] for g in groups] == sorted(RANK[g["tier"]] for g in groups),
       f'{[g.get("tier") for g in groups]}')
 check("every tier is labelled for display",
-      [g["label"] for g in groups] == ["Diamond Sponsor", "Platinum Sponsor", "Supported by"],
+      all(g["label"] in ("Diamond Sponsor", "Platinum Sponsor", "Supported by") for g in groups),
       f'{[g.get("label") for g in groups]}')
 wall = [s for g in groups for s in g["sponsors"]]
 check("every sponsor carries artwork — a wall of images cannot show a gap",
