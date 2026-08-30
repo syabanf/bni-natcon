@@ -425,6 +425,31 @@ status, _, _ = req("POST", "/api/v1/admin/redeem", token=member_tok,
                    body={"member_code": member_code, "item": "pin"})
 check("an attendee cannot hand themselves a pin", status == 403)
 
+# --------------------------------------------------------------- sponsors
+section("Sponsor wall")
+
+status, body, _ = req("GET", "/api/v1/sponsors", token=member_tok)
+groups = body.get("groups", [])
+# Ranked by the API, not by each app: three front ends deciding for themselves
+# who outranks whom is three chances to put a Diamond sponsor under a
+# supporter.
+check("the wall arrives grouped, Diamond first",
+      status == 200 and [g["tier"] for g in groups] == ["diamond", "platinum", "supported"],
+      f'{[g.get("tier") for g in groups]}')
+check("every tier is labelled for display",
+      [g["label"] for g in groups] == ["Diamond Sponsor", "Platinum Sponsor", "Supported by"],
+      f'{[g.get("label") for g in groups]}')
+wall = [s for g in groups for s in g["sponsors"]]
+check("every sponsor carries artwork — a wall of images cannot show a gap",
+      len(wall) > 0 and all(s["logo_url"].startswith("/sponsors/") for s in wall),
+      f'{[s["name"] for s in wall if not s.get("logo_url")]}')
+# Sponsors are not exhibitors: putting them in `tenants` would have told
+# every attendee they had visited 0 of 61 booths.
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("...and none of them landed in the booth count",
+      body["total_tenants"] == FIXTURE_TENANTS,
+      f'{body["total_tenants"]} exhibitors (expected {FIXTURE_TENANTS}), wall holds {len(wall)}')
+
 # ---------------------------------------------------------------- rundown
 section("Rundown — the day in one-hour blocks")
 

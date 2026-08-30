@@ -49,6 +49,7 @@ type Server struct {
 	booth          *usecase.BoothUsecase
 	admin          *usecase.AdminUsecase
 	networking     *usecase.NetworkingUsecase
+	sponsors       SponsorLister
 	attempts       AuthAttempts
 	allowedOrigins []string
 	uploadDir      string
@@ -63,6 +64,7 @@ func NewServer(
 	booth *usecase.BoothUsecase,
 	admin *usecase.AdminUsecase,
 	networking *usecase.NetworkingUsecase,
+	sponsors SponsorLister,
 	attempts AuthAttempts,
 	allowedOrigins []string,
 	uploadDir string,
@@ -70,6 +72,7 @@ func NewServer(
 	return &Server{
 		jwt: jwt, auth: auth, member: member, scan: scan,
 		seminar: seminar, booth: booth, admin: admin, networking: networking,
+		sponsors:       sponsors,
 		attempts:       attempts,
 		allowedOrigins: allowedOrigins, uploadDir: uploadDir,
 	}
@@ -127,6 +130,9 @@ func (s *Server) Router() http.Handler {
 			// attendee agenda, the booth crew wondering when networking
 			// starts, the committee. No role owns it.
 			r.Get("/rundown", s.handleListRundown)
+			// The sponsor wall is the same for everyone too, and it is the
+			// committee's thank-you rather than anybody's private data.
+			r.Get("/sponsors", s.handleListSponsors)
 			// Everyone in the hall counts down to the same moment.
 			r.Get("/networking/session", s.handleNetworkingSession)
 

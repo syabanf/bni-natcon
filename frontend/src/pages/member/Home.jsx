@@ -26,6 +26,7 @@ export default function Home() {
   const [user, setUser] = useState(cachedUser)
   const [stats, setStats] = useState(null)
   const [agenda, setAgenda] = useState(null)
+  const [sponsors, setSponsors] = useState([])
 
   useEffect(() => {
     api
@@ -41,6 +42,12 @@ export default function Home() {
       .rundown()
       .then((d) => setAgenda(d.rundown || []))
       .catch(() => setAgenda([]))
+    // The wall is a thank-you, not a feature: if it cannot be fetched the
+    // home screen simply does not show it.
+    api
+      .sponsors()
+      .then((d) => setSponsors(d.groups || []))
+      .catch(() => setSponsors([]))
   }, [])
 
   const firstName = user?.name?.split(' ')[0] || ''
@@ -166,6 +173,36 @@ export default function Home() {
           </div>
         ))}
       </div>
+      {/* The sponsor wall, in the order the committee ranks it: Diamond,
+          Platinum, then everyone who supported the day. The grouping and the
+          order both come from the API, so this renders what it is given
+          rather than deciding who outranks whom. */}
+      {sponsors.length > 0 && (
+        <>
+          <div className="section-title" style={{ marginLeft: 20 }}>
+            Thank you to our sponsors
+          </div>
+          <div className="card sponsor-wall">
+            {sponsors.map((g) => (
+              <div className="sponsor-group" key={g.tier}>
+                <div className={`sponsor-tier tier-${g.tier}`}>{g.label}</div>
+                <div className={`sponsor-grid grid-${g.tier}`}>
+                  {g.sponsors.map((sp) => (
+                    <div className="sponsor-cell" key={sp.id}>
+                      {sp.logo_url ? (
+                        <img src={sp.logo_url} alt={sp.name} loading="lazy" />
+                      ) : (
+                        <span className="sponsor-name">{sp.name}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <div style={{ height: 24 }} />
     </>
   )

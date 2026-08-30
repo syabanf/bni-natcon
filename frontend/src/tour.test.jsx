@@ -6,6 +6,7 @@ vi.mock('./api/client', () => ({
   api: {
     me: () => Promise.resolve({ user: { name: 'Ayu Pratiwi', member_code: 'NATCON-2026-09001' }, stats: {} }),
     rundown: () => Promise.resolve({ rundown: [] }),
+    sponsors: () => Promise.resolve({ groups: [] }),
     tenants: () => Promise.resolve({ tenants: [] }),
     seminars: () => Promise.resolve({ seminars: [] }),
     networking: () => Promise.resolve({ table: null, mates: [] }),

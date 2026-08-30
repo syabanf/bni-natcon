@@ -165,6 +165,19 @@ asked of attendees only: a booth's login belongs to the company, and the
 consent a crew gives is a different question from the one an attendee answers
 about their own name and email.
 
+**The sponsor wall is not the passport.** 27 sponsors across three tiers —
+Diamond, Platinum, and the supporters — live in their own `sponsors` table
+(migration `0042`) and render on the attendee home screen in that order,
+biggest first. Twenty-five of them have no stand, no scanner and nothing to
+stamp; had they been rows in `tenants` every attendee would have been told
+they had visited 0 of 61 booths, and the draw's booth minimum would have
+moved out of reach. Two of them exhibit as well and appear in both places,
+which is what sponsoring and exhibiting at the same event looks like. The
+artwork is prepared by
+[`scripts/sponsor_logos.py`](scripts/sponsor_logos.py) onto the same canvas
+the booth logos use, so a square mark and a wordmark sit in boxes of the same
+size. The ranking is decided by the API, not by each app.
+
 **The API runs behind a load balancer** (`deploy/api-lb.conf`): nginx in front
 of `API_REPLICAS` identical containers, which have no host port of their own.
 Replicas are for redundancy, not speed — one Go process already uses every

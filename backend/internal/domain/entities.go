@@ -240,6 +240,30 @@ type AdminOverview struct {
 	TenantsPasswordPending int
 }
 
+// Sponsor is a company on the sponsor wall. Separate from Tenant on purpose:
+// most sponsors have no stand, nothing to scan and nothing to stamp, so they
+// are not part of the passport — see migration 0042.
+type Sponsor struct {
+	ID   int64
+	Tier string // "diamond" | "platinum" | "supported"
+	Name string
+	// The company's own artwork. Empty shows the name as text, which is
+	// better than a broken image on a wall that is entirely images.
+	LogoURL string
+}
+
+// SponsorTierLabel is what the wall prints above each group.
+func SponsorTierLabel(tier string) string {
+	switch tier {
+	case "diamond":
+		return "Diamond Sponsor"
+	case "platinum":
+		return "Platinum Sponsor"
+	default:
+		return "Supported by"
+	}
+}
+
 // TenantScanCount ranks a booth by collected scans.
 type TenantScanCount struct {
 	Tenant

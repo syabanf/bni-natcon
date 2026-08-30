@@ -71,6 +71,7 @@ func main() {
 		usecase.NewBoothUsecase(tenantRepo, visitRepo),
 		usecase.NewAdminUsecase(postgres.NewAdminRepo(pool), httpdelivery.BcryptVerifier{}, cfg.SeedPassword),
 		usecase.NewNetworkingUsecase(postgres.NewNetworkingRepo(pool)),
+		postgres.NewSponsorRepo(pool),
 		postgres.NewAuthFailureRepo(pool),
 		cfg.AllowedOrigins,
 		cfg.UploadDir,
