@@ -14,7 +14,7 @@ const MENU = [
   { key: 'members', label: 'Attendees', icon: '◉' },
   { key: 'tenants', label: 'Tenants', icon: '▤' },
   { key: 'chapters', label: 'Chapters', icon: '⬡' },
-  { key: 'seminars', label: 'Learning Class', icon: '◈' },
+  { key: 'seminars', label: 'Learning Session', icon: '◈' },
   { key: 'tables', label: 'Tables', icon: '◍' },
   { key: 'qr', label: 'QR Prints', icon: '⧉' },
   { key: 'rundown', label: 'Rundown', icon: '◷' },

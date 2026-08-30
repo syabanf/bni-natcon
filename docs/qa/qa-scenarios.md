@@ -22,7 +22,7 @@ Camera cases need a real phone; a desktop browser without a camera falls back to
 
 Admin — admin@natcon.id / SEED_PASSWORD (default natcon2026). The 32 booths, the 4 sponsors and the 4 learning classes are already in a fresh database; the 866 attendees are seeded too (Data Peserta) and generate the networking tables on the Tables page.
 Attendee — any email from the imported sheet; first password = chapter + first name, lowercase without spaces. Booth — booth-<code>@natcon.id / SEED_PASSWORD.
-Imported attendees sign in with chapter + first name, lowercase, no spaces — e.g. Heritage + Fahmi = heritagefahmi
+Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for every account — e.g. Heritage + Fahmi = heritagefahmi
 
 ## Sheets
 01 Auth · 02 Attendee · 03 Booth scanner · 04 Admin master data · 05 Admin operations · 06 Reports & export · 07 Cross-cutting · 08 Test data
@@ -34,7 +34,7 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | ID | Pri | Precondition | Steps | Expected result |
 |---|---|---|---|---|
 | AUTH-01 | P1 | Admin account exists | Open the admin panel. Enter admin@natcon.id / natcon2026. Press Sign in. | Lands on the Dashboard with the sidebar visible. Stat tiles show numbers, not dashes. |
-| AUTH-02 | P1 | Attendee from the imported sheet | On the attendee app sign in with an attendee's email and their generated password (chapter + first name, lowercase, no spaces). | Asked to choose a password on this first sign-in, then lands on Home: 'Hello, <first name>', member pass card with a QR and their member ID. |
+| AUTH-02 | P1 | Attendee from the imported sheet | On the attendee app sign in with an attendee's email and their generated password (SEED_PASSWORD (default natcon2026), the same for every account). | Asked to choose a password on this first sign-in, then lands on Home: 'Hello, <first name>', member pass card with a QR and their member ID. |
 | AUTH-03 | P1 | Booth account | Open the booth door at /tenant/login. Sign in as booth-<code>@natcon.id with SEED_PASSWORD. | The page is headed 'Booth Scanner' and shows no 'Forgot your password?'. After sign-in: Booth Scanner titled 'SSCX International · Booth A1', bottom nav Scanner and Dashboard only. |
 | AUTH-04 | P1 | Any account | Sign in with the right email and a wrong password. | Stays on sign-in and shows an error. The wording must not reveal whether the email exists. |
 | AUTH-05 | P1 | An attendee imported from the ticketing sheet, who has never signed in | Sign in with their email and the generated password (chapter + first name). | 'Choose your password' appears immediately. No other page is reachable until a password is saved. |
@@ -127,9 +127,9 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 | BTH-15 | P1 | Scanner, an attendee holding a ticket from the sheet | Scan their pass QR from the My QR screen. | Recorded, with their name — the QR carries the ticket number, not the member code. |
 | BTH-16 | P2 | Scanner, the same attendee | Type the member code printed under their QR instead. | Reported as a repeat visit of the same person — both keys reach one attendee, never two. |
 | BTH-17 | P2 | Scanner | Type a ticket number nobody holds (16C6C-NOSUCHTICKET). | A clear not-found message. Nothing is recorded. |
-| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login. Both halves are all lowercase: booth-<code>@natcon.id, and the first password = company name + booth code, letters & digits only (WIT.id at A14 -> booth-a14@natcon.id / witida14). | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
+| BTH-18 | P1 | A booth account that has never signed in | Sign in at /tenant/login. Both halves are all lowercase: booth-<code>@natcon.id, and the first password is SEED_PASSWORD (default natcon2026) — the same one every account starts on. Booth A14 -> booth-a14@natcon.id / natcon2026. | The 'Choose your password' screen opens before anything else — the scanner stays closed until the crew sets a password of their own (8+ characters). The issued password then stops working. |
 | BTH-19 | P1 | A booth that already set its own password | Sign in again with the new password. | Straight to the scanner — no password screen. The old committee-issued password is refused. |
-| BTH-20 | P1 | A booth still on the committee's password, signing in on a phone | Tap 'show password' so the keyboard capitalises, then type the email and first password with a capital first letter (BOOTH-A14@natcon.id / Witida14). | Still signs in. Generated passwords are all-lowercase, so the capital a phone keyboard adds is accepted while the booth is on that password. After the crew sets their own, case is matched exactly again. |
+| BTH-20 | P1 | A booth still on the committee's password, signing in on a phone | Tap 'show password' so the keyboard capitalises, then type the email and first password with a capital first letter (BOOTH-A14@natcon.id / Natcon2026). | Still signs in. Generated passwords are all-lowercase, so the capital a phone keyboard adds is accepted while the booth is on that password. After the crew sets their own, case is matched exactly again. |
 | BTH-21 | P1 | Booth · a visitor already scanned | Open Dashboard, tap the visitor, look at the detail card. | Name, company, chapter, member code and the note — and no phone number, no Call button. A scan means being counted at the stand, not handing over a WhatsApp; follow-up comes from the committee's leads export. |
 
 ## Admin master data
@@ -299,12 +299,12 @@ Imported attendees sign in with chapter + first name, lowercase, no spaces — e
 |---|---|---|
 | Admin | admin@natcon.id / natcon2026 | Created by the seeder if no admin exists |
 | Admin | admin@natcon.id / SEED_PASSWORD | The only account a fresh database has |
-| Attendees | already there — 866 from the ticketing export | Seeded by migration 0038. Password = chapter + first name, lowercase, no spaces; they must change it on first sign-in. 156 of them have no company on file — the committee's newer export dropped that column. |
-| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id; first password = company name + booth code, lowercase alphanumerics (SSCX International at A1 -> sscxinternationala1). It opens the door once — each crew sets their own on first sign-in. GrasiaCare holds two stands as one booth, 'A18 & A20' (login booth-a18@natcon.id); ALPHA LEADERS likewise on 'A47 & A48' (booth-a47@natcon.id). Paper.id is on A22. |
+| Attendees | already there — 866 from the ticketing export | Seeded by migration 0038. Password = SEED_PASSWORD (default natcon2026), the same for every account; they must change it on first sign-in. 156 of them have no company on file — the committee's newer export dropped that column. |
+| Booths | already there — 32 booths + 4 sponsors from the booth sheet | login booth-<code>@natcon.id; first password = SEED_PASSWORD (default natcon2026), the same for every account. It opens the door once — each crew sets their own on first sign-in. GrasiaCare holds two stands as one booth, 'A18 & A20' (login booth-a18@natcon.id); ALPHA LEADERS likewise on 'A47 & A48' (booth-a47@natcon.id). Paper.id is on A22. |
 | Networking tables | Tables page → Generate | none exist until the committee makes them |
-| Sponsor scanner | booth-b1@natcon.id / biomedikab1 | Bio Medika - booth B1. The four sponsors are the B and C stands: B1, B2, B3, C1. |
+| Sponsor scanner | booth-b1@natcon.id / natcon2026 | Bio Medika - booth B1. The four sponsors are the B and C stands: B1, B2, B3, C1. |
 | Booth login pattern | booth-<code without dashes>@natcon.id | Booth login pattern: A1 → booth-a1@natcon.id, SP-01 → booth-sp01@natcon.id |
-| Imported attendee password | chapter + first name, lowercase, no spaces | Heritage + Fahmi → heritagefahmi |
+| Imported attendee password | SEED_PASSWORD (default natcon2026), the same for every account | Heritage + Fahmi → heritagefahmi |
 | Unknown member code | NATCON-2026-99999 | For the not-found cases |
 | Table QR payload | TABLE:5 | What the QR Prints page prints |
 | Class QR payload | SEMINAR:<id> | Scanned on Door Check-in to switch room |

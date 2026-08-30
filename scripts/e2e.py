@@ -284,13 +284,14 @@ check("second member login 200", status == 200)
 sinta_tok = body["token"]
 sinta_id = body["user"]["id"]
 
-# Booth first passwords are derived — company name + booth code, lowercase,
-# letters and digits only — so no two stands share one.
-def booth_password(name, booth):
-    return "".join(c for c in (name + booth).lower() if c.isalnum() and c.isascii())
+# Every account — attendee, booth, committee — starts on the same password.
+# It opens the door once; must_set_password does the rest.
+def booth_password(_name=None, _booth=None):
+    return PASSWORD
 
-status, body = login("booth-a1@natcon.id", booth_password("SSCX International", "A1"))
-check("tenant login 200 on its derived password", status == 200 and body["user"]["role"] == "tenant")
+status, body = login("booth-a1@natcon.id")
+check("tenant login 200 on the committee's password",
+      status == 200 and body["user"]["role"] == "tenant")
 tenant_tok = body["token"]
 # A booth's login belongs to the company, not to a person handing over their
 # own name and email, so the attendee's data notice is not asked of it.
@@ -307,13 +308,11 @@ section("Booth crews replace the handed-out password")
 # A phone keyboard capitalises the first letter the moment somebody taps
 # "show password". While a booth is still on the password we generated —
 # always all-lowercase — that stray capital must not lock the crew out.
-status, body = login("BOOTH-A2@natcon.id",
-                     booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2").capitalize(),
-                     xff="10.77.0.7")
+status, body = login("BOOTH-A2@natcon.id", PASSWORD.capitalize(), xff="10.77.0.7")
 check("a capitalised email and first password still sign the booth in",
       status == 200 and body["user"]["role"] == "tenant", f"{status}")
 
-a2_first = booth_password("PT. ORIENTAL LOGISTICS INDONESIA", "A2")
+a2_first = PASSWORD
 status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
 check("the derived password opens the door once",
@@ -930,7 +929,7 @@ status, body, _ = req("POST", "/api/v1/admin/tenants", token=admin_tok,
                       body={"name": "E2E Booth", "category": "Uji", "booth": "Z-01"})
 check("create tenant 201 (auto initials)", status == 201 and body["tenant"]["initials"] == "EB")
 new_tenant_id = body["tenant"]["id"]
-status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"))
+status, _ = login("booth-z01@natcon.id", PASSWORD)
 check("auto booth login works on its derived password", status == 200)
 status, body, _ = req("GET", f"/api/v1/admin/tenants/{new_tenant_id}", token=admin_tok)
 check("tenant detail 200", status == 200 and body["tenant"]["owner_email"] == "booth-z01@natcon.id")
@@ -1445,9 +1444,9 @@ check("the attendee passport shows who is at the booth",
 
 # A refresh keeps the login AND the password it was created with — derived
 # from the ORIGINAL name, because the crew's briefing sheet was printed then.
-status, _ = login("booth-z01@natcon.id", booth_password("E2E Booth", "Z-01"), xff="10.99.0.2")
+status, _ = login("booth-z01@natcon.id", PASSWORD, xff="10.99.0.2")
 check("refreshed booth keeps its scanner login and original password", status == 200)
-status, _ = login("booth-sp99@natcon.id", booth_password("Bulk Sponsor", "SP-99"), xff="10.99.0.3")
+status, _ = login("booth-sp99@natcon.id", PASSWORD, xff="10.99.0.3")
 check("imported booth gets an auto scanner login on its derived password", status == 200)
 
 status, body, _ = req("POST", "/api/v1/admin/tenants/bulk", token=admin_tok,
@@ -1686,11 +1685,8 @@ check("guessing one account's password is stopped, even from a fresh IP each tim
 # per-IP ceiling the eleventh was turned away, and to everyone behind them the
 # app simply looked broken.
 status, body, _ = req("GET", "/api/v1/admin/members?limit=16", token=admin_tok)
-hall = []
-for m in body["members"][:16]:
-    first = m["name"].split()[0] if m["name"].split() else ""
-    pw = re.sub(r"\s+", "", f'{m.get("chapter", "")}{first}').lower()
-    hall.append(login(m["email"], pw, xff="103.28.14.7")[0])
+hall = [login(m["email"], PASSWORD, xff="103.28.14.7")[0]
+        for m in body["members"][:16]]
 check("a hall on one public IP all sign in, none rate-limited",
       hall.count(429) == 0 and hall.count(200) >= 12, f"got {hall}")
 

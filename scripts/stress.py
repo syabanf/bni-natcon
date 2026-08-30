@@ -133,7 +133,7 @@ status, body = c.req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
 assert status == 201, f"table fixture failed: {status} {body}"
 
 status, body = c.req("POST", "/api/v1/auth/login",
-                     body={"email": "booth-a1@natcon.id", "password": "sscxinternationala1"})
+                     body={"email": "booth-a1@natcon.id", "password": PASSWORD})
 assert status == 200, "tenant login failed"
 tenant_tok = body["token"]
 

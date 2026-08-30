@@ -76,7 +76,7 @@ export function MemberLayout() {
         <NavButton to="/attendee" icon="home" label="Home" />
         <NavButton to="/attendee/qr" icon="qr" label="My QR" />
         <NavButton to="/attendee/passport" icon="pin" label="Passport" />
-        <NavButton to="/attendee/seminar" icon="mic" label="Learning Class" />
+        <NavButton to="/attendee/seminar" icon="mic" label="Learning Session" />
         <NavButton to="/attendee/network" icon="users" label="Network" />
       </nav>
       <Tour />

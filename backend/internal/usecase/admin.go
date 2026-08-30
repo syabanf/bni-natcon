@@ -177,10 +177,10 @@ func (u *AdminUsecase) CreateTenant(ctx context.Context, in TenantInput) (*domai
 		return nil, invalid("invalid email format")
 	}
 	initials = tenantInitials(initials, name)
-	// Blank means the derived default — company name + booth code — never a
-	// password shared with other stands.
+	// Blank means the committee's default — the same one every account
+	// starts on. It opens the door once; must_set_password does the rest.
 	if password == "" {
-		password = domain.TenantDefaultPassword(name, booth)
+		password = u.defaultPassword
 	}
 	hash, err := u.hasher.Hash(password)
 	if err != nil {
@@ -444,6 +444,7 @@ type TenantImportRow struct {
 // name/category/initials/kind/description refreshed — its login and the
 // scans it already collected are kept.
 func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImportRow) (created, updated int, errs []domain.BulkRowError) {
+	hash := ""
 	for i, row := range rows {
 		name := strings.TrimSpace(row.Name)
 		booth := strings.TrimSpace(row.Booth)
@@ -458,19 +459,22 @@ func (u *AdminUsecase) BulkUpsertTenants(ctx context.Context, rows []TenantImpor
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: "invalid email format"})
 			continue
 		}
-		// Every booth starts on its own derived password (name + booth code),
-		// so each row hashes its own — no two stands share one.
-		h, err := u.hasher.Hash(domain.TenantDefaultPassword(name, booth))
-		if err != nil {
-			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
-			continue
+		// Every booth starts on the committee's default password, so one
+		// bcrypt hash covers the whole batch.
+		if hash == "" {
+			h, err := u.hasher.Hash(u.defaultPassword)
+			if err != nil {
+				errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})
+				continue
+			}
+			hash = h
 		}
 		res, err := u.admin.UpsertTenant(ctx, domain.NewTenant{
 			Name: name, Category: strings.TrimSpace(row.Category), Booth: booth,
 			Initials: tenantInitials(row.Initials, name), Kind: normalizeTenantKind(row.Kind),
 			Description: strings.TrimSpace(row.Description),
 			ContactName: strings.TrimSpace(row.ContactName), Chapter: strings.TrimSpace(row.Chapter),
-			Email: email, PasswordHash: h,
+			Email: email, PasswordHash: hash,
 		})
 		if err != nil {
 			errs = append(errs, domain.BulkRowError{Row: i + 1, Label: row.Name, Err: err.Error()})

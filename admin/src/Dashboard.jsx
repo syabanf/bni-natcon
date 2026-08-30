@@ -105,7 +105,7 @@ export default function Dashboard({ onUnauthorized }) {
         <div className="col-right">
           <div className="panel">
             <h2>
-              <span className="sec-no">02</span>Learning Class Quota
+              <span className="sec-no">02</span>Learning Session Quota
             </h2>
             <p className="panel-sub">Parallel learning classes</p>
             {seminars.map((s) => {

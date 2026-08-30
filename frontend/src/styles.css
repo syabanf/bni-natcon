@@ -91,7 +91,7 @@ input {
   color: var(--gray);
   padding: 8px 2px;
 }
-/* Two-word labels ("Learning Class") wrap; every item reserves the same two
+/* Two-word labels ("Learning Session") wrap; every item reserves the same two
    lines so the row stays level instead of one tab standing taller. */
 .nav-label {
   display: flex;

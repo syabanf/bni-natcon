@@ -106,11 +106,9 @@ def report(name, lat, wall, statuses):
           f"p99 {pct(lat, 99)*1000:.0f}ms · statuses {dict(sorted(statuses.items()))} · 2xx {ok}")
 
 
-def first_password(chapter, name):
-    """Mirror of scripts/attendees_migration.py — what the ticket says."""
-    first = name.split()[0] if name.split() else ""
-    raw = unicodedata.normalize("NFKD", f"{chapter}{first}")
-    return re.sub(r"\s+", "", raw).lower()
+def first_password(_chapter=None, _name=None):
+    """Everybody starts on the committee's single password."""
+    return PASSWORD
 
 
 def run_pool(items, fn, workers=None):

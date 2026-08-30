@@ -90,15 +90,20 @@ export default function Home() {
           </div>
           <div className="st-label">Booths visited</div>
         </div>
+        {/* The pin and the goodiebag are not something to win or redeem —
+            every attendee gets both. These two say so and remind people to
+            pick them up; there is nothing to tap and nothing to claim. */}
         <div className="stat">
-          <div className="st-num">{stats?.coupons ?? '–'}</div>
-          <div className="st-label">Pins collected</div>
+          <div className="st-num">
+            <span className="accent">Free</span>
+          </div>
+          <div className="st-label">Pin — pick yours up at the desk</div>
         </div>
         <div className="stat">
           <div className="st-num">
-            <span className="accent">{stats?.seminars_picked ?? '–'}</span>/{stats?.seminars_total ?? '–'}
+            <span className="accent">Free</span>
           </div>
-          <div className="st-label">Goodiebag</div>
+          <div className="st-label">Goodiebag — pick yours up at the desk</div>
         </div>
       </div>
 
@@ -118,21 +123,21 @@ export default function Home() {
             <Icon name="pin" size={18} />
           </span>
           <h4>Tenant Passport</h4>
-          <p>Collect scans, claim your pin</p>
+          <p>Visit the booths, win the grand prize</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/seminar')}>
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
-          <h4>Learning Class</h4>
-          <p>Pick a class, claim your goodiebag</p>
+          <h4>Learning Session</h4>
+          <p>Two sessions — pick the class you like, seats are limited</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/network')}>
           <span className="q-ic">
             <Icon name="users" size={18} />
           </span>
           <h4>Speed Networking</h4>
-          <p>Scan your table · 8 people auto-connected</p>
+          <p>Scan your table · 10 people auto-connected</p>
         </button>
       </div>
 

@@ -99,8 +99,8 @@ away.
 
 - **The 866 attendees of the ticketing export** (migration `0038`), one per
   ticket, with the chapters they carry and the password printed on their
-  ticket — chapter + first name, hashed at generation because 866 bcrypt
-  hashes would add a minute to every boot. `must_set_password` stays true, so
+  ticket — `SEED_PASSWORD`, the same for everyone, written as the seeder's
+  placeholder so the password lives in the environment rather than in the file. `must_set_password` stays true, so
   each attendee still picks their own on first sign-in. Regenerate it from a
   newer export with
   [`scripts/attendees_migration.py`](scripts/attendees_migration.py). **This
@@ -218,8 +218,8 @@ ready-to-fill template (headers + example rows).
   back to email), so **one buyer holding two tickets becomes two attendees**
   on the same address — signing in then asks **which pass you are**, and each
   pass keeps its own QR, pins and learning class. New accounts sign in with
-  username = email and password = chapter + first name (lowercase, no
-  spaces), then
+  username = email and password = `SEED_PASSWORD` — the same one for
+  everybody, so the desk explains sign-in in one sentence — then
   **choose their own password on that first sign-in** — nothing else in the
   app opens until they do. Forgot it? Recovery matches **chapter + the phone
   number on the ticket** (any of `+62…`/`62…`/`08…`, case- and
@@ -413,8 +413,8 @@ Everyone else is created by that account:
 
 | Role     | Login                        | Password                                   |
 |----------|------------------------------|--------------------------------------------|
-| Attendee | the email on their ticket    | chapter + first name, then they choose their own · signs in at `/login` |
-| Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = **company name + booth code**, letters & digits only (WIT.id at A14 → `witida14`) — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
+| Attendee | the email on their ticket    | `SEED_PASSWORD`, then they choose their own · signs in at `/login` |
+| Booth    | `booth-<code>@natcon.id`     | **all lowercase**; first password = `SEED_PASSWORD`, the same one every account starts on — it opens the door **once**, then the crew sets their own · signs in at `/tenant/login` |
 
 Booth logins are created automatically when a booth is added or imported, so
 importing the booth sheet also hands out one scanner account per booth.

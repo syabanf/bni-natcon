@@ -158,7 +158,7 @@ export function MemberDetail({ id, onBack }) {
 
       <div className="panel report-panel">
         <h2>
-          <span className="sec-no">02</span>Registered Learning Classes
+          <span className="sec-no">02</span>Registered Learning Sessions
         </h2>
         <p className="panel-sub">One class per parallel slot</p>
         <SimpleTable
@@ -315,8 +315,8 @@ export function SeminarDetail({ id, onBack }) {
     }
   }
 
-  if (error) return <DetailShell title="Learning Class" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
-  if (!data) return <DetailShell title="Learning Class" sub="Loading…" onBack={onBack} />
+  if (error) return <DetailShell title="Learning Session" sub="" onBack={onBack}><div className="error">{error}</div></DetailShell>
+  if (!data) return <DetailShell title="Learning Session" sub="Loading…" onBack={onBack} />
 
   const { seminar, attendees } = data
   const pct = Math.round((seminar.seats_taken / seminar.capacity) * 100)

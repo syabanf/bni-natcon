@@ -116,14 +116,13 @@ dihapus tidak muncul lagi saat restart.
 >
 > Dua hal yang **harus** dikerjakan panitia setelah deploy:
 > 1. **Cetak ulang QR booth** dari halaman QR Prints — nomor stand berubah.
-> 2. **Bagikan ulang login + password booth.** Keduanya mengikuti stand:
->    Paper.id kini `booth-a22@natcon.id` dengan password awal `paperida22`.
->    Kru yang belum pernah login otomatis dikembalikan ke password turunan
->    yang baru; kru yang sudah membuat password sendiri tidak diusik.
+> 2. **Bagikan ulang login booth.** Alamatnya mengikuti stand: Paper.id kini
+>    `booth-a22@natcon.id`. Password awalnya `SEED_PASSWORD`, sama untuk semua
+>    akun. Kru yang sudah membuat password sendiri tidak diusik.
 
 **Peserta** ikut sebagai migrasi `0038`: 866 orang dari export ticketing,
-satu akun per tiket, password awal chapter + nama depan dan wajib diganti saat
-login pertama. Kalau panitia mengirim export baru, buat ulang dengan
+satu akun per tiket, password awal `SEED_PASSWORD` (sama untuk semua) dan
+wajib diganti saat login pertama. Kalau panitia mengirim export baru, buat ulang dengan
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
 file itu berisi nama, email, dan nomor HP 866 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat

@@ -855,7 +855,7 @@ export function SeminarsPage() {
 
   return (
     <>
-      <PageHead title="Master Data — Learning Classes" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
+      <PageHead title="Master Data — Learning Sessions" sub="Classes sharing a slot run in parallel — an attendee picks one of them">
         <ImportButton
           label="Import Registrations"
           aliases={REGISTRATION_IMPORT_ALIASES}
@@ -936,7 +936,7 @@ export function SeminarsPage() {
       </div>
 
       {crud.form && (
-        <Modal title={crud.form.id ? 'Edit Learning Class' : 'Add Learning Class'} onClose={() => crud.setForm(null)}>
+        <Modal title={crud.form.id ? 'Edit Learning Session' : 'Add Learning Session'} onClose={() => crud.setForm(null)}>
           <form className="modal-form" onSubmit={crud.submit}>
             <Field label="Slot" type="number" min="1" value={crud.form.slot} onChange={(e) => crud.setForm({ ...crud.form, slot: e.target.value })} required />
             <Field label="Room" value={crud.form.room} onChange={(e) => crud.setForm({ ...crud.form, room: e.target.value })} required autoFocus />

@@ -40,8 +40,9 @@ const AUDIENCE = {
     sub: 'Sign in for your digital pass, learning classes, and speed networking.',
     hint: (
       <>
-        Password = your <b>chapter + first name</b>, lowercase without spaces — e.g. Heritage +
-        Abraham → <code>heritageabraham</code>
+        Email = the address your ticket was bought with. First password ={' '}
+        <code>natcon2026</code> — the same one for everybody. You&apos;ll choose your own right
+        after.
       </>
     ),
     showRecovery: true,
@@ -54,9 +55,9 @@ const AUDIENCE = {
     sub: 'Sign in with the booth account to scan attendee QRs and see your visitors.',
     hint: (
       <>
-        All lowercase. Login = <code>booth-&lt;booth code&gt;@natcon.id</code>, first password ={' '}
-        <b>company name + booth code</b>, letters &amp; digits only — WIT.id at A14 →{' '}
-        <code>booth-a14@natcon.id</code> / <code>witida14</code>. You&apos;ll set your own right after.
+        All lowercase. Login = <code>booth-&lt;booth code&gt;@natcon.id</code> — booth A14 →{' '}
+        <code>booth-a14@natcon.id</code>. First password = <code>natcon2026</code>, the same one
+        for every booth. You&apos;ll set your own right after.
       </>
     ),
     showRecovery: false,
