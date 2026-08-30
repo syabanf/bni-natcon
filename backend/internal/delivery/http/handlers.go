@@ -32,6 +32,10 @@ type userDTO struct {
 	// notice. The app shows it on the same first-run screen as the password
 	// and will not go past it until the box is ticked.
 	MustConsent bool `json:"must_consent,omitempty"`
+	// Whether the registration desk has scanned this attendee's QR and
+	// handed over the pin / goodiebag.
+	PinRedeemed       bool `json:"pin_redeemed,omitempty"`
+	GoodiebagRedeemed bool `json:"goodiebag_redeemed,omitempty"`
 }
 
 func toUserDTO(u *domain.User) userDTO {
@@ -43,7 +47,9 @@ func toUserDTO(u *domain.User) userDTO {
 		// Asked of attendees only: a booth's scanner login belongs to the
 		// company, and the crew consent the committee needs from them is not
 		// the one an attendee gives about their own name and email.
-		MustConsent: u.Role == domain.RoleMember && u.ConsentedAt == nil,
+		MustConsent:       u.Role == domain.RoleMember && u.ConsentedAt == nil,
+		PinRedeemed:       u.PinRedeemedAt != nil,
+		GoodiebagRedeemed: u.GoodiebagRedeemedAt != nil,
 	}
 }
 

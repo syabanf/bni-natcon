@@ -69,7 +69,7 @@ export default function Passport() {
     <>
       <div className="hero-greet">
         <h2>Tenant Passport</h2>
-        <p>Visit sponsors &amp; booths, have them scan your QR. No stamps, no paper.</p>
+        <p>Visit sponsors &amp; booths and have them scan your QR — every scan is a stamp.</p>
       </div>
       <div style={{ height: 14 }} />
 
@@ -84,8 +84,9 @@ export default function Passport() {
           <div className="progress-fill" style={{ width: `${pct}%` }} />
         </div>
         <div className="progress-note">
-          Every tenant that scans your QR = <b>1 collectible pin</b>. Visit all {total} tenants to
-          complete your set and claim the exclusive Natcon pin at the redemption desk.
+          One QR scan at a tenant or sponsor booth = <b>1 stamp</b>. The more stamps you collect,
+          the more business opportunities you open — and the bigger your chance at the{' '}
+          <b>grand prize</b>.
         </div>
       </div>
 
@@ -94,8 +95,8 @@ export default function Passport() {
           <Icon name="award" size={19} />
         </div>
         <div>
-          <h5>Your pins: {visited}</h5>
-          <p>Claim your pins at the redemption desk · Main Lobby, from 15:00</p>
+          <h5>Your stamps: {visited}</h5>
+          <p>Every stamp brings you closer to the grand prize</p>
         </div>
       </div>
 
@@ -106,7 +107,7 @@ export default function Passport() {
             <h4>They make Natcon 2026 happen</h4>
             <p>
               {sponsors.length} sponsor{sponsors.length > 1 ? 's' : ''} back this year's conference —
-              stop by their stands to say thanks and collect a pin.
+              stop by their stands to say thanks and collect a stamp.
             </p>
             <span className="sb-progress">
               {sponsorsVisited}/{sponsors.length} sponsor stands visited

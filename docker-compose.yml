@@ -1,13 +1,20 @@
+# Resource posture for event day (3 September 2026). This host runs ~89
+# containers including GitLab, and the kernel OOM-killed 73 processes in the
+# 30 days before the event. cpu_shares wins CPU contention against neighbours,
+# mem_limit is a runaway backstop (not a tight fit), and the negative
+# oom_score_adj tells the kernel to reach for something else first.
 # Semua variabel bisa dioverride lewat file `.env` di root repo
 # (lihat .env.example) — tanpa .env pun default di bawah sudah jalan.
 services:
   db:
     image: postgres:16-alpine
     container_name: natcon-db
-    # A container that dies mid-event must come back by itself; nobody is
-    # watching a terminal at 09:40. "unless-stopped" survives a host reboot
-    # but still respects a deliberate `docker compose stop`.
     restart: unless-stopped
+    # The database is the one component whose loss is unrecoverable mid-event.
+    cpu_shares: 4096
+    mem_limit: 2g
+    mem_reservation: 512m
+    oom_score_adj: -700
     environment:
       POSTGRES_USER: ${DB_USER:-natcon}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-natcon}
@@ -41,6 +48,10 @@ services:
       # they buy is that a container dying mid-event does not take the day
       # with it, and that a deploy can roll.
       replicas: ${API_REPLICAS:-2}
+    cpu_shares: 4096
+    mem_limit: 2g
+    mem_reservation: 512m
+    oom_score_adj: -600
     environment:
       DATABASE_URL: postgres://${DB_USER:-natcon}:${DB_PASSWORD:-natcon}@db:5432/${DB_NAME:-natcon}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
@@ -89,8 +100,12 @@ services:
       context: ./frontend
       args:
         VITE_ADMIN_URL: ${VITE_ADMIN_URL:-http://localhost:8089}
+        VITE_DOOR_URL: ${VITE_DOOR_URL:-http://localhost:8087/door/login}
     container_name: natcon-frontend
     restart: unless-stopped
+    cpu_shares: 2048
+    mem_limit: 256m
+    oom_score_adj: -400
     depends_on:
       - lb
     ports:
@@ -100,6 +115,9 @@ services:
     build: ./admin
     container_name: natcon-admin
     restart: unless-stopped
+    cpu_shares: 2048
+    mem_limit: 256m
+    oom_score_adj: -400
     depends_on:
       - lb
     ports:
@@ -109,6 +127,9 @@ services:
     build: ./door
     container_name: natcon-door
     restart: unless-stopped
+    cpu_shares: 2048
+    mem_limit: 256m
+    oom_score_adj: -400
     depends_on:
       - lb
     ports:

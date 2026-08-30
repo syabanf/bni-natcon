@@ -26,6 +26,8 @@ export default function Home() {
   const [user, setUser] = useState(cachedUser)
   const [stats, setStats] = useState(null)
   const [agenda, setAgenda] = useState(null)
+  // Which redeem dialog is open: 'pin', 'goodiebag', or null.
+  const [redeemInfo, setRedeemInfo] = useState(null)
 
   useEffect(() => {
     api
@@ -90,17 +92,46 @@ export default function Home() {
           </div>
           <div className="st-label">Booths visited</div>
         </div>
-        <div className="stat">
-          <div className="st-num">{stats?.coupons ?? '–'}</div>
-          <div className="st-label">Pins collected</div>
-        </div>
-        <div className="stat">
-          <div className="st-num">
-            <span className="accent">{stats?.seminars_picked ?? '–'}</span>/{stats?.seminars_total ?? '–'}
+        {/* Every attendee gets a free pin and goodiebag. The cards are a
+            reminder, not a tracker — tapping one just says where to pick it
+            up. */}
+        <button type="button" className="stat stat-redeem" onClick={() => setRedeemInfo('pin')}>
+          <div className="st-status free">
+            <Icon name="pin" size={16} />
           </div>
-          <div className="st-label">Goodiebag</div>
-        </div>
+          <div className="st-label">Free Pin</div>
+        </button>
+        <button
+          type="button"
+          className="stat stat-redeem"
+          onClick={() => setRedeemInfo('goodiebag')}
+        >
+          <div className="st-status free">
+            <Icon name="award" size={16} />
+          </div>
+          <div className="st-label">Free Goodiebag</div>
+        </button>
       </div>
+
+      {redeemInfo && (
+        <div className="redeem-overlay" onClick={() => setRedeemInfo(null)}>
+          <div
+            className="redeem-dialog"
+            role="dialog"
+            aria-label={`Free ${redeemInfo === 'pin' ? 'pin' : 'goodiebag'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4>{redeemInfo === 'pin' ? 'Free pin' : 'Free goodiebag'}</h4>
+            <p>
+              This event comes with a free {redeemInfo === 'pin' ? 'pin' : 'goodiebag'} for
+              every attendee — don&apos;t forget to redeem yours before you head home!
+            </p>
+            <button type="button" className="btn" onClick={() => setRedeemInfo(null)}>
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="section-title" style={{ marginLeft: 20 }}>
         Quick menu
@@ -118,21 +149,21 @@ export default function Home() {
             <Icon name="pin" size={18} />
           </span>
           <h4>Tenant Passport</h4>
-          <p>Collect scans, claim your pin</p>
+          <p>Visit the booths, win the grand prize</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/seminar')}>
           <span className="q-ic">
             <Icon name="mic" size={18} />
           </span>
           <h4>Learning Class</h4>
-          <p>Pick a class, claim your goodiebag</p>
+          <p>Two sessions — pick the class you like, seats are limited</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/network')}>
           <span className="q-ic">
             <Icon name="users" size={18} />
           </span>
           <h4>Speed Networking</h4>
-          <p>Scan your table · 8 people auto-connected</p>
+          <p>Scan your table · 10 people auto-connected</p>
         </button>
       </div>
 
@@ -150,11 +181,21 @@ export default function Home() {
                 every attendee reads a date they already know. */}
             {days.length > 1 && <div className="agenda-day">{dayLabel(day.date)}</div>}
             {day.blocks.map((a) => (
-              <div className="agenda-item" key={a.id}>
+              <div
+                className={`agenda-item${a.kind === 'break' ? ' agenda-item--break' : ''}`}
+                key={a.id}
+              >
                 <div className="agenda-time">{timeOf(a.starts_at)}</div>
                 <div>
                   <h5>{a.title}</h5>
-                  <p>{a.place}</p>
+                  {/* The subtitle packs several sub-items into one field,
+                      separated by " · " — one line each, like the poster. */}
+                  {(a.place || '')
+                    .split(' · ')
+                    .filter(Boolean)
+                    .map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
                 </div>
               </div>
             ))}

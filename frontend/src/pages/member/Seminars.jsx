@@ -184,8 +184,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
                     <b>Class entry pass — {seminar.room}</b>
                     <p>
                       This QR is for the learning class door only (separate from your booth QR). The
-                      door crew scans it to record your attendance — then claim your{' '}
-                      <b>goodiebag</b>.
+                      door crew scans it to record your attendance.
                     </p>
                   </div>
                 )}
@@ -195,7 +194,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
               </>
             ) : locked ? (
               <button className="btn" disabled>
-                You already picked another learning class
+                You already picked a class in this session
               </button>
             ) : full ? (
               <button className="btn" disabled>
@@ -236,7 +235,7 @@ export default function Seminars() {
     setBusyID(id)
     try {
       await api.registerSeminar(id)
-      toast('Registered — show your class QR at the room door to claim your goodiebag')
+      toast('Registered — show your class QR at the room door to check in')
     } catch (err) {
       toast(err.message)
     } finally {
@@ -262,9 +261,17 @@ export default function Seminars() {
     return <div className="loading-note">Loading learning classes…</div>
   }
 
+  // A "Session" is the rundown hour a class runs in: classes sharing a start
+  // time are alternatives, and the attendee picks one of them. A class the
+  // committee has not placed yet falls back to its legacy slot number —
+  // mirroring the registration rule on the server.
+  const sessionKeyOf = (s) => s.starts_at || `slot-${s.slot}`
+
   const detail = seminars.find((s) => s.id === detailID)
   if (detail) {
-    const lockedDetail = seminars.some((s) => s.slot === detail.slot && s.registered && s.id !== detail.id)
+    const lockedDetail = seminars.some(
+      (s) => sessionKeyOf(s) === sessionKeyOf(detail) && s.registered && s.id !== detail.id,
+    )
     return (
       <SeminarDetail
         seminar={detail}
@@ -278,7 +285,9 @@ export default function Seminars() {
     )
   }
 
-  const slots = [...new Set(seminars.map((s) => s.slot))].sort()
+  // The list arrives ordered by hour, so the keys come out in day order and
+  // "Session 1" is simply the first hour with classes in it.
+  const sessionKeys = [...new Set(seminars.map(sessionKeyOf))]
   const registered = seminars.find((s) => s.registered)
 
   return (
@@ -286,8 +295,8 @@ export default function Seminars() {
       <div className="hero-greet">
         <h2>Learning Class</h2>
         <p>
-          Pick up to two classes in different hours, then show your class QR at the door to get
-          checked in.
+          Two sessions, one class each — pick one class per session, then show your class QR at the
+          door to get checked in.
         </p>
       </div>
 
@@ -300,25 +309,26 @@ export default function Seminars() {
             <h5>{registered.attended ? 'Attendance recorded ✓' : 'Your class ticket is ready'}</h5>
             <p>
               {registered.attended
-                ? `Enjoy ${registered.room} — don't forget to claim your goodiebag`
-                : `Open ${registered.room} below and show the entry QR at the door to claim your goodiebag`}
+                ? `Enjoy ${registered.room} — see you in class`
+                : `Open ${registered.room} below and show the entry QR at the door to check in`}
             </p>
           </div>
         </div>
       )}
 
-      {slots.map((slot) => {
-        const inSlot = seminars.filter((s) => s.slot === slot)
-        const pickedInSlot = inSlot.some((s) => s.registered)
-        const hours = classHours(inSlot[0])
+      {sessionKeys.map((key, i) => {
+        const inSession = seminars.filter((s) => sessionKeyOf(s) === key)
+        const pickedInSession = inSession.some((s) => s.registered)
+        const hours = classHours(inSession[0])
         return (
-          <div key={slot}>
+          <div key={key}>
             <div className="slot-label">
-              Parallel learning classes{hours ? ` · ${hours}` : ''}
+              Session {i + 1}
+              {hours ? ` · ${hours}` : ''} · pick one class
             </div>
-            {inSlot.map((s) => {
+            {inSession.map((s) => {
               const few = s.seats_left <= 10
-              const locked = pickedInSlot && !s.registered
+              const locked = pickedInSession && !s.registered
               const full = s.seats_left <= 0
               return (
                 <div className="card seminar-card" key={s.id}>
@@ -330,7 +340,10 @@ export default function Seminars() {
                         : undefined
                     }
                   >
-                    <div className="sc-tag">{s.room}</div>
+                    {/* The cover badge names the session, not the room — which
+                        room a class sits in matters at the door, which session
+                        it sits in decides what you can still pick. */}
+                    <div className="sc-tag">Session {i + 1}</div>
                     <span className="pill" style={{ color: few ? 'var(--red)' : 'var(--ink)' }}>
                       {s.seats_left} seats left{few && !full ? ' · almost full' : ''}
                     </span>
@@ -348,11 +361,11 @@ export default function Seminars() {
                       {s.registered ? (
                         <button className="btn done" style={{ marginTop: 10 }}>
                           <Icon name="check" size={15} />
-                          Registered{s.attended ? ' · attended ✓' : ' — goodiebag on check-in'}
+                          Registered{s.attended ? ' · attended ✓' : ' — see you in class'}
                         </button>
                       ) : locked ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>
-                          You already picked another class
+                          You already picked a class in this session
                         </button>
                       ) : full ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>

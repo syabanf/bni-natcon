@@ -392,7 +392,11 @@ function TableHistoryDetail({ tableNo, onBack }) {
           ← Back to history
         </button>
         <h2>Table {tableNo} Detail</h2>
-        <p>{data ? `${data.table.hall} · ${data.table.occupied}/${data.table.capacity} seats taken right now` : 'Loading…'}</p>
+        <p>
+          {data
+            ? `${data.table.hall ? `${data.table.hall} · ` : ''}${data.table.occupied}/${data.table.capacity} seats taken right now`
+            : 'Loading…'}
+        </p>
       </div>
       {error && <div className="empty-note">{error}</div>}
       {data && (
@@ -683,7 +687,7 @@ export default function Networking() {
         </div>
 
         <div className="empty-note" style={{ marginTop: 16 }}>
-          Every table seats 8 people. Scan the QR on your table to check in — everyone at the table
+          Every table seats 10 people. Scan the QR on your table to check in — everyone at the table
           is connected automatically. No table number to type: the QR is what puts you at the right
           one.
         </div>
@@ -725,8 +729,7 @@ export default function Networking() {
               Table {data.table.table_no} · Seat {data.seat_no}
             </h3>
             <p>
-              {data.table.name ? `${data.table.name} · ` : ''}
-              {data.table.hall}
+              {[data.table.name, data.table.hall].filter(Boolean).join(' · ')}
             </p>
           </div>
           <RoundTimer session={session} />

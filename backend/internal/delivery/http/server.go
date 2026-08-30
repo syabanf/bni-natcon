@@ -81,7 +81,10 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	// Bulk member imports bcrypt-hash every row (~55ms each; 769 rows ≈ 43s).
+	// The 30s default cancelled the request context mid-import, failing every
+	// row after the first ~540 with "context deadline exceeded".
+	r.Use(middleware.Timeout(120 * time.Second))
 	r.Use(metricsMiddleware)
 	r.Use(securityHeaders)
 	r.Use(limitBody)
