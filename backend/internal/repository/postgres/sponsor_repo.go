@@ -21,9 +21,10 @@ func (r *SponsorRepo) List(ctx context.Context) ([]domain.Sponsor, error) {
 		SELECT id, tier, name, logo_url
 		FROM sponsors
 		ORDER BY CASE tier
-			WHEN 'diamond'  THEN 0
-			WHEN 'platinum' THEN 1
-			ELSE 2
+			WHEN 'diamond'   THEN 0
+			WHEN 'platinum'  THEN 1
+			WHEN 'strategic' THEN 2
+			ELSE 3
 		END, sort, lower(name)`)
 	if err != nil {
 		return nil, err

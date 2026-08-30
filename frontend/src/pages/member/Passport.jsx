@@ -14,7 +14,17 @@ function TenantCard({ t, sponsor }) {
   const shared = (t.companies || []).length > 1
   return (
     <div className={`tenant-card${t.visited ? ' scanned' : ''}${sponsor ? ' sponsor' : ''}`}>
-      {sponsor && <span className="t-ribbon">Sponsor</span>}
+      {/* The ribbon names the tier, not just the fact: a Diamond stand and a
+          Platinum stand bought different things, and the card should say so. */}
+      {sponsor && (
+        <span className={`t-ribbon${t.sponsor_tier ? ` ${t.sponsor_tier}` : ''}`}>
+          {t.sponsor_tier === 'diamond'
+            ? 'Diamond Sponsor'
+            : t.sponsor_tier === 'platinum'
+              ? 'Platinum Sponsor'
+              : 'Sponsor'}
+        </span>
+      )}
       <div className="t-check">
         <Icon name="check" size={12} />
       </div>

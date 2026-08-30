@@ -2623,3 +2623,54 @@ button.stat-redeem {
   color: #b9bcc2;
   font-weight: 400;
 }
+
+/* ===== "More partners" sheet =====
+   The tiers below Platinum open as a bottom sheet: present when asked for,
+   absent from the first screen. */
+.sponsor-more {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed #d9dce1;
+  border-radius: 10px;
+  background: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+.sponsor-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 19, 23, 0.5);
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sponsor-sheet {
+  background: #fff;
+  width: min(480px, 100%);
+  max-height: 75vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 14px 24px;
+}
+.sponsor-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.sponsor-sheet-head h3 {
+  font-size: 15px;
+}
+.sponsor-sheet-close {
+  border: none;
+  background: #f2f3f5;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3f47;
+}

@@ -233,6 +233,7 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		LogoURL     string `json:"logo_url"`
 		ContactName string `json:"contact_name"`
 		Chapter     string `json:"chapter"`
+		SponsorTier string `json:"sponsor_tier"`
 		Visited     bool   `json:"visited"`
 		// Everyone exhibiting on this stand. Almost always one entry that
 		// mirrors the card; two where a stand is shared. The card reads this
@@ -251,7 +252,8 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
 			Description: t.Description, LogoURL: t.LogoURL,
 			ContactName: t.ContactName, Chapter: t.Chapter,
-			Visited: t.Visited, Companies: companies,
+			SponsorTier: t.SponsorTier,
+			Visited:     t.Visited, Companies: companies,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})
