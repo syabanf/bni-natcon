@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 import { useTourStore } from '../store/tour'
-import { isMuted, setMuted, speak, speechAvailable, stop } from '../speak'
 
 /*
  * A walk through the attendee app, in one button.
@@ -13,9 +12,7 @@ import { isMuted, setMuted, speak, speechAvailable, stop } from '../speak'
  * picture of it, and the tab it is talking about is lit up in the bar below.
  *
  * It opens only when somebody presses Quick tour, next to Log out on every
- * attendee screen. Each step is also read out loud — hands are busy at a
- * registration desk, and a phone held at arm's length is hard to read — with
- * a speaker button to silence it for good.
+ * attendee screen.
  */
 export const STEPS = [
   {
@@ -28,19 +25,19 @@ export const STEPS = [
     path: '/attendee/qr',
     icon: 'qr',
     title: 'Show this QR all day',
-    body: 'It carries your ticket number. Booths scan it for a stamp, the desk scans it when they hand you your goodiebag and pin, and the door crew scans it at your learning class.',
+    body: 'It carries your ticket number. Booths scan it for a stamp, the registration desk scans it when they hand you your free pin and goodiebag, and the door crew scans it at your learning class.',
   },
   {
     path: '/attendee/passport',
     icon: 'pin',
     title: 'Collect a stamp at every booth',
-    body: 'Each booth you visit lights up here. Visiting more of them is what puts you in the lucky draw — the committee sets how many are needed.',
+    body: 'Each booth you visit lights up here. The more stamps you collect, the more business opportunities you open — and the bigger your chance at the grand prize.',
   },
   {
     path: '/attendee/seminar',
     icon: 'mic',
     title: 'Pick your learning classes',
-    body: 'You may hold two, as long as they do not run at the same hour. Open the class you picked to find its entry QR, and cancel one to free the seat if you change your mind.',
+    body: 'Two sesi, one class each — pick the class you like, seats are limited. Open the class you picked to find its entry QR, and cancel it to free the seat if you change your mind.',
   },
   {
     path: '/attendee/network',
@@ -60,25 +57,10 @@ export default function Tour() {
   const open = useTourStore((s) => s.open)
   const close = useTourStore((s) => s.close)
   const [step, setStep] = useState(0)
-  const [muted, setMutedState] = useState(isMuted)
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
   const current = STEPS[step]
-
-  // Read the step aloud. A browser that will not speak yet — some wait for
-  // the page to be touched — simply says nothing, and the next step tries
-  // again.
-  useEffect(() => {
-    if (!open || !current) return
-    speak(`${current.title}. ${current.body}`)
-  }, [open, current])
-
-  // Nothing should still be talking after the sheet is gone.
-  useEffect(() => () => stop(), [])
-  useEffect(() => {
-    if (!open) stop()
-  }, [open])
 
   // Walk the app as the tour talks about it.
   useEffect(() => {
@@ -90,16 +72,8 @@ export default function Tour() {
 
   const last = step === STEPS.length - 1
   const finish = () => {
-    stop()
     close()
     setStep(0)
-  }
-
-  const toggleVoice = () => {
-    const next = !muted
-    setMuted(next)
-    setMutedState(next)
-    if (!next) speak(`${current.title}. ${current.body}`)
   }
 
   return (
@@ -113,16 +87,6 @@ export default function Tour() {
           <span className="tour-count">
             Step {step + 1} of {STEPS.length}
           </span>
-          {speechAvailable() && (
-            <button
-              className={`tour-voice${muted ? ' off' : ''}`}
-              onClick={toggleVoice}
-              aria-label={muted ? 'Read the tour out loud' : 'Stop reading out loud'}
-              aria-pressed={!muted}
-            >
-              <Icon name={muted ? 'mute' : 'sound'} size={16} />
-            </button>
-          )}
           <button className="tour-skip" onClick={finish}>
             Skip
           </button>

@@ -913,25 +913,8 @@ button.stat-redeem {
   text-transform: uppercase;
   color: var(--gray);
 }
-.tour-voice {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--red-tint);
-  color: var(--red);
-  cursor: pointer;
-}
-.tour-voice.off {
-  background: var(--chip);
-  color: var(--gray);
-}
 .tour-skip {
-  margin-left: 10px;
+  margin-left: auto;
   border: 0;
   background: none;
   color: var(--gray);
