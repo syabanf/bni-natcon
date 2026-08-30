@@ -628,7 +628,13 @@ export function TenantsPage() {
             <tr key={t.id} className={t.kind === 'sponsor' ? 'sponsor-row' : ''}>
               <td>
                 <span className={`kind-pill${t.kind === 'sponsor' ? ' sponsor' : ''}`}>
-                  {t.kind === 'sponsor' ? 'Sponsor' : 'Booth'}
+                  {t.kind !== 'sponsor'
+                    ? 'Booth'
+                    : t.sponsor_tier === 'diamond'
+                      ? 'Diamond'
+                      : t.sponsor_tier === 'platinum'
+                        ? 'Platinum'
+                        : 'Sponsor'}
                 </span>
               </td>
               <td className="mono">{t.booth}</td>

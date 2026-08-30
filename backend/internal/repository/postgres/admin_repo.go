@@ -44,7 +44,7 @@ func (r *AdminRepo) TenantRanking(ctx context.Context) ([]domain.TenantScanCount
 	rows, err := r.pool.Query(ctx, `
 		SELECT t.id, t.name, t.category, t.booth, t.initials, t.kind, t.description,
 		       t.logo_url, t.contact_name, t.chapter, t.owner_user_id,
-		       COUNT(v.id) AS scans
+		       t.sponsor_tier, COUNT(v.id) AS scans
 		FROM tenants t
 		LEFT JOIN visits v ON v.tenant_id = t.id
 		GROUP BY t.id
@@ -58,7 +58,8 @@ func (r *AdminRepo) TenantRanking(ctx context.Context) ([]domain.TenantScanCount
 	for rows.Next() {
 		var t domain.TenantScanCount
 		if err := rows.Scan(&t.ID, &t.Name, &t.Category, &t.Booth, &t.Initials, &t.Kind, &t.Description,
-			&t.LogoURL, &t.ContactName, &t.Chapter, &t.OwnerUserID, &t.ScanCount); err != nil {
+			&t.LogoURL, &t.ContactName, &t.Chapter, &t.OwnerUserID,
+			&t.SponsorTier, &t.ScanCount); err != nil {
 			return nil, err
 		}
 		out = append(out, t)

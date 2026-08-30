@@ -66,6 +66,10 @@ type Tenant struct {
 	ContactName string
 	Chapter     string
 	OwnerUserID int64
+	// Which sponsor tier this stand is, when it is one: "diamond",
+	// "platinum", or empty for a floor booth. Display data, set by the
+	// stand the committee assigned.
+	SponsorTier string
 	// Everyone exhibiting on this stand, in display order. One entry for
 	// almost every stand; two where a stand is shared.
 	Companies []TenantCompany
@@ -289,6 +293,8 @@ func SponsorTierLabel(tier string) string {
 		return "Diamond Sponsor"
 	case "platinum":
 		return "Platinum Sponsor"
+	case "strategic":
+		return "Strategic Partner"
 	default:
 		return "Supported by"
 	}

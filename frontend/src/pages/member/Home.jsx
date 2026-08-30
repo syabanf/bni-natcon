@@ -20,6 +20,68 @@ function initials(name = '') {
     .toUpperCase()
 }
 
+function SponsorCell({ sp }) {
+  return (
+    <div className="sponsor-cell">
+      {sp.logo_url ? <img src={sp.logo_url} alt={sp.name} loading="lazy" /> : <span className="sponsor-name">{sp.name}</span>}
+    </div>
+  )
+}
+
+// Diamond and Platinum carry the wall. Every tier below them — strategic
+// partners, supporters — waits behind one "More partners" button and opens
+// as a sheet, so the headline tiers keep the weight they paid for and the
+// rest are still one tap away, never invisible.
+function HomeSponsorWall({ headline, partners, showPartners, setShowPartners }) {
+  return (
+    <>
+      <div className="section-title" style={{ marginLeft: 20 }}>
+        Thank you to our sponsors
+      </div>
+      <div className="card sponsor-wall">
+        {headline.map((g) => (
+          <div className="sponsor-group" key={g.tier}>
+            <div className={`sponsor-tier tier-${g.tier}`}>{g.label}</div>
+            <div className={`sponsor-grid grid-${g.tier}`}>
+              {g.sponsors.map((sp) => (
+                <SponsorCell sp={sp} key={sp.id} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {partners.length > 0 && (
+          <button type="button" className="sponsor-more" onClick={() => setShowPartners(true)}>
+            More partners →
+          </button>
+        )}
+      </div>
+
+      {showPartners && (
+        <div className="sponsor-sheet-backdrop" onClick={() => setShowPartners(false)}>
+          <div className="sponsor-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sponsor-sheet-head">
+              <h3>Our partners</h3>
+              <button type="button" className="sponsor-sheet-close" onClick={() => setShowPartners(false)}>
+                Close
+              </button>
+            </div>
+            {partners.map((g) => (
+              <div className="sponsor-group" key={g.tier}>
+                <div className={`sponsor-tier tier-${g.tier}`}>{g.label}</div>
+                <div className="sponsor-grid grid-supported">
+                  {g.sponsors.map((sp) => (
+                    <SponsorCell sp={sp} key={sp.id} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const cachedUser = useAuthStore((s) => s.user)
@@ -29,6 +91,7 @@ export default function Home() {
   // Which redeem dialog is open: 'pin', 'goodiebag', or null.
   const [redeemInfo, setRedeemInfo] = useState(null)
   const [sponsors, setSponsors] = useState([])
+  const [showPartners, setShowPartners] = useState(false)
 
   useEffect(() => {
     api
@@ -48,12 +111,7 @@ export default function Home() {
     // home screen simply does not show it.
     api
       .sponsors()
-      .then((d) =>
-        // The home screen thanks the headline tiers only — Diamond and
-        // Platinum. A supporter tier, if one ever returns, belongs on a
-        // fuller credits page, not above the fold of everybody's home.
-        setSponsors((d.groups || []).filter((g) => g.tier === 'diamond' || g.tier === 'platinum')),
-      )
+      .then((d) => setSponsors(d.groups || []))
       .catch(() => setSponsors([]))
   }, [])
 
@@ -218,31 +276,21 @@ export default function Home() {
           Platinum, then everyone who supported the day. The grouping and the
           order both come from the API, so this renders what it is given
           rather than deciding who outranks whom. */}
-      {sponsors.length > 0 && (
-        <>
-          <div className="section-title" style={{ marginLeft: 20 }}>
-            Thank you to our sponsors
-          </div>
-          <div className="card sponsor-wall">
-            {sponsors.map((g) => (
-              <div className="sponsor-group" key={g.tier}>
-                <div className={`sponsor-tier tier-${g.tier}`}>{g.label}</div>
-                <div className={`sponsor-grid grid-${g.tier}`}>
-                  {g.sponsors.map((sp) => (
-                    <div className="sponsor-cell" key={sp.id}>
-                      {sp.logo_url ? (
-                        <img src={sp.logo_url} alt={sp.name} loading="lazy" />
-                      ) : (
-                        <span className="sponsor-name">{sp.name}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      {(() => {
+        // Diamond and Platinum carry the wall; every tier below them —
+        // strategic partners, supporters — waits behind one modest button,
+        // so the headline tiers keep the weight they paid for.
+        const headline = sponsors.filter((g) => g.tier === 'diamond' || g.tier === 'platinum')
+        const partners = sponsors.filter((g) => g.tier !== 'diamond' && g.tier !== 'platinum')
+        return headline.length > 0 || partners.length > 0 ? (
+          <HomeSponsorWall
+            headline={headline}
+            partners={partners}
+            showPartners={showPartners}
+            setShowPartners={setShowPartners}
+          />
+        ) : null
+      })()}
 
       <div style={{ height: 24 }} />
     </>

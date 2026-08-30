@@ -46,6 +46,7 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 		LogoURL     string `json:"logo_url"`
 		ContactName string `json:"contact_name"`
 		Chapter     string `json:"chapter"`
+		SponsorTier string `json:"sponsor_tier"`
 		ScanCount   int    `json:"scan_count"`
 	}
 	out := make([]row, 0, len(ranking))
@@ -55,7 +56,7 @@ func (s *Server) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
 			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
 			Description: t.Description, LogoURL: t.LogoURL,
 			ContactName: t.ContactName, Chapter: t.Chapter,
-			ScanCount: t.ScanCount,
+			SponsorTier: t.SponsorTier, ScanCount: t.ScanCount,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})

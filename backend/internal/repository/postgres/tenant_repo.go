@@ -29,7 +29,7 @@ func (r *TenantRepo) ListWithVisits(ctx context.Context, memberID int64) ([]doma
 	rows, err := r.pool.Query(ctx, `
 		SELECT t.id, t.name, t.category, t.booth, t.initials, t.kind, t.description,
 		       t.logo_url, t.contact_name, t.chapter, t.owner_user_id,
-		       (v.id IS NOT NULL) AS visited
+		       t.sponsor_tier, (v.id IS NOT NULL) AS visited
 		FROM tenants t
 		LEFT JOIN visits v ON v.tenant_id = t.id AND v.member_id = $1
 		ORDER BY (lower(t.name) <> 'wit.id'), (t.kind <> 'sponsor'), t.booth`, memberID)
@@ -42,7 +42,8 @@ func (r *TenantRepo) ListWithVisits(ctx context.Context, memberID int64) ([]doma
 	for rows.Next() {
 		var t domain.TenantWithVisit
 		if err := rows.Scan(&t.ID, &t.Name, &t.Category, &t.Booth, &t.Initials, &t.Kind, &t.Description,
-			&t.LogoURL, &t.ContactName, &t.Chapter, &t.OwnerUserID, &t.Visited); err != nil {
+			&t.LogoURL, &t.ContactName, &t.Chapter, &t.OwnerUserID,
+			&t.SponsorTier, &t.Visited); err != nil {
 			return nil, err
 		}
 		out = append(out, t)
