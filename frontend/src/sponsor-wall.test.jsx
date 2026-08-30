@@ -14,7 +14,10 @@ vi.mock('./api/client', () => ({
       Promise.resolve({
         groups: [
           { tier: 'diamond', label: 'Diamond Sponsor', sponsors: [{ id: 1, name: 'ZOHO', logo_url: '/sponsors/zoho.png' }] },
-          { tier: 'platinum', label: 'Platinum Sponsor', sponsors: [{ id: 2, name: 'OCBC', logo_url: '/sponsors/ocbc.png' }] },
+          { tier: 'platinum', label: 'Platinum Sponsor', sponsors: [
+            { id: 2, name: 'OCBC', logo_url: '/sponsors/ocbc.png' },
+            { id: 4, name: 'Nameless Co', logo_url: '' },
+          ] },
           { tier: 'supported', label: 'Supported by', sponsors: [{ id: 3, name: 'cocomodo', logo_url: '' }] },
         ],
       }),
@@ -26,11 +29,13 @@ const { default: Home } = await import('./pages/member/Home')
 afterEach(cleanup)
 
 describe('the sponsor wall', () => {
-  it('ranks Diamond above Platinum above the supporters', async () => {
+  it('shows Diamond above Platinum, and the headline tiers only', async () => {
     render(<MemoryRouter><Home /></MemoryRouter>)
     const wall = (await screen.findByText('Diamond Sponsor')).closest('.sponsor-wall')
     const tiers = [...wall.querySelectorAll('.sponsor-tier')].map((n) => n.textContent)
-    expect(tiers).toEqual(['Diamond Sponsor', 'Platinum Sponsor', 'Supported by'])
+    // The API may carry a supporter tier; the home screen thanks the two
+    // headline tiers and leaves the rest for a fuller credits page.
+    expect(tiers).toEqual(['Diamond Sponsor', 'Platinum Sponsor'])
   })
 
   it('shows each sponsor its own artwork', async () => {
@@ -41,8 +46,7 @@ describe('the sponsor wall', () => {
 
   it('falls back to the name when a sponsor sent no logo', async () => {
     render(<MemoryRouter><Home /></MemoryRouter>)
-    const group = (await screen.findByText('Supported by')).parentElement
-    expect(within(group).getByText('cocomodo')).toBeTruthy()
-    expect(within(group).queryByRole('img')).toBeNull()
+    const group = (await screen.findByText('Platinum Sponsor')).parentElement
+    expect(within(group).getByText('Nameless Co')).toBeTruthy()
   })
 })
