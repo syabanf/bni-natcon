@@ -194,7 +194,7 @@ function SeminarDetail({ seminar, passCode, onBack, onRegister, onCancel, busy, 
               </>
             ) : locked ? (
               <button className="btn" disabled>
-                You already picked a class in this sesi
+                You already picked a class in this session
               </button>
             ) : full ? (
               <button className="btn" disabled>
@@ -261,7 +261,7 @@ export default function Seminars() {
     return <div className="loading-note">Loading learning classes…</div>
   }
 
-  // A "Sesi" is the rundown hour a class runs in: classes sharing a start
+  // A "Session" is the rundown hour a class runs in: classes sharing a start
   // time are alternatives, and the attendee picks one of them. A class the
   // committee has not placed yet falls back to its legacy slot number —
   // mirroring the registration rule on the server.
@@ -286,7 +286,7 @@ export default function Seminars() {
   }
 
   // The list arrives ordered by hour, so the keys come out in day order and
-  // "Sesi 1" is simply the first hour with classes in it.
+  // "Session 1" is simply the first hour with classes in it.
   const sessionKeys = [...new Set(seminars.map(sessionKeyOf))]
   const registered = seminars.find((s) => s.registered)
 
@@ -295,7 +295,7 @@ export default function Seminars() {
       <div className="hero-greet">
         <h2>Learning Class</h2>
         <p>
-          Two sesi, one class each — pick one class per sesi, then show your class QR at the
+          Two sessions, one class each — pick one class per session, then show your class QR at the
           door to get checked in.
         </p>
       </div>
@@ -323,7 +323,7 @@ export default function Seminars() {
         return (
           <div key={key}>
             <div className="slot-label">
-              Sesi {i + 1}
+              Session {i + 1}
               {hours ? ` · ${hours}` : ''} · pick one class
             </div>
             {inSession.map((s) => {
@@ -340,10 +340,10 @@ export default function Seminars() {
                         : undefined
                     }
                   >
-                    {/* The cover badge names the sesi, not the room — which
-                        room a class sits in matters at the door, which sesi
+                    {/* The cover badge names the session, not the room — which
+                        room a class sits in matters at the door, which session
                         it sits in decides what you can still pick. */}
-                    <div className="sc-tag">Sesi {i + 1}</div>
+                    <div className="sc-tag">Session {i + 1}</div>
                     <span className="pill" style={{ color: few ? 'var(--red)' : 'var(--ink)' }}>
                       {s.seats_left} seats left{few && !full ? ' · almost full' : ''}
                     </span>
@@ -365,7 +365,7 @@ export default function Seminars() {
                         </button>
                       ) : locked ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>
-                          You already picked a class in this sesi
+                          You already picked a class in this session
                         </button>
                       ) : full ? (
                         <button className="btn" style={{ marginTop: 10 }} disabled>

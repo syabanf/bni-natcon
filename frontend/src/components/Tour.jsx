@@ -37,7 +37,7 @@ export const STEPS = [
     path: '/attendee/seminar',
     icon: 'mic',
     title: 'Pick your learning classes',
-    body: 'Two sesi, one class each — pick the class you like, seats are limited. Open the class you picked to find its entry QR, and cancel it to free the seat if you change your mind.',
+    body: 'Two sessions, one class each — pick the class you like, seats are limited. Open the class you picked to find its entry QR, and cancel it to free the seat if you change your mind.',
   },
   {
     path: '/attendee/network',
