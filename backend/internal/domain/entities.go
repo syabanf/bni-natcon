@@ -62,6 +62,9 @@ type Tenant struct {
 	ContactName string
 	Chapter     string
 	OwnerUserID int64
+	// Everyone exhibiting on this stand, in display order. One entry for
+	// almost every stand; two where a stand is shared.
+	Companies []TenantCompany
 }
 
 // TenantWithVisit is a tenant plus whether a given member has visited it.
@@ -285,6 +288,15 @@ func SponsorTierLabel(tier string) string {
 	default:
 		return "Supported by"
 	}
+}
+
+// TenantCompany is one of the companies on a stand. Usually there is exactly
+// one and it mirrors the tenant; C1 is shared by two. A stand is still one
+// tenant — one login, one QR, one stamp — so this is what the card shows,
+// never what the scan counts.
+type TenantCompany struct {
+	Name    string
+	LogoURL string
 }
 
 // TenantScanCount ranks a booth by collected scans.

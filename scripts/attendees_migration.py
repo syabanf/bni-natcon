@@ -63,6 +63,21 @@ COLUMNS = {
 }
 
 
+# Chapters the committee has told us are wrong in their own export.
+#
+# Keyed on the TICKET NUMBER, not the name: a ticket is one person, and two
+# attendees can share a name. Correcting here rather than in the database
+# means a re-import keeps the fix; and the day the committee fixes their own
+# sheet, the entry simply stops matching anything.
+#
+# Every line needs somebody to have said so — this is not a place to guess a
+# chapter from a name.
+CHAPTER_CORRECTIONS = {
+    # Stephanie Safitri Jusuf — sheet says Amplify, committee says Prestige.
+    "16798-2556D8630": "Prestige",
+}
+
+
 def q(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
@@ -112,7 +127,7 @@ def read_rows(path: pathlib.Path, sheet_name: str):
             continue
         seen.add(ticket)
         name = " ".join(x for x in (cell("first"), cell("last")) if x)
-        chapter = cell("chapter")
+        chapter = CHAPTER_CORRECTIONS.get(ticket, cell("chapter"))
         company = by_ticket.get(ticket, "")
         if company:
             carried[0] += 1

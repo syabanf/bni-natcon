@@ -462,7 +462,7 @@ FROM (VALUES
     ('16798-23D751155', 'Sharifah Alhabshi', 'sharifahaalhabshi27@gmail.com', '+60192807301', 'DESIGNWORKS ARCHITECTS & CONSULTANTS SDN BHD', 'SOUQ ARABIA', 'ARCHITECT', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
     ('16798-234304231', 'Stefanny Liezal', 'krafti.project@gmail.com', '+628388518152', 'Pt Krafti Kreasi Abadi', 'Magnitude', 'Home decor merchandising', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
     ('16798-22C8CF652', 'Stephan Anggita Hutagaol', 'stephan.hutagaol@beyondlegal.id', '+628128998779', 'Beyond Legal Partnership', 'Vision', 'Legal', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
-    ('16798-2556D8630', 'Stephanie Safitri Jusuf', 'stephanie@cubeteknologi.com', '+6282224222514', '', 'Amplify', 'IT Hardware', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
+    ('16798-2556D8630', 'Stephanie Safitri Jusuf', 'stephanie@cubeteknologi.com', '+6282224222514', '', 'Prestige', 'IT Hardware', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
     ('16798-22C92A475', 'Stephen Septian', 'stephenseptian90@gmail.com', '+62817714647', 'Increasink', 'Magnify', 'Social Media Branding', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
     ('16798-23BC6F385', 'Susanti kurniawan', 'susanti.dk@gmail.com', '+6287888989002', 'Toko cat utama', 'Heritage', 'Real estate', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),
     ('16798-24B622643', 'Teguh Panjireza Rosendra', 'teguhpanjirezar@gmail.com', '+6281221888831', 'Documenta', 'Rise', 'Legal Service', '$2a$10$SEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEHOLDERSEEDPLACEH'),

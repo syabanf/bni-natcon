@@ -212,6 +212,10 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		respondDomainError(w, err)
 		return
 	}
+	type companyDTO struct {
+		Name    string `json:"name"`
+		LogoURL string `json:"logo_url"`
+	}
 	type tenantDTO struct {
 		ID          int64  `json:"id"`
 		Name        string `json:"name"`
@@ -224,15 +228,24 @@ func (s *Server) handleListTenants(w http.ResponseWriter, r *http.Request) {
 		ContactName string `json:"contact_name"`
 		Chapter     string `json:"chapter"`
 		Visited     bool   `json:"visited"`
+		// Everyone exhibiting on this stand. Almost always one entry that
+		// mirrors the card; two where a stand is shared. The card reads this
+		// rather than the tenant's own name and logo, so a shared stand shows
+		// both marks instead of one company's above two companies' names.
+		Companies []companyDTO `json:"companies"`
 	}
 	out := make([]tenantDTO, 0, len(tenants))
 	for _, t := range tenants {
+		companies := make([]companyDTO, 0, len(t.Companies))
+		for _, c := range t.Companies {
+			companies = append(companies, companyDTO{Name: c.Name, LogoURL: c.LogoURL})
+		}
 		out = append(out, tenantDTO{
 			ID: t.ID, Name: t.Name, Category: t.Category,
 			Booth: t.Booth, Initials: t.Initials, Kind: t.Kind,
 			Description: t.Description, LogoURL: t.LogoURL,
 			ContactName: t.ContactName, Chapter: t.Chapter,
-			Visited: t.Visited,
+			Visited: t.Visited, Companies: companies,
 		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{"tenants": out})

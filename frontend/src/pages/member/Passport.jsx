@@ -9,20 +9,48 @@ function sortByVisited(list) {
 }
 
 function TenantCard({ t, sponsor }) {
+  // Two companies on one stand is the exception, so everything below stays on
+  // the single-company path unless the API actually sent more than one.
+  const shared = (t.companies || []).length > 1
   return (
     <div className={`tenant-card${t.visited ? ' scanned' : ''}${sponsor ? ' sponsor' : ''}`}>
       {sponsor && <span className="t-ribbon">Sponsor</span>}
       <div className="t-check">
         <Icon name="check" size={12} />
       </div>
-      {/* The company's own logo when they sent one; their initials when they
-          did not, because a blank square looks like a bug. */}
-      {t.logo_url ? (
+      {/* A stand shared by two companies shows both marks — C1 is Royal
+          Medicalink and Aroma Bathi together. It is still ONE stand: one
+          stamp, one scan, one card. Everywhere else there is exactly one
+          company and this renders precisely what it always did. */}
+      {shared ? (
+        <div className="t-logos">
+          {t.companies.map((c) => (
+            <div className="t-logo-slot" key={c.name}>
+              {c.logo_url ? (
+                <img className="t-logo img" src={assetUrl(c.logo_url)} alt={c.name} />
+              ) : (
+                <span className="t-logo-name">{c.name}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : t.logo_url ? (
         <img className="t-logo img" src={assetUrl(t.logo_url)} alt={t.name} />
       ) : (
         <div className="t-logo">{t.initials}</div>
       )}
-      <h5>{t.name}</h5>
+      {shared ? (
+        <h5>
+          {t.companies.map((c, i) => (
+            <span key={c.name}>
+              {i > 0 && <span className="t-amp"> &amp; </span>}
+              {c.name}
+            </span>
+          ))}
+        </h5>
+      ) : (
+        <h5>{t.name}</h5>
+      )}
       <p>
         {sponsor ? t.category : `${t.category} · Booth ${t.booth}`}
       </p>
