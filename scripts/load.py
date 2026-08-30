@@ -14,7 +14,7 @@ day's four rushes against a FRESH database seeded with the real event data:
      registration opens; the four classes hold 60 each, so exactly 240
      may win and nobody may be oversold.
   4. The expo — booths scan the crowd; and networking check-in fills
-     88 tables of 8 with zero oversell.
+     the seeded floor of 90 ten-seat tables with zero oversell.
 
 Correctness is asserted; latency is reported (p50/p95/p99). Run it before
 the event on hardware shaped like production:
@@ -145,10 +145,11 @@ status, body = boot.req("GET", "/api/v1/admin/seminars", token=admin_tok)
 seminars = body["seminars"]
 capacity_total = sum(s["capacity"] for s in seminars)
 
-TABLES = -(-N // 8) + 1  # enough 8-seat tables for everyone, plus one spare
-status, body = boot.req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
-                        body={"count": TABLES, "hall": "Hall Load", "capacity": 8})
-assert status in (200, 201), f"tables: {status} {body}"
+# The floor arrives seeded: 90 tables of 10, matching the printed QR cards
+# (migration 0051). The test rides what production has rather than building
+# its own — a floor the seed did not put there is a floor the day won't have.
+TABLES = 90
+SEATS = 10
 
 # ------------------------------------------- 1. the morning sign-in storm
 print(f"\n== 1. Sign-in storm ({len(crowd)} phones at once) ==")
@@ -261,11 +262,13 @@ check("every scan landed once, none duplicated",
       statuses.get(200, 0) == len(tokens) and dupes == 0, f"{statuses} dupes={dupes}")
 
 # --------------------------------------------- 4b. networking check-in rush
-print(f"\n== 4b. Networking check-in ({len(tokens)} people, {TABLES} tables of 8) ==")
+print(f"\n== 4b. Networking check-in ({len(tokens)} people, {TABLES} seeded tables of {SEATS}) ==")
 
 def sit(im):
     i, (m, tok, c) = im
-    table = (i % (len(tokens) // 8 + (1 if len(tokens) % 8 else 0))) + 1
+    # Round-robin over the seeded floor: 700 people over 90 tables is at most
+    # eight a table, comfortably inside the ten seats each card promises.
+    table = (i % TABLES) + 1
     t0 = time.time()
     s, _ = c.req("POST", "/api/v1/networking/checkin", token=tok, body={"table_no": table})
     return s, time.time() - t0, table

@@ -128,7 +128,9 @@ wajib diganti saat login pertama. Kalau panitia mengirim export baru, buat ulang
 `python3 scripts/attendees_migration.py "Data Peserta ....xlsx"`. Catatan:
 file itu berisi nama, email, dan nomor HP 866 orang dan repo ini publik. Tidak ada peserta
 demo, chapter, atau meja networking bawaan: peserta & chapter masuk lewat
-import export ticketing, meja dibuat di halaman Tables.
+import export ticketing. **Meja networking ikut ter-seed** (migrasi `0051`):
+90 meja berkapasitas 10, persis kartu QR yang sudah dicetak — meja tambahan
+tetap bisa dibuat di halaman Tables.
 
 > **Cover seminar**: file upload disimpan di disk. Tanpa persistent
 > volume, gambar hilang setiap redeploy. Arahkan `UPLOAD_DIR` ke volume,

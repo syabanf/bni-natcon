@@ -33,6 +33,9 @@ SEEDED_BOOTHS = 32
 SEEDED_SPONSORS = 4
 FIXTURE_SPONSORS = 2
 FIXTURE_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS + FIXTURE_SPONSORS
+# The seeded networking floor (migration 0051), matching the printed QR
+# cards: tables 1-90, ten seats each. The fixtures add a few more on top.
+SEEDED_TABLES = 90
 FIXTURE_TABLES = 12
 PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 
@@ -248,8 +251,10 @@ check("a save without initials keeps them", a1["initials"] == "SI", f'{a1["initi
 
 status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                       body={"count": FIXTURE_TABLES, "hall": "Hall B", "capacity": 8})
-check(f"{FIXTURE_TABLES} networking tables generated",
-      status == 201 and body["created"] == FIXTURE_TABLES)
+check(f"{FIXTURE_TABLES} networking tables generated after the seeded 90",
+      status == 201 and body["created"] == FIXTURE_TABLES
+      and body["tables"][0]["table_no"] == SEEDED_TABLES + 1,
+      f'{body.get("tables", [{}])[0].get("table_no")}')
 
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 # Nothing pre-loads the chapter list: it is exactly the set of chapters the
@@ -932,8 +937,10 @@ check("only seminar 2 registered", reg[sem1] is False and reg[sem2] is True)
 # ---------------------------------------------------------------- networking
 section("Speed networking")
 status, body, _ = req("GET", "/api/v1/networking", token=member_tok)
-check("not checked in, 12 tables", status == 200
-      and body["checked_in"] is False and len(body["tables"]) == 12)
+check("not checked in, the seeded floor plus the fixtures listed", status == 200
+      and body["checked_in"] is False
+      and len(body["tables"]) == SEEDED_TABLES + FIXTURE_TABLES,
+      f'{len(body["tables"])}')
 
 status, _, _ = req("POST", "/api/v1/networking/checkin", token=member_tok, body={"table_no": 12})
 check("check-in table 12", status == 200)
@@ -968,7 +975,7 @@ status, body, _ = req("GET", "/api/v1/networking/tables/12", token=member_tok)
 check("table detail: 2 occupants, contact flagged saved",
       status == 200 and len(body["members"]) == 2
       and any(m["saved"] for m in body["members"] if not m["is_me"]))
-status, _, _ = req("GET", "/api/v1/networking/tables/99", token=member_tok)
+status, _, _ = req("GET", "/api/v1/networking/tables/9999", token=member_tok)
 check("table detail unknown -> 404", status == 404)
 
 status, body, _ = req("GET", f"/api/v1/networking/contacts/{sinta_id}", token=member_tok)
@@ -1191,8 +1198,12 @@ status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
 seeded_tables = len(body["tables"])
 # Reddie and Sinta are still checked in from the networking section, so the
 # live occupancy has to show up here.
-check("tables listed with capacity + live occupancy", status == 200 and seeded_tables == 12
-      and all(t["capacity"] == 8 for t in body["tables"])
+check("tables listed with capacity + live occupancy",
+      status == 200 and seeded_tables == SEEDED_TABLES + FIXTURE_TABLES
+      # The printed cards promise ten seats on the seeded floor; the suite's
+      # own fixtures were generated at eight, proving capacity is per table.
+      and all(t["capacity"] == 10 for t in body["tables"] if t["table_no"] <= SEEDED_TABLES)
+      and all(t["capacity"] == 8 for t in body["tables"] if t["table_no"] > SEEDED_TABLES)
       and sum(t["occupied"] for t in body["tables"]) == 2
       and next(t for t in body["tables"] if t["table_no"] == 12)["occupied"] == 1)
 
@@ -1200,7 +1211,8 @@ status, body, _ = req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                       body={"count": 3, "hall": "Hall C", "capacity": 6})
 check("generate 3 tables -> 201, numbering continues",
       status == 201 and body["created"] == 3
-      and [t["table_no"] for t in body["tables"]] == [13, 14, 15]
+      and [t["table_no"] for t in body["tables"]]
+      == [SEEDED_TABLES + FIXTURE_TABLES + i for i in (1, 2, 3)]
       and body["tables"][0]["hall"] == "Hall C")
 gen_table_id = body["tables"][0]["id"]
 
@@ -1215,7 +1227,7 @@ status, _, _ = req("PUT", f"/api/v1/admin/tables/{gen_table_id}", token=admin_to
                    body={"hall": "Hall D", "capacity": 10})
 check("update table hall/capacity -> 200", status == 200)
 status, body, _ = req("GET", "/api/v1/admin/tables", token=admin_tok)
-t13 = next(t for t in body["tables"] if t["table_no"] == 13)
+t13 = next(t for t in body["tables"] if t["id"] == gen_table_id)
 check("table update persisted", t13["hall"] == "Hall D" and t13["capacity"] == 10)
 
 # Table 12 currently seats Reddie (checked in earlier), so it is protected.

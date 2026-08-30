@@ -94,18 +94,22 @@ function RoundTimer({ session }) {
   )
 }
 
-// Eight seats spread evenly around the table circle, like the mockup.
+// Everyone at the table spread evenly around the circle. The count follows
+// the people actually seated rather than a fixed eight: the printed cards
+// promise ten seats, and the two who arrived last must not vanish from the
+// picture because the drawing assumed a smaller table.
 function TableCircle({ tableNo, mates }) {
   const R = 89
   const C = 112.5
+  const seats = Math.max(mates.length, 1)
   return (
     <div className="table-circle">
       <div className="table-center">
         <div className="tc-num">{tableNo}</div>
         <div className="tc-label">Table</div>
       </div>
-      {mates.slice(0, 8).map((p, i) => {
-        const angle = (i / 8) * Math.PI * 2 - Math.PI / 2
+      {mates.map((p, i) => {
+        const angle = (i / seats) * Math.PI * 2 - Math.PI / 2
         const x = C + R * Math.cos(angle) - 23
         const y = C + R * Math.sin(angle) - 23
         return (

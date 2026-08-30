@@ -13,7 +13,9 @@ import Modal from './Modal'
 export default function Tables({ onUnauthorized }) {
   const [rows, setRows] = useState(null)
   const [form, setForm] = useState(null) // null | { id, table_no, hall, capacity }
-  const [gen, setGen] = useState({ count: 12, hall: '', capacity: 8 })
+  // The seeded floor is 90 tables of 10 (migration 0051); the generator's
+  // defaults follow the printed cards so adding more keeps their shape.
+  const [gen, setGen] = useState({ count: 10, hall: '', capacity: 10 })
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)

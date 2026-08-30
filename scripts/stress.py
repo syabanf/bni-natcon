@@ -126,11 +126,13 @@ status, body = c.req("POST", "/api/v1/auth/login",
 assert status == 200, f"admin login failed: {status} {body}"
 admin_tok = body["token"]
 
-# Booth A1 arrives with the Data Booth migration; the networking tables do
-# not exist until someone makes them, so this suite makes its own.
+# The floor arrives seeded (90 tables of 10, migration 0051), so the suite
+# generates its OWN table for the contention phase — the assertion is about
+# an exact capacity, and it must not depend on what the seed ships.
 status, body = c.req("POST", "/api/v1/admin/tables/generate", token=admin_tok,
                      body={"count": 12, "hall": "Hall B", "capacity": TABLE_CAPACITY})
 assert status == 201, f"table fixture failed: {status} {body}"
+CONTENTION_TABLE = body["tables"][0]["table_no"]
 
 status, body = c.req("POST", "/api/v1/auth/login",
                      body={"email": "booth-a1@natcon.id", "password": PASSWORD})
@@ -268,7 +270,7 @@ results = {}
 def checkin_worker(idx):
     client = Client()
     status, _ = client.req("POST", "/api/v1/networking/checkin",
-                           token=tokens[idx], body={"table_no": 10})
+                           token=tokens[idx], body={"table_no": CONTENTION_TABLE})
     with lock:
         results[status] = results.get(status, 0) + 1
 
@@ -282,7 +284,7 @@ check("the rest rejected with 409 (meja penuh)",
       results.get(409, 0) == CONTENDERS - 8, f"{results}")
 
 status, body = c.req("GET", "/api/v1/networking", token=tokens[0])
-table10 = next(t for t in body["tables"] if t["table_no"] == 10)
+table10 = next(t for t in body["tables"] if t["table_no"] == CONTENTION_TABLE)
 check(f"table occupancy is exactly {TABLE_CAPACITY}", table10["occupied"] == TABLE_CAPACITY,
       f"occupied={table10['occupied']}")
 
