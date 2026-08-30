@@ -2680,3 +2680,96 @@ button.stat-redeem {
   height: auto;
   border-radius: 10px;
 }
+
+/* ===== Landing =====
+   The event poster as a page: the mark, the date, and a clock. Same gradient
+   the sign-in hero uses, so the front door and the doorstep match. */
+.landing {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 20px;
+  background: linear-gradient(155deg, #e5232f, #a31621 55%, #6d0f18);
+  color: #fff;
+}
+.landing-logo {
+  width: min(300px, 70vw);
+  margin-bottom: 18px;
+}
+.landing-where {
+  font-size: 13px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.countdown {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 30px 0 6px;
+}
+.cd-unit {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  padding: 14px 10px 10px;
+  min-width: 74px;
+}
+.cd-num {
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.cd-label {
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.cd-sep {
+  font-size: 30px;
+  font-weight: 700;
+  opacity: 0.5;
+  margin-top: 14px;
+}
+.landing-live {
+  margin: 28px 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+}
+.landing-actions {
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.landing-cta {
+  background: #fff;
+  color: var(--red);
+  font-weight: 800;
+  font-size: 15px;
+  padding: 14px 42px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.landing-alt {
+  color: #fff;
+  font-size: 12.5px;
+  opacity: 0.9;
+  text-decoration: underline;
+}
+.landing-foot {
+  margin-top: 40px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+@media (max-width: 420px) {
+  .cd-unit { min-width: 62px; padding: 12px 6px 9px; }
+  .cd-num { font-size: 27px; }
+}

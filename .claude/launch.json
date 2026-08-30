@@ -129,10 +129,10 @@
         "door",
         "--",
         "--port",
-        "5182",
+        "5183",
         "--strictPort"
       ],
-      "port": 5182,
+      "port": 5183,
       "env": {
         "VITE_API_PROXY": "http://localhost:8086"
       }
