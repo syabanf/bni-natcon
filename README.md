@@ -112,13 +112,15 @@ away.
 
 
 - **`admin@natcon.id`**, on `SEED_PASSWORD`. Set that before the event.
-- **A draft rundown for 3 September** (migration `0024`): nine one-hour
-  blocks from registration to the closing draw, including **two learning
-  blocks** — an attendee may hold two classes only if the day has two hours
-  to hold them in. Written only into an empty schedule, so a committee that
-  has typed their own day keeps it and a deleted block never returns. The
-  hours come from the ticket window and the shape of the programme; the
-  Rundown page is where they get corrected.
+- **The committee's run of show for 3 September** (migration `0041`), from
+  registration at 07:00 to the Opening Ceremony — the day as their published
+  artwork prints it, replacing the draft `0024` had guessed. It carries **two
+  learning blocks**, and each of the four classes is **placed** in one of
+  them: the "two classes, as long as they do not overlap" rule reads a
+  block's hours, so a class with no block is one an attendee can take
+  alongside anything. The one hour the artwork does not give is where the
+  ceremony ends; the Rundown page is where the committee corrects that
+  without a redeploy.
 - **34 company logos**, carried by migration `0037` from
   [`scripts/booth-logos.json`](scripts/booth-logos.json). The floor plan has
   been redrawn twice, so the mapping is keyed on the **company name** and the

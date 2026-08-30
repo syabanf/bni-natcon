@@ -431,17 +431,24 @@ section("Rundown — the day in one-hour blocks")
 D, TZ = "2026-09-03", "+07:00"
 status, body, _ = req("GET", "/api/v1/admin/rundown", token=admin_tok)
 draft = body["rundown"]
-check("a fresh database opens on a draft day, not an empty page",
-      status == 200 and len(draft) == 10
-      and draft[0]["kind"] == "registration"
-      and draft[0]["starts_at"] == f"{D}T07:00:00{TZ}"
-      and [b for b in draft if b["starts_at"].startswith(D)][-1]["kind"] == "doorprize",
+day = [b for b in draft if b["starts_at"].startswith(D)]
+check("a fresh database opens on the committee's day, not an empty page",
+      status == 200 and len(day) == 7
+      and day[0]["kind"] == "registration"
+      and day[0]["starts_at"] == f"{D}T07:00:00{TZ}"
+      and day[-1]["title"] == "Opening Ceremony",
       f"{status} {[b.get('title') for b in draft]}")
 # Two learning blocks, or "two classes that do not clash" can never happen.
-check("the draft leaves room for two learning classes",
-      sum(1 for b in draft if b["kind"] == "learning") == 2)
-check("...and every block sits on the hour grid",
-      all(b["starts_at"][14:19] == "00:00" and b["ends_at"][14:19] == "00:00" for b in draft))
+check("the day leaves room for two learning sessions",
+      sum(1 for b in day if b["kind"] == "learning") == 2)
+# The published rundown is not on a tidy hour grid — the coffee break starts at
+# 08.30 and the ceremony at 12.15 — so the old grid check would now be checking
+# that we had ignored the committee.
+check("...and the blocks are the ones on the committee's artwork",
+      [b["title"] for b in day] == [
+          "Registration Open + Networking", "Chapter Photo Session", "Learning Session 1",
+          "Coffee Break 1", "Learning Session 2", "Lunch Break", "Opening Ceremony"],
+      f'{[b["title"] for b in day]}')
 
 # 66 tickets are for the morning after, not the conference day. A schedule
 # that could only hold one date had nowhere to put them.
@@ -799,10 +806,12 @@ status, body, _ = req("GET", "/api/v1/seminars", token=member_tok)
 check("4 learning classes listed", status == 200 and len(body["seminars"]) == 4)
 check("class carries description + attended flag",
       body["seminars"][0]["description"] != "" and body["seminars"][0]["attended"] is False)
-# All four share slot 1, so picking one locks the rest — that single pick is
-# what the goodiebag is claimed against.
-check("all classes share one parallel slot",
-      len({s["slot"] for s in body["seminars"]}) == 1)
+# The committee's rundown splits the four classes across two sessions, two in
+# each. That split is the whole reason an attendee may hold two: with all four
+# in one slot, the first pick locked the other three.
+check("the four classes are split across two sessions, two in each",
+      sorted(s["slot"] for s in body["seminars"]) == [1, 1, 2, 2],
+      f'{[(s["room"], s["slot"]) for s in body["seminars"]]}')
 check("classes carry speakers and at least one moderator",
       all(s["speaker"] for s in body["seminars"])
       and any(s.get("moderator") for s in body["seminars"]))
@@ -821,13 +830,25 @@ check("class carries speaker rows with photos",
       len(people) >= 2
       and all(p["name"] and p["photo_url"].startswith("/speakers/") for p in people)
       and any(p["role"] == "moderator" for p in people))
-sem1, sem2 = body["seminars"][0]["id"], body["seminars"][1]["id"]
-sem3, sem4 = body["seminars"][2]["id"], body["seminars"][3]["id"]
+# Picked by SESSION rather than by position in the list: the committee's
+# rundown puts two classes in each session, and which one the API happens to
+# list first is not what any of these checks are about. sem1/sem2 share a
+# session (so the second is refused); sem3/sem4 are the other session's pair.
+_s1 = [x["id"] for x in body["seminars"] if x["slot"] == 1]
+_s2 = [x["id"] for x in body["seminars"] if x["slot"] == 2]
+check("two classes in each session, so a pair exists on both sides",
+      len(_s1) == 2 and len(_s2) == 2,
+      f'{[(x["room"], x["slot"]) for x in body["seminars"]]}')
+sem1, sem2 = _s1
+sem3, sem4 = _s2
+# The bulk-import fixture below names a ROOM, and it has to be sem3's room or
+# it would be registering a second class in the same session by accident.
+sem3_room = next(x["room"] for x in body["seminars"] if x["id"] == sem3)
 
 status, _, _ = req("POST", f"/api/v1/seminars/{sem1}/register", token=member_tok)
 check("register seminar 1 -> 201", status == 201)
 status, _, _ = req("POST", f"/api/v1/seminars/{sem2}/register", token=member_tok)
-check("same-slot second register -> 409", status == 409)
+check("second class in the same session -> 409", status == 409)
 status, _, _ = req("DELETE", f"/api/v1/seminars/{sem1}/register", token=member_tok)
 check("cancel -> 200", status == 200)
 status, _, _ = req("DELETE", f"/api/v1/seminars/{sem1}/register", token=member_tok)
@@ -1626,15 +1647,15 @@ check("registering twice reports duplicate, not an error",
       status == 201 and body["duplicate"] is True)
 status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem4}/registrations", token=admin_tok,
                    body={"member": "sinta@natcon.id"})
-check("second class in the same slot -> 409", status == 409)
+check("second class in the same session -> 409", status == 409)
 status, _, _ = req("POST", f"/api/v1/admin/seminars/{sem3}/registrations", token=admin_tok,
                    body={"member": "nobody@example.com"})
 check("unknown attendee -> 404", status == 404)
 
 status, body, _ = req("POST", "/api/v1/admin/seminars/registrations/bulk", token=admin_tok,
                       body={"registrations": [
-                          {"member": "agus@natcon.id", "room": "Learning Session 3"},
-                          {"member": "sinta@natcon.id", "room": "Learning Session 3"},
+                          {"member": "agus@natcon.id", "room": sem3_room},
+                          {"member": "sinta@natcon.id", "room": sem3_room},
                           {"member": "agus@natcon.id", "room": "No Such Room"},
                       ]})
 check("bulk registration: 1 created, 1 already there, 1 unknown room",

@@ -104,10 +104,12 @@ Environment yang wajib diisi:
 Migrasi dan seeder jalan otomatis saat start; tidak ada langkah manual.
 Database baru berisi akun `admin@natcon.id`, **4 learning class beserta
 narasumbernya**, **32 booth + 4 sponsor dari sheet booth** (migrasi `0037`,
-lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **draf rundown 3
-September** (migrasi `0024`, sembilan blok 1 jam) plus **Gold Club Breakfast
-4 September** (migrasi `0025`) — rapikan di halaman Rundown; blok yang
-dihapus tidak muncul lagi saat restart.
+lengkap dengan login scanner `booth-<kode>@natcon.id`), dan **rundown resmi 3
+September** (migrasi `0041`, sesuai artwork panitia: registrasi 07.00 sampai
+Opening Ceremony) plus **Gold Club Breakfast 4 September** (migrasi `0025`) —
+rapikan di halaman Rundown; blok yang dihapus tidak muncul lagi saat restart.
+Keempat kelas sudah ditempatkan ke dua blok Learning Session, yang membuat
+aturan "dua kelas asal jamnya tidak bentrok" benar-benar berlaku.
 
 > **Setelah deploy migrasi `0037`**: denah mengikuti sheet terbaru panitia —
 > GrasiaCare kembali memegang dua stand (`A18 & A20`), dan **11 booth pindah

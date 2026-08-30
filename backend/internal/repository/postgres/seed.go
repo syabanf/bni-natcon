@@ -90,13 +90,13 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		capacity                   int
 		desc                       string
 	}{
-		{1, "Learning Session 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
+		{2, "Learning Session 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
 			"Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai", "Roby Oktober", 60,
 			"Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team."},
 		{1, "Learning Session 2", "Work-Life Balance & AI: The New Agency Equation",
 			"Viktor Iwan; Irfan Arsandi — WIT Indonesia", "Ryan Kristomulyono", 60,
 			"AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity."},
-		{1, "Learning Session 3", "How to Win in Retail: The 2026 Economic Reality",
+		{2, "Learning Session 3", "How to Win in Retail: The 2026 Economic Reality",
 			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
 			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
 		{1, "Learning Session 4", "Your Face Tells a Story",
@@ -144,6 +144,20 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 				return err
 			}
 		}
+	}
+
+	// Place each class in its learning block, the same way migration 0041 does
+	// for a database that already holds them. The clash rule reads the
+	// block's hours, so a class with no block is one an attendee can take
+	// alongside anything.
+	if _, err := tx.Exec(ctx, `
+		UPDATE seminars s
+		SET rundown_id = b.id
+		FROM rundown b
+		WHERE b.kind = 'learning'
+		  AND b.title = 'Learning Session ' || s.slot::text
+		  AND s.rundown_id IS NULL`); err != nil {
+		return err
 	}
 
 	return tx.Commit(ctx)
