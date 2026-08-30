@@ -296,7 +296,7 @@ func SponsorTierLabel(tier string) string {
 	case "strategic":
 		return "Strategic Partner"
 	default:
-		return "Supported by"
+		return "Our Partners"
 	}
 }
 

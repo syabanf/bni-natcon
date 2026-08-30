@@ -60,7 +60,7 @@ function HomeSponsorWall({ headline, partners, showPartners, setShowPartners }) 
         <div className="sponsor-sheet-backdrop" onClick={() => setShowPartners(false)}>
           <div className="sponsor-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sponsor-sheet-head">
-              <h3>Our partners</h3>
+              <h3>More partners</h3>
               <button type="button" className="sponsor-sheet-close" onClick={() => setShowPartners(false)}>
                 Close
               </button>
@@ -80,7 +80,7 @@ function HomeSponsorWall({ headline, partners, showPartners, setShowPartners }) 
                     loading="lazy"
                   />
                 ) : (
-                  <div className="sponsor-grid grid-supported">
+                  <div className={`sponsor-grid ${g.tier === 'strategic' ? 'grid-platinum' : 'grid-supported'}`}>
                     {g.sponsors.map((sp) => (
                       <SponsorCell sp={sp} key={sp.id} />
                     ))}
