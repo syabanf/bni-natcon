@@ -5,6 +5,7 @@ import { MemberLayout, TenantLayout } from './components/Layout'
 import Login from './pages/Login'
 import SetPassword from './pages/SetPassword'
 import WrongApp from './pages/WrongApp'
+import Landing from './pages/Landing'
 import Home from './pages/member/Home'
 import MyQR from './pages/member/MyQR'
 import Passport from './pages/member/Passport'
@@ -105,6 +106,11 @@ export default function App() {
           />
           <Route path="/tenant/dashboard" element={<Dashboard />} />
         </Route>
+
+        {/* The front door: the poster with the countdown. Deliberately shown
+            to signed-in people too — the address on the printed material is
+            the landing, and their way in is one tap further. */}
+        <Route path="/" element={<Landing />} />
 
         {/* Pre-split URLs (bookmarks, installed PWAs) keep working. */}
         <Route path="/qr" element={<Navigate to="/attendee/qr" replace />} />
