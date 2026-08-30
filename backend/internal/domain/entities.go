@@ -232,6 +232,12 @@ type AdminOverview struct {
 	VisitsToday          int
 	SeminarRegistrations int
 	MembersWithVisit     int
+	// Accounts still on the password the committee handed out. Every account
+	// now starts on the same one, so this is the number that matters on the
+	// morning: until somebody signs in and picks their own, anybody holding
+	// the briefing sheet can sign in as them.
+	MembersPasswordPending int
+	TenantsPasswordPending int
 }
 
 // TenantScanCount ranks a booth by collected scans.

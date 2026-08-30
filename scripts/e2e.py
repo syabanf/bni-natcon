@@ -118,6 +118,16 @@ check("a fresh database arrives with the ticketing export and the sheet's booths
       and body["total_booths"] == SEEDED_BOOTHS and body["total_sponsors"] == SEEDED_SPONSORS,
       f"got {body}")
 
+# Everybody starts on the password the committee hands out, so the dashboard
+# has to say who is still on it: an account nobody has signed into yet is one
+# anybody holding the briefing sheet can sign into. On a fresh database that
+# is everybody, and the count only ever falls.
+check("the dashboard counts who is still on the handed-out password",
+      body["members_password_pending"] == body["total_members"]
+      and body["tenants_password_pending"] == body["total_tenants"],
+      f'{body.get("members_password_pending")}/{body.get("total_members")} · '
+      f'{body.get("tenants_password_pending")}/{body.get("total_tenants")}')
+
 status, body, _ = req("GET", "/api/v1/admin/chapters", token=admin_tok)
 SEEDED_CHAPTERS = {c["name"] for c in body["chapters"]}
 check("...and with the chapters those attendees carry",
@@ -312,6 +322,11 @@ status, body = login("BOOTH-A2@natcon.id", PASSWORD.capitalize(), xff="10.77.0.7
 check("a capitalised email and first password still sign the booth in",
       status == 200 and body["user"]["role"] == "tenant", f"{status}")
 
+# Measured either side of the change rather than against a constant, so the
+# check still means something when the seeded booth count moves again.
+_, before, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+pending_before = before["tenants_password_pending"]
+
 a2_first = PASSWORD
 status, body = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 a2_tok = body["token"]
@@ -323,15 +338,23 @@ check("the crew sets their own -> 200", status == 200)
 status, _ = login("booth-a2@natcon.id", a2_first, xff="10.77.0.9")
 check("the first password no longer works there", status == 401)
 status, body = login("booth-a2@natcon.id", "rahasia-booth-a2", xff="10.77.0.9")
+# Held on to now: the checks below overwrite `body`, and putting the password
+# back at the end needs this session.
+a2_own_tok = body["token"]
 # must_set_password is omitempty: gone from the JSON once it is false.
 check("their own password works, and the demand is gone",
       status == 200 and not body["user"].get("must_set_password"), f'{body.get("user")}')
+status, body, _ = req("GET", "/api/v1/admin/overview", token=admin_tok)
+check("...and the dashboard's count falls as soon as a booth picks its own",
+      body["tenants_password_pending"] == pending_before - 1,
+      f'{body["tenants_password_pending"]} vs {pending_before} before')
+
 # Once the crew picks their own password, case is matched exactly again.
 status, _ = login("booth-a2@natcon.id", "Rahasia-booth-a2", xff="10.77.0.9")
 check("a self-chosen password is case-sensitive", status == 401)
 
 # Put it back the way the rest of the suite expects it.
-req("POST", "/api/v1/auth/password", token=body["token"], body={"password": a2_first})
+req("POST", "/api/v1/auth/password", token=a2_own_tok, body={"password": a2_first})
 
 # ------------------------------------------------------- duplicate attendees
 section("Attendees who share a name, email and phone")

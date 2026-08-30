@@ -29,7 +29,10 @@ scan member QRs — which carry the attendee's **ticket number**, the one
 printed on their ticket — with the camera, or take **manual input by ticket
 number / member ID / phone number**, keep **notes per visitor** (shown in the visitor list), and open
 a **visitor detail** page from the booth dashboard. A separate admin app
-gives the committee live monitoring (**Sponsors** and **Booths** are counted
+gives the committee live monitoring — including **who is still on the password
+we handed out**, which is the number that matters on the morning: everybody
+starts on the same one, so an account nobody has signed into yet is an account
+anybody holding the briefing sheet can sign into. (**Sponsors** and **Booths** are counted
 as separate tiles), master-data CRUD (tenants have **booth/sponsor kind** +
 description, with All/Sponsors/Booths filter tabs, a Kind column and tinted
 sponsor rows; learning classes carry a **speaker list with uploadable

@@ -229,6 +229,8 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | OPS-43 | P1 | Admin · Rundown with two learning blocks | Put two classes in the 13:00 block and two in the 14:00 block, from the Learning Sessions page. | Each class shows its hour. An attendee can then hold one from each block, but never two from the same one. |
 | OPS-44 | P1 | Admin · Rundown | Add a block and pick 'Friday 4 September' in the Day field. | It lands under the 4 September heading, below every 3 September block — not mixed into the conference day. |
 | OPS-45 | P2 | Admin · Rundown, two days on screen | Compare a 3 September block with a 4 September block at the same hour. | Neither is flagged as overlapping. Same hour on different days is not a clash. |
+| OPS-21 | P1 | Dashboard · the morning, before people sign in | Open the admin Dashboard and read the 'Password Setup' panel. | Two bars: attendees and booths, each showing how many have replaced the password the committee handed out. On a fresh database both read 0 and the bar is empty. Every account starts on the same password, so an account nobody has signed into is one anybody with the briefing sheet can sign into — the bar filling up is the day getting safer. |
+| OPS-22 | P2 | Dashboard · somebody sets their own password | Have one attendee and one booth sign in and choose a password, then reload the Dashboard. | Both counts rise by one and never fall back — the change is one-way. The bar turns from warning colour once more than half have done it. |
 
 ## Reports & export
 
@@ -328,8 +330,8 @@ Imported attendees sign in with SEED_PASSWORD (default natcon2026), the same for
 | Attendee | 36 | 24 |
 | Booth scanner | 21 | 15 |
 | Admin master data | 46 | 37 |
-| Admin operations | 38 | 25 |
+| Admin operations | 40 | 26 |
 | Reports & export | 13 | 10 |
 | Cross-cutting | 19 | 9 |
 | Door crew app | 10 | 9 |
-| **Total** | **210** | **145** |
+| **Total** | **212** | **146** |
