@@ -46,7 +46,12 @@ export default function Home() {
     // home screen simply does not show it.
     api
       .sponsors()
-      .then((d) => setSponsors(d.groups || []))
+      .then((d) =>
+        // The home screen thanks the headline tiers only — Diamond and
+        // Platinum. A supporter tier, if one ever returns, belongs on a
+        // fuller credits page, not above the fold of everybody's home.
+        setSponsors((d.groups || []).filter((g) => g.tier === 'diamond' || g.tier === 'platinum')),
+      )
       .catch(() => setSponsors([]))
   }, [])
 
