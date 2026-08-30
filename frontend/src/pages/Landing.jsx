@@ -66,10 +66,11 @@ export default function Landing() {
         </div>
       )}
 
+      {/* No attendee sign-in yet, at the committee's request — the page is a
+          poster until credentials go out. /login still works for anyone who
+          has the address; this just does not advertise it. The booth door
+          stays, because crews set up before attendees arrive. */}
       <div className="landing-actions">
-        <Link className="landing-cta" to="/login">
-          Attendee sign-in
-        </Link>
         <Link className="landing-alt" to="/tenant/login">
           Manning a booth? Booth scanner →
         </Link>

@@ -2769,7 +2769,27 @@ button.stat-redeem {
   font-size: 11px;
   opacity: 0.6;
 }
+/* Phone: the units shrink before they wrap — four boxes stay one row. */
 @media (max-width: 420px) {
   .cd-unit { min-width: 62px; padding: 12px 6px 9px; }
   .cd-num { font-size: 27px; }
+  .cd-sep { font-size: 24px; }
+}
+/* Tablet: the poster grows into the room it has. */
+@media (min-width: 768px) {
+  .landing-logo { width: 360px; }
+  .landing-where { font-size: 15px; }
+  .cd-unit { min-width: 96px; padding: 18px 14px 13px; border-radius: 18px; }
+  .cd-num { font-size: 46px; }
+  .cd-label { font-size: 11px; }
+  .cd-sep { font-size: 40px; margin-top: 18px; }
+}
+/* Laptop and up: a hall screen, readable from the back row. */
+@media (min-width: 1200px) {
+  .landing-logo { width: 430px; }
+  .countdown { gap: 16px; margin-top: 44px; }
+  .cd-unit { min-width: 122px; padding: 22px 18px 16px; }
+  .cd-num { font-size: 60px; }
+  .cd-sep { font-size: 52px; margin-top: 24px; }
+  .landing-live { font-size: 26px; }
 }
