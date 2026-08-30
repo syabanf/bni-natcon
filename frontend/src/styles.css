@@ -2654,13 +2654,21 @@ button.stat-redeem {
   max-height: 75vh;
   overflow-y: auto;
   border-radius: 16px 16px 0 0;
-  padding: 16px 14px 24px;
+  padding: 0 14px 24px;
 }
+/* The title and Close float above the list: however far the partners
+   scroll, the way out stays under the thumb. */
 .sponsor-sheet-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin: 0 -14px 4px;
+  padding: 16px 14px 10px;
+  border-bottom: 1px solid #f1f2f4;
 }
 .sponsor-sheet-head h3 {
   font-size: 15px;
