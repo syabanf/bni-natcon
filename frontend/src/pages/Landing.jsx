@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 
 /*
  * The front door: bninatcon.com itself.
@@ -66,15 +65,10 @@ export default function Landing() {
         </div>
       )}
 
-      {/* No attendee sign-in yet, at the committee's request — the page is a
-          poster until credentials go out. /login still works for anyone who
-          has the address; this just does not advertise it. The booth door
-          stays, because crews set up before attendees arrive. */}
-      <div className="landing-actions">
-        <Link className="landing-alt" to="/tenant/login">
-          Manning a booth? Booth scanner →
-        </Link>
-      </div>
+      {/* No sign-in links at all, at the committee's request — the page is
+          purely a poster until credentials go out. /login and /tenant/login
+          both still work for anyone who has the address; the landing simply
+          does not advertise either. */}
 
       <p className="landing-foot">System by WIT</p>
     </div>
