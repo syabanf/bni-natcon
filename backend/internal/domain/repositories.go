@@ -16,6 +16,11 @@ type UserRepository interface {
 	// phone number typed by hand when a screen will not scan.
 	GetByScanCode(ctx context.Context, key string) (*User, error)
 	SetPassword(ctx context.Context, userID int64, hash string) error
+	// UpdateProfile corrects an attendee's own name and chapter — the two
+	// lines on the pass they show all day.
+	UpdateProfile(ctx context.Context, userID int64, name, chapter string) error
+	// ListChapterNames is the datalist behind the profile's chapter field.
+	ListChapterNames(ctx context.Context) ([]string, error)
 	// RecordConsent stamps the moment an attendee agreed to the data notice.
 	// Called once; agreeing again does not move the timestamp, so the record
 	// keeps saying when they actually said yes.

@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react'
  *
  * No links anywhere, at the committee's request: this is a poster until
  * credentials go out. /login and /tenant/login still answer for anyone who
- * has the address.
+ * has the address. The programme — rundown and learning classes — opens as
+ * a popup on request, so the poster itself stays a poster.
  */
 
 // Doors open — Registration & Open Networking, the rundown's first block.
@@ -28,12 +29,35 @@ function Unit({ value, label, pad }) {
   )
 }
 
+function dayOf(iso) {
+  return new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Jakarta' })
+}
+
+function timeOf(iso) {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  })
+}
+
 export default function Landing() {
   const [ms, setMs] = useState(remaining)
+  const [agenda, setAgenda] = useState(null)
+  const [sheet, setSheet] = useState(null) // null | 'rundown' | 'classes'
+  const [classDetail, setClassDetail] = useState(null)
 
   useEffect(() => {
     const t = setInterval(() => setMs(remaining()), 1000)
     return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    // The printed programme, public by design — the poster works signed out.
+    fetch('/api/v1/public/agenda')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setAgenda(d))
+      .catch(() => {})
   }, [])
 
   const live = ms === 0
@@ -42,6 +66,19 @@ export default function Landing() {
   const hours = Math.floor((s % 86400) / 3600)
   const minutes = Math.floor((s % 3600) / 60)
   const seconds = s % 60
+
+  // The poster advertises conference day only — the breakfast the morning
+  // after belongs to the ticket, not the countdown.
+  const rundown = agenda?.rundown?.length
+    ? agenda.rundown.filter((b) => dayOf(b.starts_at) === dayOf(agenda.rundown[0].starts_at))
+    : []
+  // Best effort: the class's session block on the rundown carries its hours.
+  const slotBlock = (slot) => rundown.find((b) => b.title === `Learning Session ${slot}`)
+
+  const close = () => {
+    setSheet(null)
+    setClassDetail(null)
+  }
 
   return (
     <div className="landing">
@@ -80,8 +117,101 @@ export default function Landing() {
           </>
         )}
 
+        {/* The programme opens on request — the poster itself stays a poster. */}
+        <div className="landing-actions">
+          <button type="button" onClick={() => setSheet('rundown')}>
+            Event Rundown
+          </button>
+          <button type="button" onClick={() => setSheet('classes')}>
+            Learning Classes
+          </button>
+        </div>
+
         <p className="landing-foot">bninatcon.com</p>
       </main>
+
+      {sheet && (
+        <div className="sponsor-sheet-backdrop" onClick={close}>
+          <div className="sponsor-sheet agenda-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sponsor-sheet-head">
+              <h3>{sheet === 'rundown' ? 'Event Rundown' : 'Learning Classes'}</h3>
+              <button type="button" className="sponsor-sheet-close" onClick={close}>
+                Close
+              </button>
+            </div>
+            {!agenda && <p className="landing-section-sub">Loading the programme…</p>}
+
+            {sheet === 'rundown' && rundown.length > 0 && (
+              <div className="landing-rundown">
+                {rundown.map((b) => (
+                  <div className="lr-row" key={b.id}>
+                    <span className="lr-time">{timeOf(b.starts_at)}</span>
+                    <div className="lr-body">
+                      <h5>{b.title}</h5>
+                      {b.place && <p>{b.place}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {sheet === 'classes' &&
+              agenda?.classes?.length > 0 &&
+              (classDetail ? (
+                <div className="lc-detail">
+                  <button type="button" className="lc-back" onClick={() => setClassDetail(null)}>
+                    ‹ All classes
+                  </button>
+                  {classDetail.cover_url && <img src={classDetail.cover_url} alt="" />}
+                  <span className="lc-room">{classDetail.room}</span>
+                  <h4>{classDetail.title}</h4>
+                  <p className="lc-speaker">{classDetail.speaker}</p>
+                  {classDetail.moderator && (
+                    <p className="lc-mod">Moderator: {classDetail.moderator}</p>
+                  )}
+                  {slotBlock(classDetail.slot) && (
+                    <p className="lc-slot">
+                      Session {classDetail.slot} · {timeOf(slotBlock(classDetail.slot).starts_at)}
+                      –{timeOf(slotBlock(classDetail.slot).ends_at)} WIB
+                    </p>
+                  )}
+                  {classDetail.description && (
+                    <p className="lc-desc-full">{classDetail.description}</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="landing-section-sub">
+                    Two sessions, two classes in each — attendees pick one from every session.
+                    Tap a class for its details.
+                  </p>
+                  <div className="landing-classes">
+                    {agenda.classes.map((c) => (
+                      <article
+                        className="lc-card"
+                        key={c.room}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setClassDetail(c)}
+                        onKeyDown={(e) => e.key === 'Enter' && setClassDetail(c)}
+                      >
+                        {c.cover_url && <img src={c.cover_url} alt="" loading="lazy" />}
+                        <div className="lc-body">
+                          <span className="lc-room">{c.room}</span>
+                          <h5>{c.title}</h5>
+                          <p className="lc-speaker">{c.speaker}</p>
+                          {c.moderator && <p className="lc-mod">Moderator: {c.moderator}</p>}
+                          {c.description && <p className="lc-desc">{c.description}</p>}
+                          <span className="lc-more">View details ›</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

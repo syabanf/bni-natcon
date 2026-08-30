@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"strings"
 
 	"natcon2026/backend/internal/domain"
 )
@@ -59,4 +60,21 @@ func (u *MemberUsecase) Profile(ctx context.Context, userID int64) (*domain.User
 
 func (u *MemberUsecase) ListTenants(ctx context.Context, memberID int64) ([]domain.TenantWithVisit, error) {
 	return u.tenants.ListWithVisits(ctx, memberID)
+}
+
+// UpdateProfile is the attendee correcting their own pass. The name cannot
+// go blank — a pass with no name on it identifies nobody — and both fields
+// are trimmed the way the imports trim them.
+func (u *MemberUsecase) UpdateProfile(ctx context.Context, userID int64, name, chapter string) error {
+	name = strings.TrimSpace(name)
+	chapter = strings.TrimSpace(chapter)
+	if name == "" {
+		return invalid("name is required")
+	}
+	return u.users.UpdateProfile(ctx, userID, name, chapter)
+}
+
+// Chapters feeds the profile page's chapter picker.
+func (u *MemberUsecase) Chapters(ctx context.Context) ([]string, error) {
+	return u.users.ListChapterNames(ctx)
 }

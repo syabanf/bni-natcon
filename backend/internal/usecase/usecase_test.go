@@ -227,10 +227,12 @@ func TestSetPassword(t *testing.T) {
 	uc := NewAuthUsecase(users, fakeTokens{}, fakeVerifier{}, fakeVerifier{})
 	ctx := context.Background()
 
-	if err := uc.SetPassword(ctx, 1, "short"); err == nil {
+	// The first-sign-in gate: still on the committee's password, so no
+	// current password is asked.
+	if err := uc.SetPassword(ctx, 1, "", "short"); err == nil {
 		t.Fatal("a 5-character password should be rejected")
 	}
-	if err := uc.SetPassword(ctx, 1, "brandnewpass"); err != nil {
+	if err := uc.SetPassword(ctx, 1, "", "brandnewpass"); err != nil {
 		t.Fatalf("set password: %v", err)
 	}
 	if member.MustSetPassword {
@@ -241,6 +243,18 @@ func TestSetPassword(t *testing.T) {
 	}
 	if _, err := uc.Login(ctx, "member@test.id", "secret"); !errors.Is(err, domain.ErrInvalidCredentials) {
 		t.Fatal("the old generated password should no longer work")
+	}
+
+	// Once the account owns its password, changing it means proving you know
+	// it — a phone left on a table must not be enough.
+	if err := uc.SetPassword(ctx, 1, "wrong-old", "anothernewpass"); !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Fatal("changing without the current password should be refused")
+	}
+	if err := uc.SetPassword(ctx, 1, "brandnewpass", "anothernewpass"); err != nil {
+		t.Fatalf("change with the current password: %v", err)
+	}
+	if _, err := uc.Login(ctx, "member@test.id", "anothernewpass"); err != nil {
+		t.Fatalf("login after the change: %v", err)
 	}
 }
 

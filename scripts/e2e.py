@@ -362,7 +362,8 @@ status, _ = login("booth-a2@natcon.id", "Rahasia-booth-a2", xff="10.77.0.9")
 check("a self-chosen password is case-sensitive", status == 401)
 
 # Put it back the way the rest of the suite expects it.
-req("POST", "/api/v1/auth/password", token=a2_own_tok, body={"password": a2_first})
+req("POST", "/api/v1/auth/password", token=a2_own_tok,
+    body={"current_password": "rahasia-booth-a2", "password": a2_first})
 
 # ------------------------------------------------------- duplicate attendees
 section("Attendees who share a name, email and phone")
@@ -536,6 +537,20 @@ check("the only block beyond the conference day is the Gold Club breakfast",
 check("the draft runs in the order the days do",
       [b["starts_at"] for b in draft] == sorted(b["starts_at"] for b in draft))
 
+# ---- the landing page's programme: public by design, personal by nothing
+status, body, _ = req("GET", "/api/v1/public/agenda")
+check("the public agenda opens without a token",
+      status == 200 and len(body["rundown"]) == 17 and len(body["classes"]) == 4)
+check("classes carry the poster details",
+      all(c["room"] and c["title"] and c["speaker"] and c["description"]
+          and c["cover_url"] for c in body["classes"]))
+check("classes arrive grouped by session slot",
+      [c["slot"] for c in body["classes"]] == sorted(c["slot"] for c in body["classes"]))
+leaked = str(body)
+check("the public agenda leaks no seats, phones, or registrations",
+      "phone" not in leaked and "seats" not in leaked
+      and "registered" not in leaked and "@" not in leaked.replace("R&B", ""))
+
 # The rest of this section builds its own day from scratch, the way a
 # committee that has thrown the draft away would.
 for b in draft:
@@ -640,8 +655,42 @@ check("setting a password -> 200", status == 200)
 status, body = login("passtest@natcon.id", "chosenbythem", xff="10.9.9.2")
 check("the chosen password works", status == 200)
 check("the flag is cleared once set", not body["user"].get("must_set_password"))
+own_tok = body["token"]
 status, _ = login("passtest@natcon.id", xff="10.9.9.3")
 check("the generated password stops working", status == 401)
+
+# Once the password is their own, changing it means proving you know it — a
+# phone left on a table must not be enough. The first-sign-in gate above
+# never asked, because there was nothing personal to prove yet.
+status, _, _ = req("POST", "/api/v1/auth/password", token=own_tok,
+                   body={"password": "sneakychange1"})
+check("changing without the current password -> 401", status == 401)
+status, _, _ = req("POST", "/api/v1/auth/password", token=own_tok,
+                   body={"current_password": "wrong-guess", "password": "sneakychange1"})
+check("...and a wrong current password -> 401", status == 401)
+status, _, _ = req("POST", "/api/v1/auth/password", token=own_tok,
+                   body={"current_password": "chosenbythem", "password": "secondchoice2"})
+check("with the current password -> 200", status == 200)
+status, _ = login("passtest@natcon.id", "secondchoice2", xff="10.9.9.4")
+check("the changed password signs in", status == 200)
+
+# ---- the profile page: an attendee corrects their own pass
+status, body, _ = req("GET", "/api/v1/chapters", token=member_tok)
+check("the chapter picker lists what attendees carry",
+      status == 200 and len(body["chapters"]) > 0)
+status, body, _ = req("PUT", "/api/v1/me/profile", token=member_tok,
+                      body={"name": "Reddie Wijaya Jr.", "chapter": "Chapter Baru E2E"})
+check("profile update returns the corrected pass",
+      status == 200 and body["user"]["name"] == "Reddie Wijaya Jr."
+      and body["user"]["chapter"] == "Chapter Baru E2E")
+status, body, _ = req("GET", "/api/v1/chapters", token=member_tok)
+check("a new chapter registers itself, the rule imports follow",
+      "Chapter Baru E2E" in body["chapters"])
+status, _, _ = req("PUT", "/api/v1/me/profile", token=member_tok, body={"name": "  "})
+check("a blank name is refused — a pass with no name identifies nobody", status == 400)
+# Put the name back so the rest of the suite reads what it seeded.
+req("PUT", "/api/v1/me/profile", token=member_tok,
+    body={"name": "Reddie Wijaya", "chapter": "BNI Chapter Jakarta Elite"})
 
 # Recovery: chapter + the phone on the ticket, in any of its shapes.
 status, body, _ = req("POST", "/api/v1/auth/forgot",

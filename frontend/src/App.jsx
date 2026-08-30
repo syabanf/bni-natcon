@@ -11,6 +11,7 @@ import MyQR from './pages/member/MyQR'
 import Passport from './pages/member/Passport'
 import Seminars from './pages/member/Seminars'
 import Networking from './pages/member/Networking'
+import Profile from './pages/member/Profile'
 import Dashboard from './pages/tenant/Dashboard'
 
 // html5-qrcode besar; muat hanya saat tenant membuka Scanner.
@@ -87,6 +88,7 @@ export default function App() {
           <Route path="/attendee/passport" element={<Passport />} />
           <Route path="/attendee/seminar" element={<Seminars />} />
           <Route path="/attendee/network" element={<Networking />} />
+          <Route path="/attendee/profile" element={<Profile />} />
         </Route>
 
         <Route

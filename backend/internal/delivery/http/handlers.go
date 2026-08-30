@@ -124,12 +124,15 @@ func (s *Server) handleSelectAccount(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSetPassword(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Password string `json:"password"`
+		// Required once the account owns its password; ignored on the
+		// first-sign-in gate, where there is nothing personal to prove yet.
+		CurrentPassword string `json:"current_password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondDecodeError(w, err, "invalid data format")
 		return
 	}
-	if err := s.auth.SetPassword(r.Context(), userIDFrom(r.Context()), req.Password); err != nil {
+	if err := s.auth.SetPassword(r.Context(), userIDFrom(r.Context()), req.CurrentPassword, req.Password); err != nil {
 		respondDomainError(w, err)
 		return
 	}
@@ -482,3 +485,70 @@ func (s *Server) handleSeminarAttendees(w http.ResponseWriter, r *http.Request) 
 // Small helpers so the DTO stays a literal.
 func mustStart(a, b *time.Time) string { s, _ := classTimes(a, b); return s }
 func mustEnd(a, b *time.Time) string   { _, e := classTimes(a, b); return e }
+
+// handleUpdateProfile is the attendee's own pen on their pass: name and
+// chapter, nothing else. Email stays — it is the login; phone stays — it is
+// a scanner key and recovery factor, corrected at the desk if wrong.
+func (s *Server) handleUpdateProfile(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name    string `json:"name"`
+		Chapter string `json:"chapter"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondDecodeError(w, err, "invalid data format")
+		return
+	}
+	if err := s.member.UpdateProfile(r.Context(), userIDFrom(r.Context()), req.Name, req.Chapter); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	user, _, err := s.member.Profile(r.Context(), userIDFrom(r.Context()))
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"user": toUserDTO(user)})
+}
+
+// handleListChapters feeds the profile page's chapter picker.
+func (s *Server) handleListChapters(w http.ResponseWriter, r *http.Request) {
+	names, err := s.member.Chapters(r.Context())
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"chapters": names})
+}
+
+// handlePublicAgenda is the landing page's window into the day: the rundown
+// and the learning classes, with their speakers and descriptions. Public on
+// purpose — this is the printed programme, not anybody's data — and it
+// carries nothing personal: no seats-taken, no registrations, no names but
+// the speakers the committee put on the poster.
+func (s *Server) handlePublicAgenda(w http.ResponseWriter, r *http.Request) {
+	blocks, err := s.admin.ListRundown(r.Context())
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	rundown := make([]map[string]any, 0, len(blocks))
+	for _, b := range blocks {
+		rundown = append(rundown, rundownDTO(b))
+	}
+
+	// Member id zero: nobody is signed in, so nothing reads as registered.
+	seminars, err := s.seminar.List(r.Context(), 0)
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	classes := make([]map[string]any, 0, len(seminars))
+	for _, c := range seminars {
+		classes = append(classes, map[string]any{
+			"room": c.Room, "title": c.Title, "slot": c.Slot,
+			"speaker": c.Speaker, "moderator": c.Moderator,
+			"description": c.Description, "cover_url": c.CoverURL,
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"rundown": rundown, "classes": classes})
+}

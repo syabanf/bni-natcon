@@ -44,6 +44,28 @@ func (f *fakeUserRepo) SetPassword(_ context.Context, userID int64, hash string)
 	return domain.ErrNotFound
 }
 
+func (f *fakeUserRepo) UpdateProfile(_ context.Context, userID int64, name, chapter string) error {
+	for _, u := range f.users {
+		if u.ID == userID {
+			u.Name, u.Chapter = name, chapter
+			return nil
+		}
+	}
+	return domain.ErrNotFound
+}
+
+func (f *fakeUserRepo) ListChapterNames(_ context.Context) ([]string, error) {
+	seen := map[string]bool{}
+	var out []string
+	for _, u := range f.users {
+		if u.Chapter != "" && !seen[u.Chapter] {
+			seen[u.Chapter] = true
+			out = append(out, u.Chapter)
+		}
+	}
+	return out, nil
+}
+
 func (f *fakeUserRepo) RecordConsent(_ context.Context, userID int64) error {
 	for _, u := range f.users {
 		if u.ID == userID {

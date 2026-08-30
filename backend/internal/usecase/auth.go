@@ -50,9 +50,20 @@ func validPassword(p string) error {
 
 // SetPassword is what the first-login screen calls: the account stops using
 // the password generated at import time.
-func (u *AuthUsecase) SetPassword(ctx context.Context, userID int64, newPassword string) error {
+func (u *AuthUsecase) SetPassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	if err := validPassword(newPassword); err != nil {
 		return err
+	}
+	user, err := u.users.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	// On first sign-in the account is still on the committee's password and
+	// the gate screen is the only way forward, so no current password is
+	// asked. Once somebody owns their password, changing it means proving
+	// you know it — a phone left unlocked on a table must not be enough.
+	if !user.MustSetPassword && !u.verifier.Verify(user.PasswordHash, currentPassword) {
+		return domain.ErrInvalidCredentials
 	}
 	hash, err := u.hasher.Hash(newPassword)
 	if err != nil {

@@ -100,6 +100,9 @@ func (s *Server) Router() http.Handler {
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	}))
 
+	// The landing page's programme: public, cache-friendly, nothing personal.
+	r.Get("/api/v1/public/agenda", s.handlePublicAgenda)
+
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -129,6 +132,8 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)
 			r.Get("/me", s.handleMe)
+			r.Put("/me/profile", s.handleUpdateProfile)
+			r.Get("/chapters", s.handleListChapters)
 			r.Post("/auth/password", s.handleSetPassword)
 			r.Post("/auth/consent", s.handleConsent)
 

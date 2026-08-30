@@ -79,6 +79,14 @@ export const api = {
   selectAccount: (choiceToken, userId) =>
     request('/auth/login/select', { method: 'POST', body: { choice_token: choiceToken, user_id: userId } }),
   me: () => request('/me'),
+  updateProfile: (name, chapter) =>
+    request('/me/profile', { method: 'PUT', body: { name, chapter } }),
+  chapters: () => request('/chapters'),
+  changePassword: (currentPassword, password) =>
+    request('/auth/password', {
+      method: 'POST',
+      body: { current_password: currentPassword, password },
+    }),
   setPassword: (password) =>
     request('/auth/password', { method: 'POST', body: { password } }),
   // The consent checkbox on the first-run screen.

@@ -167,3 +167,50 @@ func digitsOnly(s string) string {
 	}
 	return b.String()
 }
+
+// UpdateProfile lets an attendee correct their own name and chapter — the
+// two lines printed on the pass they show all day. The chapter registers
+// itself in the master list, the same rule the imports follow: the list is
+// exactly what attendees carry.
+func (r *UserRepo) UpdateProfile(ctx context.Context, userID int64, name, chapter string) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if chapter != "" {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO chapters (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, chapter); err != nil {
+			return err
+		}
+	}
+	tag, err := tx.Exec(ctx,
+		`UPDATE users SET name = $1, chapter = $2 WHERE id = $3 AND role = 'member'`,
+		name, chapter, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return tx.Commit(ctx)
+}
+
+// ListChapterNames is the datalist behind the profile page's chapter field.
+func (r *UserRepo) ListChapterNames(ctx context.Context) ([]string, error) {
+	rows, err := r.pool.Query(ctx, `SELECT name FROM chapters ORDER BY name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var n string
+		if err := rows.Scan(&n); err != nil {
+			return nil, err
+		}
+		out = append(out, n)
+	}
+	return out, rows.Err()
+}

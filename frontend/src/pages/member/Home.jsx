@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
@@ -139,7 +139,11 @@ export default function Home() {
             <h2>Hello, {firstName}</h2>
             <p>BNI Natcon 2026 · Pullman Central Park Jakarta</p>
           </div>
-          <div className="avatar">{initials(user?.name)}</div>
+          {/* The avatar is the door to the profile — where the pass gets
+              corrected and the password changed. */}
+          <Link className="avatar" to="/attendee/profile" aria-label="My profile">
+            {initials(user?.name)}
+          </Link>
         </div>
       </div>
 
