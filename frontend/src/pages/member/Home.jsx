@@ -149,7 +149,7 @@ export default function Home() {
             <Icon name="pin" size={18} />
           </span>
           <h4>Tenant Passport</h4>
-          <p>Collect scans, claim your pin</p>
+          <p>Visit the booths, win the grand prize</p>
         </button>
         <button className="quick" onClick={() => navigate('/attendee/seminar')}>
           <span className="q-ic">
@@ -163,7 +163,7 @@ export default function Home() {
             <Icon name="users" size={18} />
           </span>
           <h4>Speed Networking</h4>
-          <p>Scan your table · 8 people auto-connected</p>
+          <p>Scan your table · 10 people auto-connected</p>
         </button>
       </div>
 

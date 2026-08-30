@@ -9,7 +9,7 @@ import Modal from './Modal'
 export default function Tables({ onUnauthorized }) {
   const [rows, setRows] = useState(null)
   const [form, setForm] = useState(null) // null | { id, table_no, hall, capacity }
-  const [gen, setGen] = useState({ count: 12, hall: '', capacity: 8 })
+  const [gen, setGen] = useState({ count: 12, hall: '', capacity: 10 })
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)

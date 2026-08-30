@@ -687,7 +687,7 @@ export default function Networking() {
         </div>
 
         <div className="empty-note" style={{ marginTop: 16 }}>
-          Every table seats 8 people. Scan the QR on your table to check in — everyone at the table
+          Every table seats 10 people. Scan the QR on your table to check in — everyone at the table
           is connected automatically. No table number to type: the QR is what puts you at the right
           one.
         </div>
