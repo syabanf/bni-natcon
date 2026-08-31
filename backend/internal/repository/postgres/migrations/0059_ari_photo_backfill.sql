@@ -4,13 +4,13 @@
 -- a database seeded from the final files matches nothing here.
 
 UPDATE seminars
-SET moderator = 'Ari H. Hadojo'
+SET moderator = 'Ari H. Handojo'
 WHERE moderator = 'P. Ari Handojo';
 
 UPDATE seminar_speakers
-SET name = 'Ari H. Hadojo'
+SET name = 'Ari H. Handojo'
 WHERE name = 'P. Ari Handojo';
 
 UPDATE seminar_speakers
-SET photo_url = '/speakers/ari-h-hadojo.jpg'
-WHERE name = 'Ari H. Hadojo' AND role = 'moderator' AND photo_url = '';
+SET photo_url = '/speakers/ari-h-handojo.jpg'
+WHERE name = 'Ari H. Handojo' AND role = 'moderator' AND photo_url = '';

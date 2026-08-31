@@ -100,7 +100,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
 			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
 		{1, "Learning Session 4", "Your Face Tells a Story",
-			"Suntoro Suciatmaja", "Ari H. Hadojo", 60,
+			"Suntoro Suciatmaja", "Ari H. Handojo", 60,
 			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
 	// Speakers and moderators per class, in stage order. Photos live in each
@@ -124,7 +124,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		},
 		"Learning Session 4": {
 			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
-			{"Ari H. Hadojo", "moderator", "", "/speakers/ari-h-hadojo.jpg"},
+			{"Ari H. Handojo", "moderator", "", "/speakers/ari-h-handojo.jpg"},
 		},
 	}
 	for _, s := range seminars {
