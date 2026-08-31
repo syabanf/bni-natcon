@@ -124,7 +124,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 		},
 		"Learning Session 4": {
 			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
-			{"Ari H. Hadojo", "moderator", "", ""},
+			{"Ari H. Hadojo", "moderator", "", "/speakers/ari-h-hadojo.jpg"},
 		},
 	}
 	for _, s := range seminars {
