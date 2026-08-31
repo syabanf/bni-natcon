@@ -32,7 +32,7 @@ const AGENDA = {
   ],
   classes: [
     {
-      room: 'Learning Session 2',
+      room: 'Learning Session 1',
       title: 'Work-Life Balance & AI',
       slot: 1,
       speaker: 'Viktor Iwan & Irfan Arsandi',

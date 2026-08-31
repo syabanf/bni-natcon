@@ -185,14 +185,14 @@ export default function Landing() {
               ) : (
                 <>
                   <p className="landing-section-sub">
-                    Four sessions across two time slots — attendees pick one from each slot.
-                    Tap a session for its details.
+                    Two sessions, two classes in each — attendees pick one class from every
+                    session. Tap a class for its details.
                   </p>
                   <div className="landing-classes">
                     {agenda.classes.map((c) => (
                       <article
                         className="lc-card"
-                        key={c.room}
+                        key={c.title}
                         role="button"
                         tabIndex={0}
                         onClick={() => setClassDetail(c)}

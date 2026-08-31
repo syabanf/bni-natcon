@@ -82,47 +82,51 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	// The four real learning classes, from the Term of Reference documents.
-	// All share slot 1: they run in parallel, so an attendee picks exactly one
-	// and that pick is what the goodiebag is claimed against.
+	// Two session GROUPS, two classes in each: the room label names the
+	// group ("Learning Session 1" = 08.00, "Learning Session 2" = 10.00),
+	// so both classes in an hour carry the same badge. An attendee picks
+	// one class from each session.
 	seminars := []struct {
 		slot                       int
 		room, title, sp, moderator string
 		capacity                   int
 		desc                       string
 	}{
-		{2, "Learning Session 1", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
+		{2, "Learning Session 2", "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026",
 			"Flavia N. Sungkit, M.Psi., Psikolog — HR Consultant, Ikigai", "Roby Oktober", 60,
 			"Mid-sized companies have outgrown startup-style HR but lack enterprise budgets. A strategic roadmap for 2026: pivoting to skills-based management against high-potential turnover, setting boundaries for agentic AI in HR, treating burnout as a boardroom hazard through workflow redesign, and handling the compliance minefield without an internal legal team."},
-		{1, "Learning Session 2", "Work-Life Balance & AI: The New Agency Equation",
+		{1, "Learning Session 1", "Work-Life Balance & AI: The New Agency Equation",
 			"Viktor Iwan; Irfan Arsandi — WIT Indonesia", "Ryan Kristomulyono", 60,
 			"AI is already in the stack — the question is how it changes the way we measure work. Moving from hours logged to outcome-based performance, the expansion of human agency as AI takes over execution, why 86% of advanced users treat AI output as a starting point, and using AI as a shield for work-life balance rather than a demand for 24/7 productivity."},
-		{2, "Learning Session 3", "How to Win in Retail: The 2026 Economic Reality",
+		{2, "Learning Session 2", "How to Win in Retail: The 2026 Economic Reality",
 			"Ben Wirawan — Torch; Selina Nicole — LEKA", "David Gan", 60,
 			"Indonesian shoppers are fatigued by rising costs yet still crave premium experiences. Reading the economic trade-down and value hunting, why retail is a business of feelings when 58% of consumers report daily stress, the continued reign of the physical store, and preparing product data for the rise of agentic commerce."},
-		{1, "Learning Session 4", "Your Face Tells a Story",
+		{1, "Learning Session 1", "Your Face Tells a Story",
 			"Suntoro Suciatmaja", "Ari H. Handojo", 60,
 			"Reading faces as a practical business skill — what expression, structure, and first impressions communicate before a word is said, and how to use that in sales conversations, negotiation, and building trust fast."},
 	}
-	// Speakers and moderators per class, in stage order. Photos live in each
-	// app's public/speakers/ so they are served by the static host, not the API.
+	// Speakers and moderators per class, in stage order, keyed by the class
+	// title — the room now names the session group two classes share. Photos
+	// live in each app's public/speakers/ so they are served by the static
+	// host, not the API.
 	people := map[string][]struct {
 		name, role, title, photo string
 	}{
-		"Learning Session 1": {
+		"Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026": {
 			{"Flavia N. Sungkit, M.Psi., Psikolog", "speaker", "HR Consultant · Ikigai", "/speakers/flavia-sungkit.jpg"},
 			{"Roby Oktober", "moderator", "", "/speakers/roby-oktober.jpg"},
 		},
-		"Learning Session 2": {
+		"Work-Life Balance & AI: The New Agency Equation": {
 			{"Viktor Iwan", "speaker", "", "/speakers/viktor-iwan.jpg"},
 			{"Irfan Arsandi", "speaker", "IT & Digital Transformation Consultant · WIT Indonesia", "/speakers/irfan-arsandi.jpg"},
 			{"Ryan Kristomulyono", "moderator", "", "/speakers/ryan-kristomulyono.jpg"},
 		},
-		"Learning Session 3": {
+		"How to Win in Retail: The 2026 Economic Reality": {
 			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan.jpg"},
 			{"Selina Nicole", "speaker", "Founder · LEKA", "/speakers/selina-nicole.jpg"},
 			{"David Gan", "moderator", "CEO & Founder · Arkova Training & Consulting", "/speakers/david-gan.jpg"},
 		},
-		"Learning Session 4": {
+		"Your Face Tells a Story": {
 			{"Suntoro Suciatmaja", "speaker", "", "/speakers/suntoro-suciatmaja.jpg"},
 			{"Ari H. Handojo", "moderator", "", "/speakers/ari-h-handojo.jpg"},
 		},
@@ -134,10 +138,10 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			RETURNING id`,
 			s.slot, s.room, s.title, s.sp, s.moderator, s.capacity, s.desc,
-			coverFor(s.room)).Scan(&semID); err != nil {
+			coverFor(s.title)).Scan(&semID); err != nil {
 			return err
 		}
-		for i, p := range people[s.room] {
+		for i, p := range people[s.title] {
 			if _, err := tx.Exec(ctx, `
 				INSERT INTO seminar_speakers (seminar_id, name, role, title, photo_url, sort)
 				VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -164,20 +168,20 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 	return tx.Commit(ctx)
 }
 
-// coverFor maps a learning session to the banner shipped in each app's
-// public/covers/ — the committee's own artwork, with the speakers on it.
-// Sessions added later simply fall back to the gradient cover. The files
-// themselves keep their original names: they are artwork on disk, not a
-// label anybody reads.
-func coverFor(room string) string {
-	switch room {
-	case "Learning Session 1":
+// coverFor maps a class to the banner shipped in each app's public/covers/
+// — the committee's own artwork, with the speakers on it. Keyed by title:
+// the room names the session group two classes share. Classes added later
+// simply fall back to the gradient cover. The files keep their original
+// names: they are artwork on disk, not a label anybody reads.
+func coverFor(title string) string {
+	switch title {
+	case "Navigating the Mid-Market HR Squeeze: Talent, AI, and Wellbeing in 2026":
 		return "/covers/learning-class-1.jpg"
-	case "Learning Session 2":
+	case "Work-Life Balance & AI: The New Agency Equation":
 		return "/covers/learning-class-2.jpg"
-	case "Learning Session 3":
+	case "How to Win in Retail: The 2026 Economic Reality":
 		return "/covers/learning-class-3.jpg"
-	case "Learning Session 4":
+	case "Your Face Tells a Story":
 		return "/covers/learning-class-4.jpg"
 	}
 	return ""

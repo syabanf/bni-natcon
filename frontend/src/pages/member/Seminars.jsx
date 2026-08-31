@@ -322,11 +322,10 @@ export default function Seminars() {
         const hours = classHours(inSession[0])
         return (
           <div key={key}>
-            {/* The classes carry the committee's own "Learning Session N"
-                numbers across both hours, so the header names the hour and
-                nothing else — a second numbering just contradicted the cards. */}
+            {/* The room names the session GROUP two classes share, so the
+                header can say it out loud next to its hours. */}
             <div className="slot-label">
-              {hours ? `${hours} · ` : ''}pick one class
+              {[inSession[0].room, hours, 'pick one class'].filter(Boolean).join(' · ')}
             </div>
             {inSession.map((s) => {
               const few = s.seats_left <= 10
