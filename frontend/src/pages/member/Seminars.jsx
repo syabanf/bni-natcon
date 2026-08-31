@@ -322,9 +322,11 @@ export default function Seminars() {
         const hours = classHours(inSession[0])
         return (
           <div key={key}>
+            {/* The classes carry the committee's own "Learning Session N"
+                numbers across both hours, so the header names the hour and
+                nothing else — a second numbering just contradicted the cards. */}
             <div className="slot-label">
-              Session {i + 1}
-              {hours ? ` · ${hours}` : ''} · pick one class
+              {hours ? `${hours} · ` : ''}pick one class
             </div>
             {inSession.map((s) => {
               const few = s.seats_left <= 10
@@ -340,10 +342,11 @@ export default function Seminars() {
                         : undefined
                     }
                   >
-                    {/* The cover badge names the session, not the room — which
-                        room a class sits in matters at the door, which session
-                        it sits in decides what you can still pick. */}
-                    <div className="sc-tag">Session {i + 1}</div>
+                    {/* The cover badge names the hour, not a session number —
+                        the classes already carry "Learning Session N" names of
+                        their own, and a second numbering contradicted them.
+                        The hour is what decides what you can still pick. */}
+                    <div className="sc-tag">{hours || `Slot ${i + 1}`}</div>
                     <span className="pill" style={{ color: few ? 'var(--red)' : 'var(--ink)' }}>
                       {s.seats_left} seats left{few && !full ? ' · almost full' : ''}
                     </span>

@@ -107,7 +107,7 @@ describe('the landing page', () => {
     fireEvent.click(await screen.findByText('Work-Life Balance & AI'))
     // The full story, not the clamped card: description, session hours, a way back.
     expect(screen.getByText('AI is already in the stack.')).toBeTruthy()
-    expect(screen.getByText(/Session 1 · 08:00–09:00 WIB/)).toBeTruthy()
+    expect(screen.getByText(/08:00–09:00 WIB/)).toBeTruthy()
     fireEvent.click(screen.getByText('‹ All sessions'))
     expect(screen.getByText('View details ›')).toBeTruthy()
     expect(document.querySelector('a')).toBeNull()

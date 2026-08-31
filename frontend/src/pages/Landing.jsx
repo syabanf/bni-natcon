@@ -169,10 +169,13 @@ export default function Landing() {
                   {classDetail.moderator && (
                     <p className="lc-mod">Moderator: {classDetail.moderator}</p>
                   )}
+                  {/* Hours only: the classes are already numbered "Learning
+                      Session 1-4", so numbering the time slot too made one
+                      card say 3 and 2 at once. */}
                   {slotBlock(classDetail.slot) && (
                     <p className="lc-slot">
-                      Session {classDetail.slot} · {timeOf(slotBlock(classDetail.slot).starts_at)}
-                      –{timeOf(slotBlock(classDetail.slot).ends_at)} WIB
+                      {timeOf(slotBlock(classDetail.slot).starts_at)}–
+                      {timeOf(slotBlock(classDetail.slot).ends_at)} WIB
                     </p>
                   )}
                   {classDetail.description && (
