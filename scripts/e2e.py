@@ -155,7 +155,7 @@ check("the seeded chapters carry no BNI prefix and no case twins",
 status, body, _ = req("GET", "/api/v1/admin/seminars", token=admin_tok)
 check("...but the four learning classes are already there, with their speakers",
       status == 200 and len(body["seminars"]) == 4
-      and sum(len(s.get("speakers") or []) for s in body["seminars"]) == 9)
+      and sum(len(s.get("speakers") or []) for s in body["seminars"]) == 10)
 
 FIXTURE_MEMBERS = [
     {"name": "Reddie Wijaya", "email": "reddie@natcon.id", "chapter": "BNI Chapter Jakarta Elite",
@@ -964,9 +964,9 @@ check("class carries description + attended flag",
 check("the four classes are split across two sessions, two in each",
       sorted(s["slot"] for s in body["seminars"]) == [1, 1, 2, 2],
       f'{[(s["room"], s["slot"]) for s in body["seminars"]]}')
-check("classes carry speakers and at least one moderator",
+check("classes carry speakers, and every session its moderator",
       all(s["speaker"] for s in body["seminars"])
-      and any(s.get("moderator") for s in body["seminars"]))
+      and all(s.get("moderator") for s in body["seminars"]))
 # Speakers are rows now, each with a photo the app serves from its own
 # public/ folder — that is what the class card renders.
 people = body["seminars"][0].get("speakers") or []
