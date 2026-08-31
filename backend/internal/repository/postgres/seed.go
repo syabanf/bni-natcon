@@ -122,7 +122,7 @@ func SeedIfEmpty(ctx context.Context, pool *pgxpool.Pool, password string) error
 			{"Ryan Kristomulyono", "moderator", "", "/speakers/ryan-kristomulyono.jpg"},
 		},
 		"How to Win in Retail: The 2026 Economic Reality": {
-			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan.jpg"},
+			{"Ben Wirawan", "speaker", "Co-Founder & CEO · Torch", "/speakers/ben-wirawan-torch.jpg"},
 			{"Selina Nicole", "speaker", "Founder · LEKA", "/speakers/selina-nicole.jpg"},
 			{"David Gan", "moderator", "CEO & Founder · Arkova Training & Consulting", "/speakers/david-gan.jpg"},
 		},
