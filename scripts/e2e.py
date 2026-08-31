@@ -25,11 +25,11 @@ import urllib.request
 
 BASE = os.environ.get("BASE", "http://localhost:8082")
 
-# The exhibitor floor of the committee's booth sheet arrives with migration
-# 0033 — booths, plus the four sponsors on the B and C stands.
+# The exhibitor floor of the committee's booth sheet (rev. 31 Aug) arrives
+# with the booth migration, plus the four sponsors on the B and C stands.
 # A brand on two stands counts once: it is one exhibitor, not two.
 # The extra sponsors, the attendees and the tables are this suite's fixtures.
-SEEDED_BOOTHS = 32
+SEEDED_BOOTHS = 33
 SEEDED_SPONSORS = 4
 FIXTURE_SPONSORS = 2
 FIXTURE_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS + FIXTURE_SPONSORS
@@ -42,7 +42,7 @@ PASSWORD = os.environ.get("SEED_PASSWORD", "natcon2026")
 # Chapter names store bare: a leading "BNI " is dropped on every write
 # (domain.NormalizeChapter), and migration 0055 folded the seeded data the
 # same way. The fixtures deliberately send prefixed names to prove it.
-SEEDED_CHAPTER_COUNT = 86
+SEEDED_CHAPTER_COUNT = 85
 
 
 def norm_chapter(name):
@@ -221,8 +221,10 @@ check("...and it has one scanner login, on the first stand's code",
 # The committee's logo pack numbers its booths differently from the sheet, so
 # the logos are matched on company name and pinned by booth code here.
 logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("logo_url")}
-check("every exhibitor on the floor carries its logo",
-      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS
+# A49 (rev. 31 Aug) is a personal stand with no artwork in any pack, so it
+# rides on initials — every company stand carries its logo.
+check("every company stand on the floor carries its logo",
+      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS - 1
       and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
@@ -232,8 +234,8 @@ check("the double stand carries one logo, on one card",
 # before the event, so nothing seeded falls back any more. SP-01 and SP-02 are
 # this suite's own sponsors, invented here and never given a logo — they are
 # what proves the fallback still works.
-check("only the suite's own fixtures fall back to initials",
-      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"SP-01", "SP-02"},
+check("only A49 and the suite's own fixtures fall back to initials",
+      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"A49", "SP-01", "SP-02"},
       f'{[t["booth"] for t in body["tenants"] if not t.get("logo_url")]}')
 check("a booth still carries initials for the lists that have no room for a logo",
       by_booth["A1"]["initials"] == "SI", f'{by_booth["A1"]}')

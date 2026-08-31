@@ -82,6 +82,21 @@ def q(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+# The committee writes corrections straight into the chapter cell — either
+# editing the row ("Star -> Kosong") or appending a second row for the same
+# ticket ("Multirich > Ventura") — old name, arrow, new name, with "kosong"
+# meaning the chapter is removed. The migration carries only the destination.
+ARROW = re.compile(r"\s*(?:->|→|>)\s*")
+
+
+def resolve_chapter(raw: str) -> str:
+    parts = [p.strip() for p in ARROW.split(raw) if p.strip()]
+    if len(parts) < 2:
+        return raw.strip()
+    final = parts[-1]
+    return "" if final.lower() == "kosong" else final
+
+
 def name_key(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", name or "").lower())
 
@@ -116,18 +131,38 @@ def read_rows(path: pathlib.Path, sheet_name: str):
     known = json.loads(COMPANIES.read_text(encoding="utf-8")) if COMPANIES.exists() else {}
     by_ticket, by_name = known.get("by_ticket", {}), known.get("by_name", {})
 
-    out, seen, carried = [], set(), [0, 0]
+    out, entries, carried = [], {}, [0, 0]
     for r in rows[1:]:
         def cell(key):
             v = r[ix[key]]
             return str(v).strip() if v is not None else ""
 
         ticket, email = cell("ticket"), cell("email").lower()
-        if not ticket or not email or ticket in seen:
+        if not ticket:
             continue
-        seen.add(ticket)
         name = " ".join(x for x in (cell("first"), cell("last")) if x)
-        chapter = CHAPTER_CORRECTIONS.get(ticket, cell("chapter"))
+        raw_chapter = cell("chapter")
+        corrected = bool(ARROW.search(raw_chapter))
+        chapter = CHAPTER_CORRECTIONS.get(ticket, resolve_chapter(raw_chapter))
+
+        if ticket in entries:
+            # A duplicated ticket is the committee appending a correction row
+            # under the original: an arrow decides the chapter, anything else
+            # only fills a blank — the fuller original row stays authoritative.
+            p = entries[ticket]
+            if corrected or (ticket in CHAPTER_CORRECTIONS):
+                p["chapter"] = chapter
+                p["chapter_final"] = True
+            elif not p["chapter_final"] and not p["chapter"] and chapter:
+                p["chapter"] = chapter
+            for k, v in (("name", name), ("email", email),
+                         ("phone", normalize_phone(cell("phone"))),
+                         ("classification", cell("classification"))):
+                if not p[k] and v:
+                    p[k] = v
+            continue
+        if not email:
+            continue
         company = by_ticket.get(ticket, "")
         if company:
             carried[0] += 1
@@ -135,15 +170,18 @@ def read_rows(path: pathlib.Path, sheet_name: str):
             company = by_name.get(name_key(name), "")
             if company:
                 carried[1] += 1
-        out.append({
+        entry = {
             "ticket": ticket,
             "name": name,
             "email": email,
             "phone": normalize_phone(cell("phone")),
             "company": company,
             "chapter": chapter,
+            "chapter_final": corrected or (ticket in CHAPTER_CORRECTIONS),
             "classification": cell("classification"),
-        })
+        }
+        entries[ticket] = entry
+        out.append(entry)
     return out, carried
 
 

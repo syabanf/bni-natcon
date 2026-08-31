@@ -129,9 +129,16 @@ def read_booths(path: pathlib.Path, sheet_name: str):
 
         number, company = cell("Booth Number"), cell("Company Name")
         company = CORRECTIONS.get(company, company)
-        if not number or not company:
+        if not number:
             # The sheet ends with a row naming the organiser and no stand.
             continue
+        if not company:
+            # A stand with no company names only its exhibitor (A49, rev. 31
+            # Aug): the person IS the exhibitor, and skipping the row would
+            # drop a real booth from the passport.
+            company = cell("Name")
+            if not company:
+                continue
         codes = booth_codes(number)
         if not codes or codes[0] in seen:
             continue
