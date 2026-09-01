@@ -130,7 +130,30 @@ def read_booths(path: pathlib.Path, sheet_name: str):
         number, company = cell("Booth Number"), cell("Company Name")
         company = CORRECTIONS.get(company, company)
         if not number:
-            # The sheet ends with a row naming the organiser and no stand.
+            # A row with no stand but a name and an email is the organiser's
+            # own booth ("BNI Indonesia", rev. 31 Aug): there is no code to
+            # derive a scanner login from, so the login is the email on the
+            # sheet, and the stand label stays empty. A nameless, mailless
+            # tail row is still just the sheet ending.
+            org, org_email = cell("Name"), cell("Email").lower()
+            if not org or not org_email or key(org) in seen:
+                continue
+            seen.add(key(org))
+            wa = cell("Whatsapp Number")
+            booths.append({
+                "key": key(org),
+                "booth": "",
+                "company": org,
+                "category": cell("Business Classification"),
+                "initials": initials(org),
+                "kind": "booth",
+                "email": org_email,
+                "logo": by_key.get(key(org), ""),
+                # The sheet writes this row's contact into the Whatsapp
+                # column; a value with no digits is a person, not a number.
+                "contact": "" if re.search(r"\d{6,}", wa) else wa,
+                "chapter": cell("BNI Chapter"),
+            })
             continue
         if not company:
             # A stand with no company names only its exhibitor (A49, rev. 31

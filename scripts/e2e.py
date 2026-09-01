@@ -29,7 +29,7 @@ BASE = os.environ.get("BASE", "http://localhost:8082")
 # with the booth migration, plus the four sponsors on the B and C stands.
 # A brand on two stands counts once: it is one exhibitor, not two.
 # The extra sponsors, the attendees and the tables are this suite's fixtures.
-SEEDED_BOOTHS = 33
+SEEDED_BOOTHS = 34
 SEEDED_SPONSORS = 4
 FIXTURE_SPONSORS = 2
 FIXTURE_TENANTS = SEEDED_BOOTHS + SEEDED_SPONSORS + FIXTURE_SPONSORS
@@ -224,7 +224,7 @@ logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("lo
 # A49 (rev. 31 Aug) is a personal stand with no artwork in any pack, so it
 # rides on initials — every company stand carries its logo.
 check("every company stand on the floor carries its logo",
-      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS - 1
+      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS - 2
       and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
@@ -234,9 +234,15 @@ check("the double stand carries one logo, on one card",
 # before the event, so nothing seeded falls back any more. SP-01 and SP-02 are
 # this suite's own sponsors, invented here and never given a logo — they are
 # what proves the fallback still works.
-check("only A49 and the suite's own fixtures fall back to initials",
-      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"A49", "SP-01", "SP-02"},
+check("only A49, the organiser's stand and the suite's fixtures ride initials",
+      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"A49", "", "SP-01", "SP-02"},
       f'{[t["booth"] for t in body["tenants"] if not t.get("logo_url")]}')
+# The organiser's stand has no code, so its scanner signs in by the email on
+# the sheet rather than a derived booth-<code> address.
+bni_booth = next((t for t in body["tenants"] if t["name"] == "BNI Indonesia"), None)
+check("BNI Indonesia is on the floor with no stand label",
+      bni_booth is not None and bni_booth["booth"] == ""
+      and bni_booth["contact_name"] == "Pak Chris Tampi")
 check("a booth still carries initials for the lists that have no room for a logo",
       by_booth["A1"]["initials"] == "SI", f'{by_booth["A1"]}')
 
