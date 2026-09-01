@@ -224,7 +224,7 @@ logos = {t["booth"]: t.get("logo_url", "") for t in body["tenants"] if t.get("lo
 # A49 (rev. 31 Aug) is a personal stand with no artwork in any pack, so it
 # rides on initials — every company stand carries its logo.
 check("every company stand on the floor carries its logo",
-      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS - 1
+      len(logos) == SEEDED_BOOTHS + SEEDED_SPONSORS
       and logos.get("A22") == "/logos/paper-id.png"
       and logos.get("C1") == "/logos/royal-medicalink-pharmalab.png",
       f"{len(logos)} {sorted(logos.items())[:3]}")
@@ -234,9 +234,14 @@ check("the double stand carries one logo, on one card",
 # before the event, so nothing seeded falls back any more. SP-01 and SP-02 are
 # this suite's own sponsors, invented here and never given a logo — they are
 # what proves the fallback still works.
-check("only A49 and the suite's own fixtures ride initials",
-      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"A49", "SP-01", "SP-02"},
+check("only the suite's own fixtures ride initials",
+      {t["booth"] for t in body["tenants"] if not t.get("logo_url")} == {"SP-01", "SP-02"},
       f'{[t["booth"] for t in body["tenants"] if not t.get("logo_url")]}')
+a49 = next((t for t in body["tenants"] if t["booth"] == "A49"), None)
+check("A49 is PT. Sora System Global, with its category and contact",
+      a49 is not None and a49["name"] == "PT. Sora System Global"
+      and a49["category"] == "Sound System Manufacturer"
+      and a49["contact_name"] == "Pak Andy Mulya Sutikno")
 # The organiser's stand has no code, so its scanner signs in by the email on
 # the sheet rather than a derived booth-<code> address.
 bni_booth = next((t for t in body["tenants"] if t["name"] == "BNI Indonesia"), None)

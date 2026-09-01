@@ -66,6 +66,13 @@ CORRECTIONS = {
         "PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia",
 }
 
+# Details the committee sent outside the sheet (chat, 1 Sep 2026), keyed by
+# stand. The sheet's A49 row named only its owner; the company and what it
+# does arrived separately. The sheet's Name stays as the contact.
+BOOTH_DETAILS = {
+    "A49": {"company": "PT. Sora System Global", "category": "Sound System Manufacturer"},
+}
+
 
 def initials(name: str) -> str:
     """Mirror of tenantInitials in the Go usecase, so a booth created here and
@@ -156,9 +163,9 @@ def read_booths(path: pathlib.Path, sheet_name: str):
             })
             continue
         if not company:
-            # A stand with no company names only its exhibitor (A49, rev. 31
-            # Aug): the person IS the exhibitor, and skipping the row would
-            # drop a real booth from the passport.
+            # A stand naming no company names only its exhibitor: the person
+            # IS the exhibitor then, and skipping the row would drop a real
+            # booth from the passport.
             company = cell("Name")
             if not company:
                 continue
@@ -166,6 +173,9 @@ def read_booths(path: pathlib.Path, sheet_name: str):
         if not codes or codes[0] in seen:
             continue
         seen.add(codes[0])
+        fixes = BOOTH_DETAILS.get(codes[0], {})
+        company = fixes.get("company", company)
+        category = fixes.get("category") or cell("Business Classification")
         # Stand A is the exhibition floor; B and C are the sponsor stands, and
         # the sponsors lead the passport ahead of the floor.
         kind = "booth" if codes[0][0].upper() == "A" else "sponsor"
@@ -176,7 +186,7 @@ def read_booths(path: pathlib.Path, sheet_name: str):
             # login and the QR follow the first code — there is only one.
             "booth": " & ".join(codes),
             "company": company,
-            "category": cell("Business Classification"),
+            "category": category,
             "initials": initials(company),
             "kind": kind,
             "email": login_email(codes[0]),
