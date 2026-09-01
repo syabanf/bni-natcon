@@ -60,7 +60,7 @@ FROM tenants t, (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
   AND lower(regexp_replace(t.name, '[^a-zA-Z0-9]', '', 'g')) = v.key
@@ -106,7 +106,7 @@ FROM (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE lower(regexp_replace(t.name, '[^a-zA-Z0-9]', '', 'g')) = v.key
   AND t.booth <> v.booth;
@@ -151,7 +151,7 @@ FROM tenants t, (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.owner_user_id = u.id
   AND u.email LIKE 'moving-%'
@@ -199,7 +199,7 @@ FROM (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = v.email)
   AND NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
@@ -246,7 +246,7 @@ FROM (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 JOIN users u ON u.email = v.email
 WHERE NOT EXISTS (SELECT 1 FROM tenants t WHERE t.booth = v.booth);
@@ -297,7 +297,7 @@ FROM (VALUES
     ('parahitadiagnosticcenter', 'B2', 'Parahita Diagnostic Center', 'Health & Wellness Services', 'PD', 'sponsor', 'booth-b2@natcon.id', '/logos/parahita-diagnostic-center.png', 'Mizan Tamimy', 'Sovereign'),
     ('prosnap', 'B3', 'ProSnap', 'Business Consultant', 'P', 'sponsor', 'booth-b3@natcon.id', '/logos/prosnap.png', 'Leonard Rosandy', 'Star'),
     ('ptroyalmedicalinkpharmalabptaromabathiindonesia', 'C1', 'PT Royal Medicalink Pharmalab & PT Aroma Bathi Indonesia', 'Pharmaceutical Manufacturing', 'PR', 'sponsor', 'booth-c1@natcon.id', '/logos/royal-medicalink-pharmalab.png', 'Bu Dyah & Pak David Gani', ''),
-    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '', 'Pak Chris Tampi', '')
+    ('bniindonesia', '', 'BNI Indonesia', '', 'BI', 'booth', 'operation.bniindonesia@gmail.com', '/logos/bni-indonesia.png', 'Pak Chris Tampi', '')
 ) AS v (key, booth, company, category, initials, kind, email, logo, contact, chapter)
 WHERE t.booth = v.booth;
 
