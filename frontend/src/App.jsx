@@ -1,5 +1,6 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { api } from './api/client'
 import { useAuthStore } from './store/auth'
 import { MemberLayout, TenantLayout } from './components/Layout'
 import Login from './pages/Login'
@@ -61,7 +62,29 @@ function HomeOrExplain({ user }) {
   return home ? <Navigate to={home} replace /> : <WrongApp />
 }
 
+// The device remembers its user, but the server's word on the first-run
+// gates wins: a pass stored before the consent notice shipped carries no
+// must_consent at all, and that device would see the password screen with
+// no agreement box — or none of it. One /me on boot puts the flags right.
+function useFreshUser() {
+  const token = useAuthStore((s) => s.token)
+  const setAuth = useAuthStore((s) => s.setAuth)
+  useEffect(() => {
+    if (!token) return
+    api
+      .me()
+      .then((d) => {
+        if (!d?.user) return
+        // Merge over what the device stored: the server's flags win, but a
+        // field the response happens not to carry cannot blank the session.
+        setAuth(token, { ...useAuthStore.getState().user, ...d.user })
+      })
+      .catch(() => {})
+  }, [token, setAuth])
+}
+
 export default function App() {
+  useFreshUser()
   const user = useAuthStore((s) => s.user)
 
   return (
