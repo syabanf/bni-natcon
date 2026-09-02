@@ -23,7 +23,7 @@ func (u *AdminUsecase) RedeemItem(ctx context.Context, memberCode, item string) 
 		return nil, invalid("scan the attendee's QR, or type their member code")
 	}
 	switch item {
-	case domain.RedeemPin, domain.RedeemGoodiebag:
+	case domain.RedeemPin, domain.RedeemGoodiebag, domain.RedeemKit:
 	default:
 		return nil, invalid("that is not something the desk hands over")
 	}
@@ -33,10 +33,12 @@ func (u *AdminUsecase) RedeemItem(ctx context.Context, memberCode, item string) 
 type RedeemTally struct {
 	Pins       int
 	Goodiebags int
-	Members    int
+	// Attendees holding both — the door's one-scan kit.
+	Kits    int
+	Members int
 }
 
 func (u *AdminUsecase) RedeemCounts(ctx context.Context) (RedeemTally, error) {
-	pins, bags, members, err := u.admin.RedeemCounts(ctx)
-	return RedeemTally{Pins: pins, Goodiebags: bags, Members: members}, err
+	pins, bags, kits, members, err := u.admin.RedeemCounts(ctx)
+	return RedeemTally{Pins: pins, Goodiebags: bags, Kits: kits, Members: members}, err
 }

@@ -47,6 +47,31 @@ func (r *AdminRepo) RedeemItem(ctx context.Context, memberCode, item string) (*d
 		return nil, err
 	}
 
+	if item == domain.RedeemKit {
+		// Both out already: refuse, dated by the later of the two. Otherwise
+		// stamp whatever is still owed — one scan, both items.
+		if pinAt != nil && bagAt != nil {
+			res.RedeemedAt = *pinAt
+			if bagAt.After(*pinAt) {
+				res.RedeemedAt = *bagAt
+			}
+			res.AlreadyDone = true
+			return &res, domain.ErrAlreadyRedeemed
+		}
+		var at time.Time
+		if err := tx.QueryRow(ctx, `
+			UPDATE users
+			SET pin_redeemed_at = COALESCE(pin_redeemed_at, now()),
+			    goodiebag_redeemed_at = COALESCE(goodiebag_redeemed_at, now())
+			WHERE id = $1
+			RETURNING GREATEST(pin_redeemed_at, goodiebag_redeemed_at)`,
+			res.MemberID).Scan(&at); err != nil {
+			return nil, err
+		}
+		res.RedeemedAt = at
+		return &res, tx.Commit(ctx)
+	}
+
 	already := pinAt
 	if item == domain.RedeemGoodiebag {
 		already = bagAt
@@ -68,11 +93,12 @@ func (r *AdminRepo) RedeemItem(ctx context.Context, memberCode, item string) (*d
 }
 
 // RedeemCounts is what the desk screen shows: how many of each have gone out.
-func (r *AdminRepo) RedeemCounts(ctx context.Context) (pins, goodiebags, members int, err error) {
+func (r *AdminRepo) RedeemCounts(ctx context.Context) (pins, goodiebags, kits, members int, err error) {
 	err = r.pool.QueryRow(ctx, `
 		SELECT COUNT(*) FILTER (WHERE pin_redeemed_at IS NOT NULL),
 		       COUNT(*) FILTER (WHERE goodiebag_redeemed_at IS NOT NULL),
+		       COUNT(*) FILTER (WHERE pin_redeemed_at IS NOT NULL AND goodiebag_redeemed_at IS NOT NULL),
 		       COUNT(*)
-		FROM users WHERE role = 'member'`).Scan(&pins, &goodiebags, &members)
+		FROM users WHERE role = 'member'`).Scan(&pins, &goodiebags, &kits, &members)
 	return
 }

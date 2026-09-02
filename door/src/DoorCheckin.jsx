@@ -13,23 +13,36 @@ function fmtClock(d) {
  *
  *   Attendance — scan into a learning session; anyone not registered for that
  *                room is rejected clearly.
- *   Goodiebag  — hand one over, once per attendee.
- *   Pin        — same, for the collectible pin.
+ *   Kit        — goodiebag AND pin in one scan, once per attendee (committee,
+ *                1 Sep 2026): a second scan is refused, naming who and when.
  *
- * All three are scans rather than ticks: in a queue nobody reliably finds the
- * right row in a list of several hundred people.
+ * Both are scans rather than ticks: in a queue nobody reliably finds the
+ * right row in a list of several hundred people. Every result also flashes
+ * as a toast the crew can read from arm's length, on top of the panel.
  */
 export default function DoorCheckin({ onUnauthorized }) {
   const [seminars, setSeminars] = useState([])
   const [seminarId, setSeminarId] = useState(null)
   const [detail, setDetail] = useState(null)
   const [result, setResult] = useState(null) // {kind:'ok'|'dup'|'err', title, sub}
+  // The same result, flashed large for a moment: a queue moves faster when
+  // the crew can read the verdict without looking down at the panel.
+  const [toast, setToast] = useState(null)
+  const toastTimer = useRef(null)
   const [recent, setRecent] = useState([])
   const [manual, setManual] = useState('')
   const [cameraOn, setCameraOn] = useState(false)
   const [cameraError, setCameraError] = useState('')
-  // 'attendance' | 'goodiebag' | 'pin'
+  // 'attendance' | 'kit'
   const [mode, setMode] = useState('attendance')
+
+  const announce = (r) => {
+    setResult(r)
+    setToast(r)
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2600)
+  }
+  useEffect(() => () => clearTimeout(toastTimer.current), [])
   const [counts, setCounts] = useState(null)
   // Switching rooms clears the result panel, so a "switched room" message
   // has to survive that reset — park it here until the effect runs.
@@ -67,12 +80,12 @@ export default function DoorCheckin({ onUnauthorized }) {
       const id = Number(room[1])
       const target = seminars.find((x) => x.id === id)
       if (!target) {
-        setResult({ kind: 'err', title: 'Unknown room', sub: 'That class QR is not in this event' })
+        announce({ kind: 'err', title: 'Unknown room', sub: 'That class QR is not in this event' })
         return
       }
       const notice = { kind: 'ok', title: `Switched to ${target.room}`, sub: target.title }
       if (id === seminarId) {
-        setResult(notice) // already on this room — no effect will fire
+        announce(notice) // already on this room — no effect will fire
       } else {
         pendingResultRef.current = notice
         setSeminarId(id)
@@ -89,27 +102,28 @@ export default function DoorCheckin({ onUnauthorized }) {
     if (mode !== 'attendance') loadCounts()
   }, [mode])
 
-  // Handing over a pin or a goodiebag. The refusal matters as much as the
-  // success: a second scan has to say who already collected it and when,
-  // otherwise the crew cannot tell a queue-jumper from their own double tap.
+  // Handing over the kit — goodiebag and pin together, one scan. The refusal
+  // matters as much as the success: a second scan has to say who already
+  // collected it and when, otherwise the crew cannot tell a queue-jumper
+  // from their own double tap.
   const handOver = async (code) => {
     try {
-      const res = await api.redeem(code, mode)
-      setResult({
+      const res = await api.redeem(code, 'kit')
+      announce({
         kind: 'ok',
-        title: mode === 'pin' ? 'Pin handed over' : 'Goodiebag handed over',
+        title: 'Goodiebag & pin handed over',
         sub: `${res.name} · ${res.chapter || res.company || res.member_code}`,
       })
       setRecent((r) => [{ name: res.name, at: fmtClock(new Date()) }, ...r].slice(0, 6))
       loadCounts()
     } catch (err) {
       const at = err.body?.redeemed_at ? ` at ${err.body.redeemed_at.slice(11, 16)}` : ''
-      setResult(
+      announce(
         err.status === 409
           ? {
               kind: 'dup',
-              title: 'Already collected',
-              sub: `${err.body?.name || 'This attendee'} took it${at}`,
+              title: 'Already collected — not twice',
+              sub: `${err.body?.name || 'This attendee'} took the kit${at}`,
             }
           : { kind: 'err', title: 'Rejected', sub: err.message },
       )
@@ -121,18 +135,34 @@ export default function DoorCheckin({ onUnauthorized }) {
     try {
       const res = await api.seminarCheckin(seminarId, code)
       if (res.duplicate) {
-        setResult({ kind: 'dup', title: 'Already checked in', sub: `${res.member_name} is already recorded as present` })
+        announce({ kind: 'dup', title: 'Already checked in', sub: `${res.member_name} is already recorded as present` })
       } else {
-        setResult({
+        announce({
           kind: 'ok',
-          title: 'Attendance recorded',
+          title: 'Registered — attendance recorded',
           sub: `${res.member_name} · ${res.member_chapter}`,
         })
         setRecent((r) => [{ name: res.member_name, at: fmtClock(new Date()) }, ...r].slice(0, 6))
       }
       loadDetail(seminarId)
     } catch (err) {
-      setResult({ kind: 'err', title: 'Rejected', sub: err.message })
+      // The API refuses anyone not registered for this room; say so in the
+      // words the crew needs, not the server's.
+      if (/regist/i.test(err.message || '')) {
+        announce({
+          kind: 'err',
+          title: 'Not registered for this session',
+          sub: 'Their pass names another class — send them to the right room',
+        })
+      } else if (err.status === 404) {
+        announce({
+          kind: 'err',
+          title: 'Not on this session\u2019s list',
+          sub: 'Not registered here, or an unknown code — check their pass',
+        })
+      } else {
+        announce({ kind: 'err', title: 'Rejected', sub: err.message })
+      }
     }
   }
 
@@ -149,12 +179,21 @@ export default function DoorCheckin({ onUnauthorized }) {
 
   return (
     <>
+      {toast && (
+        <div className={`door-toast ${toast.kind}`} role="status" aria-live="polite">
+          <span className="door-toast-ic">{toast.kind === 'ok' ? '✓' : toast.kind === 'dup' ? '↺' : '✕'}</span>
+          <div>
+            <b>{toast.title}</b>
+            <small>{toast.sub}</small>
+          </div>
+        </div>
+      )}
       <div className="content-head">
         <div>
           <h1>Door Check-in</h1>
           <p className="micro">
-            One scanner for the door: session attendance, goodiebags and pins — each handed over once
-            per attendee
+            One scanner for the door: session attendance, and the goodiebag &amp; pin kit — one scan,
+            once per attendee
           </p>
         </div>
       </div>
@@ -167,8 +206,7 @@ export default function DoorCheckin({ onUnauthorized }) {
         <div className="door-modes">
           {[
             { key: 'attendance', label: 'Session attendance', hint: 'into a learning session' },
-            { key: 'goodiebag', label: 'Goodiebag', hint: 'one per attendee' },
-            { key: 'pin', label: 'Pin', hint: 'one per attendee' },
+            { key: 'kit', label: 'Goodiebag & Pin', hint: 'one scan, once per attendee' },
           ].map((m) => (
             <button
               key={m.key}
@@ -188,17 +226,15 @@ export default function DoorCheckin({ onUnauthorized }) {
         {mode !== 'attendance' && counts && (
           <div className="door-stats">
             <div className="stat-card">
-              <div className="num accent">{mode === 'pin' ? counts.pins : counts.goodiebags}</div>
-              <div className="label">Handed over</div>
+              <div className="num accent">{counts.kits ?? counts.goodiebags}</div>
+              <div className="label">Kits handed over</div>
             </div>
             <div className="stat-card">
               <div className="num">{counts.members}</div>
               <div className="label">Attendees</div>
             </div>
             <div className="stat-card">
-              <div className="num">
-                {counts.members - (mode === 'pin' ? counts.pins : counts.goodiebags)}
-              </div>
+              <div className="num">{counts.members - (counts.kits ?? counts.goodiebags)}</div>
               <div className="label">Still to collect</div>
             </div>
           </div>
@@ -253,7 +289,7 @@ export default function DoorCheckin({ onUnauthorized }) {
         <p className="panel-sub">
           {mode === 'attendance'
             ? `${selected ? `${selected.room} door` : 'Loading…'} · camera or manual input — scanning a printed room QR switches the session`
-            : `Handing over ${mode === 'pin' ? 'pins' : 'goodiebags'} · camera or manual input — a ticket number, member code, email or phone all work`}
+            : 'Handing over the goodiebag & pin kit · camera or manual input — a ticket number, member code, email or phone all work'}
         </p>
 
         {cameraOn ? (
@@ -280,7 +316,7 @@ export default function DoorCheckin({ onUnauthorized }) {
             placeholder="Manual input: ticket number, member code, email or phone"
           />
           <button type="submit" className="md-add">
-            Check-in
+            {mode === 'attendance' ? 'Check-in' : 'Hand over'}
           </button>
         </form>
 

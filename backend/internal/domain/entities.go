@@ -155,6 +155,10 @@ type RedeemResult struct {
 const (
 	RedeemPin       = "pin"
 	RedeemGoodiebag = "goodiebag"
+	// The kit: goodiebag and pin in ONE scan — the door hands both over
+	// together (committee, 1 Sep 2026). A second scan is refused once both
+	// are out; a person who got one item earlier gets the other.
+	RedeemKit = "kit"
 )
 
 // RundownBlock is one slice of the event's schedule — the one-hour blocks the

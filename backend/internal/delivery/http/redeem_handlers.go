@@ -9,8 +9,9 @@ import (
 	"natcon2026/backend/internal/domain"
 )
 
-// The desk that hands over pins and goodiebags. One endpoint, one scan, one
-// item — the door crew's app switches which item it is asking for.
+// The desk that hands over pins and goodiebags. One endpoint, one scan —
+// the door asks for the "kit" (both at once); "pin" and "goodiebag" remain
+// for a desk that hands them over separately.
 
 func redeemDTO(res *domain.RedeemResult) map[string]any {
 	return map[string]any{
@@ -59,6 +60,7 @@ func (s *Server) handleRedeemCounts(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{
 		"pins":       tally.Pins,
 		"goodiebags": tally.Goodiebags,
+		"kits":       tally.Kits,
 		"members":    tally.Members,
 	})
 }

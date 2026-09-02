@@ -114,7 +114,7 @@ type AdminRepository interface {
 	// RedeemItem returns ErrAlreadyRedeemed together with a filled result, so
 	// the desk can say who collected it and when.
 	RedeemItem(ctx context.Context, memberCode, item string) (*RedeemResult, error)
-	RedeemCounts(ctx context.Context) (pins, goodiebags, members int, err error)
+	RedeemCounts(ctx context.Context) (pins, goodiebags, kits, members int, err error)
 
 	// The event schedule in one-hour blocks. Deleting a block leaves the
 	// classes in it un-placed rather than deleting them.

@@ -451,6 +451,28 @@ status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
                       body={"member_code": "+62811000322", "item": "pin"})
 check("a phone number works too", status == 200)
 
+# The door hands both over in ONE scan (committee, 1 Sep 2026). Agus has had
+# nothing yet: the kit stamps both; the second scan is refused with who and
+# when. Sinta already holds a goodiebag from above, so the kit hands her the
+# pin she is still owed — and then refuses too.
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "agus@natcon.id", "item": "kit"})
+check("kit: one scan hands over goodiebag and pin", status == 200 and body["name"], f"{status} {body}")
+kit_time = body["redeemed_at"]
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "agus@natcon.id", "item": "kit"})
+check("kit: a second scan is refused, naming who and when",
+      status == 409 and body["already"] is True and body["redeemed_at"] == kit_time, f"{status} {body}")
+status, body, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                      body={"member_code": "sinta@natcon.id", "item": "kit"})
+check("kit: someone holding one item gets the other", status == 200, f"{status} {body}")
+status, _, _ = req("POST", "/api/v1/admin/redeem", token=admin_tok,
+                   body={"member_code": "sinta@natcon.id", "item": "kit"})
+check("...and is refused after that", status == 409)
+status, body, _ = req("GET", "/api/v1/admin/redeem/counts", token=admin_tok)
+check("the desk counts complete kits",
+      body["kits"] == 3 and body["pins"] == 3 and body["goodiebags"] == 3, f"{body}")
+
 for label, payload, want in [
     ("unknown code", {"member_code": "NATCON-2026-99999", "item": "pin"}, 404),
     ("unknown item", {"member_code": member_code, "item": "t-shirt"}, 400),
@@ -1469,9 +1491,18 @@ status, _, _ = req("GET", "/api/v1/admin/seminars", token=door_tok)
 check("the door crew can list the classes", status == 200)
 status, body, _ = req("GET", "/api/v1/admin/redeem/counts", token=door_tok)
 check("...and see what has been handed over", status == 200 and "goodiebags" in body)
+# A fresh attendee, so the door's one scan hands over a whole kit.
+status, body, _ = req("POST", "/api/v1/admin/members", token=admin_tok,
+                      body={"name": "Door Kit Test", "email": "doorkit@natcon.id",
+                            "chapter": "Chapter Door", "phone": "+628119870001"})
+door_kit_id = body["user"]["id"]
 status, body, _ = req("POST", "/api/v1/admin/redeem", token=door_tok,
-                      body={"member_code": "agus@natcon.id", "item": "goodiebag"})
-check("...and hand over a goodiebag", status == 200, f"{status} {body}")
+                      body={"member_code": "doorkit@natcon.id", "item": "kit"})
+check("...and hand over the kit", status == 200, f"{status} {body}")
+status, _, _ = req("POST", "/api/v1/admin/redeem", token=door_tok,
+                   body={"member_code": "doorkit@natcon.id", "item": "kit"})
+check("...but not twice", status == 409)
+req("DELETE", f"/api/v1/admin/members/{door_kit_id}", token=admin_tok)
 
 # Everything else is the committee's, which is the reason this account exists.
 for label, method, path in [
