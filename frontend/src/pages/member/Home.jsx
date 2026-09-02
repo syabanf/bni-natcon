@@ -6,6 +6,7 @@ import { api } from '../../api/client'
 import { dayLabel, groupByDay, timeOf } from '../../agenda'
 import { scanCode } from '../../pass'
 import { useAuthStore } from '../../store/auth'
+import { useTenantsStore } from '../../store/tenants'
 
 // The agenda is the committee's rundown, read live from the API — it used to
 // be a list baked into the bundle, which meant a change to the day's timing
@@ -126,6 +127,10 @@ export default function Home() {
       .sponsors()
       .then((d) => setSponsors(d.groups || []))
       .catch(() => setSponsors([]))
+    // Warm the tenant list so Passport opens instantly — only when the
+    // store has nothing, or nothing recent.
+    const tenants = useTenantsStore.getState()
+    if (!tenants.tenants || tenants.isStale()) tenants.refresh()
   }, [])
 
   const firstName = user?.name?.split(' ')[0] || ''
@@ -157,7 +162,7 @@ export default function Home() {
               {user?.company ? ` · ${user.company}` : ''}
             </div>
           </div>
-          <img className="mc-logo" src="/brand/logo-horizontal-white.png" alt="BNI Natcon 2026" />
+          <img className="mc-logo" src="/brand/logo-horizontal-white.webp" alt="BNI Natcon 2026" />
         </div>
         <div className="mc-bottom">
           <div>

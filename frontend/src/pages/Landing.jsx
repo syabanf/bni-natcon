@@ -85,7 +85,7 @@ export default function Landing() {
       <header className="landing-hero">
         <img
           className="landing-logo"
-          src="/brand/logo-stacked-white.png"
+          src="/brand/logo-stacked-white.webp"
           alt="BNI Indonesia National Conference 2026 — Accelerate"
         />
         <span className="landing-pill">National Conference 2026</span>

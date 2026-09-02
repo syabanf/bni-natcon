@@ -18,7 +18,7 @@ function AppBar({ backTo, tour = false }) {
   return (
     <header className="appbar">
       <div className="brand">
-        <img className="brand-logo" src="/brand/logo-horizontal.png" alt="BNI Indonesia National Conference 2026 — Accelerate" />
+        <img className="brand-logo" src="/brand/logo-horizontal.webp" alt="BNI Indonesia National Conference 2026 — Accelerate" />
       </div>
       <div className="appbar-right">
         {/* Next to Log out, on every attendee screen — the two things you

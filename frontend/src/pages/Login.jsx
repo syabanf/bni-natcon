@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api/client'
 import { useAuthStore } from '../store/auth'
+import { preloadTenants } from '../store/tenants'
 import ForgotPassword from './ForgotPassword'
 import { WitCredit } from '../components/Layout'
 
@@ -89,6 +90,7 @@ export default function Login({ audience = 'attendee' }) {
         setChoice(res)
       } else {
         setAuth(res.token, res.user)
+        preloadTenants(res.user)
       }
     } catch (err) {
       setError(err.message)
@@ -103,6 +105,7 @@ export default function Login({ audience = 'attendee' }) {
     try {
       const { token, user } = await api.selectAccount(choice.choice_token, account.id)
       setAuth(token, user)
+      preloadTenants(user)
     } catch (err) {
       setError(err.message)
       setChoice(null)
@@ -172,7 +175,7 @@ export default function Login({ audience = 'attendee' }) {
             <p className="auth-eyebrow">{copy.eyebrow}</p>
             <img
               className="auth-logo"
-              src="/brand/logo-horizontal.png"
+              src="/brand/logo-horizontal.webp"
               alt="BNI Indonesia National Conference 2026 — Accelerate"
             />
             <p className="auth-sub">{copy.sub}</p>
@@ -265,7 +268,7 @@ export default function Login({ audience = 'attendee' }) {
           <span className="auth-streak s2" />
           <span className="auth-streak s3" />
           <div className="auth-hero-inner">
-            <img className="auth-hero-logo" src="/brand/logo-stacked-white.png" alt="" />
+            <img className="auth-hero-logo" src="/brand/logo-stacked-white.webp" alt="" />
             <span className="auth-hero-meta">3 September 2026 · Pullman Central Park Jakarta</span>
           </div>
         </aside>

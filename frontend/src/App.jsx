@@ -7,16 +7,25 @@ import Login from './pages/Login'
 import SetPassword from './pages/SetPassword'
 import WrongApp from './pages/WrongApp'
 import Landing from './pages/Landing'
-import Home from './pages/member/Home'
-import MyQR from './pages/member/MyQR'
-import Passport from './pages/member/Passport'
-import Seminars from './pages/member/Seminars'
-import Networking from './pages/member/Networking'
-import Profile from './pages/member/Profile'
 import Dashboard from './pages/tenant/Dashboard'
 
 // html5-qrcode besar; muat hanya saat tenant membuka Scanner.
 const Scanner = lazy(() => import('./pages/tenant/Scanner'))
+
+// Halaman peserta dimuat per-route: layar pertama (Landing/Login) tidak perlu
+// membawa QR, agenda, networking dan sisanya — bundle awal jadi jauh lebih
+// kecil di HP.
+const Home = lazy(() => import('./pages/member/Home'))
+const MyQR = lazy(() => import('./pages/member/MyQR'))
+const Passport = lazy(() => import('./pages/member/Passport'))
+const Seminars = lazy(() => import('./pages/member/Seminars'))
+const Networking = lazy(() => import('./pages/member/Networking'))
+const Profile = lazy(() => import('./pages/member/Profile'))
+
+// Fallback sekecil mungkin: satu baris loading-note, bukan layar putih.
+const page = (element) => (
+  <Suspense fallback={<div className="loading-note">Loading…</div>}>{element}</Suspense>
+)
 
 // Each app lives under its own path prefix, so a URL always says which
 // app it belongs to: /attendee/… for the member pass, /tenant/… for the
@@ -106,12 +115,12 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route path="/attendee" element={<Home />} />
-          <Route path="/attendee/qr" element={<MyQR />} />
-          <Route path="/attendee/passport" element={<Passport />} />
-          <Route path="/attendee/seminar" element={<Seminars />} />
-          <Route path="/attendee/network" element={<Networking />} />
-          <Route path="/attendee/profile" element={<Profile />} />
+          <Route path="/attendee" element={page(<Home />)} />
+          <Route path="/attendee/qr" element={page(<MyQR />)} />
+          <Route path="/attendee/passport" element={page(<Passport />)} />
+          <Route path="/attendee/seminar" element={page(<Seminars />)} />
+          <Route path="/attendee/network" element={page(<Networking />)} />
+          <Route path="/attendee/profile" element={page(<Profile />)} />
         </Route>
 
         <Route
