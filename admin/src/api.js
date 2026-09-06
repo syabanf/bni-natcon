@@ -265,6 +265,10 @@ export const api = {
   drawPick: (key) => request(`/admin/draws/${key}/pick`, { method: 'POST' }),
   setDrawMinimum: (key, min) =>
     request(`/admin/draws/${key}/minimum`, { method: 'PUT', body: { min_booth_visits: min } }),
+  setDrawPrizeName: (key, prizeName) =>
+    request(`/admin/draws/${key}/prize-name`, { method: 'PUT', body: { prize_name: prizeName } }),
+  setDrawPrizeList: (key, prizeList) =>
+    request(`/admin/draws/${key}/prize-list`, { method: 'PUT', body: { prize_list: prizeList } }),
   resetDraw: (key) => request(`/admin/draws/${key}/winners`, { method: 'DELETE' }),
   // The speed-networking round: everyone counts down to the same moment.
   networkingSession: (opts) => request('/networking/session', opts),

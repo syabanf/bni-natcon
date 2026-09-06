@@ -48,14 +48,21 @@ func (s *Server) handleAdminTenantDetail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	type visitorDTO struct {
-		Name      string    `json:"name"`
-		Chapter   string    `json:"chapter"`
-		Company   string    `json:"company"`
-		VisitedAt time.Time `json:"visited_at"`
+		Name       string    `json:"name"`
+		MemberCode string    `json:"member_code"`
+		Email      string    `json:"email"`
+		Phone      string    `json:"phone"`
+		Chapter    string    `json:"chapter"`
+		Company    string    `json:"company"`
+		Note       string    `json:"note"`
+		VisitedAt  time.Time `json:"visited_at"`
 	}
 	visitors := make([]visitorDTO, 0, len(d.Visitors))
 	for _, v := range d.Visitors {
-		visitors = append(visitors, visitorDTO{Name: v.Name, Chapter: v.Chapter, Company: v.Company, VisitedAt: v.VisitedAt})
+		visitors = append(visitors, visitorDTO{
+			Name: v.Name, MemberCode: v.MemberCode, Email: v.Email, Phone: v.Phone,
+			Chapter: v.Chapter, Company: v.Company, Note: v.Note, VisitedAt: v.VisitedAt,
+		})
 	}
 	respondJSON(w, http.StatusOK, map[string]any{
 		"tenant": map[string]any{

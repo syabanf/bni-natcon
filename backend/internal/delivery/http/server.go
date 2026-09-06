@@ -225,6 +225,8 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/draws/{key}", s.handleDrawPool)
 				r.Post("/admin/draws/{key}/pick", s.handleDrawPick)
 				r.Put("/admin/draws/{key}/minimum", s.handleDrawMinimum)
+				r.Put("/admin/draws/{key}/prize-name", s.handleDrawPrizeName)
+				r.Put("/admin/draws/{key}/prize-list", s.handleDrawPrizeList)
 				r.Delete("/admin/draws/{key}/winners", s.handleDrawReset)
 
 				r.Get("/admin/tables/seats", s.handleAdminTableSeats)

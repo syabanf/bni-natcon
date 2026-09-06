@@ -270,6 +270,56 @@ export function exportSheet(rows, sheetName, fileName) {
   XLSX.writeFile(buildWorkbook(rows, sheetName), fileName)
 }
 
+/* ----- styled report exports (committee-facing Excel) ----- */
+
+// A report someone opens to actually work from deserves more than a raw
+// dump: bold white-on-navy headers, columns wide enough to read without
+// hovering, and a filter row so a follow-up list can be sliced by booth or
+// chapter on the spot. Column widths follow the widest value, capped so a
+// single long note does not stretch the whole sheet.
+function columnWidths(rows) {
+  const header = Object.keys(rows[0] || {})
+  return header.map((h) => {
+    let w = String(h).length
+    for (const r of rows) {
+      const v = r[h]
+      if (v !== undefined && v !== null) w = Math.max(w, String(v).length)
+      if (w >= 44) break
+    }
+    return { wch: w + 3 }
+  })
+}
+
+function decorateSheet(ws, rows) {
+  const range = XLSX.utils.decode_range(ws['!ref'])
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: range.s.r, c })]
+    if (!cell) continue
+    cell.s = {
+      font: { bold: true, color: { rgb: 'FFFFFFFF' } },
+      fill: { fgColor: { rgb: 'FF1F4E79' } },
+      alignment: { vertical: 'center' },
+    }
+  }
+  ws['!cols'] = columnWidths(rows)
+  ws['!autofilter'] = {
+    ref: `A1:${XLSX.utils.encode_col(range.e.c)}${range.e.r + 1}`,
+  }
+  return ws
+}
+
+// Styled sibling of buildWorkbook: same literal-string guarantees, plus the
+// header/column/filter polish above.
+export function buildStyledWorkbook(rows, sheetName) {
+  const wb = buildWorkbook(rows, sheetName)
+  wb.Sheets[sheetName] = decorateSheet(wb.Sheets[sheetName], rows)
+  return wb
+}
+
+export function exportStyledSheet(rows, sheetName, fileName) {
+  XLSX.writeFile(buildStyledWorkbook(rows, sheetName), fileName)
+}
+
 // Excel limits a sheet name to 31 characters and forbids : \ / ? * [ ] —
 // tenant names hold most of those.
 function sheetName(raw, taken) {
@@ -285,7 +335,8 @@ export function exportSheets(groups, fileName) {
   const wb = XLSX.utils.book_new()
   const taken = new Set()
   for (const g of groups) {
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(g.rows), sheetName(g.name, taken))
+    const ws = XLSX.utils.json_to_sheet(g.rows)
+    XLSX.utils.book_append_sheet(wb, decorateSheet(ws, g.rows), sheetName(g.name, taken))
   }
   XLSX.writeFile(wb, fileName)
 }

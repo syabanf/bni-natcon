@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
 import {
   buildWorkbook,
+  buildStyledWorkbook,
   buildTemplateWorkbook,
   MEMBER_TEMPLATE,
   TENANT_TEMPLATE,
@@ -27,33 +28,73 @@ function read(wb) {
 
 describe('Tenant Leads export', () => {
   const visits = [
-    { member_name: 'Fahmi Syaban', member_code: 'NATCON-2026-09001', chapter: 'Heritage',
-      company: 'WIT Indonesia', tenant_name: 'Hukum & Rekan', booth: 'D-01',
+    { member_name: 'Fahmi Syaban', member_code: 'NATCON-2026-09001', email: 'fahmi@flow.test', phone: '+628112345671',
+      chapter: 'Heritage', company: 'WIT Indonesia', tenant_name: 'Hukum & Rekan', booth: 'D-01',
       visited_at: '2026-09-03T12:30:00Z' },
-    { member_name: 'Reddie Wijaya', member_code: 'NATCON-2026-08154', chapter: 'Jakarta Elite',
-      company: 'Witid', tenant_name: 'Kopi Nusantara', booth: 'A-03',
+    { member_name: 'Reddie Wijaya', member_code: 'NATCON-2026-08154', email: 'reddie@natcon.id', phone: '08123456789',
+      chapter: 'Jakarta Elite', company: 'Witid', tenant_name: 'Kopi Nusantara', booth: 'A-03',
       visited_at: '2026-09-03T13:05:00Z' },
   ]
+  // Mirrors the mapping in Report.jsx, including the readable sortable time.
   const rows = visits.map((v) => ({
-    Attendee: v.member_name, 'Member Code': v.member_code, Chapter: v.chapter,
-    Company: v.company, Tenant: v.tenant_name, Booth: v.booth, Time: v.visited_at,
+    Attendee: v.member_name, 'Member Code': v.member_code,
+    Email: v.email, Phone: v.phone,
+    Chapter: v.chapter, Company: v.company, Tenant: v.tenant_name, Booth: v.booth,
+    Time: v.visited_at.replace('T', ' ').slice(0, 16),
   }))
 
-  it('carries every scan under the committee-facing headers', () => {
+  it('carries every scan with contact details under the committee-facing headers', () => {
     const { sheetName, header, rows: out } = read(buildWorkbook(rows, 'Leads'))
     expect(sheetName).toBe('Leads')
-    expect(header).toEqual(['Attendee', 'Member Code', 'Chapter', 'Company', 'Tenant', 'Booth', 'Time'])
+    expect(header).toEqual(['Attendee', 'Member Code', 'Email', 'Phone', 'Chapter', 'Company', 'Tenant', 'Booth', 'Time'])
     expect(out).toHaveLength(visits.length)
     expect(out[0]).toMatchObject({
       Attendee: 'Fahmi Syaban', 'Member Code': 'NATCON-2026-09001',
+      Email: 'fahmi@flow.test', Phone: '+628112345671',
       Tenant: 'Hukum & Rekan', Booth: 'D-01',
     })
+    expect(out[1].Phone).toBe('08123456789')
   })
 
   it('keeps timestamps sortable', () => {
     const { rows: out } = read(buildWorkbook(rows, 'Leads'))
-    // ISO-8601 sorts correctly as text, which is how a spreadsheet will treat it.
+    // "2026-09-03 12:30" sorts correctly as text, which is how a spreadsheet
+    // will treat it — and reads better on screen than the raw ISO stamp.
     expect(out[0].Time < out[1].Time).toBe(true)
+    expect(out[0].Time).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)
+  })
+})
+
+describe('the styled leads workbook', () => {
+  const rows = [
+    { Attendee: 'Fahmi Syaban', 'Member Code': 'NATCON-2026-09001', Email: 'fahmi@flow.test', Phone: '+628112345671', Booth: 'D-01', Time: '2026-09-03 12:30' },
+    { Attendee: 'Reddie Wijaya', 'Member Code': 'NATCON-2026-08154', Email: 'reddie@natcon.id', Phone: '08123456789', Booth: 'A-03', Time: '2026-09-03 13:05' },
+  ]
+
+  it('opens with a bold header, sized columns and a filter row', () => {
+    const wb = buildStyledWorkbook(rows, 'Leads')
+    const ws = wb.Sheets.Leads
+    // Header cells are styled white-on-navy bold; data cells stay plain.
+    expect(ws.A1.s.font.bold).toBe(true)
+    expect(ws.A1.s.font.color.rgb).toBe('FFFFFFFF')
+    expect(ws.A1.s.fill.fgColor.rgb).toBe('FF1F4E79')
+    expect(ws.A2.s).toBeUndefined()
+    // The filter covers the header plus every data row.
+    expect(ws['!autofilter'].ref).toBe('A1:F3')
+    // Column widths follow the content and stay capped.
+    expect(ws['!cols']).toHaveLength(6)
+    expect(ws['!cols'].every((c) => c.wch >= 7 && c.wch <= 47)).toBe(true)
+    // And the values still read back exactly as typed.
+    const out = XLSX.utils.sheet_to_json(ws, { defval: '' })
+    expect(out[0].Phone).toBe('+628112345671')
+  })
+
+  it('writes looks-like-formula values as plain text, styled or not', () => {
+    const rows = [{ Attendee: '+62 Studio', Company: '=HYPERLINK("http://evil.example","click")' }]
+    const ws = buildStyledWorkbook(rows, 'Leads').Sheets.Leads
+    expect(ws.A2.t).toBe('s')
+    expect(ws.B2.t).toBe('s')
+    expect(ws.B2.f).toBeUndefined()
   })
 })
 

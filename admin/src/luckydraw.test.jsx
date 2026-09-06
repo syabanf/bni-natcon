@@ -9,6 +9,7 @@ const draws = vi.fn()
 const drawPool = vi.fn()
 const drawPick = vi.fn()
 const setDrawMinimum = vi.fn()
+const setDrawPrizeList = vi.fn()
 const resetDraw = vi.fn()
 
 vi.mock('./api', () => ({
@@ -17,6 +18,7 @@ vi.mock('./api', () => ({
     drawPool: (...a) => drawPool(...a),
     drawPick: (...a) => drawPick(...a),
     setDrawMinimum: (...a) => setDrawMinimum(...a),
+    setDrawPrizeList: (...a) => setDrawPrizeList(...a),
     resetDraw: (...a) => resetDraw(...a),
   },
 }))
@@ -30,9 +32,11 @@ const entrant = (id, name, visits = 0) => ({
 
 const POOL = [entrant(1, 'Ayu Pratiwi', 5), entrant(2, 'Budi Santoso', 0), entrant(3, 'Citra Dewi', 12)]
 
+// Longer than SHUFFLE_MS (5 s): the shuffle has to have finished, whatever
+// the exact timer arithmetic adds on top.
 const finishShuffle = async () => {
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(6000)
+    await vi.advanceTimersByTimeAsync(11000)
   })
 }
 
@@ -116,7 +120,10 @@ describe('the draws', () => {
     await openStage()
     await pressKeys(' ')
     await finishShuffle()
-    await pressKeys(' ')
+    // The next spin waits for the button — the keyboard does not roll it.
+    await act(async () => {
+      fireEvent.click(onStage().getByRole('button', { name: /draw the next winner/i }))
+    })
     await finishShuffle()
 
     expect(drawPick).toHaveBeenCalledTimes(2)
@@ -143,6 +150,24 @@ describe('the draws', () => {
     await finishShuffle()
 
     expect(drawPick).toHaveBeenCalledTimes(1)
+  })
+
+  it('will not roll the next spin from the keyboard while a winner is up', async () => {
+    await openStage()
+    await pressKeys(' ')
+    await finishShuffle()
+    expect(onStage().getByText(/^1 drawn:/)).toBeTruthy()
+
+    // A stray, held or auto-repeating key must not start the next draw —
+    // the winner stays up until someone clicks the button.
+    await pressKeys(' ', ' ', ' ')
+    expect(drawPick).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      fireEvent.click(onStage().getByRole('button', { name: /draw the next winner/i }))
+    })
+    await finishShuffle()
+    expect(drawPick).toHaveBeenCalledTimes(2)
   })
 
   it('says why when the server has nobody left to draw', async () => {
@@ -179,5 +204,86 @@ describe('the draws', () => {
     document.documentElement.requestFullscreen = vi.fn(() => Promise.reject(new Error('denied')))
     await openStage()
     expect(document.querySelector('.draw-fullscreen')).toBeTruthy()
+  })
+
+  it('edits the prize queue row by row, with add and remove buttons', async () => {
+    const rows = () => [...document.querySelectorAll('.draw-prize-row input')]
+    // Empty queue starts with no rows and an Add button.
+    expect(screen.getByRole('button', { name: /add prize/i })).toBeTruthy()
+    expect(rows().length).toBe(0)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /add prize/i }))
+    })
+    expect(rows().length).toBe(1)
+
+    // Typing saves the queue; every row is its own field.
+    await act(async () => {
+      fireEvent.change(rows()[0], { target: { value: 'Umroh' } })
+    })
+    expect(setDrawPrizeList).toHaveBeenLastCalledWith('lucky', ['Umroh'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /add prize/i }))
+    })
+    await act(async () => {
+      fireEvent.change(rows()[1], { target: { value: 'Smart TV' } })
+    })
+    expect(setDrawPrizeList).toHaveBeenLastCalledWith('lucky', ['Umroh', 'Smart TV'])
+
+    // Editing the first row in place keeps the rest.
+    await act(async () => {
+      fireEvent.change(rows()[0], { target: { value: 'Umroh 2026' } })
+    })
+    expect(setDrawPrizeList).toHaveBeenLastCalledWith('lucky', ['Umroh 2026', 'Smart TV'])
+
+    // The × on the second row drops it.
+    await act(async () => {
+      fireEvent.click(document.querySelectorAll('.draw-prize-row .dpr-remove')[1])
+    })
+    expect(rows().length).toBe(1)
+    expect(setDrawPrizeList).toHaveBeenLastCalledWith('lucky', ['Umroh 2026'])
+  })
+
+  it('moves to the next prize after each winner', async () => {
+    draws.mockResolvedValue({
+      draws: [
+        {
+          key: 'lucky',
+          name: 'Lucky Draw',
+          prize_list: ['Umroh', 'Smart TV'],
+          min_booth_visits: 0,
+          winner_count: 0,
+        },
+        {
+          key: 'doorprize',
+          name: 'Doorprize',
+          prize_list: [],
+          min_booth_visits: 0,
+          winner_count: 0,
+        },
+      ],
+    })
+    // Reload the draws so the mocked prize list reaches the page.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Doorprize/i }))
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Lucky Draw/i }))
+    })
+
+    // First prize is on stage before anything is drawn.
+    expect(document.querySelector('.draw-stage .draw-prize-name')?.textContent).toBe('Umroh')
+
+    await openStage()
+    await pressKeys(' ')
+    await finishShuffle()
+    expect(onStage().getByText('Umroh')).toBeTruthy() // the prize they just won
+    // The next prize only spins once the button is clicked.
+    await act(async () => {
+      fireEvent.click(onStage().getByRole('button', { name: /draw the next winner/i }))
+    })
+    await finishShuffle()
+    expect(onStage().getByText('Smart TV')).toBeTruthy() // and auto-next works
   })
 })

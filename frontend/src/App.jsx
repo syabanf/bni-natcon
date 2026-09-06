@@ -6,7 +6,6 @@ import { MemberLayout, TenantLayout } from './components/Layout'
 import Login from './pages/Login'
 import SetPassword from './pages/SetPassword'
 import WrongApp from './pages/WrongApp'
-import Landing from './pages/Landing'
 import Dashboard from './pages/tenant/Dashboard'
 
 // html5-qrcode besar; muat hanya saat tenant membuka Scanner.
@@ -141,10 +140,11 @@ export default function App() {
           <Route path="/tenant/dashboard" element={<Dashboard />} />
         </Route>
 
-        {/* The front door: the poster with the countdown. Deliberately shown
-            to signed-in people too — the address on the printed material is
-            the landing, and their way in is one tap further. */}
-        <Route path="/" element={<Landing />} />
+        {/* The front door: bninatcon.com opens straight on the attendee
+            sign-in — doors open, the poster's job is done. A signed-in
+            visitor is bounced to their own home by the /login route's
+            element, so nobody is stuck here. */}
+        <Route path="/" element={<Navigate to={ATTENDEE_LOGIN} replace />} />
 
         {/* Pre-split URLs (bookmarks, installed PWAs) keep working. */}
         <Route path="/countdown" element={<Navigate to="/" replace />} />

@@ -36,7 +36,8 @@ func (s *Server) handleDraws(w http.ResponseWriter, r *http.Request) {
 	out := make([]map[string]any, 0, len(draws))
 	for _, d := range draws {
 		out = append(out, map[string]any{
-			"key": d.Key, "name": d.Name,
+			"key": d.Key, "name": d.Name, "prize_name": d.PrizeName,
+			"prize_list": d.PrizeList,
 			"min_booth_visits": d.MinBoothVisits, "winner_count": d.WinnerCount,
 		})
 	}
@@ -84,6 +85,36 @@ func (s *Server) handleDrawMinimum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.admin.SetDrawMinimum(r.Context(), chi.URLParam(r, "key"), req.MinBoothVisits); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+}
+
+func (s *Server) handleDrawPrizeName(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		PrizeName string `json:"prize_name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondDecodeError(w, err, "invalid data format")
+		return
+	}
+	if err := s.admin.SetDrawPrizeName(r.Context(), chi.URLParam(r, "key"), req.PrizeName); err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+}
+
+func (s *Server) handleDrawPrizeList(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		PrizeList []string `json:"prize_list"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondDecodeError(w, err, "invalid data format")
+		return
+	}
+	if err := s.admin.SetDrawPrizeList(r.Context(), chi.URLParam(r, "key"), req.PrizeList); err != nil {
 		respondDomainError(w, err)
 		return
 	}

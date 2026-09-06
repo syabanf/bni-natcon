@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
-import { exportSheet, exportSheets } from './excel'
+import { exportSheet, exportSheets, exportStyledSheet } from './excel'
 import { BarChart, HBarChart } from './Charts'
 
 function fmtTime(iso) {
   return new Date(iso).toLocaleString('en-GB', {
     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
   })
+}
+
+// The Excel counterpart of fmtTime: readable on screen, yet still sortable
+// as text — a spreadsheet sorting "2026-09-03 12:30" gets the same order a
+// human would.
+function fmtExportTime(iso) {
+  const d = new Date(iso)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
 const PREVIEW_ROWS = 10
@@ -110,10 +119,10 @@ export function ReportLeads({ onUnauthorized }) {
       sub="Every booth visit scan · tenant follow-up material"
       exportDisabled={visits.length === 0}
       extraExport={{
-        label: 'Per tenant (no phone)',
-        // The handout for the tenants themselves: one sheet per booth,
-        // that booth's visitors and its own notes — and no phone numbers,
-        // because the attendees consented to a scan, not to a call list.
+        label: 'Per tenant (all booths)',
+        // One sheet per booth with that booth's own visitors — the same
+        // leads the tenant's detail page exports, batched into a single
+        // workbook for handing around the committee room.
         onClick: () => {
           const byTenant = {}
           for (const v of visits) {
@@ -121,8 +130,9 @@ export function ReportLeads({ onUnauthorized }) {
             byTenant[key] = byTenant[key] || []
             byTenant[key].push({
               Attendee: v.member_name, 'Member Code': v.member_code,
+              Email: v.email || '', Phone: v.phone || '',
               Chapter: v.chapter, Company: v.company,
-              Note: v.note || '', Time: v.visited_at,
+              Note: v.note || '', Time: fmtExportTime(v.visited_at),
             })
           }
           exportSheets(
@@ -134,10 +144,15 @@ export function ReportLeads({ onUnauthorized }) {
         },
       }}
       onExport={() =>
-        exportSheet(
+        // The committee's own follow-up list: the full lead, including how
+        // to reach them — same contact fields as the per-tenant exports.
+        exportStyledSheet(
           visits.map((v) => ({
-            Attendee: v.member_name, 'Member Code': v.member_code, Chapter: v.chapter,
-            Company: v.company, Tenant: v.tenant_name, Booth: v.booth, Time: v.visited_at,
+            Attendee: v.member_name, 'Member Code': v.member_code,
+            Email: v.email || '', Phone: v.phone || '',
+            Chapter: v.chapter, Company: v.company,
+            Tenant: v.tenant_name, Booth: v.booth,
+            Time: fmtExportTime(v.visited_at),
           })),
           'Leads', 'natcon2026-tenant-leads.xlsx'
         )
@@ -166,9 +181,9 @@ export function ReportLeads({ onUnauthorized }) {
         </h2>
         <p className="panel-sub">{visits.length} rows · newest first</p>
         <ReportTable
-          columns={['Attendee', 'Member Code', 'Chapter', 'Company', 'Tenant', 'Booth', 'Time']}
+          columns={['Attendee', 'Member Code', 'Email', 'Phone', 'Chapter', 'Company', 'Tenant', 'Booth', 'Time']}
           rows={visits.map((v) => [
-            v.member_name, v.member_code, v.chapter, v.company, v.tenant_name, v.booth, fmtTime(v.visited_at),
+            v.member_name, v.member_code, v.email || '', v.phone || '', v.chapter, v.company, v.tenant_name, v.booth, fmtTime(v.visited_at),
           ])}
         />
       </div>

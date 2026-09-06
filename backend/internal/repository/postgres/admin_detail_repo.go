@@ -81,7 +81,8 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 	}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT u.name, u.chapter, u.company, v.created_at
+		SELECT u.id, u.name, COALESCE(u.member_code, ''), COALESCE(u.email, ''),
+		       COALESCE(u.phone, ''), u.chapter, u.company, COALESCE(v.note, ''), v.created_at
 		FROM visits v JOIN users u ON u.id = v.member_id
 		WHERE v.tenant_id = $1
 		ORDER BY v.created_at DESC`, id)
@@ -91,7 +92,8 @@ func (r *AdminRepo) TenantDetail(ctx context.Context, id int64) (*domain.TenantD
 	defer rows.Close()
 	for rows.Next() {
 		var v domain.Visitor
-		if err := rows.Scan(&v.Name, &v.Chapter, &v.Company, &v.VisitedAt); err != nil {
+		if err := rows.Scan(&v.MemberID, &v.Name, &v.MemberCode, &v.Email,
+			&v.Phone, &v.Chapter, &v.Company, &v.Note, &v.VisitedAt); err != nil {
 			return nil, err
 		}
 		d.Visitors = append(d.Visitors, v)

@@ -136,6 +136,8 @@ type AdminRepository interface {
 	// somebody a second prize.
 	Draws(ctx context.Context) ([]Draw, error)
 	SetDrawMinimum(ctx context.Context, key string, min int) error
+	SetDrawPrizeName(ctx context.Context, key, prizeName string) error
+	SetDrawPrizeList(ctx context.Context, key string, prizes []string) error
 	DrawPool(ctx context.Context, key string) ([]DrawEntrant, error)
 	Pick(ctx context.Context, key string) (*DrawWinner, error)
 	DrawWinners(ctx context.Context, key string) ([]DrawWinner, error)

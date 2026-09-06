@@ -96,6 +96,7 @@ type Visitor struct {
 	Chapter    string
 	Company    string
 	MemberCode string
+	Email      string
 	Phone      string
 	Note       string
 	VisitedAt  time.Time
@@ -472,6 +473,8 @@ type BulkRowError struct {
 type VisitReportRow struct {
 	MemberName string
 	MemberCode string
+	Email      string
+	Phone      string
 	Chapter    string
 	Company    string
 	TenantName string
@@ -579,6 +582,14 @@ type NetworkingTable struct {
 type Draw struct {
 	Key  string
 	Name string
+	// What this draw is giving away — typed by the operator on the day and
+	// shown on the stage screen, so the hall knows what it is watching for.
+	// Empty until someone says what the prize is.
+	PrizeName string
+	// The whole queue of prizes this ceremony gives away, in order. The page
+	// shows the first unconsumed one and moves to the next after each winner;
+	// an empty queue means the operator has not set the list yet.
+	PrizeList []string
 	// How many booths an attendee must have visited to be in this draw.
 	// Zero means everyone registered is in it.
 	MinBoothVisits int

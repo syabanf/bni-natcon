@@ -38,6 +38,34 @@ func (u *AdminUsecase) SetDrawMinimum(ctx context.Context, key string, min int) 
 	return u.admin.SetDrawMinimum(ctx, k, min)
 }
 
+// SetDrawPrizeName says what a draw is giving away — shown on the stage
+// screen. Free text, and empty is fine: that just means the operator has
+// not said yet.
+func (u *AdminUsecase) SetDrawPrizeName(ctx context.Context, key, prizeName string) error {
+	k, err := validDrawKey(key)
+	if err != nil {
+		return err
+	}
+	return u.admin.SetDrawPrizeName(ctx, k, strings.TrimSpace(prizeName))
+}
+
+// SetDrawPrizeList queues every prize a ceremony gives away, in order — the
+// stage screen shows the first unconsumed one and moves on after each
+// winner. Blank lines are dropped; an empty list clears the queue.
+func (u *AdminUsecase) SetDrawPrizeList(ctx context.Context, key string, prizes []string) error {
+	k, err := validDrawKey(key)
+	if err != nil {
+		return err
+	}
+	clean := make([]string, 0, len(prizes))
+	for _, p := range prizes {
+		if p = strings.TrimSpace(p); p != "" {
+			clean = append(clean, p)
+		}
+	}
+	return u.admin.SetDrawPrizeList(ctx, k, clean)
+}
+
 func (u *AdminUsecase) DrawPool(ctx context.Context, key string) ([]domain.DrawEntrant, error) {
 	k, err := validDrawKey(key)
 	if err != nil {

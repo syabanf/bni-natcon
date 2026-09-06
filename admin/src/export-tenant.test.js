@@ -10,19 +10,27 @@ vi.mock('xlsx', async (importOriginal) => {
 const XLSX = await import('xlsx')
 const { exportSheets } = await import('./excel')
 
-describe('the per-tenant handout workbook', () => {
-  it('gives every tenant its own sheet, phone nowhere in it', () => {
+describe('the per-tenant leads workbook', () => {
+  it('gives every tenant its own sheet carrying its visitors with contacts', () => {
     exportSheets(
       [
-        { name: 'A14 WIT.id', rows: [{ Attendee: 'Ayu', 'Member Code': 'NATCON-2026-09001', Chapter: 'Heritage', Company: 'Ayu Co', Note: 'follow up', Time: 'x' }] },
-        { name: 'A1 SSCX International', rows: [{ Attendee: 'Budi', 'Member Code': 'NATCON-2026-09002', Chapter: 'Grow', Company: 'Budi Co', Note: '', Time: 'y' }] },
+        { name: 'A14 WIT.id', rows: [{ Attendee: 'Ayu', 'Member Code': 'NATCON-2026-09001', Email: 'ayu@wit.id', Phone: '+628111000154', Chapter: 'Heritage', Company: 'Ayu Co', Note: 'follow up', Time: '2026-09-03 12:30' }] },
+        { name: 'A1 SSCX International', rows: [{ Attendee: 'Budi', 'Member Code': 'NATCON-2026-09002', Email: 'budi@natcon.id', Phone: '08111000201', Chapter: 'Grow', Company: 'Budi Co', Note: '', Time: '2026-09-03 12:31' }] },
       ],
       'leads.xlsx',
     )
     expect(written.SheetNames).toEqual(['A14 WIT.id', 'A1 SSCX International'])
     const rows = XLSX.utils.sheet_to_json(written.Sheets['A14 WIT.id'])
     expect(rows[0].Attendee).toBe('Ayu')
-    expect(Object.keys(rows[0])).not.toContain('Phone')
+    expect(rows[0].Email).toBe('ayu@wit.id')
+    expect(rows[0].Phone).toBe('+628111000154')
+  })
+
+  it('styles the header and adds a filter to each sheet', () => {
+    exportSheets([{ name: 'A14 WIT.id', rows: [{ Attendee: 'Ayu', Phone: '+628111000154' }] }], 'leads.xlsx')
+    const ws = written.Sheets['A14 WIT.id']
+    expect(ws.A1.s.font.bold).toBe(true)
+    expect(ws['!autofilter'].ref).toBe('A1:B2')
   })
 
   it('survives tenant names Excel would refuse as sheet names', () => {

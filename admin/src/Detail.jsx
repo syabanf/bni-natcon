@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
 import TenantMark from './TenantMark'
+import { exportStyledSheet } from './excel'
 
 // Prefer the structured speaker rows; fall back to the plain-text columns
 // for classes that were typed in before speakers became first-class.
@@ -17,6 +18,15 @@ function fmtTime(iso) {
   })
 }
 
+// The Excel counterpart of fmtTime: readable on screen, yet still sortable
+// as text — a spreadsheet sorting "2026-09-03 12:30" gets the same order a
+// human would.
+function fmtExportTime(iso) {
+  const d = new Date(iso)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
 function initials(name = '') {
   return name
     .split(' ')
@@ -26,7 +36,7 @@ function initials(name = '') {
     .toUpperCase()
 }
 
-function DetailShell({ title, sub, onBack, children }) {
+function DetailShell({ title, sub, onBack, action, children }) {
   return (
     <>
       <button className="back-btn" onClick={onBack}>
@@ -37,6 +47,7 @@ function DetailShell({ title, sub, onBack, children }) {
           <h1>{title}</h1>
           <p className="micro">{sub}</p>
         </div>
+        {action && <div className="head-right">{action}</div>}
       </div>
       {children}
     </>
@@ -193,11 +204,26 @@ export function TenantDetail({ id, onBack }) {
   if (!data) return <DetailShell title="Tenant Detail" sub="Loading…" onBack={onBack} />
 
   const { tenant, total_scans, scans_today, visitors } = data
+  const exportLeads = () =>
+    exportStyledSheet(
+      visitors.map((v) => ({
+        Attendee: v.name, 'Member Code': v.member_code,
+        Email: v.email || '', Phone: v.phone || '',
+        Chapter: v.chapter, Company: v.company,
+        Note: v.note || '', Time: fmtExportTime(v.visited_at),
+      })),
+      'Leads', `natcon2026-leads-${String(tenant.booth).replace(/[^A-Za-z0-9._-]+/g, '-')}.xlsx`
+    )
   return (
     <DetailShell
       title={tenant.name}
       sub={`${tenant.kind === 'sponsor' ? 'Official sponsor' : 'Booth tenant'} · ${tenant.booth}`}
       onBack={onBack}
+      action={
+        <button className="md-secondary" onClick={exportLeads} disabled={visitors.length === 0}>
+          ⇓ Export Excel
+        </button>
+      }
     >
       <div className="detail-hero">
         <TenantMark
@@ -237,8 +263,10 @@ export function TenantDetail({ id, onBack }) {
         </h2>
         <p className="panel-sub">Terbaru di atas · bahan follow-up tenant</p>
         <SimpleTable
-          columns={['Attendee', 'Chapter', 'Company', 'Time']}
-          rows={visitors.map((v) => [<b key="n">{v.name}</b>, v.chapter, v.company, fmtTime(v.visited_at)])}
+          columns={['Attendee', 'Email', 'Phone', 'Chapter', 'Company', 'Time']}
+          rows={visitors.map((v) => [
+            <b key="n">{v.name}</b>, v.email || '', v.phone || '', v.chapter, v.company, fmtTime(v.visited_at),
+          ])}
           emptyText="No visitors yet."
         />
       </div>

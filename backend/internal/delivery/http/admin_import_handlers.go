@@ -105,6 +105,8 @@ func (s *Server) handleAdminVisitReport(w http.ResponseWriter, r *http.Request) 
 		out = append(out, map[string]any{
 			"member_name": v.MemberName,
 			"member_code": v.MemberCode,
+			"email":       v.Email,
+			"phone":       v.Phone,
 			"chapter":     v.Chapter,
 			"company":     v.Company,
 			"tenant_name": v.TenantName,

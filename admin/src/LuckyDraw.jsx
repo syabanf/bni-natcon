@@ -27,7 +27,9 @@ function initials(name = '') {
 
 
 
-const SHUFFLE_MS = 3600
+// Five seconds of ceremony on stage — long enough for the room to react,
+// short enough to keep the pace up between prizes.
+const SHUFFLE_MS = 5000
 
 export default function LuckyDraw({ onUnauthorized }) {
   const [drawKey, setDrawKey] = useState('lucky')
@@ -85,6 +87,20 @@ export default function LuckyDraw({ onUnauthorized }) {
   // already a winner of either draw.
   const deck = pool || []
   const draw = draws.find((d) => d.key === drawKey)
+
+  // Which prize the stage is reading out. One draw consumes one line of the
+  // queue: while a winner is up it names the prize they just took (the last
+  // one drawn); any other moment it names the next prize still to come.
+  // The list itself lives on the server, so a reload mid-ceremony lands on
+  // the same prize as the projector.
+  const prizeList = draw?.prize_list || []
+  const drawnCount = winners.length
+  const stagePrize =
+    phase === 'winner' && drawnCount > 0
+      ? prizeList[drawnCount - 1] || ''
+      : drawnCount < prizeList.length
+        ? prizeList[drawnCount]
+        : ''
 
   const enterStage = () => {
     setStage(true)
@@ -179,7 +195,11 @@ export default function LuckyDraw({ onUnauthorized }) {
       }
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        if (phase !== 'shuffling') start()
+        // Only the idle deck answers to the keyboard. A winner on screen is
+        // the operator's moment to pause — a held or auto-repeating key must
+        // not roll the next spin by itself — so the next draw waits for an
+        // actual click on the "Draw the next winner" button.
+        if (phase === 'idle') start()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -190,6 +210,10 @@ export default function LuckyDraw({ onUnauthorized }) {
 
   const stageContent = (
     <>
+        {/* The prize this round is about — the next in the queue, or, while
+            a winner is up, the one they just took. Read from the list the
+            operator typed, so it moves on by itself after every draw. */}
+        {stagePrize && <div className="draw-prize-name">{stagePrize}</div>}
         {phase === 'idle' && (
           <div className="draw-idle">
             <div className="draw-deck">
@@ -291,6 +315,70 @@ export default function LuckyDraw({ onUnauthorized }) {
           })}
         </div>
         <div className="draw-rule">
+          <div className="md-field draw-prizes">
+            <span>
+              Prizes
+              <em> — in order: after each winner the next prize moves up on stage</em>
+            </span>
+            <div className="draw-prize-rows">
+              {(draw?.prize_list || []).map((prize, i) => (
+                <div className="draw-prize-row" key={i}>
+                  <span className="dpr-idx">{i + 1}</span>
+                  <input
+                    type="text"
+                    value={prize}
+                    placeholder={`Prize ${i + 1}`}
+                    onChange={async (e) => {
+                      const list = [...(draw?.prize_list || [])]
+                      list[i] = e.target.value
+                      setDraws((prev) =>
+                        prev.map((x) => (x.key === drawKey ? { ...x, prize_list: list } : x)),
+                      )
+                      try {
+                        await api.setDrawPrizeList(drawKey, list)
+                      } catch (err) {
+                        setError(err.message)
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="dpr-remove"
+                    aria-label={`Remove prize ${i + 1}`}
+                    onClick={async () => {
+                      const list = [...(draw?.prize_list || [])]
+                      list.splice(i, 1)
+                      setDraws((prev) =>
+                        prev.map((x) => (x.key === drawKey ? { ...x, prize_list: list } : x)),
+                      )
+                      try {
+                        await api.setDrawPrizeList(drawKey, list)
+                      } catch (err) {
+                        setError(err.message)
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="dpr-add"
+              onClick={() =>
+                setDraws((prev) =>
+                  prev.map((x) =>
+                    x.key === drawKey
+                      ? { ...x, prize_list: [...(x.prize_list || []), ''] }
+                      : x,
+                  ),
+                )
+              }
+            >
+              + Add prize
+            </button>
+          </div>
           <label className="md-field">
             <span>
               Booths to visit before entering

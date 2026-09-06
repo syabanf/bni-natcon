@@ -5,11 +5,23 @@
 # oom_score_adj tells the kernel to reach for something else first.
 # Semua variabel bisa dioverride lewat file `.env` di root repo
 # (lihat .env.example) — tanpa .env pun default di bawah sudah jalan.
+# Every service logs every request (chi's logger on the API, access logs on
+# the nginx tiers): at the modelled 250 req/s that is ~2 GB per container per
+# event day, and Docker's json-file driver has no cap unless one is given.
+# This host has been to 86 % full once already. 50 MB x 5 keeps roughly the
+# last hour of traffic per container for debugging and nothing older.
+x-natcon-logging: &natcon-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:16-alpine
     container_name: natcon-db
     restart: unless-stopped
+    logging: *natcon-logging
     # The database is the one component whose loss is unrecoverable mid-event.
     cpu_shares: 4096
     mem_limit: 2g
@@ -24,8 +36,10 @@ services:
     # the default pool, and running out looks like the API failing to start
     # at the worst possible moment.
     command: ["postgres", "-c", "max_connections=${DB_MAX_CONNECTIONS:-200}"]
+    # Loopback only. Backups run through `docker exec`, the API reaches it
+    # over the compose network, and nothing on the LAN has any business here.
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - natcon-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -41,6 +55,7 @@ services:
   api:
     build: ./backend
     restart: unless-stopped
+    logging: *natcon-logging
     deploy:
       # Two, not more, unless there is CPU to back it. Replicas do not make a
       # fixed machine faster — one Go process already uses every core, and
@@ -83,6 +98,12 @@ services:
     image: nginx:1.27-alpine
     container_name: natcon-lb
     restart: unless-stopped
+    logging: *natcon-logging
+    # The only way to the API deserves the API's own posture: an lb that loses
+    # a CPU fight or gets OOM-picked takes every replica behind it offline.
+    cpu_shares: 4096
+    mem_limit: 256m
+    oom_score_adj: -600
     volumes:
       - ./deploy/api-lb.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -103,6 +124,7 @@ services:
         VITE_DOOR_URL: ${VITE_DOOR_URL:-http://localhost:8087/door/login}
     container_name: natcon-frontend
     restart: unless-stopped
+    logging: *natcon-logging
     cpu_shares: 2048
     mem_limit: 256m
     oom_score_adj: -400
@@ -115,6 +137,7 @@ services:
     build: ./admin
     container_name: natcon-admin
     restart: unless-stopped
+    logging: *natcon-logging
     cpu_shares: 2048
     mem_limit: 256m
     oom_score_adj: -400
@@ -127,6 +150,7 @@ services:
     build: ./door
     container_name: natcon-door
     restart: unless-stopped
+    logging: *natcon-logging
     cpu_shares: 2048
     mem_limit: 256m
     oom_score_adj: -400
