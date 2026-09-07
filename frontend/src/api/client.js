@@ -129,6 +129,7 @@ export const api = {
   boothStats: () => request('/booth/stats'),
   boothVisitors: (limit = 10) =>
     request(`/booth/visitors?limit=${limit}`),
+  boothVisitorsExport: () => request('/booth/visitors/export'),
   visitorDetail: (memberId) =>
     request(`/booth/visitors/${memberId}`),
   setVisitorNote: (memberId, note) =>

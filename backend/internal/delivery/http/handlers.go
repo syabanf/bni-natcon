@@ -406,6 +406,29 @@ func (s *Server) handleBoothVisitors(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"visitors": out})
 }
 
+// The booth's own export: name and email of everyone who let the stand scan
+// them — the two fields the consent notice names for booth follow-up. The
+// phone stays out, as everywhere on the booth side.
+func (s *Server) handleBoothVisitorsExport(w http.ResponseWriter, r *http.Request) {
+	visitors, err := s.booth.AllVisitors(r.Context(), userIDFrom(r.Context()))
+	if err != nil {
+		respondDomainError(w, err)
+		return
+	}
+	out := make([]map[string]any, 0, len(visitors))
+	for _, v := range visitors {
+		out = append(out, map[string]any{
+			"name":       v.Name,
+			"email":      v.Email,
+			"chapter":    v.Chapter,
+			"company":    v.Company,
+			"note":       v.Note,
+			"visited_at": v.VisitedAt.In(eventZone).Format(time.RFC3339),
+		})
+	}
+	respondJSON(w, http.StatusOK, map[string]any{"visitors": out})
+}
+
 // The phone number is deliberately absent. A scan is somebody agreeing to be
 // counted at a stand, not handing over their WhatsApp; the committee's own
 // export is where a booth's follow-up list comes from, and the per-tenant one

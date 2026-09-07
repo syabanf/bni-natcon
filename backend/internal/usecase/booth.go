@@ -38,6 +38,16 @@ func (u *BoothUsecase) RecentVisitors(ctx context.Context, tenantUserID int64, l
 	return u.visits.RecentVisitors(ctx, booth.ID, limit)
 }
 
+// AllVisitors is the booth's export: every visitor, for the follow-up sheet
+// the crew takes home.
+func (u *BoothUsecase) AllVisitors(ctx context.Context, tenantUserID int64) ([]domain.Visitor, error) {
+	booth, err := u.tenants.GetByOwnerUserID(ctx, tenantUserID)
+	if err != nil {
+		return nil, err
+	}
+	return u.visits.AllVisitors(ctx, booth.ID)
+}
+
 // SetVisitorNote stores the booth's private note about a visitor.
 func (u *BoothUsecase) SetVisitorNote(ctx context.Context, tenantUserID, memberID int64, note string) error {
 	booth, err := u.tenants.GetByOwnerUserID(ctx, tenantUserID)

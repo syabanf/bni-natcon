@@ -44,6 +44,9 @@ type VisitRepository interface {
 	CountByMember(ctx context.Context, memberID int64) (int, error)
 	StatsByTenant(ctx context.Context, tenantID int64) (*BoothStats, error)
 	RecentVisitors(ctx context.Context, tenantID int64, limit int) ([]Visitor, error)
+	// AllVisitors is the booth's own follow-up sheet: every scan, oldest
+	// first, with the email the attendee agreed to share.
+	AllVisitors(ctx context.Context, tenantID int64) ([]Visitor, error)
 	// SetNote stores the booth's private note about a visitor.
 	// ErrNotFound when the member never visited this booth.
 	SetNote(ctx context.Context, tenantID, memberID int64, note string) error

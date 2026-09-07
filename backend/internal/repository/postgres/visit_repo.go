@@ -81,6 +81,34 @@ func (r *VisitRepo) RecentVisitors(ctx context.Context, tenantID int64, limit in
 	return out, rows.Err()
 }
 
+// AllVisitors backs the booth's export: name and email of everyone who let
+// the stand scan them. The consent notice names exactly these two fields as
+// what a visited booth may follow up with; the phone stays out here too.
+func (r *VisitRepo) AllVisitors(ctx context.Context, tenantID int64) ([]domain.Visitor, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.id, u.name, COALESCE(u.email, ''), u.chapter, u.company,
+		       COALESCE(u.member_code, ''), COALESCE(v.note, ''), v.created_at
+		FROM visits v
+		JOIN users u ON u.id = v.member_id
+		WHERE v.tenant_id = $1
+		ORDER BY v.created_at ASC`, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []domain.Visitor
+	for rows.Next() {
+		var v domain.Visitor
+		if err := rows.Scan(&v.MemberID, &v.Name, &v.Email, &v.Chapter, &v.Company,
+			&v.MemberCode, &v.Note, &v.VisitedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, rows.Err()
+}
+
 func (r *VisitRepo) SetNote(ctx context.Context, tenantID, memberID int64, note string) error {
 	tag, err := r.pool.Exec(ctx,
 		`UPDATE visits SET note = $3 WHERE tenant_id = $1 AND member_id = $2`,

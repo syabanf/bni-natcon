@@ -3098,3 +3098,18 @@ button.stat-redeem {
   font-size: 12.5px;
   color: #8b919b;
 }
+
+/* Booth: the visitor export, a quiet link beside the list title. */
+.export-link {
+  border: 1px solid #e3e5e9;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--red);
+  cursor: pointer;
+}
+.export-link:disabled {
+  opacity: 0.6;
+}

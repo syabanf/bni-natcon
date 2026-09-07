@@ -920,14 +920,26 @@ check("a booth never receives a visitor's phone number",
 status, body, _ = req("GET", "/api/v1/booth/visitors?limit=5", token=tenant_tok)
 check("visitor list shows the note",
       any(v.get("note") == "interested in bulk order" for v in body["visitors"]))
+# The booth's own export: every visitor with name and email — the two fields
+# the consent notice names for booth follow-up — and still no phone.
+status, body, _ = req("GET", "/api/v1/booth/visitors/export", token=tenant_tok)
+check("the booth exports its visitors with name and email",
+      status == 200 and len(body["visitors"]) == 2
+      and {v["name"] for v in body["visitors"]} == {"Reddie Wijaya", "Sinta Dewi"}
+      and all(v["email"].endswith("@natcon.id") for v in body["visitors"])
+      and not any("phone" in v for v in body["visitors"]), f"{status} {body}")
+status, _, _ = req("GET", "/api/v1/booth/visitors/export", token=member_tok)
+check("an attendee cannot pull a booth's export", status == 403)
 
 # That note rides into the committee's leads report — the per-tenant handout
-# is built from these rows, and each sheet only ever shows its own notes.
+# is built from these rows, and each sheet only ever shows its own notes. The
+# committee's own sheet carries the phone (6 Sep 2026): follow-up is theirs
+# to run. The booth side stays phone-free, asserted above.
 status, body, _ = req("GET", "/api/v1/admin/report/visits", token=admin_tok)
-check("the leads report carries the booth's note, and never a phone number",
+check("the leads report carries the booth's note and the phone for the committee",
       status == 200
       and any(v["note"] == "interested in bulk order" and v["booth"] == "A1" for v in body["visits"])
-      and all("phone" not in v for v in body["visits"]), f'{body["visits"][:2]}')
+      and all(v.get("phone") for v in body["visits"]), f'{body["visits"][:2]}')
 status, _, _ = req("PUT", "/api/v1/booth/visitors/999999/note", token=tenant_tok, body={"note": "x"})
 check("note for non-visitor -> 404", status == 404)
 

@@ -170,6 +170,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/booth", s.handleBooth)
 				r.Get("/booth/stats", s.handleBoothStats)
 				r.Get("/booth/visitors", s.handleBoothVisitors)
+				r.Get("/booth/visitors/export", s.handleBoothVisitorsExport)
 				r.Get("/booth/visitors/{memberID}", s.handleVisitorDetail)
 				r.Put("/booth/visitors/{memberID}/note", s.handleVisitorNote)
 			})

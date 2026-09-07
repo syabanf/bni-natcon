@@ -115,11 +115,48 @@ function VisitorDetail({ memberId, onBack }) {
   )
 }
 
+// The follow-up sheet, built on the device: one row per visitor, name and
+// email — exactly what the consent notice lets a visited booth keep. A BOM
+// up front so Excel reads the UTF-8 names right.
+function csvOf(rows) {
+  const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const lines = [['Name', 'Email'].map(cell).join(',')]
+  for (const r of rows) lines.push([r.name, r.email].map(cell).join(','))
+  return '\ufeff' + lines.join('\r\n') + '\r\n'
+}
+
+function download(filename, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export default function Dashboard() {
   const [booth, setBooth] = useState(null)
   const [stats, setStats] = useState(null)
   const [visitors, setVisitors] = useState([])
   const [detailId, setDetailId] = useState(null)
+  const [exporting, setExporting] = useState(false)
+
+  const exportVisitors = async () => {
+    setExporting(true)
+    try {
+      const d = await api.boothVisitorsExport()
+      const rows = d.visitors || []
+      const slug = (booth?.booth || booth?.name || 'booth').toString().replace(/[^A-Za-z0-9]+/g, '-')
+      download(`natcon2026-visitors-${slug}.csv`, csvOf(rows))
+      toast(rows.length ? `Exported ${rows.length} visitors` : 'No visitors to export yet')
+    } catch (err) {
+      toast(err.message)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const load = useCallback(() => {
     api.boothStats().then(setStats).catch(() => {})
@@ -173,8 +210,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="section-title" style={{ marginLeft: 20 }}>
-        Recent visitors <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>· tap for detail &amp; notes</span>
+      <div
+        className="section-title"
+        style={{ marginLeft: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 }}
+      >
+        <span>
+          Recent visitors <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>· tap for detail &amp; notes</span>
+        </span>
+        <button type="button" className="export-link" onClick={exportVisitors} disabled={exporting}>
+          {exporting ? 'Exporting…' : '⇓ Export CSV'}
+        </button>
       </div>
       <div className="visitor-list">
         {visitors.map((v, i) => (

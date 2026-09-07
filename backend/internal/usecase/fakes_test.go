@@ -204,6 +204,10 @@ func (f *fakeVisitRepo) StatsByTenant(_ context.Context, tenantID int64) (*domai
 	return s, nil
 }
 
+func (f *fakeVisitRepo) AllVisitors(ctx context.Context, tenantID int64) ([]domain.Visitor, error) {
+	return f.RecentVisitors(ctx, tenantID, 1<<30)
+}
+
 func (f *fakeVisitRepo) RecentVisitors(_ context.Context, tenantID int64, limit int) ([]domain.Visitor, error) {
 	var out []domain.Visitor
 	for i := len(f.visits) - 1; i >= 0 && len(out) < limit; i-- {
