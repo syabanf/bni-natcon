@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { csvOf, pdfOf } from './visitorExport'
 
 const rows = [
-  { name: 'Sinta Dewi', email: 'sinta@natcon.id', chapter: 'Star' },
-  { name: 'Reddie "RW" Wijaya', email: 'reddie@natcon.id', chapter: 'Jakarta Elite' },
+  { name: 'Sinta Dewi', email: 'sinta@natcon.id', chapter: 'Star', note: 'interested in bulk order' },
+  { name: 'Reddie "RW" Wijaya', email: 'reddie@natcon.id', chapter: 'Jakarta Elite', note: '' },
 ]
 
 describe('the booth visitor export', () => {
@@ -25,6 +25,7 @@ describe('the booth visitor export', () => {
     expect(text).toContain('(Sinta Dewi)')
     expect(text).toContain('(sinta@natcon.id)')
     expect(text).toContain('(Jakarta Elite)')
+    expect(text).toContain('(interested in bulk order)')
     // Parentheses in a name are escaped so they cannot close the string.
     const withParens = pdfOf([{ name: 'A (B)', email: 'x@y.id' }])
     expect(new TextDecoder('latin1').decode(withParens)).toContain('(A \\(B\\))')
@@ -33,12 +34,24 @@ describe('the booth visitor export', () => {
     expect(text).toContain('(Visitors - SSCX International \xb7 A1)')
   })
 
-  it('paginates a long list', () => {
+  it('paginates a long list, numbering straight through', () => {
     const many = Array.from({ length: 90 }, (_, i) => ({ name: `Visitor ${i + 1}`, email: `v${i + 1}@x.id` }))
     const text = new TextDecoder('latin1').decode(pdfOf(many))
-    expect(text).toContain('/Count 3')
-    expect(text).toContain('(Page 3 of 3)')
+    const pages = (text.match(/\/Type \/Page /g) || []).length
+    expect(pages).toBeGreaterThan(2)
+    expect(text).toContain(`/Count ${pages}`)
+    expect(text).toContain(`(Page ${pages} of ${pages})`)
     expect(text).toContain('(Visitor 90)')
+    // Page two starts where page one stopped, not at 1 again.
+    expect((text.match(/\(1\) Tj/g) || []).length).toBe(1)
+  })
+
+  it('wraps a long note onto more lines instead of running off the page', () => {
+    const note = 'wants a quotation for two hundred custom gift boxes with embossed logo before the end of the month'
+    const text = new TextDecoder('latin1').decode(pdfOf([{ name: 'A', email: 'a@x.id', chapter: 'Star', note }]))
+    expect(text).toContain('(wants a quotation')
+    expect(text).toContain('end of the month)')
+    expect(text).not.toContain(`(${note})`)
   })
 
   it('keeps the xref offsets honest', () => {

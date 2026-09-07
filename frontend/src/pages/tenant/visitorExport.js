@@ -13,19 +13,22 @@
 const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
 
 export function csvOf(rows) {
-  const lines = [['Name', 'Email', 'Chapter'].map(cell).join(',')]
-  for (const r of rows) lines.push([r.name, r.email, r.chapter].map(cell).join(','))
+  const lines = [['Name', 'Email', 'Chapter', 'Note'].map(cell).join(',')]
+  for (const r of rows) lines.push([r.name, r.email, r.chapter, r.note].map(cell).join(','))
   // A BOM up front so Excel reads the UTF-8 names right.
   return '﻿' + lines.join('\r\n') + '\r\n'
 }
 
 // ---- PDF ----
 
-const PAGE_W = 595 // A4, points
-const PAGE_H = 842
+// A4 landscape: five columns, the last one the booth's own note, which
+// wraps onto as many lines as it needs.
+const PAGE_W = 842
+const PAGE_H = 595
 const MARGIN = 40
-const ROWS_PER_PAGE = 38
-const LINE_H = 17
+const LINE_H = 16
+const NOTE_CHARS = 52
+const COL = { no: MARGIN, name: MARGIN + 30, email: MARGIN + 200, chapter: MARGIN + 395, note: MARGIN + 515 }
 
 // Punctuation the app writes that WinAnsi cannot: dashes and curly quotes
 // fold to their plain cousins instead of printing as "?".
@@ -48,7 +51,53 @@ function pdfText(s) {
 
 function clip(s, max) {
   s = String(s ?? '')
-  return s.length > max ? s.slice(0, max - 1) + '…'.replace('…', '.') : s
+  return s.length > max ? s.slice(0, max - 1) + '.' : s
+}
+
+// A note wraps at spaces into lines the column can hold; a single word
+// longer than the column is cut rather than allowed to run off the page.
+function wrap(s, max) {
+  const words = String(s ?? '').trim().split(/\s+/).filter(Boolean)
+  const lines = []
+  let cur = ''
+  for (let w of words) {
+    while (w.length > max) {
+      if (cur) lines.push(cur)
+      cur = ''
+      lines.push(w.slice(0, max))
+      w = w.slice(max)
+    }
+    if (!cur) cur = w
+    else if (cur.length + 1 + w.length <= max) cur += ' ' + w
+    else {
+      lines.push(cur)
+      cur = w
+    }
+  }
+  if (cur) lines.push(cur)
+  return lines
+}
+
+// Rows fill a page by height: a visitor with a long note takes more lines.
+function paginate(rows) {
+  const top = PAGE_H - MARGIN - 10 - 18 - 26 - 6 - 14
+  const bottom = MARGIN + 8
+  const pages = []
+  let page = []
+  let y = top
+  rows.forEach((r) => {
+    const lines = Math.max(1, wrap(r.note, NOTE_CHARS).length)
+    const h = lines * LINE_H
+    if (page.length && y - h < bottom) {
+      pages.push(page)
+      page = []
+      y = top
+    }
+    page.push(r)
+    y -= h
+  })
+  pages.push(page)
+  return pages
 }
 
 function pageContent(rows, pageNo, pageCount, title, sub, startNo) {
@@ -58,21 +107,23 @@ function pageContent(rows, pageNo, pageCount, title, sub, startNo) {
   y -= 18
   ops.push(`BT /F1 9.5 Tf ${MARGIN} ${y} Td (${pdfText(sub)}) Tj ET`)
   y -= 26
-  // Column heads and a rule under them: No. · Name · Email · Chapter.
-  const COL = { no: MARGIN, name: MARGIN + 30, email: MARGIN + 210, chapter: MARGIN + 400 }
-  ops.push(`BT /F2 9.5 Tf ${COL.no} ${y} Td (No.) Tj ET`)
-  ops.push(`BT /F2 9.5 Tf ${COL.name} ${y} Td (Name) Tj ET`)
-  ops.push(`BT /F2 9.5 Tf ${COL.email} ${y} Td (Email) Tj ET`)
-  ops.push(`BT /F2 9.5 Tf ${COL.chapter} ${y} Td (Chapter) Tj ET`)
+  // Column heads and a rule under them: No. · Name · Email · Chapter · Note.
+  for (const [key, label] of [['no', 'No.'], ['name', 'Name'], ['email', 'Email'], ['chapter', 'Chapter'], ['note', 'Note']]) {
+    ops.push(`BT /F2 9.5 Tf ${COL[key]} ${y} Td (${label}) Tj ET`)
+  }
   y -= 6
   ops.push(`0.85 G ${MARGIN} ${y} m ${PAGE_W - MARGIN} ${y} l S`)
   y -= 14
   rows.forEach((r, i) => {
     ops.push(`BT /F1 9.5 Tf ${COL.no} ${y} Td (${startNo + i}) Tj ET`)
-    ops.push(`BT /F1 9.5 Tf ${COL.name} ${y} Td (${pdfText(clip(r.name, 36))}) Tj ET`)
+    ops.push(`BT /F1 9.5 Tf ${COL.name} ${y} Td (${pdfText(clip(r.name, 34))}) Tj ET`)
     ops.push(`BT /F1 9.5 Tf ${COL.email} ${y} Td (${pdfText(clip(r.email, 38))}) Tj ET`)
     ops.push(`BT /F1 9.5 Tf ${COL.chapter} ${y} Td (${pdfText(clip(r.chapter, 22))}) Tj ET`)
-    y -= LINE_H
+    const noteLines = wrap(r.note, NOTE_CHARS)
+    noteLines.forEach((line, k) => {
+      ops.push(`BT /F1 9.5 Tf ${COL.note} ${y - k * LINE_H} Td (${pdfText(line)}) Tj ET`)
+    })
+    y -= Math.max(1, noteLines.length) * LINE_H
   })
   ops.push(
     `BT /F1 8.5 Tf ${MARGIN} ${MARGIN - 12} Td (Page ${pageNo} of ${pageCount}) Tj ET`,
@@ -83,10 +134,7 @@ function pageContent(rows, pageNo, pageCount, title, sub, startNo) {
 // Returns the PDF as bytes. Every string stays within Latin-1, so a byte
 // offset is a character offset and the xref table can be written by hand.
 export function pdfOf(rows, { title = 'Visitors', sub = '' } = {}) {
-  const pages = []
-  for (let i = 0; i < Math.max(1, rows.length); i += ROWS_PER_PAGE) {
-    pages.push(rows.slice(i, i + ROWS_PER_PAGE))
-  }
+  const pages = paginate(rows)
   const objects = [] // 1-based: index 0 unused
   const add = (body) => {
     objects.push(body)
@@ -97,8 +145,10 @@ export function pdfOf(rows, { title = 'Visitors', sub = '' } = {}) {
   const f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
   const f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
   const pageIds = []
+  let startNo = 1
   pages.forEach((pageRows, idx) => {
-    const content = pageContent(pageRows, idx + 1, pages.length, title, sub, idx * ROWS_PER_PAGE + 1)
+    const content = pageContent(pageRows, idx + 1, pages.length, title, sub, startNo)
+    startNo += pageRows.length
     const stream = add(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`)
     const page = add(
       `<< /Type /Page /Parent ${pagesObj} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] ` +
