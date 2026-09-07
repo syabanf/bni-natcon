@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Icon from '../../components/Icon'
 import { api } from '../../api/client'
 import { toast } from '../../components/Toast'
+import { csvOf, pdfOf } from './visitorExport'
 
 function initials(name = '') {
   return name
@@ -115,18 +116,8 @@ function VisitorDetail({ memberId, onBack }) {
   )
 }
 
-// The follow-up sheet, built on the device: one row per visitor, name and
-// email — exactly what the consent notice lets a visited booth keep. A BOM
-// up front so Excel reads the UTF-8 names right.
-function csvOf(rows) {
-  const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
-  const lines = [['Name', 'Email'].map(cell).join(',')]
-  for (const r of rows) lines.push([r.name, r.email].map(cell).join(','))
-  return '\ufeff' + lines.join('\r\n') + '\r\n'
-}
-
-function download(filename, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }))
+function download(filename, data, type) {
+  const url = URL.createObjectURL(new Blob([data], { type }))
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -141,20 +132,35 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [visitors, setVisitors] = useState([])
   const [detailId, setDetailId] = useState(null)
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState('')
 
-  const exportVisitors = async () => {
-    setExporting(true)
+  // The same list, as a CSV for a spreadsheet or a PDF to print or forward.
+  const exportVisitors = async (format) => {
+    setExporting(format)
     try {
       const d = await api.boothVisitorsExport()
       const rows = d.visitors || []
+      if (!rows.length) {
+        toast('No visitors to export yet')
+        return
+      }
+      const label = booth?.booth ? `${booth.name} · ${booth.booth}` : booth?.name || 'Booth'
       const slug = (booth?.booth || booth?.name || 'booth').toString().replace(/[^A-Za-z0-9]+/g, '-')
-      download(`natcon2026-visitors-${slug}.csv`, csvOf(rows))
-      toast(rows.length ? `Exported ${rows.length} visitors` : 'No visitors to export yet')
+      if (format === 'pdf') {
+        const sub = `BNI Natcon 2026 · ${rows.length} visitors · exported ${new Date().toLocaleString('en-GB')}`
+        download(
+          `natcon2026-visitors-${slug}.pdf`,
+          pdfOf(rows, { title: `Visitors — ${label}`, sub }),
+          'application/pdf',
+        )
+      } else {
+        download(`natcon2026-visitors-${slug}.csv`, csvOf(rows), 'text/csv;charset=utf-8')
+      }
+      toast(`Exported ${rows.length} visitors (${format.toUpperCase()})`)
     } catch (err) {
       toast(err.message)
     } finally {
-      setExporting(false)
+      setExporting('')
     }
   }
 
@@ -212,14 +218,19 @@ export default function Dashboard() {
 
       <div
         className="section-title"
-        style={{ marginLeft: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 }}
+        style={{ marginLeft: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, paddingRight: 20 }}
       >
         <span>
           Recent visitors <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--gray)' }}>· tap for detail &amp; notes</span>
         </span>
-        <button type="button" className="export-link" onClick={exportVisitors} disabled={exporting}>
-          {exporting ? 'Exporting…' : '⇓ Export CSV'}
-        </button>
+        <span className="export-links">
+          <button type="button" className="export-link" onClick={() => exportVisitors('csv')} disabled={!!exporting}>
+            {exporting === 'csv' ? '…' : '⇓ CSV'}
+          </button>
+          <button type="button" className="export-link" onClick={() => exportVisitors('pdf')} disabled={!!exporting}>
+            {exporting === 'pdf' ? '…' : '⇓ PDF'}
+          </button>
+        </span>
       </div>
       <div className="visitor-list">
         {visitors.map((v, i) => (

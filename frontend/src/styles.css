@@ -3101,6 +3101,7 @@ button.stat-redeem {
 
 /* Booth: the visitor export, a quiet link beside the list title. */
 .export-link {
+  white-space: nowrap;
   border: 1px solid #e3e5e9;
   background: #fff;
   border-radius: 999px;
@@ -3112,4 +3113,8 @@ button.stat-redeem {
 }
 .export-link:disabled {
   opacity: 0.6;
+}
+.export-links {
+  display: inline-flex;
+  gap: 6px;
 }
