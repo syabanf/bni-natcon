@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { csvOf, pdfOf } from './visitorExport'
 
 const rows = [
-  { name: 'Sinta Dewi', email: 'sinta@natcon.id' },
-  { name: 'Reddie "RW" Wijaya', email: 'reddie@natcon.id' },
+  { name: 'Sinta Dewi', email: 'sinta@natcon.id', chapter: 'Star' },
+  { name: 'Reddie "RW" Wijaya', email: 'reddie@natcon.id', chapter: 'Jakarta Elite' },
 ]
 
 describe('the booth visitor export', () => {
@@ -24,6 +24,7 @@ describe('the booth visitor export', () => {
     expect(text).toContain('/Count 1')
     expect(text).toContain('(Sinta Dewi)')
     expect(text).toContain('(sinta@natcon.id)')
+    expect(text).toContain('(Jakarta Elite)')
     // Parentheses in a name are escaped so they cannot close the string.
     const withParens = pdfOf([{ name: 'A (B)', email: 'x@y.id' }])
     expect(new TextDecoder('latin1').decode(withParens)).toContain('(A \\(B\\))')

@@ -1,7 +1,7 @@
 /*
- * The booth's follow-up sheet, built on the device: one row per visitor,
- * name and email — exactly what the consent notice lets a visited booth
- * keep. Two shapes of the same list: a CSV for a spreadsheet, and a PDF
+ * The booth's follow-up sheet, built on the device: one row per visitor —
+ * name and email, the two fields the consent notice lets a visited booth
+ * keep, plus the chapter printed on their pass. Two shapes of the same list: a CSV for a spreadsheet, and a PDF
  * for printing or forwarding as-is.
  *
  * The PDF is written by hand rather than pulled from a library: the app is
@@ -13,8 +13,8 @@
 const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
 
 export function csvOf(rows) {
-  const lines = [['Name', 'Email'].map(cell).join(',')]
-  for (const r of rows) lines.push([r.name, r.email].map(cell).join(','))
+  const lines = [['Name', 'Email', 'Chapter'].map(cell).join(',')]
+  for (const r of rows) lines.push([r.name, r.email, r.chapter].map(cell).join(','))
   // A BOM up front so Excel reads the UTF-8 names right.
   return '﻿' + lines.join('\r\n') + '\r\n'
 }
@@ -58,17 +58,20 @@ function pageContent(rows, pageNo, pageCount, title, sub, startNo) {
   y -= 18
   ops.push(`BT /F1 9.5 Tf ${MARGIN} ${y} Td (${pdfText(sub)}) Tj ET`)
   y -= 26
-  // Column heads and a rule under them.
-  ops.push(`BT /F2 10 Tf ${MARGIN} ${y} Td (No.) Tj ET`)
-  ops.push(`BT /F2 10 Tf ${MARGIN + 34} ${y} Td (Name) Tj ET`)
-  ops.push(`BT /F2 10 Tf ${MARGIN + 290} ${y} Td (Email) Tj ET`)
+  // Column heads and a rule under them: No. · Name · Email · Chapter.
+  const COL = { no: MARGIN, name: MARGIN + 30, email: MARGIN + 210, chapter: MARGIN + 400 }
+  ops.push(`BT /F2 9.5 Tf ${COL.no} ${y} Td (No.) Tj ET`)
+  ops.push(`BT /F2 9.5 Tf ${COL.name} ${y} Td (Name) Tj ET`)
+  ops.push(`BT /F2 9.5 Tf ${COL.email} ${y} Td (Email) Tj ET`)
+  ops.push(`BT /F2 9.5 Tf ${COL.chapter} ${y} Td (Chapter) Tj ET`)
   y -= 6
   ops.push(`0.85 G ${MARGIN} ${y} m ${PAGE_W - MARGIN} ${y} l S`)
   y -= 14
   rows.forEach((r, i) => {
-    ops.push(`BT /F1 10 Tf ${MARGIN} ${y} Td (${startNo + i}) Tj ET`)
-    ops.push(`BT /F1 10 Tf ${MARGIN + 34} ${y} Td (${pdfText(clip(r.name, 46))}) Tj ET`)
-    ops.push(`BT /F1 10 Tf ${MARGIN + 290} ${y} Td (${pdfText(clip(r.email, 44))}) Tj ET`)
+    ops.push(`BT /F1 9.5 Tf ${COL.no} ${y} Td (${startNo + i}) Tj ET`)
+    ops.push(`BT /F1 9.5 Tf ${COL.name} ${y} Td (${pdfText(clip(r.name, 36))}) Tj ET`)
+    ops.push(`BT /F1 9.5 Tf ${COL.email} ${y} Td (${pdfText(clip(r.email, 38))}) Tj ET`)
+    ops.push(`BT /F1 9.5 Tf ${COL.chapter} ${y} Td (${pdfText(clip(r.chapter, 22))}) Tj ET`)
     y -= LINE_H
   })
   ops.push(
